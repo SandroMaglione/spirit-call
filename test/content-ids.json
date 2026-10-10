@@ -115,7 +115,31 @@
     "rockTrial3",
     "fireTrial3",
     "fireTrial4",
-    "thunderTrial2"
+    "thunderTrial2",
+    "gunnerOpenGround",
+    "gunnerHoldTheRange",
+    "gunnerPackReturns",
+    "stormSpreadOut",
+    "stormByTheTotem",
+    "stormDrownedBrute",
+    "sparkFiringLines",
+    "sparkQuickHands",
+    "sparkTheHunter",
+    "tideHeavyBlows",
+    "tideHoldTheGate",
+    "tideIronGiant",
+    "hearthKeepBurning",
+    "hearthEmbersToHealth",
+    "hearthBrood",
+    "windUnderFire",
+    "windTheGale",
+    "windStormGuard",
+    "quarryStoneAndShield",
+    "quarryBreakThem",
+    "quarryThunderKing",
+    "swordsmanMastery",
+    "tidecallerMastery",
+    "bastionMastery"
   ],
   "attacks": [
     "sword",
@@ -196,7 +220,17 @@
     "fireTrial",
     "waterTrial",
     "thunderTrial",
-    "rockTrial"
+    "rockTrial",
+    "gunnerAudition",
+    "stormcallerAudition",
+    "sparkfistAudition",
+    "tidewardenAudition",
+    "hearthAudition",
+    "windwallAudition",
+    "quarryAudition",
+    "swordsmanMastery",
+    "tidecallerMastery",
+    "bastionMastery"
   ],
   "discoveries": [
     "withSwordsman",
@@ -280,7 +314,12 @@
     "nightshade",
     "lastLight",
     "stoneDust",
-    "prism"
+    "prism",
+    "verdantSpark",
+    "glacier",
+    "rust",
+    "emberRose",
+    "duskGale"
   ],
   "materials": [
     "fireShard",
@@ -302,7 +341,9 @@
     "waterEssence",
     "windEssence",
     "thunderEssence",
-    "rockEssence"
+    "rockEssence",
+    "refinedEssence",
+    "coreEssence"
   ],
   "banners": [
     "stormAndStone",
@@ -320,7 +361,17 @@
       "steam",
       "carried",
       "shocked",
-      "withStonekeeper"
+      "withStonekeeper",
+      "withSwordsman",
+      "withGunner",
+      "withTidecaller",
+      "withStormcaller",
+      "withBastion",
+      "withSparkfist",
+      "withTidewarden",
+      "withQuarry",
+      "withHearth",
+      "withWindwall"
     ],
     "weapons": [
       "trainingBlade",
@@ -367,7 +418,22 @@
       "stonekeeper"
     ],
     "banners": [
-      "stormAndStone"
+      "stormAndStone",
+      "emberAndStorm",
+      "sparkAndFrost",
+      "forgeAndGale"
+    ],
+    "cosmetics": [
+      "autumnWind",
+      "ashen",
+      "abyss",
+      "paleSky",
+      "obsidian"
+    ],
+    "currencies": [
+      "crystals",
+      "dust",
+      "sigils"
     ]
   }
 }

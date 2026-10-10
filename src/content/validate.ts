@@ -19,14 +19,14 @@ import { beyond, challengeShows, holds, introducedBy, nothingSeen, withNovelty }
 import { aheadOfLine, starsPerChest } from "./quests.ts"
 import { noTwist, rankGates, rankLevel, rankTwist } from "./ranks.ts"
 import type { QuestAt, RankTwist } from "./ranks.ts"
-import type { QuestId, QuestSpec, StarGroup } from "./quests.ts"
+import type { QuestId, QuestSpec, StarGroup, Unlock } from "./quests.ts"
 import { elements } from "./elements.ts"
 import type { ElementId, StateId } from "./elements.ts"
 import { materialOf } from "./materials.ts"
 import { meets, tallies, tallyMeeting, worstClear } from "./stars.ts"
 import type { StarGoal } from "./stars.ts"
 import { basicAttack } from "./aspects.ts"
-import type { AspectSpec } from "./aspects.ts"
+import type { AspectId, AspectSpec } from "./aspects.ts"
 import { dashStrikePower, hitsOf, isMelee, reachOf, reachShare } from "./attacks.ts"
 import type { AttackMove, BasicAttackSpec } from "./attacks.ts"
 import type { ClassSpec, Moves } from "./classes.ts"
@@ -37,6 +37,8 @@ import type { HitCondition, MoveFilter, Passive } from "./passives.ts"
 import { relicBudget, relicSlots, relicTiers } from "./relics.ts"
 import { bodyRules, bodyScore } from "./characters.ts"
 import type { CosmeticId, CosmeticSpec } from "./cosmetics.ts"
+import { collectionSources, sameItem } from "./collection.ts"
+import type { CharacterId } from "./characters.ts"
 import type { RelicId, RelicSpec } from "./relics.ts"
 import type { LevelCurve, RunPay } from "./progression.ts"
 import type { SkillEffect, StateHeal } from "./skills.ts"
@@ -50,70 +52,61 @@ const positive = (problems: Array<string>, where: string, values: Record<string,
 }
 
 /**
- * The Spirit Call (see docs/calls.md): every character comes from
- * somewhere (the new account, a quest, or a banner) and from one place
- * only, so a call never brings what a quest gives; banners hold
- * characters; the odds are shares, the guarantees can be reached, and
- * the exchange's prices are whole sigils.
- */
-const checkCalls = (problems: Array<string>, tuning: Tuning): void => {
-  const rules = tuning.calls
-  const fromQuests = new Set(Object.values(tuning.quests).flatMap((quest) => quest.rewards.unlocks.filter((item) => item.kind === "character").map((item) => item.id as string)))
-  const fromStarter = new Set<string>(newAccount.characters)
-  const onBanners = new Map<string, string>()
-  for (const [id, spec] of Object.entries(tuning.banners)) {
-    const where = `banner ${id}`
-    if (spec.characters.length === 0) problems.push(`${where}: holds no character`)
-    for (const character of spec.characters) {
-      if (!has(tuning.characters, character)) problems.push(`${where}: unknown character ${character}`)
-      if (fromQuests.has(character) || fromStarter.has(character)) problems.push(`${where}: ${character} already comes from a quest or the new account`)
-      const other = onBanners.get(character)
-      if (other !== undefined && other !== id) problems.push(`${where}: ${character} is on banner ${other} too`)
-      onBanners.set(character, id)
-    }
-  }
-  for (const character of Object.keys(tuning.characters)) {
-    if (!fromQuests.has(character) && !fromStarter.has(character) && !onBanners.has(character)) problems.push(`character ${character}: comes from no quest, banner, or the new account`)
-  }
-  if (Object.keys(tuning.banners).length === 0) problems.push("the Spirit Call: needs a banner")
-  if (!has(tuning.quests, rules.opensAfter)) problems.push(`the Spirit Call: opens after unknown quest ${rules.opensAfter}`)
-  checkAmounts(problems, "the Spirit Call's price", tuning, rules.price)
-  const { character, rare } = rules
-  for (const [name, share] of [["character rate", character.rate], ["character softStep", character.softStep], ["rare rate", rare.rate]] as const) {
-    if (!(share >= 0 && share <= 1)) problems.push(`the Spirit Call: ${name} must be a share from 0 to 1 (is ${share})`)
-  }
-  for (const [name, count] of [["character softFrom", character.softFrom], ["character guarantee", character.guarantee], ["character firstGuarantee", character.firstGuarantee], ["rare guarantee", rare.guarantee], ["sigils", rules.sigils], ["exchange aspect", rules.exchange.aspect], ["exchange look", rules.exchange.look], ["history", rules.history]] as const) {
-    if (!(Number.isInteger(count) && count >= 1)) problems.push(`the Spirit Call: ${name} must be a whole number, at least 1 (is ${count})`)
-  }
-  if (character.firstGuarantee > character.guarantee) problems.push("the Spirit Call: the first character's guarantee must come no later than the others'")
-  // The exchange is the slower road to the purple tier: a sigil a call, so a price is calls; no cheaper than the pool is likely to give it.
-  if (rules.exchange.aspect < rules.exchange.look) problems.push("the Spirit Call: an aspect costs no less than a look in the exchange")
-  positive(problems, "the Spirit Call's rotation", { days: rules.rotation.days })
-}
-
-/**
  * Relics' rules and the looks (see docs/relics.md): relics open with a
- * quest, the shop's prices are dust, a tint is one character's and a trail
- * anyone's, a look from the shop has a price, and a reward look is given by
- * some hardcore tier (and only those are).
+ * quest, the Survival slot with another, and a tint is one character's and
+ * a trail anyone's.
  */
 const checkLooks = (problems: Array<string>, tuning: Tuning): void => {
   const rules = tuning.relicRules
   if (!has(tuning.quests, rules.opensAfter)) problems.push(`relics: open after unknown quest ${rules.opensAfter}`)
   if (rules.survivalOpensAfter !== null && !has(tuning.quests, rules.survivalOpensAfter)) problems.push(`relics: the Survival slot opens after unknown quest ${rules.survivalOpensAfter}`)
   if (rules.survivalOpensAfter !== null && !Object.values(tuning.relics).some((relic) => (relic as RelicSpec).slot === "survival")) problems.push("relics: the Survival slot opens with no relic for it")
-  positive(problems, "relics' prices", { tier2: rules.prices[2], tier3: rules.prices[3] })
-  positive(problems, "relics' perfect-clear dust", { base: rules.perfectDust.base })
-  if (!(rules.perfectDust.perLevel >= 0)) problems.push(`relics: perfect-clear dust per level must not be negative (is ${rules.perfectDust.perLevel})`)
   checkRelicHomes(problems, tuning)
-  const rewarded = new Set(Object.values(tuning.tracks).flatMap((track) => track.tiers.flatMap((tier) => tier.rewards.cosmetics ?? [])))
-  for (const id of rewarded) if (!has(tuning.cosmetics, id)) problems.push(`hardcore: rewards unknown look ${id}`)
   for (const [id, spec] of Object.entries(tuning.cosmetics) as Array<[string, CosmeticSpec]>) {
     const where = `look ${id}`
     if ((spec.kind === "tint") !== (spec.character !== null)) problems.push(`${where}: a tint is one character's, a trail anyone's`)
     if (spec.character !== null && !has(tuning.characters, spec.character)) problems.push(`${where}: for unknown character ${spec.character}`)
-    if (spec.source.kind === "shop" && !(Number.isInteger(spec.source.dust) && spec.source.dust > 0)) problems.push(`${where}: a shop look needs a price in dust`)
-    if ((spec.source.kind === "reward") !== rewarded.has(id as CosmeticId)) problems.push(`${where}: ${spec.source.kind === "reward" ? "a reward look no hardcore tier gives" : "given by a hardcore tier, so its source is a reward"}`)
+  }
+}
+
+/** An item named for a message. */
+const named = (item: Unlock): string => item.kind === "relicTier" ? `relic ${item.id} tier ${item.tier}` : `${item.kind} ${item.id}`
+
+/**
+ * The collection (see docs/collection.md): every character, aspect, relic,
+ * relic tier (II and III), and look comes from exactly one card, and every
+ * card names something that exists. A relic's tier given by a track comes
+ * no earlier than the rank that unlocks the relic. An audition lends a
+ * character and makes her the account's on one of its tiers.
+ */
+const checkCollection = (problems: Array<string>, tuning: Tuning): void => {
+  const sources = collectionSources(tuning, newAccount)
+  const kinds = { character: tuning.characters, aspect: tuning.aspects, relic: tuning.relics, relicTier: tuning.relics, cosmetic: tuning.cosmetics }
+  for (const { item } of sources) if (!has(kinds[item.kind], item.id)) problems.push(`the collection: ${named(item)} is unknown`)
+  const everything: ReadonlyArray<Unlock> = [
+    ...(Object.keys(tuning.characters) as Array<CharacterId>).map((id): Unlock => ({ kind: "character", id })),
+    ...(Object.keys(tuning.aspects) as Array<AspectId>).map((id): Unlock => ({ kind: "aspect", id })),
+    ...(Object.keys(tuning.relics) as Array<RelicId>).flatMap((id): Array<Unlock> => [{ kind: "relic", id }, { kind: "relicTier", id, tier: 2 }, { kind: "relicTier", id, tier: 3 }]),
+    ...(Object.keys(tuning.cosmetics) as Array<CosmeticId>).map((id): Unlock => ({ kind: "cosmetic", id }))
+  ]
+  for (const item of everything) {
+    const from = sources.filter((each) => sameItem(each.item, item))
+    if (from.length === 0) problems.push(`the collection: nothing gives ${named(item)}`)
+    if (from.length > 1) problems.push(`the collection: ${named(item)} comes from ${from.length} places (one only)`)
+  }
+  // A relic's tier from a track opens with or after the rank whose perfect clear unlocks the relic.
+  for (const { item, source } of sources) {
+    if (item.kind !== "relicTier" || source.kind !== "tier" || !has(tuning.relics, item.id)) continue
+    const home = Object.values(tuning.quests).find((quest) => quest.relic?.id === item.id)?.relic
+    const tier = tuning.tracks[source.track].tiers[source.tier - 1]
+    if (home !== undefined && home !== null && tier !== undefined && tier.opensRank < home.rank) problems.push(`the collection: relic ${item.id} tier ${item.tier} opens at rank ${tier.opensRank}, before the relic (rank ${home.rank})`)
+  }
+  for (const [id, track] of Object.entries(tuning.tracks)) {
+    const where = `track ${id}`
+    if ((track.kind === "audition") !== (track.character !== null)) problems.push(`${where}: an audition lends a character, and no other track does`)
+    if (track.character === null) continue
+    if (!has(tuning.characters, track.character)) problems.push(`${where}: lends unknown character ${track.character}`)
+    else if (tuning.characters[track.character].element !== track.element) problems.push(`${where}: an audition's element is its character's`)
   }
 }
 
@@ -632,11 +625,10 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   if (!(onBreak >= 0)) problems.push(`energy: break must not be negative (is ${onBreak})`)
   if (!(tuning.energy.targetCap >= 1 && tuning.energy.targetCap <= 2)) problems.push("energy: targetCap must be between 1 and 2")
   if (!(tuning.team.benchEnergyShare >= 0 && tuning.team.benchEnergyShare <= 1)) problems.push("team: benchEnergyShare must be between 0 and 1")
-  checkCurve(problems, "account levels", progression.account.curve)
   checkCurve(problems, "character levels", progression.character.curve)
+  if (!(progression.character.catchUp.share > 0 && progression.character.catchUp.share <= 1)) problems.push(`character levels: catchUp's share must be in (0, 1] (is ${progression.character.catchUp.share})`)
+  if (!(Number.isInteger(progression.character.catchUp.leaders) && progression.character.catchUp.leaders >= 1)) problems.push(`character levels: catchUp's leaders must be a whole number from 1 (is ${progression.character.catchUp.leaders})`)
   checkPay(problems, "run gold", progression.gold)
-  checkPay(problems, "run account experience", progression.account.run)
-  checkAmounts(problems, "account level-up", tuning, progression.account.levelUp)
   if (!(progression.loss >= 0 && progression.loss <= 1)) problems.push(`a loss's share must be in [0, 1] (is ${progression.loss})`)
   if (!(progression.stats.band >= 1)) problems.push(`stat curve: band must be 1 or more, or levels would weaken (is ${progression.stats.band})`)
   positive(problems, "stat curve", { shape: progression.stats.shape })
@@ -822,7 +814,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (endless !== null && !(endless.baseBudget >= cheapest)) problems.push(`${where}: the endless budget ${endless.baseBudget} affords no enemy (cheapest costs ${cheapest})`)
   }
 
-  const unlockKinds = { character: tuning.characters, aspect: tuning.aspects, relic: tuning.relics, cosmetic: tuning.cosmetics }
+  const unlockKinds = { character: tuning.characters, aspect: tuning.aspects, relic: tuning.relics, relicTier: tuning.relics, cosmetic: tuning.cosmetics }
   for (const [id, quest] of Object.entries(tuning.quests)) {
     const where = `quest ${id}`
     if (!has(tuning.challenges, quest.challenge)) problems.push(`${where}: unknown challenge ${quest.challenge}`)
@@ -858,13 +850,13 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   checkNovelties(problems, tuning)
   const rankRules = tuning.ranks
   if (!(Number.isInteger(rankRules.count) && rankRules.count >= 1)) problems.push(`ranks: count must be a whole number of at least 1 (is ${rankRules.count})`)
-  if (!(Number.isInteger(rankRules.offset) && rankRules.offset > 0 && Number.isInteger(rankRules.chaptersAhead) && rankRules.chaptersAhead >= 1)) problems.push("ranks: offset and chaptersAhead must be positive whole numbers")
+  if (!(Number.isInteger(rankRules.offset) && rankRules.offset > 0)) problems.push("ranks: offset must be a positive whole number")
   if (rankRules.twists.length < rankRules.count - 1) problems.push(`ranks: every rank above the first needs a twist (${rankRules.twists.length} for ${rankRules.count - 1})`)
-  if (!(rankRules.crystals >= 0 && rankRules.goldRuns >= 0)) problems.push("ranks: rewards must not be negative")
+  if (!(rankRules.goldRuns >= 0 && rankRules.chestGold >= 0)) problems.push("ranks: rewards must not be negative")
 
   for (const [id, track] of Object.entries(tuning.tracks)) {
-    const where = `hardcore track ${id}`
-    if (!has(elements, track.element)) problems.push(`${where}: pays the material of unknown element ${track.element}`)
+    const where = `track ${id}`
+    if (!has(elements, track.element)) problems.push(`${where}: pays the essence of unknown element ${track.element}`)
     if (track.tiers.length === 0) problems.push(`${where}: needs at least one tier`)
     track.tiers.forEach((tier, index) => {
       const at = `${where} tier ${index + 1}`
@@ -873,11 +865,11 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       }
       const before = track.tiers[index - 1]
       if (before !== undefined && tier.enemyLevel <= before.enemyLevel) problems.push(`${at}: enemies must be a higher level than the tier before (${tier.enemyLevel} after ${before.enemyLevel})`)
-      if (!(tier.rewards.experience >= 0)) problems.push(`${at}: experience must not be negative (is ${tier.rewards.experience})`)
       checkAmounts(problems, at, tuning, tier.rewards.currencies)
+      if (!(Number.isInteger(tier.opensRank) && tier.opensRank >= 1 && tier.opensRank <= tuning.ranks.count)) problems.push(`${at}: opens at rank ${tier.opensRank}, which there is not`)
       if (!has(tuning.challenges, tier.challenge)) problems.push(`${at}: unknown challenge ${tier.challenge}`)
       else if (!has(tuning.quests, tier.opens)) problems.push(`${at}: opens after unknown quest ${tier.opens}`)
-      else checkOpening(problems, at, tuning, tier.challenge, tier.enemyLevel, tier.opens, tier.opensRank)
+      else checkOpening(problems, at, tuning, tier.challenge, tier.enemyLevel, tier.opens, tier.opensRank, tier.twist)
     })
   }
 
@@ -889,7 +881,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (spec === undefined || spec.element !== element) problems.push(`materials: ${element} needs its material, ${id}`)
     if (!Object.values(tuning.tracks).some((track) => track.kind === "trial" && track.element === element)) problems.push(`materials: ${element} has no trial to earn ${id} in`)
   }
-  positive(problems, "materials", { atFirst: rules.worth.atFirst, doublesEvery: rules.worth.doublesEvery, firstClear: rules.firstClear, weekly: rules.weekly })
+  positive(problems, "materials", { atFirst: rules.worth.atFirst, doublesEvery: rules.worth.doublesEvery, firstClear: rules.firstClear, tierClear: rules.tierClear })
   for (const [id, track] of Object.entries(tuning.tracks)) {
     if (track.kind !== "trial") continue
     // A trial's ranks are fought for their material: what resists its element is in every one.
@@ -907,7 +899,8 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     const before = rules.ascension[index - 1]
     if (!(Number.isInteger(step.level) && step.level > (before?.level ?? 1) && step.level < tuning.progression.character.curve.maxLevel)) problems.push(`ascension step ${index + 1}: level must rise and stay below the maximum (is ${step.level})`)
     if (!(step.count >= 1 && step.gold >= 0)) problems.push(`ascension step ${index + 1}: needs at least one material, and no negative gold`)
-    if (before !== undefined && step.count <= before.count) problems.push(`ascension step ${index + 1}: must cost more material than the step before`)
+    if (before !== undefined && step.grade === before.grade && step.count <= before.count) problems.push(`ascension step ${index + 1}: must cost more essence than the step before of its grade`)
+    if (before !== undefined && step.grade < before.grade) problems.push(`ascension step ${index + 1}: its grade of essence must not go down`)
   })
 
   // Chests open in order, one every `starsPerChest` stars of their group (see docs/quests.md), and no more than it has.
@@ -928,18 +921,12 @@ export const validateContent = (tuning: Tuning): Array<string> => {
     if (list.length !== Math.floor(total / every)) problems.push(`${where}: needs one every ${every} of its ${total} stars (has ${list.length})`)
   }
 
-  // Discoveries pay crystals only (gold comes from runs), and every character can be discovered.
+  // Discoveries pay a little gold, once.
   for (const [id, spec] of Object.entries(tuning.discoveries)) {
     const where = `discovery ${id}`
-    if (spec.check.kind === "clearWith" && !has(tuning.characters, spec.check.character)) problems.push(`${where}: unknown character ${spec.check.character}`)
     checkAmounts(problems, where, tuning, spec.rewards)
-    if (Object.keys(spec.rewards).some((currency) => currency !== "crystals")) problems.push(`${where}: rewards must be crystals only`)
+    if (Object.keys(spec.rewards).some((currency) => currency !== "gold")) problems.push(`${where}: rewards must be gold only`)
   }
-  for (const character of Object.keys(tuning.characters)) {
-    const found = Object.values(tuning.discoveries).some((spec) => spec.check.kind === "clearWith" && spec.check.character === character)
-    if (!found) problems.push(`character ${character}: needs a discovery for clearing with her`)
-  }
-  positive(problems, "hardcore reset", { days: tuning.reset.days })
 
   const starter = newAccount
   const where = "the new account"
@@ -955,7 +942,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   if (first === undefined) problems.push(`${where}: selects unknown quest ${starter.selection.quest}`)
   else if (first.after !== null) problems.push(`${where}: selects quest ${starter.selection.quest}, which a new account cannot start`)
 
-  checkCalls(problems, tuning)
+  checkCollection(problems, tuning)
   checkLooks(problems, tuning)
   return problems
 }

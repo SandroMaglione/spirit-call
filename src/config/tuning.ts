@@ -16,7 +16,6 @@ import { arenas } from "../content/arena.ts"
 import { aspects } from "../content/aspects.ts"
 import { relicRules, relics } from "../content/relics.ts"
 import { cosmetics } from "../content/cosmetics.ts"
-import { banners, callRules } from "../content/calls.ts"
 import { challenges } from "../content/challenges.ts"
 import { championMovesets } from "../content/champions.ts"
 import { characters } from "../content/characters.ts"
@@ -25,7 +24,7 @@ import { currencies } from "../content/currencies.ts"
 import { discoveries } from "../content/discoveries.ts"
 import { elementRules } from "../content/elements.ts"
 import { enemies, fairness, shields } from "../content/enemies.ts"
-import { reset, tracks } from "../content/hardcore.ts"
+import { tracks } from "../content/hardcore.ts"
 import { materialRules, materials } from "../content/materials.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, chests, quests, rankRules } from "../content/quests.ts"
@@ -84,7 +83,7 @@ export const defaultTuning = {
   /** Levels and what runs earn (see content/progression.ts). */
   progression,
 
-  /** The pull and upgrade currencies (see content/currencies.ts). */
+  /** Gold, the one currency (see content/currencies.ts). */
   currencies,
   /** The ascension materials, and how they are paid and spent (see content/materials.ts). */
   materials,
@@ -98,16 +97,11 @@ export const defaultTuning = {
   /** The ranks: every quest played again, harder, with its own first clears, stars, and chests (see content/quests.ts). */
   ranks: rankRules,
 
-  /** Hardcore tracks in tiers, and the periodic reset of their rewards (see content/hardcore.ts). */
+  /** Tracks in tiers: hardcore, the trials, and the auditions (see content/hardcore.ts, content/auditions.ts). */
   tracks,
-  reset,
 
-  /** One-time goals that point at something worth trying, for crystals (see content/discoveries.ts). */
+  /** One-time feats that point at something worth trying, for a little gold (see content/discoveries.ts). */
   discoveries,
-
-  /** The Spirit Call: its banners, and what a call costs and brings (see content/calls.ts). */
-  banners,
-  calls: callRules,
 
   /** Every class, by id: how it handles, and its plain aspect (see content/classes.ts). */
   classes,
@@ -117,7 +111,7 @@ export const defaultTuning = {
 
   /** Every relic, by id: a small addition to how a character plays, in one of her slots (see content/relics.ts). */
   relics,
-  /** When relics open, and what the shop asks for a relic's next tier (see content/relics.ts). */
+  /** When relics and their slots open (see content/relics.ts). */
   relicRules,
 
   /** Every look, by id: how a spirit shows, never how she fights (see content/cosmetics.ts). */

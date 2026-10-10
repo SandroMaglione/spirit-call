@@ -244,7 +244,7 @@ export const challenges = {
     ["swarmer", "shooter"]
   ]),
 
-  // Chapter 3: two characters (the Tidecaller joins at its end; the Spirit Call's first character comes in chapter 5).
+  // Chapter 3: two characters (Bastion joins at its end).
   /** Elites: bigger, tougher, and carrying fire or water. */
   ashfall: waves("Ashfall", "Eight waves in the citadel, led by elites of fire and water.", "citadel", [
     ["chaser", "chaser", "swarmer"],
@@ -640,6 +640,88 @@ export const challenges = {
   fireTrial: trial("Fire Trial", "kilnworks", ["brute", "charger", "stalker"], ["warden", "guardian", "chaser"], "fire"),
   fireTrial2: trial("Fire Trial", "kilnworks", ["volatile", "brute", "charger", "stalker"], ["juggernaut", "galeCaster", "guardian"], "fire"),
   thunderTrial: trial("Thunder Trial", "necropolis", ["sniper"], ["juggernaut", "stalker", "galeCaster"], "thunder"),
+
+  // Auditions (see content/auditions.ts): a character alone, in three fights around her kit, the last against a champion.
+  // The Gunner: keep your distance, then hold it against the patient, then a champion that closes in.
+  gunnerOpenGround: waves("Open Ground", "Six waves of chasers and swarmers in the open: keep moving, keep firing.", "courtyard", [
+    ["chaser", "chaser"], ["swarmer"], ["chaser", "swarmer"], ["chaser", "chaser", "chaser"], ["swarmer", "swarmer"], ["chaser", "chaser", "swarmer"]
+  ]),
+  gunnerHoldTheRange: waves("Hold the Range", "Six waves of guardians and shooters: their thrusts reach far, so fire from farther.", "sanctuary", [
+    ["guardian"], ["shooter", "chaser"], ["guardian", "shooter"], ["swarmer", "guardian"], ["shooter", "shooter", "chaser"], ["guardian", "guardian"]
+  ]),
+  gunnerPackReturns: waves("The Pack Returns", "Six waves; the Pack Leader comes back to hunt you, and stays until it falls.", "monastery", [
+    ["chaser", "chaser"], ["shooter", "swarmer"], [champion("chaser", "fire")], ["chaser"], ["shooter"], ["swarmer"]
+  ]),
+  // The Stormcaller: groups spread out, a place to fight from, then a champion to fight by the totem.
+  stormSpreadOut: waves("Spread Out", "Six waves of swarms and snipers spread across the harbor: link them up.", "harbor", [
+    ["swarmer", "sniper"], ["chaser", "chaser", "shooter"], ["swarmer", "swarmer"], ["sniper", "sniper", "chaser"], [elite("swarmer", "water"), "shooter"], ["swarmer", "swarmer", "sniper"]
+  ]),
+  stormByTheTotem: waves("By the Totem", "Six waves of firebombers and brutes: pick your ground and hold it.", "citadel", [
+    ["charger", "chaser"], ["brute"], ["charger", "charger"], ["guardian", "swarmer"], ["brute", "charger"], [elite("chaser", "fire"), "charger", "chaser"]
+  ]),
+  stormDrownedBrute: waves("The Drowned Brute", "Six waves in the cistern; a soaked champion brute joins midway, and stays until it falls.", "cistern", [
+    ["chaser", "chaser"], ["sniper", "swarmer"], [champion("brute", "water")], ["chaser"], ["charger"], ["swarmer"]
+  ]),
+  // Sparkfist: lines to dart through, the quick ones, then the hunter.
+  sparkFiringLines: waves("Firing Lines", "Six waves of shooters and snipers standing in lines: dart through them.", "sanctuary", [
+    ["shooter", "shooter", "shooter"], ["sniper", "shooter"], ["chaser", "chaser", "chaser"], ["shooter", "shooter", "sniper"], [elite("shooter", "thunder"), "shooter"], ["sniper", "sniper", "shooter", "shooter"]
+  ]),
+  sparkQuickHands: waves("Quick Hands", "Six waves of stalkers and wardens: be faster than they are.", "monastery", [
+    ["stalker"], ["warden", "chaser"], ["stalker", "swarmer"], ["warden", "shooter", "shooter"], ["stalker", "stalker"], [elite("stalker", "fire"), "warden"]
+  ]),
+  sparkTheHunter: waves("The Hunter", "Six waves among the obelisks; a champion stalker charged with thunder joins midway, and stays until it falls.", "necropolis", [
+    ["chaser", "chaser"], ["warden", "shooter"], [champion("stalker", "thunder")], ["chaser"], ["shooter"], ["warden"]
+  ]),
+  // Tidewarden: blows worth bracing for, many at once, then a giant's.
+  tideHeavyBlows: waves("Heavy Blows", "Six waves of brutes, guardians, and juggernauts: meet each blow.", "courtyard", [
+    ["brute"], ["guardian", "chaser"], ["juggernaut"], ["brute", "shooter"], ["guardian", "guardian"], [elite("brute", "water"), "juggernaut"]
+  ]),
+  tideHoldTheGate: waves("Hold the Gate", "Six waves of volatiles, firebombers, and gale casters crowding the cistern.", "cistern", [
+    ["volatile", "chaser"], ["charger", "charger"], ["volatile", "volatile"], ["galeCaster", "chaser"], ["charger", "volatile", "shooter"], [elite("guardian", "fire"), "volatile", "charger"]
+  ]),
+  tideIronGiant: waves("The Iron Giant", "Six waves in the citadel; a burning champion juggernaut joins midway, and stays until it falls.", "citadel", [
+    ["chaser", "chaser"], ["shooter", "volatile"], [champion("juggernaut", "fire")], ["chaser"], ["galeCaster"], ["shooter"]
+  ]),
+  // Hearth: packs to keep burning, the team's health from them, then a champion's brood.
+  hearthKeepBurning: waves("Keep Them Burning", "Six waves of packs in the kilnworks: set them alight and keep them so.", "kilnworks", [
+    ["swarmer", "swarmer"], ["chaser", "chaser", "swarmer"], ["swarmer", "swarmer", "shooter"], ["chaser", "chaser", "chaser", "chaser"], ["swarmer", "swarmer", "swarmer"], [elite("swarmer", "water"), "swarmer", "chaser"]
+  ]),
+  hearthEmbersToHealth: waves("Embers to Health", "Six waves of tough enemies among packs: their burns are your health.", "harbor", [
+    ["guardian", "swarmer"], ["stalker", "chaser"], ["warden", "swarmer", "swarmer"], ["guardian", "guardian", "shooter"], ["stalker", "volatile"], [elite("guardian", "thunder"), "swarmer", "swarmer"]
+  ]),
+  hearthBrood: waves("The Brood", "Six waves; a soaked champion swarmer joins midway with its brood, and stays until it falls.", "monastery", [
+    ["chaser", "swarmer"], ["shooter", "swarmer"], [champion("swarmer", "water")], ["chaser"], ["swarmer"], ["shooter"]
+  ]),
+  // Windwall: shots to stop, winds to stand in, then a champion's charge.
+  windUnderFire: waves("Under Fire", "Six waves of shooters and snipers: wall off their shots.", "sanctuary", [
+    ["shooter", "shooter", "sniper"], ["sniper", "sniper"], ["shooter", "shooter", "shooter", "chaser"], [elite("sniper", "fire"), "shooter"], ["sniper", "sniper", "shooter", "shooter"], [elite("shooter", "water"), "sniper", "sniper"]
+  ]),
+  windTheGale: waves("The Gale", "Six waves of gale casters and firebombers at the harbor: hold your ground in the wind.", "harbor", [
+    ["galeCaster", "chaser"], ["charger", "shooter"], ["galeCaster", "volatile"], ["charger", "charger", "sniper"], ["galeCaster", "galeCaster", "chaser"], [elite("charger", "thunder"), "galeCaster", "shooter"]
+  ]),
+  windStormGuard: waves("The Storm Guard", "Six waves in the citadel; a champion guardian charged with thunder joins midway, and stays until it falls.", "citadel", [
+    ["chaser", "shooter"], ["sniper", "chaser"], [champion("guardian", "thunder")], ["shooter"], ["charger"], ["sniper"]
+  ]),
+  // Quarry: the tough ones to break, the heaviest, then a champion brute.
+  quarryStoneAndShield: waves("Stone and Shield", "Six waves of guardians, wardens, and brutes, some behind shields.", "courtyard", [
+    ["guardian"], ["warden", "chaser"], [shielded("guardian"), "swarmer"], ["brute", "warden"], ["guardian", "guardian", "chaser"], [elite("brute", "fire"), "warden"]
+  ]),
+  quarryBreakThem: waves("Break Them", "Six waves of juggernauts and brutes in the kilnworks: break them, then punish them.", "kilnworks", [
+    ["juggernaut"], ["brute", "chaser"], [shielded("brute"), "shooter"], ["juggernaut", "guardian"], ["warden", "brute", "swarmer"], [elite("juggernaut", "water"), "brute"]
+  ]),
+  quarryThunderKing: waves("The Thunder King", "Six waves in the kilnworks; a champion brute charged with thunder joins midway, and stays until it falls.", "kilnworks", [
+    ["chaser", "swarmer"], ["guardian", "shooter"], [champion("brute", "thunder")], ["chaser"], ["warden"], ["shooter"]
+  ]),
+  // The quest characters' masteries (the others' are their auditions' last fight, harder).
+  swordsmanMastery: waves("The Wind's Rival", "Six waves; a burning champion stalker joins midway, and stays until it falls.", "courtyard", [
+    ["chaser", "chaser", "swarmer"], ["shooter", "stalker"], [champion("stalker", "fire")], ["chaser"], ["shooter"], ["swarmer"]
+  ]),
+  tidecallerMastery: waves("The Storm Brood", "Six waves at the harbor; a champion swarmer charged with thunder joins midway, and stays until it falls.", "harbor", [
+    ["swarmer", "shooter"], ["chaser", "sniper"], [champion("swarmer", "thunder")], ["chaser"], ["shooter"], ["sniper"]
+  ]),
+  bastionMastery: waves("The Last Wall", "Six waves in the citadel; a burning champion brute joins midway, and stays until it falls.", "citadel", [
+    ["guardian", "chaser"], ["shooter", "brute"], [champion("brute", "fire")], ["chaser"], ["shooter"], ["guardian"]
+  ]),
 
   // Extras.
   /** The Training Ground (an Extra): dummies to practice on, a fire pool near each side, nothing to fear. */

@@ -94,22 +94,33 @@ describe("content", () => {
       ...defaultTuning,
       tracks: {
         ...defaultTuning.tracks,
-        gauntlet: { ...gauntlet, tiers: [gauntlet.tiers[0]!, { ...gauntlet.tiers[0]!, rewards: { experience: 10, currencies: { gems: 5 } as never } }] }
+        gauntlet: { ...gauntlet, tiers: [gauntlet.tiers[0]!, { ...gauntlet.tiers[0]!, rewards: { currencies: { gems: 5 } as never, unlocks: [] } }] }
       }
     }
-    expect(validateContent(broken)).toEqual([
-      `hardcore track gauntlet tier 2: enemies must be a higher level than the tier before (${gauntlet.tiers[0]!.enemyLevel} after ${gauntlet.tiers[0]!.enemyLevel})`,
-      "hardcore track gauntlet tier 2: unknown currency or material gems"
-    ])
+    expect(validateContent(broken)).toEqual(expect.arrayContaining([
+      `track gauntlet tier 2: enemies must be a higher level than the tier before (${gauntlet.tiers[0]!.enemyLevel} after ${gauntlet.tiers[0]!.enemyLevel})`,
+      "track gauntlet tier 2: unknown currency or material gems"
+    ]))
   })
 
-  it("reports discoveries that pay gold or leave a character out", () => {
-    const { withGunner: _, ...others } = defaultTuning.discoveries
-    const broken = { ...defaultTuning, discoveries: { ...others, flare: { ...defaultTuning.discoveries.flare, rewards: { gold: 100 } } } } as unknown as Tuning
-    expect(validateContent(broken)).toEqual([
-      "discovery flare: rewards must be crystals only",
-      "character gunner: needs a discovery for clearing with her"
-    ])
+  it("reports discoveries that pay anything but gold", () => {
+    const broken = { ...defaultTuning, discoveries: { ...defaultTuning.discoveries, flare: { ...defaultTuning.discoveries.flare, rewards: { gold: 100, fireEssence: 5 } } } } as unknown as Tuning
+    expect(validateContent(broken)).toEqual(["discovery flare: rewards must be gold only"])
+  })
+
+  it("reports the collection: something nothing gives, something given twice, an audition lending nobody", () => {
+    const tracks = defaultTuning.tracks, quests = defaultTuning.quests
+    const broken: Tuning = {
+      ...defaultTuning,
+      // The Gunner's audition gives no one; Duelist also comes from the Pack Leader.
+      tracks: { ...tracks, gunnerAudition: { ...tracks.gunnerAudition, character: null, tiers: tracks.gunnerAudition.tiers.map((tier) => ({ ...tier, rewards: { ...tier.rewards, unlocks: tier.rewards.unlocks.filter((item) => item.kind !== "character") } })) } },
+      quests: { ...quests, packLeader: { ...quests.packLeader, rewards: { ...quests.packLeader.rewards, unlocks: [...quests.packLeader.rewards.unlocks, { kind: "aspect", id: "duelist" }] } } }
+    }
+    expect(validateContent(broken)).toEqual(expect.arrayContaining([
+      "the collection: nothing gives character gunner",
+      "the collection: aspect duelist comes from 2 places (one only)",
+      "track gunnerAudition: an audition lends a character, and no other track does"
+    ]))
   })
 
   it("reports quests that cannot be reached or refer to nothing", () => {
@@ -154,7 +165,7 @@ describe("content", () => {
       "quest crossfire: shows the shooter too, which the main line has not brought yet",
       "quest holdTheLine: shows the swarmer, the guardian, the shooter, the brute, the sniper, fire floors, the champion brute before the main line introduces it (it opens after packLeader)",
       "quest nightOfPacks: a side quest brings nothing new (it mixes what the main line brought)",
-      "hardcore track untilFall tier 1: enemies of level 12 are more than 4 levels above packLeader (5), which opens it"
+      "track untilFall tier 1: enemies of level 12 are more than 4 levels above packLeader (5), which opens it"
     ]))
   })
 })

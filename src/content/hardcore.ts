@@ -1,101 +1,111 @@
 /**
- * Hardcore: the goals to aim for, where preparation and skill are tested
- * fully (see docs/vision.md, "Structure"). Each track is one kind of
- * content (mixed waves, champions) in tiers, each harder than the last;
- * lower tiers are within reach of a low-level team. Each tier opens along
- * the main line (once its quest is cleared at a rank, and the tier before it), plays
- * its own waves showing only what the main line has introduced by then,
- * and sits at most a few enemy levels above that quest.
+ * Tracks: tiers played apart from the quests, each opening along the main
+ * line (once its quest is cleared at a rank, and for most the tier before
+ * it), playing its own waves that show only what the main line has
+ * introduced by then, at most a few enemy levels above that quest.
  *
- * A tier's rewards (experience and currency, dust among it; gold worth
- * about five runs at its level) are given on top of what the run pays, the
- * first time it is cleared in each period; the periodic reset makes them
- * available again, so nothing is missable and there is no pressure to play
- * every period. A few tiers also give a look the first time (`cosmetics`),
- * a mark of a hard goal reached; a trial's ranks give dust once a period.
+ * - **Hardcore** tracks: the goals to aim for, where preparation and skill
+ *   are tested fully (see docs/vision.md, "Structure"). Each tier is a
+ *   ruleset (its own waves, and a twist), and pays once, on its first
+ *   clear: gold worth about five runs at its level, essence of the grade
+ *   its rank opens (see content/materials.ts), and what it unlocks
+ *   (written on it: a look, a relic's tier; see docs/collection.md). A
+ *   track can be endless (its challenge lasting until the team falls, see
+ *   `endure`): a tier is cleared by reaching its goal wave, and the run
+ *   goes on as far as the team can.
+ * - **Trials**: one per element, its essence on every clear (see
+ *   content/materials.ts), each rank opening with the main line alone.
+ * - **Auditions** (`content/auditions.ts`): a character played alone, lent
+ *   at the tier's level; the third tier makes her the account's, the
+ *   fourth (her mastery) gives her tint.
  *
- * Tiers only raise enemy levels for now; modifiers and new attack patterns
- * per tier come with gameplay work. A track can also be endless (its
- * challenge lasting until the team falls, see `endure`): a tier is cleared
- * by reaching its goal wave, and the run goes on as far as the team can.
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  */
 import type { ChallengeId } from "./challenges.ts"
+import type { CharacterId } from "./characters.ts"
 import type { CosmeticId } from "./cosmetics.ts"
 import type { Amounts } from "./currencies.ts"
 import type { ElementId } from "./elements.ts"
-import type { QuestId } from "./quests.ts"
+import type { QuestId, Unlock } from "./quests.ts"
+import { noTwist } from "./ranks.ts"
+import type { RankTwist } from "./ranks.ts"
+import type { RelicId, RelicTier } from "./relics.ts"
+import { auditions } from "./auditions.ts"
 
-/** What a tier gives when cleared, once per period (and, the first time, its looks). */
+/** What a tier gives on its first clear, on top of what the run pays (and, for a hardcore tier, its essence; see `tierEssence`). */
 export interface TierRewards {
-  readonly experience: number
   readonly currencies: Amounts
-  /** Looks given the first time its rewards are (see `content/cosmetics.ts`). */
-  readonly cosmetics?: ReadonlyArray<CosmeticId>
+  readonly unlocks: ReadonlyArray<Unlock>
 }
 
 export interface TierSpec {
-  /** The level of its enemies: at most a few above the quest that opens it. */
+  /** The level of its enemies (and, in an audition, of the character lent): at most a few above the quest that opens it. */
   readonly enemyLevel: number
   /** What it plays: each tier its own waves, showing only what the main line has introduced by `opens`. */
   readonly challenge: ChallengeId
-  /** The main quest to clear before it opens (and, for a hardcore tier, the tier before it), at rank `opensRank` (see `rankRules`). */
+  /** The main quest to clear before it opens (and, but for a trial, the tier before it), at rank `opensRank` (see `rankRules`). */
   readonly opens: QuestId
   readonly opensRank: number
+  /** A twist on its waves (elite leaders, shields), as a rank's (see `RankTwist`). */
+  readonly twist: RankTwist
   readonly rewards: TierRewards
 }
 
 export interface TrackSpec {
   readonly name: string
   /**
-   * A hardcore track (rewards once per period, each tier after the one
-   * before) or an element's trial (its material on every clear, each rank
-   * opening with the main line alone; see content/materials.ts).
+   * A hardcore track (rewards once, each tier after the one before), an
+   * element's trial (its essence on every clear, each rank opening with the
+   * main line alone; see content/materials.ts), or a character's audition
+   * (played as her alone, see `character`).
    */
-  readonly kind: "hardcore" | "trial"
-  /** The element whose material a clear pays (see `content/materials.ts`). */
+  readonly kind: "hardcore" | "trial" | "audition"
+  /** The element whose essence it pays (a hardcore tier's at rank I, a trial's); an audition's is her element. */
   readonly element: ElementId
+  /** An audition's character, played alone and lent at each tier's level; `null` for the others. */
+  readonly character: CharacterId | null
   /** Tier 1 first; a tier is known by its number (its place here), which never changes once shipped. */
   readonly tiers: ReadonlyArray<TierSpec>
 }
 
-const track = (spec: Omit<TrackSpec, "kind">): TrackSpec => ({ kind: "hardcore", ...spec })
+const track = (spec: Omit<TrackSpec, "kind" | "character">): TrackSpec => ({ kind: "hardcore", character: null, ...spec })
 /** An element's trial, its ranks opening along the main line. */
 const trial = (name: string, element: ElementId, ranks: ReadonlyArray<readonly [number, ChallengeId, QuestId, number?]>): TrackSpec =>
-  ({ name, kind: "trial", element, tiers: ranks.map(([enemyLevel, challenge, opens, opensRank]) => ({ enemyLevel, challenge, opens, opensRank: opensRank ?? 1, rewards: { experience: 0, currencies: { dust: trialDust(enemyLevel) } } })) })
-/** The dust a trial's rank gives once a period: a little more at higher levels. */
-const trialDust = (enemyLevel: number): number => 10 * Math.round((20 + enemyLevel / 2) / 10)
-/** The dust a hardcore tier gives once a period, by its enemies' level. */
-const tierDust = (enemyLevel: number): number => 10 * Math.round((30 + enemyLevel) / 10)
+  ({ name, kind: "trial", element, character: null, tiers: ranks.map(([enemyLevel, challenge, opens, opensRank]) => ({ enemyLevel, challenge, opens, opensRank: opensRank ?? 1, twist: noTwist, rewards: { currencies: {}, unlocks: [] } })) })
 /** A trial's ranks above level 35, opening with the ranks' replays of the late chapters (all of the roster known by then). */
 const late = (challenge: ChallengeId): ReadonlyArray<readonly [number, ChallengeId, QuestId, number]> =>
   [[41, challenge, "theWarlord", 2], [47, challenge, "colossus", 2], [53, challenge, "theWarlord", 3], [59, challenge, "colossus", 3]]
-/** A hardcore tier: its gold at four fifths of what is written (dust takes the rest, see `tierDust`), and its looks the first time. */
-const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, experience: number, currencies: Amounts, opensRank = 1, cosmetics?: ReadonlyArray<CosmeticId>): TierSpec => ({
+/** A relic's tier, as a tier's unlock. */
+const tierOf = (id: RelicId, tier: Exclude<RelicTier, 1>): Unlock => ({ kind: "relicTier", id, tier })
+/** A look, as a tier's unlock. */
+const look = (id: CosmeticId): Unlock => ({ kind: "cosmetic", id })
+/** A hardcore tier: its gold at four fifths of what is written, and what it unlocks the first time. */
+const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, gold: number, opensRank = 1, unlocks: ReadonlyArray<Unlock> = []): TierSpec => ({
   enemyLevel,
   challenge,
   opens,
   opensRank,
-  rewards: { experience, currencies: { ...currencies, gold: Math.round((currencies.gold ?? 0) * 0.8 / 100) * 100, dust: tierDust(enemyLevel) }, ...(cosmetics === undefined ? {} : { cosmetics }) }
+  twist: noTwist,
+  rewards: { currencies: { gold: Math.round(gold * 0.8 / 100) * 100 }, unlocks }
 })
 
-/** Every hardcore track, by id: each tier opens along the main line. */
+/** Every track, by id: each tier opens along the main line. */
 export const tracks = {
   /** No end: every wave stronger than the last, until the team falls; a tier is cleared at its goal wave. */
   untilFall: track({
     name: "Until Fall",
     element: "wind",
     tiers: [
-      tier(3, "untilFall", "packLeader", 100, { crystals: 15, gold: 1200 }),
-      tier(10, "untilFall2", "bulwark", 140, { crystals: 20, gold: 2400 }),
-      tier(16, "untilFall3", "bruteKing", 180, { crystals: 20, gold: 4000 }, 1, ["lastLight"]),
-      tier(22, "untilFall4", "swarmMother", 220, { crystals: 25, gold: 6000 }),
-      tier(28, "untilFall5", "theWarlord", 260, { crystals: 30, gold: 8000 }),
-      tier(34, "untilFall6", "colossus", 300, { crystals: 40, gold: 10000 }),
-      tier(40, "untilFall6", "theWarlord", 340, { crystals: 40, gold: 12000 }, 2),
-      tier(46, "untilFall6", "colossus", 380, { crystals: 40, gold: 14000 }, 2),
-      tier(52, "untilFall6", "theWarlord", 420, { crystals: 45, gold: 16000 }, 3),
-      tier(58, "untilFall6", "colossus", 460, { crystals: 45, gold: 18000 }, 3)
+      tier(3, "untilFall", "packLeader", 1200),
+      tier(10, "untilFall2", "bulwark", 2400),
+      tier(16, "untilFall3", "bruteKing", 4000, 1, [look("lastLight")]),
+      tier(22, "untilFall4", "swarmMother", 6000),
+      tier(28, "untilFall5", "theWarlord", 8000, 1, [look("starfall")]),
+      tier(34, "untilFall6", "colossus", 10000),
+      tier(40, "untilFall6", "theWarlord", 12000, 2, [tierOf("counterpoint", 3)]),
+      tier(46, "untilFall6", "colossus", 14000, 2, [tierOf("staticCharge", 3)]),
+      tier(52, "untilFall6", "theWarlord", 16000, 3, [tierOf("featherstep", 2), tierOf("mendingStep", 2)]),
+      tier(58, "untilFall6", "colossus", 18000, 3, [tierOf("featherstep", 3), tierOf("mendingStep", 3), look("prism")])
     ]
   }),
   /** Clearing mixed formations with elite leaders. */
@@ -103,11 +113,11 @@ export const tracks = {
     name: "Gauntlet",
     element: "water",
     tiers: [
-      tier(10, "gauntlet", "bulwark", 140, { crystals: 15, gold: 2400 }),
-      tier(22, "gauntlet2", "swarmMother", 220, { crystals: 20, gold: 6000 }),
-      tier(34, "gauntlet3", "colossus", 300, { crystals: 30, gold: 10000 }),
-      tier(46, "gauntlet3", "colossus", 380, { crystals: 40, gold: 14000 }, 2),
-      tier(58, "gauntlet3", "colossus", 460, { crystals: 45, gold: 18000 }, 3)
+      tier(10, "gauntlet", "bulwark", 2400),
+      tier(22, "gauntlet2", "swarmMother", 6000, 1, [look("petals")]),
+      tier(34, "gauntlet3", "colossus", 10000, 1, [look("nightshade")]),
+      tier(46, "gauntlet3", "colossus", 14000, 2, [tierOf("glassEdge", 3), tierOf("secondWind", 3)]),
+      tier(58, "gauntlet3", "colossus", 18000, 3, [tierOf("lastStand", 2)])
     ]
   }),
   /** The brute and its guards, tougher every tier. */
@@ -115,11 +125,11 @@ export const tracks = {
     name: "Brute Siege",
     element: "rock",
     tiers: [
-      tier(16, "siege", "bruteKing", 180, { crystals: 15, gold: 4000 }),
-      tier(28, "siege2", "theWarlord", 260, { crystals: 20, gold: 8000 }, 1, ["stoneDust"]),
-      tier(36, "siege3", "colossus", 320, { crystals: 30, gold: 11000 }),
-      tier(46, "siege3", "colossus", 380, { crystals: 40, gold: 14000 }, 2),
-      tier(58, "siege3", "colossus", 460, { crystals: 45, gold: 18000 }, 3)
+      tier(16, "siege", "bruteKing", 4000),
+      tier(28, "siege2", "theWarlord", 8000, 1, [look("stoneDust")]),
+      tier(36, "siege3", "colossus", 11000),
+      tier(46, "siege3", "colossus", 14000, 2, [tierOf("bedrock", 3)]),
+      tier(58, "siege3", "colossus", 18000, 3, [tierOf("lastStand", 3), tierOf("overflow", 2)])
     ]
   }),
   /**
@@ -127,9 +137,10 @@ export const tracks = {
    * the quest team's elements first (wind after chapter 2, water after 3,
    * rock after 4, fire after 5, thunder after 6), each built from what its
    * element struggles against: enemies
-   * that resist it and elites that carry it. They pay their element's
-   * material on every clear, at their rank's enemy level: the top rank open
-   * is where materials come from, and lower ranks pay little.
+   * that resist it and elites that carry it. They pay essence on every
+   * clear, at their rank's enemy level, of the grade of the rank that opens
+   * it (Refined from 41, Core from 53): the top rank open is where essence
+   * comes from, and lower ranks pay little.
    */
   windTrial: trial("Wind Trial", "wind", [[11, "windTrial", "bulwark"], [17, "windTrial2", "bruteKing"], [23, "windTrial3", "swarmMother"], [29, "windTrial4", "theWarlord"], [35, "windTrial5", "colossus"], ...late("windTrial5")]),
   waterTrial: trial("Water Trial", "water", [[17, "waterTrial", "bruteKing"], [23, "waterTrial2", "swarmMother"], [29, "waterTrial3", "theWarlord"], [35, "waterTrial4", "colossus"], ...late("waterTrial4")]),
@@ -141,20 +152,13 @@ export const tracks = {
     name: "The Keep",
     element: "fire",
     tiers: [
-      tier(30, "keep", "theWarlord", 280, { crystals: 20, gold: 9000 }),
-      tier(36, "keep2", "colossus", 340, { crystals: 30, gold: 12000 }),
-      tier(46, "keep2", "colossus", 380, { crystals: 40, gold: 14000 }, 2),
-      tier(58, "keep2", "colossus", 460, { crystals: 45, gold: 18000 }, 3)
+      tier(30, "keep", "theWarlord", 9000, 1, [look("aurora")]),
+      tier(36, "keep2", "colossus", 12000),
+      tier(46, "keep2", "colossus", 14000, 2, [tierOf("anchor", 3)]),
+      tier(58, "keep2", "colossus", 18000, 3, [tierOf("overflow", 3)])
     ]
-  })
+  }),
+  ...auditions
 }
 
 export type TrackId = keyof typeof tracks
-
-/**
- * The periodic reset: periods of `days` days starting at `anchor` (epoch
- * milliseconds, UTC). A Monday at 00:00 UTC, so a week runs Monday to Sunday.
- */
-export const reset = { anchor: Date.UTC(2026, 0, 5), days: 7 }
-
-export type ResetSpec = typeof reset

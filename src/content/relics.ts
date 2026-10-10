@@ -371,28 +371,19 @@ export interface EquippedRelic {
 export const relicBudget = { worth: 20, damageBonus: 40, power: 12, every: 0.5, heal: 5 } as const
 
 /**
- * How relics are had (see docs/relics.md): they open with the Spirit Call
- * (`opensAfter`, a quest id); the Survival slot later (`survivalOpensAfter`,
- * `null` until it has relics). Each relic is unlocked at tier I by one
- * quest's perfect clear at one rank (`QuestSpec.relic`); its next tiers
- * are bought in the shop for `prices[tier]` dust (the tier it reaches).
- * Every other quest's perfect clear, at each rank, pays `perfectDust`
- * once: `base` plus `perLevel` for each enemy level, rounded to tens.
+ * Relics' rules (see docs/relics.md): they open once `opensAfter` is
+ * cleared (Strike, Dash, and Element), and the Survival slot once
+ * `survivalOpensAfter` is. A relic is unlocked by its quest's perfect clear
+ * at one rank (`QuestSpec.relic`), and grows with its quest: tier II with
+ * the same quest's perfect clear one rank up, tier III two ranks up; tiers
+ * past the last rank come from hardcore tiers (see docs/collection.md).
  */
 export interface RelicRules {
   readonly opensAfter: string
   readonly survivalOpensAfter: string | null
-  readonly prices: { readonly [Tier in Exclude<RelicTier, 1>]: number }
-  readonly perfectDust: { readonly base: number; readonly perLevel: number }
 }
 
 export const relicRules: RelicRules = {
   opensAfter: "packLeader",
-  survivalOpensAfter: "bruteKing",
-  // Every relic maxed costs about what the whole game pays in dust (see `pnpm calls`): the last tiers come with the last ranks.
-  prices: { 2: 400, 3: 800 },
-  perfectDust: { base: 20, perLevel: 2.5 }
+  survivalOpensAfter: "bruteKing"
 }
-
-/** The dust a perfect clear pays at `enemyLevel` (see `RelicRules.perfectDust`). */
-export const perfectDustAt = (rules: RelicRules, enemyLevel: number): number => 10 * Math.round((rules.perfectDust.base + rules.perfectDust.perLevel * enemyLevel) / 10)

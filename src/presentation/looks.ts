@@ -971,21 +971,18 @@ export const modelsInLooks = (): ReadonlySet<ModelId> => {
 
 /** What each look is (see `content/cosmetics.ts`): a tint turns a spirit's colors; a trail is what she sheds instead of her own drops. */
 export const cosmeticLooks: Readonly<Record<CosmeticId, { readonly kind: "tint"; readonly tint: Tint } | { readonly kind: "trail"; readonly drops: Omit<Drops, "rate"> }>> = {
-  // From wind's teal to amber and red leaves; to a pale, silver-blue breeze.
-  autumnWind: { kind: "tint", tint: { hue: -135, saturation: 3, lightness: 0.8 } },
+  // Each spirit's own tint, from her element's colors.
   moonwind: { kind: "tint", tint: { hue: 50, saturation: 0.45, lightness: 1.15 } },
-  // From fire's orange to smouldering grey; to a blue-white flame.
-  ashen: { kind: "tint", tint: { hue: -10, saturation: 0.12, lightness: 0.65 } },
   blueFlame: { kind: "tint", tint: { hue: 190, saturation: 1.6, lightness: 0.85 } },
-  // From water's blue to deep indigo; to warm coral.
-  abyss: { kind: "tint", tint: { hue: 40, saturation: 1, lightness: 0.6 } },
   coral: { kind: "tint", tint: { hue: 155, saturation: 1.4, lightness: 0.95 } },
-  // From thunder's violet and gold to soft daylight blues; to red lightning.
-  paleSky: { kind: "tint", tint: { hue: -50, saturation: 0.5, lightness: 1.15 } },
   crimsonStorm: { kind: "tint", tint: { hue: 115, saturation: 1.2, lightness: 0.85 } },
-  // From rock's warm brown to black glass; to polished green stone.
-  obsidian: { kind: "tint", tint: { hue: 0, saturation: 0.1, lightness: 0.18 } },
   jade: { kind: "tint", tint: { hue: 110, saturation: 1.2, lightness: 1 } },
+  // Thunder's violet to leaf green; water's blue to pale ice; rock's brown to rust; fire's orange to rose; wind's teal to lavender.
+  verdantSpark: { kind: "tint", tint: { hue: -140, saturation: 1.1, lightness: 1 } },
+  glacier: { kind: "tint", tint: { hue: -15, saturation: 0.4, lightness: 1.25 } },
+  rust: { kind: "tint", tint: { hue: -15, saturation: 1.5, lightness: 0.85 } },
+  emberRose: { kind: "tint", tint: { hue: -40, saturation: 1.2, lightness: 1 } },
+  duskGale: { kind: "tint", tint: { hue: 90, saturation: 0.8, lightness: 1 } },
   starfall: { kind: "trail", drops: { colors: [0xffffff, 0xfff1b8, 0xffd56b], size: 2, kind: "ember" } },
   petals: { kind: "trail", drops: { colors: [0xffc1dc, 0xff8fc8, 0xffe4f1], size: 2.6, kind: "wisp" } },
   aurora: { kind: "trail", drops: { colors: [0x7dffc4, 0x58e1ff, 0xb48cff], size: 2.4, kind: "wisp" } },
