@@ -5,6 +5,7 @@
  * content checks.
  */
 import type { EliteElement } from "./challenges.ts"
+import type { EnemyKind } from "./enemies.ts"
 import type { ElementId } from "./elements.ts"
 import type { ChapterSpec, QuestId, QuestSpec, RankRules } from "./quests.ts"
 
@@ -15,13 +16,19 @@ export interface RankContent {
   readonly ranks: RankRules
 }
 
-/** A rank's twist on a run's waves: its leaders elites of `elites` (from the second wave), and carrying shields when `shields`. */
+/**
+ * A twist on a run's waves (a rank's, or a hardcore tier's ruleset): every
+ * wave led by a `leader` of that kind, set at its head (none: its own first
+ * enemy leads); its leaders elites of `elites` (from the second wave), and
+ * carrying shields when `shields`.
+ */
 export interface RankTwist {
   readonly elites: EliteElement | null
   readonly shields: boolean
+  readonly leader: EnemyKind | null
 }
 
-export const noTwist: RankTwist = { elites: null, shields: false }
+export const noTwist: RankTwist = { elites: null, shields: false, leader: null }
 
 /** A quest at a rank. */
 export interface QuestAt {
@@ -62,5 +69,5 @@ export const eliteElementOf = (element: ElementId): EliteElement => (element ===
 /** The twist on `quest`'s waves at `rank`: the twists of every rank up to it. */
 export const rankTwist = (content: RankContent, quest: QuestId, rank: number): RankTwist => {
   const twists = new Set(content.ranks.twists.slice(0, Math.max(0, rank - 1)))
-  return { elites: twists.has("eliteLeaders") ? eliteElementOf(content.quests[quest].element) : null, shields: twists.has("shieldLeaders") }
+  return { elites: twists.has("eliteLeaders") ? eliteElementOf(content.quests[quest].element) : null, shields: twists.has("shieldLeaders"), leader: null }
 }

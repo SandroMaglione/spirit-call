@@ -35,7 +35,7 @@ const mastery = (character: CharacterId, challenge: ChallengeId, tint: CosmeticI
   challenge,
   opens: masteryOpens.quest,
   opensRank: masteryOpens.rank,
-  twist: { elites: eliteElementOf(characters[character].element), shields: true },
+  twist: { elites: eliteElementOf(characters[character].element), shields: true, leader: null },
   rewards: { currencies: { gold: 8000 }, unlocks: [{ kind: "cosmetic", id: tint }] }
 })
 

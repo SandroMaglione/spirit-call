@@ -33,19 +33,22 @@ describe("ranks", () => {
   })
 
   it("twist the waves: elite leaders from rank 2, shields too from rank 3", () => {
-    expect(rankTwist(defaultTuning, "outposts", 1)).toEqual({ elites: null, shields: false })
-    expect(rankTwist(defaultTuning, "outposts", 2)).toEqual({ elites: "water", shields: false })
+    expect(rankTwist(defaultTuning, "outposts", 1)).toEqual({ elites: null, shields: false, leader: null })
+    expect(rankTwist(defaultTuning, "outposts", 2)).toEqual({ elites: "water", shields: false, leader: null })
     // Wind makes no elites: water stands in.
-    expect(rankTwist(defaultTuning, "firstBlood", 3)).toEqual({ elites: "water", shields: true })
+    expect(rankTwist(defaultTuning, "firstBlood", 3)).toEqual({ elites: "water", shields: true, leader: null })
   })
 
   it("lead each wave with an elite (from the second) and a shield, never touching a champion or an elite already there", () => {
-    const twist = { elites: "fire" as const, shields: true }
+    const twist = { elites: "fire" as const, shields: true, leader: null }
     expect(withTwist(["chaser", "shooter"], twist, 1)).toEqual([shielded("chaser"), "shooter"])
     expect(withTwist(["chaser", "shooter"], twist, 2)).toEqual([shielded(elite("chaser", "fire")), "shooter"])
     expect(withTwist([champion("brute", "water"), "chaser"], twist, 3)).toEqual([champion("brute", "water"), shielded(elite("chaser", "fire"))])
     expect(withTwist([elite("guardian", "water")], twist, 4)).toEqual([shielded(elite("guardian", "water"))])
-    expect(withTwist(["chaser"], { elites: null, shields: false }, 5)).toEqual(["chaser"])
+    expect(withTwist(["chaser"], { elites: null, shields: false, leader: null }, 5)).toEqual(["chaser"])
+    // A ruleset's leader heads every wave, and takes the twist's elite and shield.
+    expect(withTwist(["chaser"], { elites: null, shields: false, leader: "sniper" }, 1)).toEqual(["sniper", "chaser"])
+    expect(withTwist([champion("brute", "water"), "chaser"], { ...twist, leader: "sniper" }, 2)).toEqual([shielded(elite("sniper", "fire")), champion("brute", "water"), "chaser"])
   })
 
   it("enter the arena with the rank's twist: the first wave's leader shielded, the second's an elite too", () => {

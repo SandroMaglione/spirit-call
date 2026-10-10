@@ -241,7 +241,7 @@ describe("account rules", () => {
     expect(playLock(defaultTuning, opened, { kind: "quest", quest: "crossfire", rank: 2 })).toEqual({ kind: "after", quest: "firstBlood", rank: 2 })
     expect(playLock(defaultTuning, opened, { kind: "quest", quest: "firstBlood", rank: 9 })).not.toBeNull()
     // Harder: more levels, and its leaders elites of the quest's element (wind's stand-in, water).
-    expect(encounterOf(defaultTuning, rank2)).toEqual({ challenge: "firstBlood", enemyLevel: questLevel(defaultTuning, "firstBlood", 2), twist: { elites: "water", shields: false } })
+    expect(encounterOf(defaultTuning, rank2)).toEqual({ challenge: "firstBlood", enemyLevel: questLevel(defaultTuning, "firstBlood", 2), twist: { elites: "water", shields: false, leader: null } })
     expect(questLevel(defaultTuning, "firstBlood", 2)).toBe(defaultTuning.quests.firstBlood.enemyLevel + defaultTuning.ranks.offset)
     const played = recordRun(defaultTuning, opened, rank2, clear({ ...noTally, perfectDodges: 9 }), 3000)
     expect(played.earned.rewards).toEqual(questRewards(defaultTuning, "firstBlood", 2))
@@ -348,8 +348,8 @@ describe("account rules", () => {
     expect(playLock(defaultTuning, lost, tier("gauntlet", 2))).not.toBeNull()
     const cleared = recordRun(defaultTuning, lost, tier("gauntlet", 1), run, 3000).account
     expect(playLock(defaultTuning, cleared, tier("gauntlet", 2))).toBeNull()
-    expect(encounterOf(defaultTuning, tier("gauntlet", 2))).toEqual({ challenge: second.challenge, enemyLevel: second.enemyLevel, twist: { elites: null, shields: false } })
-    expect(encounterOf(defaultTuning, quest("crossfire"))).toEqual({ challenge: "crossfire", enemyLevel: defaultTuning.quests.crossfire.enemyLevel, twist: { elites: null, shields: false } })
+    expect(encounterOf(defaultTuning, tier("gauntlet", 2))).toEqual({ challenge: second.challenge, enemyLevel: second.enemyLevel, twist: second.twist })
+    expect(encounterOf(defaultTuning, quest("crossfire"))).toEqual({ challenge: "crossfire", enemyLevel: defaultTuning.quests.crossfire.enemyLevel, twist: { elites: null, shields: false, leader: null } })
   })
 
   it("keeps a tier's furthest wave, whether the run cleared it or not", () => {

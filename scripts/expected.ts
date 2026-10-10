@@ -6,7 +6,7 @@
  * (every star in it: what unlocks a quest's relic, see docs/relics.md).
  *
  *   pnpm expected                     everything, two seeds
- *   pnpm expected --only main         main | side | ranks | hardcore | trials
+ *   pnpm expected --only main         main | side | ranks | hardcore | trials | auditions
  *   pnpm expected --seeds 1,2,3
  *
  * The team is the one entering a main quest, or the one leaving the quest
@@ -19,7 +19,7 @@
  */
 import { parseArgs } from "node:util"
 import type { Play } from "../src/account/account.ts"
-import { encounterOf } from "../src/account/account.ts"
+import { encounterOf, lentFor } from "../src/account/account.ts"
 import { meets } from "../src/content/stars.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { TrackId } from "../src/content/hardcore.ts"
@@ -38,7 +38,7 @@ const entering = (quest: QuestId, rank: number) => rows.find((row) => row.quest 
 const leaving = (quest: QuestId, rank: number) => rows.find((row) => row.quest === quest && row.rank === rank)?.after
 
 interface Case {
-  readonly kind: "main" | "side" | "ranks" | "hardcore" | "trials"
+  readonly kind: "main" | "side" | "ranks" | "hardcore" | "trials" | "auditions"
   readonly name: string
   readonly play: Play
   readonly team: ReadonlyArray<Member> | undefined
@@ -62,7 +62,12 @@ for (const [id, spec] of Object.entries(tuning.quests) as Array<[QuestId, (typeo
   }
 }
 for (const [id, track] of Object.entries(tuning.tracks) as Array<[TrackId, (typeof tuning.tracks)[TrackId]]>) {
-  track.tiers.forEach((tier, index) => cases.push({ kind: track.kind === "trial" ? "trials" : "hardcore", name: `${track.name} ${index + 1}`, play: { kind: "tier", track: id, tier: index + 1 }, team: leaving(tier.opens, tier.opensRank), budget: null }))
+  track.tiers.forEach((tier, index) => {
+    const play: Play = { kind: "tier", track: id, tier: index + 1 }
+    // An audition is fought by the character it lends, alone, at its level.
+    const lent = lentFor(tuning, play)
+    cases.push({ kind: track.kind === "trial" ? "trials" : track.kind === "audition" ? "auditions" : "hardcore", name: `${track.name} ${index + 1}`, play, team: lent === null ? leaving(tier.opens, tier.opensRank) : [lent], budget: null })
+  })
 }
 
 console.log(`Each fought by the team that has it open, at its levels; ${seeds.length} seeds, at most ${seconds}s. C cleared, D defeated, T timed out.\n`)

@@ -79,13 +79,15 @@ const late = (challenge: ChallengeId): ReadonlyArray<readonly [number, Challenge
 const tierOf = (id: RelicId, tier: Exclude<RelicTier, 1>): Unlock => ({ kind: "relicTier", id, tier })
 /** A look, as a tier's unlock. */
 const look = (id: CosmeticId): Unlock => ({ kind: "cosmetic", id })
-/** A hardcore tier: its gold at four fifths of what is written, and what it unlocks the first time. */
-const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, gold: number, opensRank = 1, unlocks: ReadonlyArray<Unlock> = []): TierSpec => ({
+/** A ruleset's twist: every wave led by `leader`, its leaders elites of `elites` (from the second wave), and shielded. */
+const rule = (spec: Partial<RankTwist>): RankTwist => ({ ...noTwist, ...spec })
+/** A hardcore tier: its gold at four fifths of what is written, what it unlocks the first time, and its ruleset's twist (see `RankTwist`). */
+const tier = (enemyLevel: number, challenge: ChallengeId, opens: QuestId, gold: number, opensRank = 1, unlocks: ReadonlyArray<Unlock> = [], twist: RankTwist = noTwist): TierSpec => ({
   enemyLevel,
   challenge,
   opens,
   opensRank,
-  twist: noTwist,
+  twist,
   rewards: { currencies: { gold: Math.round(gold * 0.8 / 100) * 100 }, unlocks }
 })
 
@@ -97,15 +99,15 @@ export const tracks = {
     element: "wind",
     tiers: [
       tier(3, "untilFall", "packLeader", 1200),
-      tier(10, "untilFall2", "bulwark", 2400),
-      tier(16, "untilFall3", "bruteKing", 4000, 1, [look("lastLight")]),
-      tier(22, "untilFall4", "swarmMother", 6000),
-      tier(28, "untilFall5", "theWarlord", 8000, 1, [look("starfall")]),
-      tier(34, "untilFall6", "colossus", 10000),
-      tier(40, "untilFall6", "theWarlord", 12000, 2, [tierOf("counterpoint", 3)]),
-      tier(46, "untilFall6", "colossus", 14000, 2, [tierOf("staticCharge", 3)]),
-      tier(52, "untilFall6", "theWarlord", 16000, 3, [tierOf("featherstep", 2), tierOf("mendingStep", 2)]),
-      tier(58, "untilFall6", "colossus", 18000, 3, [tierOf("featherstep", 3), tierOf("mendingStep", 3), look("prism")])
+      tier(10, "untilFall2", "bulwark", 2400, 1, [], rule({ leader: "guardian" })),
+      tier(16, "untilFall3", "bruteKing", 4000, 1, [look("lastLight")], rule({ elites: "fire" })),
+      tier(22, "untilFall4", "swarmMother", 6000, 1, [], rule({ leader: "charger" })),
+      tier(28, "untilFall5", "theWarlord", 8000, 1, [look("starfall")], rule({ shields: true })),
+      tier(34, "untilFall6", "colossus", 10000, 1, [], rule({ leader: "galeCaster" })),
+      tier(40, "untilFall7", "theWarlord", 12000, 2, [tierOf("counterpoint", 3)], rule({ leader: "sniper" })),
+      tier(46, "untilFall8", "colossus", 14000, 2, [tierOf("staticCharge", 3)], rule({ shields: true })),
+      tier(52, "untilFall9", "theWarlord", 16000, 3, [tierOf("featherstep", 2), tierOf("mendingStep", 2)], rule({ leader: "stalker" })),
+      tier(58, "untilFall10", "colossus", 18000, 3, [tierOf("featherstep", 3), tierOf("mendingStep", 3), look("prism")], rule({ elites: "thunder", shields: true }))
     ]
   }),
   /** Clearing mixed formations with elite leaders. */
@@ -113,11 +115,11 @@ export const tracks = {
     name: "Gauntlet",
     element: "water",
     tiers: [
-      tier(10, "gauntlet", "bulwark", 2400),
-      tier(22, "gauntlet2", "swarmMother", 6000, 1, [look("petals")]),
-      tier(34, "gauntlet3", "colossus", 10000, 1, [look("nightshade")]),
-      tier(46, "gauntlet3", "colossus", 14000, 2, [tierOf("glassEdge", 3), tierOf("secondWind", 3)]),
-      tier(58, "gauntlet3", "colossus", 18000, 3, [tierOf("lastStand", 2)])
+      tier(10, "gauntlet", "bulwark", 2400, 1, [], rule({ leader: "swarmer" })),
+      tier(22, "gauntlet2", "swarmMother", 6000, 1, [look("petals")], rule({ shields: true })),
+      tier(34, "gauntlet3", "colossus", 10000, 1, [look("nightshade")], rule({ elites: "water" })),
+      tier(46, "gauntlet4", "colossus", 14000, 2, [tierOf("glassEdge", 3), tierOf("secondWind", 3)], rule({ leader: "warden" })),
+      tier(58, "gauntlet5", "colossus", 18000, 3, [tierOf("lastStand", 2)], rule({ leader: "juggernaut", elites: "thunder", shields: true }))
     ]
   }),
   /** The brute and its guards, tougher every tier. */
@@ -125,11 +127,11 @@ export const tracks = {
     name: "Brute Siege",
     element: "rock",
     tiers: [
-      tier(16, "siege", "bruteKing", 4000),
-      tier(28, "siege2", "theWarlord", 8000, 1, [look("stoneDust")]),
-      tier(36, "siege3", "colossus", 11000),
-      tier(46, "siege3", "colossus", 14000, 2, [tierOf("bedrock", 3)]),
-      tier(58, "siege3", "colossus", 18000, 3, [tierOf("lastStand", 3), tierOf("overflow", 2)])
+      tier(16, "siege", "bruteKing", 4000, 1, [], rule({ leader: "sniper" })),
+      tier(28, "siege2", "theWarlord", 8000, 1, [look("stoneDust")], rule({ elites: "fire" })),
+      tier(36, "siege3", "colossus", 11000, 1, [], rule({ leader: "volatile" })),
+      tier(46, "siege4", "colossus", 14000, 2, [tierOf("bedrock", 3)], rule({ shields: true })),
+      tier(58, "siege5", "colossus", 18000, 3, [tierOf("lastStand", 3), tierOf("overflow", 2)], rule({ leader: "stalker", elites: "thunder" }))
     ]
   }),
   /**
@@ -152,10 +154,10 @@ export const tracks = {
     name: "The Keep",
     element: "fire",
     tiers: [
-      tier(30, "keep", "theWarlord", 9000, 1, [look("aurora")]),
-      tier(36, "keep2", "colossus", 12000),
-      tier(46, "keep2", "colossus", 14000, 2, [tierOf("anchor", 3)]),
-      tier(58, "keep2", "colossus", 18000, 3, [tierOf("overflow", 3)])
+      tier(30, "keep", "theWarlord", 9000, 1, [look("aurora")], rule({ shields: true })),
+      tier(36, "keep2", "colossus", 12000, 1, [], rule({ leader: "charger" })),
+      tier(46, "keep3", "colossus", 14000, 2, [tierOf("anchor", 3)], rule({ elites: "water" })),
+      tier(58, "keep4", "colossus", 18000, 3, [tierOf("overflow", 3)], rule({ leader: "sniper", elites: "fire", shields: true }))
     ]
   }),
   ...auditions

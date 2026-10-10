@@ -152,6 +152,27 @@ second and third acts (`collection.md`).
 - Ranks are where the late levels come from: characters go to level 60,
   and enemy stats follow the same curve past 40 (see `StatCurve`).
 
+## Hardcore rulesets
+
+Every hardcore tier is a **ruleset** (`content/hardcore.ts`): its own waves
+(no tier replays the one below at a higher level) and a twist on them,
+from one vocabulary shared with the ranks (`RankTwist`): a **leader** (an
+enemy of a kind at the head of every wave), **elite leaders** of an element
+(from the second wave), and **shields** on the leaders. A twist only uses
+what the main line has brought by the time the tier opens
+(`validateContent`), and the brief shows it as "Ruleset" where a quest's new
+thing would be. Each tier pays once, on its first clear (`collection.md`).
+
+| Track | Tiers (enemy level: twist) |
+|---|---|
+| Until Fall | 3 · 10 guardian leaders · 16 fire elites · 22 firebomber leaders · 28 shields · 34 gale caster leaders · 40 sniper leaders (harbor) · 46 shields (kilnworks) · 52 stalker leaders (cistern) · 58 thunder elites, shields (citadel) |
+| Gauntlet | 10 swarmer leaders · 22 shields · 34 water elites · 46 warden leaders (necropolis) · 58 juggernaut leaders, thunder elites, shields (harbor, champion juggernaut) |
+| Brute Siege | 16 sniper leaders · 28 fire elites · 36 volatile leaders · 46 shields (kilnworks, champion juggernaut) · 58 stalker leaders, thunder elites (cistern) |
+| The Keep | 30 shields · 36 firebomber leaders · 46 water elites (monastery, champion guardian) · 58 sniper leaders, fire elites, shields (citadel, champion juggernaut) |
+
+Until Fall's tiers are its milestones: each is the endless track's goal
+wave at a higher level, paying once, its best wave kept as the score.
+
 ## Materials and ascension
 
 - **Three grades of essence.** Each element has its own (Fire Essence,
