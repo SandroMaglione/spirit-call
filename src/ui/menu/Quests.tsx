@@ -311,6 +311,11 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
       {quest !== null && <div>
         <Label>Stars</Label>
         {quest.stars.map((goal, index) => <div key={index} class={`goal${earnedStars.includes(index) ? " is-earned" : ""}`}><Icon name="star" />{describeGoal(goal)}</div>)}
+        {/* All three stars in one run, once: gold and essence, and a relic where one is written (its prize line below). */}
+        {perfectAmounts !== null && <div class="quests__perfect">
+          <Label>Perfect clear{perfected && <Claimed />}</Label>
+          <div class={perfected ? "is-claimed" : undefined}><Amounts store={store} rewards={{ currencies: perfectAmounts, unlocks: perfectPrize === null ? [] : [perfectPrize] }} compact preview={preview} /></div>
+        </div>}
       </div>}
       {challenge.objective.kind === "endure" && <div>
         <Label>Each wave</Label>
@@ -321,11 +326,6 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
         {!trial && <div>
           <Label>First clear{firstClear !== null && done && <Claimed />}</Label>
           {once === null ? <span class="dim">None</span> : <div class={done ? "is-claimed" : undefined}><Amounts store={store} rewards={once} compact preview={preview} /></div>}
-        </div>}
-        {/* All three stars in one run, once: gold and essence, and a relic where one is written (its prize line below). */}
-        {perfectAmounts !== null && <div>
-          <Label><span class="goal__stars" aria-hidden="true"><Icon name="star" /><Icon name="star" /><Icon name="star" /></span>Perfect clear{perfected && <Claimed />}</Label>
-          <div class={perfected ? "is-claimed" : undefined}><Amounts store={store} rewards={{ currencies: perfectAmounts, unlocks: perfectPrize === null ? [] : [perfectPrize] }} compact preview={preview} /></div>
         </div>}
         <div>
           <Label>Every clear</Label>

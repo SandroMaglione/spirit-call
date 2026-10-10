@@ -117,8 +117,8 @@
 .roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); overflow-x: auto; scrollbar-width: none; }
 .roster::-webkit-scrollbar { display: none; }
 /* The roster takes a fixed share of the bar and scrolls within it as the cast grows; the name and the close button keep their places. */
-/* The roster stays put whoever is shown: both sides keep room for their widest (the title, the gold and close), and it takes the middle, up to 330px, scrolling beyond. */
-.character .topbar { grid-template-columns: minmax(190px, 1fr) minmax(0, 330px) minmax(190px, 1fr); }
+/* The roster stays put whoever is shown: both sides keep a fixed room for their widest (the title, the gold and close), and it takes all the middle, scrolling beyond. */
+.character .topbar { grid-template-columns: 190px minmax(0, 1fr) 190px; }
 .character .topbar__fill { justify-content: safe center; }
 .character .roster { -webkit-mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); }
 /* The roster stands in the middle of the bar whatever sits beside it (a longer name, the gold shown only for one owned), so the faces never shift. */
@@ -331,8 +331,8 @@
 .quests__goals > .quests__side-by-side { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 16px; }
 .claimed { display: inline-flex; align-items: center; margin-left: 6px; vertical-align: -2px; }
 .quests__rewards .label > span:first-child, .relic-prize .label > span:first-child { display: inline-flex; align-items: center; }
-.quests__rewards .label .goal__stars { margin-right: 6px; color: var(--gold-hi); }
-.quests__rewards .label .goal__stars .menu-icon { font-size: 11px; }
+.quests__perfect { margin-top: 15px; }
+.quests__perfect .label > span:first-child { display: inline-flex; align-items: center; }
 .claimed .menu-icon { color: var(--up); }
 /* A first clear already claimed: still listed, dimmed. */
 .is-claimed { opacity: 0.55; }
