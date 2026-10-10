@@ -291,11 +291,11 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
     noteIcon={lock !== null ? "lock" : "info"}>
     {quest?.introduces != null && rank === 1 && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
     {quest !== null && rank > 1 && <RankTwist rank={rank} twist={encounter.twist} />}
-    {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" || trial ? "Rank" : "Tier"}>
-      <Label>{selected.kind === "quest" || trial ? "Rank" : "Tier"}</Label>
+    {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"}>
+      <Label>{selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"}</Label>
       {steps.map((step) => {
         const locked = playLock(tuning, account, step.play) !== null, on = samePlay(step.play, selected)
-        return <button type="button" role="radio" key={step.name} class={`step${locked ? " is-locked" : ""}`} aria-checked={on} aria-label={`${selected.kind === "quest" || trial ? "Rank" : "Tier"} ${step.name}, enemies level ${encounterOf(tuning, step.play).enemyLevel}`} onClick={() => (play.value = step.play)}>
+        return <button type="button" role="radio" key={step.name} class={`step${locked ? " is-locked" : ""}`} aria-checked={on} aria-label={`${selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"} ${step.name}, enemies level ${encounterOf(tuning, step.play).enemyLevel}`} onClick={() => (play.value = step.play)}>
           <b>{step.name}</b><span>{locked ? <Icon name="lock" /> : null}Lv {encounterOf(tuning, step.play).enemyLevel}</span>
         </button>
       })}

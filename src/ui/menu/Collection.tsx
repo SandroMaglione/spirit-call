@@ -42,18 +42,24 @@ const roleNames = { attacker: "Attacker", healer: "Healer", guardian: "Guardian"
 const playOf = (source: Source): Play | null =>
   source.kind === "start" ? null : source.kind === "tier" ? { kind: "tier", track: source.track, tier: source.tier } : source.rank === 1 ? { kind: "quest", quest: source.quest } : { kind: "quest", quest: source.quest, rank: source.rank }
 
-/** Where `item` comes from, said in a line, and a way to go there while it is not owned. */
-const From = ({ store, nav, item }: { readonly store: UiStore; readonly nav: Nav; readonly item: Item }) => {
+/** Where `item` comes from, said in a line (in its panel). */
+const From = ({ store, item }: { readonly store: UiStore; readonly item: Item }) => {
   const tuning = store.tuning.value, account = store.account.value
   const source = sourceOf(sourcesOf(tuning), item), play = source === undefined ? null : playOf(source)
   if (source === undefined) return null
   const owned = owns(account, item), locked = play !== null && playLock(tuning, account, play) !== null
-  return <>
-    <p class="collection__from"><Icon name={owned ? "check" : locked ? "lock" : "star"} />{describeSource(store, source)}{owned ? "" : locked ? " (not open yet)" : ""}</p>
-    <Actions>{!owned && play !== null && <Pill icon="quests" label={`Go there: ${describeSource(store, source)}`} onClick={() => { store.menuPlay.value = play; nav.go({ kind: "quests", tab: tabOf(tuning, play) }) }}>
-      <span class="prize__button">Go there<small>{locked ? "Not open yet" : "Open"}</small></span>
-    </Pill>}</Actions>
-  </>
+  return <p class="collection__from"><Icon name={owned ? "check" : locked ? "lock" : "star"} />{describeSource(store, source)}{owned ? "" : locked ? " (not open yet)" : ""}</p>
+}
+
+/** A way to the card `item` comes from, while it is not owned (the screen's action). */
+const GoThere = ({ store, nav, item }: { readonly store: UiStore; readonly nav: Nav; readonly item: Item }) => {
+  const tuning = store.tuning.value, account = store.account.value
+  const source = sourceOf(sourcesOf(tuning), item), play = source === undefined ? null : playOf(source)
+  if (source === undefined || play === null || owns(account, item)) return <Actions>{null}</Actions>
+  const locked = playLock(tuning, account, play) !== null
+  return <Actions><Pill icon="quests" label={`Go there: ${describeSource(store, source)}`} onClick={() => { store.menuPlay.value = play; nav.go({ kind: "quests", tab: tabOf(tuning, play) }) }}>
+    <span class="prize__button">Go there<small>{locked ? "Not open yet" : "Open"}</small></span>
+  </Pill></Actions>
 }
 
 const CharacterShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav }) => {
@@ -67,8 +73,9 @@ const CharacterShelf = ({ store, nav }: { readonly store: UiStore; readonly nav:
     <Panel class="collection__brief collection__brief--side in-right" element={spec.element} icon={<Icon name={spec.element} />} title={spec.name}
       detail={`${elements[spec.element].name} · ${tuning.classes[spec.class].name} · ${roleNames[spec.role]}${owned ? " · Yours" : ""}`}>
       <KitLines store={store} character={picked.value} />
-      <From store={store} nav={nav} item={{ kind: "character", id: picked.value }} />
+      <From store={store} item={{ kind: "character", id: picked.value }} />
     </Panel>
+    <GoThere store={store} nav={nav} item={{ kind: "character", id: picked.value }} />
   </>
 }
 
@@ -84,8 +91,9 @@ const AspectShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Na
     })}</Cards></div>
     <Panel class="collection__brief in-right" icon={<AbilityIcon kind={spec.class} />} title={spec.name} detail={`${tuning.classes[spec.class].name} aspect`}>
       <p class="dim">{spec.against}</p>
-      <From store={store} nav={nav} item={{ kind: "aspect", id: picked.value }} />
+      <From store={store} item={{ kind: "aspect", id: picked.value }} />
     </Panel>
+    <GoThere store={store} nav={nav} item={{ kind: "aspect", id: picked.value }} />
   </>
 }
 
@@ -112,8 +120,9 @@ const RelicShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav
           <TierMarks tier={each} /><span>{relic.tiers[each].adds}{source === undefined ? null : <small class="collection__tier-from">{describeSource(store, source)}</small>}</span>
         </p>
       })}</div>
-      <From store={store} nav={nav} item={next} />
+      <From store={store} item={next} />
     </Panel>
+    <GoThere store={store} nav={nav} item={next} />
   </>
 }
 
@@ -133,8 +142,9 @@ const LookShelf = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav 
       detail={`${look.kind === "tint" ? "Tint" : "Trail"} · ${look.character === null ? "Any spirit" : tuning.characters[look.character].name}${has ? " · Yours" : ""}`}>
       <p class="dim">{look.about}</p>
       {has && <p class="dim">Wear it from {look.character === null ? "a spirit's" : `${tuning.characters[look.character].name}'s`} gear.</p>}
-      <From store={store} nav={nav} item={{ kind: "cosmetic", id: picked.value }} />
+      <From store={store} item={{ kind: "cosmetic", id: picked.value }} />
     </Panel>
+    <GoThere store={store} nav={nav} item={{ kind: "cosmetic", id: picked.value }} />
   </>
 }
 
