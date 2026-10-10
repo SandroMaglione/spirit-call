@@ -32,6 +32,7 @@ class Asset:
 
     def world(self,nodes):
         result = {}
+        self.transforms = {}
         def visit(i,parent):
             n = nodes[i]
             x,y,z,w = n.get("rotation",[0,0,0,1])
@@ -43,6 +44,7 @@ class Asset:
             if "matrix" in n:
                 m = np.array(n["matrix"]).reshape(4,4,order="F")
             m = parent @ m
+            self.transforms[n["name"]] = m
             if "mesh" in n:
                 parts = []
                 for p in self.gltf["meshes"][n["mesh"]]["primitives"]:
@@ -88,18 +90,19 @@ g = asset.gltf
 meta = json.loads((HERE/"animation.json").read_text())
 assert hashlib.sha256(asset.raw).hexdigest() == meta["animated_glb_sha256"]
 assert hashlib.sha256((HERE/"quarry.blend").read_bytes()).hexdigest() == meta["static_source_sha256"]
-assert len(g["materials"]) == 2 and len(g["meshes"]) == 13
+assert len(g["materials"]) == 2 and len(g["meshes"]) == 17
 assert not g.get("skins") and not g.get("cameras") and not g.get("images")
 assert "KHR_lights_punctual" not in g.get("extensionsUsed",[])
 assert all(not b.get("uri") for b in g["buffers"])
 assert {a["name"] for a in g["animations"]} == set(meta["clips"])
 triangles = sum(g["accessors"][p["indices"]]["count"]//3 for m in g["meshes"] for p in m["primitives"])
-assert triangles == meta["triangles"] == 1424
+assert triangles == meta["triangles"] and triangles < 2000
 static = Asset(HERE/"quarry.glb")
 rest = asset.world(g["nodes"])
 static_rest = static.world(static.gltf["nodes"])
 for name,points in rest.items():
-    assert np.allclose(points,static_rest[name],atol=1e-6), f"Approved rest geometry changed: {name}"
+    if name not in FEET and not name.startswith("Joint."):
+        assert np.allclose(points,static_rest[name],atol=1e-6), f"Approved torso geometry changed: {name}"
 
 results = {}
 for animation in g["animations"]:
@@ -115,6 +118,7 @@ for animation in g["animations"]:
     min_support = 4
     min_gap = 100
     max_lift = 0
+    joint_error = 0
     samples = []
     for t in np.linspace(0,duration,round(duration*240)+1):
         world = asset.sample(animation,t,timing["loopSeconds"])
@@ -126,7 +130,19 @@ for animation in g["animations"]:
         soles = [float(world[f][:,1].min()) for f in FEET]
         support = sum(abs(y) < .0001 for y in soles)
         min_support = min(min_support,support)
-        assert support >= 2, f"{name} is unsupported at {t}: {soles}"
+        window = meta["airborneWindows"].get(name)
+        deliberate_jump = window is not None and window[0] < t < window[1]
+        assert support >= 2 or deliberate_jump, f"{name} is unsupported outside its jump at {t}: {soles}"
+        for foot,anchors in meta["jointAnchors"].items():
+            convert = lambda p: np.array([p[0],p[2],-p[1],1])
+            a = asset.transforms["Torso"] @ convert(anchors["body"])
+            b = asset.transforms[foot] @ convert(anchors["leg"])
+            joint = asset.transforms[anchors["name"]]
+            start = joint @ np.array([0,-.5,0,1])
+            end = joint @ np.array([0,.5,0,1])
+            error = max(np.linalg.norm(start-a),np.linalg.norm(end-b))
+            joint_error = max(joint_error,error)
+            assert error < .003, f"Joint detached in {name} at {t}: {foot}, {error}"
         max_lift = max(max_lift,*soles)
         gap = float(world["FloatRock"][:,1].min()-world["MossCap"][:,1].max())
         min_gap = min(min_gap,gap)
@@ -141,7 +157,8 @@ for animation in g["animations"]:
             assert np.allclose(samples[-1][part],rest[part],atol=1e-6), f"{name} ends off rest: {part}"
     results[name] = {"duration_s":duration,"sample_rate_hz":240,
         "minimum_supports":min_support,"minimum_ground_y_m":min_ground,
-        "maximum_sole_lift_m":max_lift,"minimum_float_moss_gap_m":min_gap}
+        "maximum_sole_lift_m":max_lift,"minimum_float_moss_gap_m":min_gap,
+        "maximum_joint_endpoint_error_m":joint_error}
     if name == "Run":
         assert max_lift > .09
         errors = []
@@ -156,6 +173,6 @@ for animation in g["animations"]:
         assert max(errors) < .0001, f"Planted sole slides relative to travel: {max(errors)}"
         results[name]["maximum_stance_velocity_error_m_s"] = max(errors)
 report = {"passed":True,"clips":results,"triangles":triangles,"materials":2,
-          "approved_rest_geometry_unchanged":True,"root_motion":False}
+          "approved_torso_geometry_unchanged":True,"articulated_legs":True,"root_motion":False}
 (HERE/"animation-audit.json").write_text(json.dumps(report,indent=2)+"\n")
 print(json.dumps(report,indent=2))

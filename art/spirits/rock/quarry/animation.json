@@ -1,7 +1,15 @@
 {
   "status": "animated review export",
-  "triangles": 1424,
+  "triangles": 1600,
   "part_triangles": {
+    "Joint.Front.L": 44,
+    "Joint.Front.R": 44,
+    "Joint.Rear.L": 44,
+    "Joint.Rear.R": 44,
+    "Stone.Front.L": 76,
+    "Stone.Front.R": 76,
+    "Stone.Rear.L": 76,
+    "Stone.Rear.R": 76,
     "BodyCore": 188,
     "Cheek.L": 32,
     "Cheek.R": 32,
@@ -10,11 +18,7 @@
     "FloatRock": 60,
     "Head": 472,
     "MossCap": 156,
-    "RearStone": 116,
-    "Stone.Front.L": 76,
-    "Stone.Front.R": 76,
-    "Stone.Rear.L": 76,
-    "Stone.Rear.R": 76
+    "RearStone": 116
   },
   "floating_rock_gap_m": 0.07077914476394653,
   "socket_bevel_m": 0.009,
@@ -31,6 +35,10 @@
     "Eye.R",
     "FloatRock",
     "Head",
+    "Joint.Front.L",
+    "Joint.Front.R",
+    "Joint.Rear.L",
+    "Joint.Rear.R",
     "MossCap",
     "RearStone",
     "Stone.Front.L",
@@ -40,8 +48,8 @@
   ],
   "bounds_blender_m": [
     [
-      -0.4740253686904907,
-      0.47272801399230957
+      -0.5090253353118896,
+      0.5077279806137085
     ],
     [
       -0.45385944843292236,
@@ -53,7 +61,7 @@
     ]
   ],
   "height_m": 0.7720000147819519,
-  "width_m": 0.9467533826828003,
+  "width_m": 1.0167533159255981,
   "depth_m": 0.8303227722644806,
   "closed_meshes": {
     "BodyCore": true,
@@ -68,9 +76,13 @@
     "Stone.Front.L": true,
     "Stone.Front.R": true,
     "Stone.Rear.L": true,
-    "Stone.Rear.R": true
+    "Stone.Rear.R": true,
+    "Joint.Front.L": true,
+    "Joint.Rear.R": true,
+    "Joint.Front.R": true,
+    "Joint.Rear.L": true
   },
-  "animations": 0,
+  "animations": 10,
   "skeletons": 0,
   "height_basis": "ground origin to highest static mesh vertex",
   "coordinates": "GLB +Y up, +Z forward; Blender +Z up, -Y forward",
@@ -79,27 +91,27 @@
   "reference/sheet.png_sha256": "e8b6bdb477a43188e368a607dcc38d16068c03df2033ef497ae6264f39bc5c92",
   "clips": {
     "Idle": {
-      "lastKeySeconds": 2.966666666666667,
+      "lastKeySeconds": 2.9916666666666667,
       "loopSeconds": 3.0
     },
     "Run": {
-      "lastKeySeconds": 0.7666666666666667,
+      "lastKeySeconds": 0.7916666666666666,
       "loopSeconds": 0.8
     },
     "AttackA": {
-      "lastKeySeconds": 0.36666666666666664,
+      "lastKeySeconds": 0.4666666666666667,
       "loopSeconds": null
     },
     "AttackB": {
-      "lastKeySeconds": 0.36666666666666664,
+      "lastKeySeconds": 0.4666666666666667,
       "loopSeconds": null
     },
     "AttackC": {
-      "lastKeySeconds": 0.5333333333333333,
+      "lastKeySeconds": 0.7333333333333333,
       "loopSeconds": null
     },
     "Power": {
-      "lastKeySeconds": 0.5333333333333333,
+      "lastKeySeconds": 0.8666666666666667,
       "loopSeconds": null
     },
     "Dash": {
@@ -111,13 +123,88 @@
       "loopSeconds": null
     },
     "Cast": {
-      "lastKeySeconds": 0.4666666666666667,
+      "lastKeySeconds": 0.6666666666666666,
       "loopSeconds": null
     },
     "Ultimate": {
-      "lastKeySeconds": 0.6666666666666666,
+      "lastKeySeconds": 0.9333333333333333,
       "loopSeconds": null
     }
+  },
+  "parts": 17,
+  "articulatedLegs": true,
+  "sampleRateHz": 120,
+  "jointAnchors": {
+    "Stone.Front.L": {
+      "name": "Joint.Front.L",
+      "body": [
+        -0.2199999988079071,
+        -0.14329352974891663,
+        0.034999996423721313
+      ],
+      "leg": [
+        0.0038251280784606934,
+        0.0,
+        0.10531558096408844
+      ]
+    },
+    "Stone.Rear.R": {
+      "name": "Joint.Rear.R",
+      "body": [
+        0.2199999988079071,
+        0.15914496779441833,
+        0.034999996423721313
+      ],
+      "leg": [
+        0.026244133710861206,
+        0.0,
+        0.10330429673194885
+      ]
+    },
+    "Stone.Front.R": {
+      "name": "Joint.Front.R",
+      "body": [
+        0.2199999988079071,
+        -0.14355376362800598,
+        0.034999996423721313
+      ],
+      "leg": [
+        -0.003226935863494873,
+        0.0,
+        0.10576632618904114
+      ]
+    },
+    "Stone.Rear.L": {
+      "name": "Joint.Rear.L",
+      "body": [
+        -0.2199999988079071,
+        0.15915420651435852,
+        0.034999996423721313
+      ],
+      "leg": [
+        -0.02646467089653015,
+        0.0,
+        0.10708752274513245
+      ]
+    }
+  },
+  "airborneWindows": {
+    "AttackC": [
+      0.1,
+      0.3333333333333333
+    ],
+    "Power": [
+      0.1,
+      0.3333333333333333
+    ],
+    "Ultimate": [
+      0.06666666666666667,
+      0.3
+    ]
+  },
+  "impactSeconds": {
+    "Cast": 0.23333333333333334,
+    "Ultimate": 0.3
   },
   "contactSeconds": {
     "AttackA": 0.13333333333333333,
@@ -143,6 +230,6 @@
     ]
   },
   "static_source_sha256": "8fa0a98856781d8378aa222792f78f450fb53a8ae4b233821a1daea7231cca25",
-  "animated_glb_sha256": "f00a84efd8f9f91372ca219d9e3d6f6096a08f2545ab661bfd78dbfb59c3ad12",
-  "bytes": 177420
+  "animated_glb_sha256": "9593bbc312b75d4c0d119be9d3d0e1af01b8559d8cb3c888ab71128e8c66e2b6",
+  "bytes": 495980
 }

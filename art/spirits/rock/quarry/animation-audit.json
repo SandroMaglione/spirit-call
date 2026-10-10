@@ -1,54 +1,60 @@
 {
   "passed": true,
   "clips": {
-    "Run": {
-      "duration_s": 0.8,
-      "sample_rate_hz": 240,
-      "minimum_supports": 2,
-      "minimum_ground_y_m": -2.7755575615628914e-17,
-      "maximum_sole_lift_m": 0.10000000608745165,
-      "minimum_float_moss_gap_m": 0.0524389349482427,
-      "maximum_stance_velocity_error_m_s": 1.14952049912187e-06
-    },
     "Idle": {
       "duration_s": 3.0,
       "sample_rate_hz": 240,
       "minimum_supports": 4,
       "minimum_ground_y_m": 0.0,
       "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.05722223121794068
+      "minimum_float_moss_gap_m": 0.05722223120611347,
+      "maximum_joint_endpoint_error_m": 7.656131328070803e-08
+    },
+    "Run": {
+      "duration_s": 0.8,
+      "sample_rate_hz": 240,
+      "minimum_supports": 2,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0.10000000817583134,
+      "minimum_float_moss_gap_m": 0.052427487296613284,
+      "maximum_joint_endpoint_error_m": 6.510296071334487e-05,
+      "maximum_stance_velocity_error_m_s": 3.576257603055133e-06
     },
     "AttackA": {
-      "duration_s": 0.36666666666666664,
+      "duration_s": 0.4666666666666667,
       "sample_rate_hz": 240,
-      "minimum_supports": 4,
+      "minimum_supports": 3,
       "minimum_ground_y_m": 0.0,
-      "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.06481254506843159
+      "maximum_sole_lift_m": 0.08999999198677033,
+      "minimum_float_moss_gap_m": 0.061990707197262296,
+      "maximum_joint_endpoint_error_m": 0.000860870286415571
     },
     "AttackB": {
-      "duration_s": 0.36666666666666664,
+      "duration_s": 0.4666666666666667,
       "sample_rate_hz": 240,
-      "minimum_supports": 4,
+      "minimum_supports": 3,
       "minimum_ground_y_m": 0.0,
-      "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.06285928679106023
+      "maximum_sole_lift_m": 0.08999999755215485,
+      "minimum_float_moss_gap_m": 0.06198712878750923,
+      "maximum_joint_endpoint_error_m": 0.0008608613507435191
     },
     "AttackC": {
-      "duration_s": 0.5333333333333333,
+      "duration_s": 0.7333333333333333,
       "sample_rate_hz": 240,
-      "minimum_supports": 4,
+      "minimum_supports": 0,
       "minimum_ground_y_m": 0.0,
-      "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.062345236876039656
+      "maximum_sole_lift_m": 0.18499999886508253,
+      "minimum_float_moss_gap_m": 0.058219967376389015,
+      "maximum_joint_endpoint_error_m": 0.00022266516813339163
     },
     "Power": {
-      "duration_s": 0.5333333333333333,
+      "duration_s": 0.8666666666666667,
       "sample_rate_hz": 240,
-      "minimum_supports": 4,
+      "minimum_supports": 0,
       "minimum_ground_y_m": 0.0,
-      "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.056227475427988005
+      "maximum_sole_lift_m": 0.2375000070572135,
+      "minimum_float_moss_gap_m": 0.058219967376389015,
+      "maximum_joint_endpoint_error_m": 0.00022266168483490168
     },
     "Dash": {
       "duration_s": 0.36666666666666664,
@@ -56,7 +62,8 @@
       "minimum_supports": 4,
       "minimum_ground_y_m": 0.0,
       "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.050923533522808206
+      "minimum_float_moss_gap_m": 0.04999994133593777,
+      "maximum_joint_endpoint_error_m": 0.00026453111954631526
     },
     "Hurt": {
       "duration_s": 0.3,
@@ -64,27 +71,31 @@
       "minimum_supports": 4,
       "minimum_ground_y_m": 0.0,
       "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.07077914476394653
+      "minimum_float_moss_gap_m": 0.07077914476394653,
+      "maximum_joint_endpoint_error_m": 0.0005169755140502841
     },
     "Cast": {
-      "duration_s": 0.4666666666666667,
-      "sample_rate_hz": 240,
-      "minimum_supports": 4,
-      "minimum_ground_y_m": 0.0,
-      "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.07077914476394653
-    },
-    "Ultimate": {
       "duration_s": 0.6666666666666666,
       "sample_rate_hz": 240,
-      "minimum_supports": 4,
+      "minimum_supports": 2,
       "minimum_ground_y_m": 0.0,
-      "maximum_sole_lift_m": 0,
-      "minimum_float_moss_gap_m": 0.07077914476394653
+      "maximum_sole_lift_m": 0.14000001035466683,
+      "minimum_float_moss_gap_m": 0.07077914476394653,
+      "maximum_joint_endpoint_error_m": 0.00011859782578890425
+    },
+    "Ultimate": {
+      "duration_s": 0.9333333333333333,
+      "sample_rate_hz": 240,
+      "minimum_supports": 0,
+      "minimum_ground_y_m": -7.594601907277582e-06,
+      "maximum_sole_lift_m": 0.2400000016844124,
+      "minimum_float_moss_gap_m": 0.07077914476394653,
+      "maximum_joint_endpoint_error_m": 0.0002316699979076421
     }
   },
-  "triangles": 1424,
+  "triangles": 1600,
   "materials": 2,
-  "approved_rest_geometry_unchanged": true,
+  "approved_torso_geometry_unchanged": true,
+  "articulated_legs": true,
   "root_motion": false
 }

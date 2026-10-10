@@ -69,7 +69,7 @@ try {
   });
   const mixer = new THREE.AnimationMixer(gltf.scene);
   let action, clipName = 'Run', playing = true, speed = 1, hold = 0;
-  const names = { Idle:'Idle · quiet watch', Run:'Run · heavy diagonal gait', AttackA:'Attack A · left strike', AttackB:'Attack B · right strike', AttackC:'Attack C · heavy finish', Power:'Power · charged blow', Dash:'Dash · braced rush', Hurt:'Hurt · recoil', Cast:'Cast · stone pulse', Ultimate:'Ultimate · quake slam' };
+  const names = { Idle:'Idle · quiet watch', Run:'Run · heavy diagonal gait', AttackA:'Attack A · left stepping strike', AttackB:'Attack B · right stepping strike', AttackC:'Attack C · head-first jump', Power:'Power · heavy head-first jump', Dash:'Dash · braced rush', Hurt:'Hurt · recoil', Cast:'Cast · rear-up and stomp', Ultimate:'Ultimate · leap and quake slam' };
   for (const clip of clips) $('#clip').add(new Option(names[clip.name],clip.name));
   function selectClip(name) {
     mixer.stopAllAction(); hold = 0; clipName = name;
@@ -99,8 +99,8 @@ try {
     markers.add(marker);
   }
   scene.add(markers);
-  const center = new THREE.Vector3(0, info.height_m/2, 0);
-  let currentView = 'hero', span = 1.3;
+  const center = new THREE.Vector3(0, info.height_m/2+.06, 0);
+  let currentView = 'hero', span = 1.55;
   function direction(turn, elevation) {
     const t = THREE.MathUtils.degToRad(turn), e = THREE.MathUtils.degToRad(elevation);
     return new THREE.Vector3(Math.sin(t)*Math.cos(e), Math.sin(e), Math.cos(t)*Math.cos(e));
@@ -138,7 +138,7 @@ try {
     const settings = {
       face: { target: [0,.29,.37], span: .56, view: 'front' },
       moss: { target: [0,.46,0], span: .96, view: 'game' },
-      all: { target: [0,info.height_m/2,0], span: 1.3, view: 'hero' }
+      all: { target: [0,info.height_m/2+.06,0], span: 1.55, view: 'hero' }
     };
     const setting = settings[name];
     center.set(...setting.target);

@@ -4,10 +4,10 @@
 kept separately from Bastion's existing Rock Spirit. The designer approved
 the revised static model and requested animation. `quarry.blend` and
 `quarry.glb` preserve that approved rest model. `quarry-animated.blend` and
-`quarry-animated.glb` add ten object animation clips to the same geometry.
+`quarry-animated.glb` add ten object animation clips and articulated leg joints.
 Quarry has not been registered as a playable character.
 
-The revised model has 1,424 triangles, two materials and 13 named mesh parts.
+The approved static model has 1,424 triangles, two materials and 13 named mesh parts.
 Its height including the floating rock is 0.772 m, width 0.947 m and depth
 0.830 m. The sheet gives no
 physical height; 0.62 m was chosen as a working scale near the other spirits.
@@ -77,11 +77,29 @@ for the connected body, moss, head, eyes and tucked hands. The four large
 stones remain independent so the torso's weight shift cannot lift a
 supporting foot.
 
+After approving the run, the designer requested connected legs and stronger
+combat. The animated source now has four short faceted stone necks between
+the body and the leg stones. The legs sit 35 mm farther out; their upper
+inner facets stop at a clear plane instead of sweeping through the moss
+and core. Each neck follows an anchor on the torso and one on its leg.
+The animated model has 1,600 triangles, two materials and 17 mesh parts,
+with a rest width of 1.017 m. The torso, moss, face and hands keep their
+approved geometry. The run keeps its cadence, stride and lift.
+
 `AttackA`, `AttackB`, `AttackC`, `Power`, `Dash`, `Hurt`, `Cast` and
-`Ultimate` are planted one-shots, starting and ending at the accepted
-rest pose. The attack contacts use the existing spirit convention:
-frames 4, 4, 6 and 6 at 30 fps. Cast raises the cap rock immediately;
-Ultimate compresses into a heavy stone pulse. The simulation will own
+`Ultimate` start and end at the revised animated rest pose. AttackA and
+AttackB lift the leading front leg 9 cm and step it 12 cm forward into
+contact while the other three brace. AttackC launches head-first with
+15 cm of forward body excursion; Power expands that to 20.25 cm. All four
+feet leave the floor on these two blows, tuck under the body and unfold
+for the landing. Cast rears on the back legs, lifts both front legs 14 cm
+and stomps. Ultimate pushes off with the rear legs, jumps 24 cm, spreads
+the supports and lands in a deeper compression, with cap-rock overshoot.
+
+The attack contacts use the existing spirit convention: frames 4, 4, 6
+and 6 at 30 fps. Poses are baked at 120 Hz to keep the connecting necks
+attached during fast rotations. Cast starts its rear-up immediately;
+Ultimate starts its push-off immediately. The simulation will own
 movement, hits and timing when this character is integrated.
 
 `animation.json` contains the generated clip timings, contact times and
@@ -93,6 +111,7 @@ Browser recordings of the actual GLB:
 
 - `renders/run-review.mp4`: the run from hero, side and game cameras.
 - `renders/animation-review.mp4`: all ten clips with their names visible.
+- `renders/combat-review.mp4`: the revised attacks, skill and ultimate.
 - `renders/run-phone-gameplay.mp4`: the run at 48 px in a 390 by 844 viewport.
 
 The animation review checked pause, scrubbing, rest-to-play and synthetic
@@ -103,11 +122,16 @@ stopping the recording recovered the complete clip sequence.
 
 `verify-animation.py` samples the delivered GLB at 240 Hz using glTF
 linear translation/scale and quaternion interpolation, including loop
-seams. It verifies unchanged rest geometry, clip timing, rest endpoints,
+seams. It verifies unchanged torso geometry, clip timing, rest endpoints,
 root-motion absence, supporting soles, all-mesh ground clearance, floating
-rock clearance and planted-foot velocity against preview travel. The
-minimum cap-rock/moss gap is 50.9 mm across the clips. The run's maximum
-stance velocity error is below 0.002 mm/s. The asset audit and lint pass;
+rock clearance, joint endpoints and planted-foot velocity against preview
+travel. Explicit jump windows allow airborne poses for the two head-first
+blows and Ultimate; the run always has two supports. The minimum cap-rock/
+moss gap is 50 mm across the clips. The run's maximum stance velocity error
+is below 0.004 mm/s. The maximum connecting-neck endpoint error between
+keys is 0.861 mm. `verify-joints.py` checks triangle intersections between
+each leg and the core, moss, head and rear stone at 240 Hz in the editable
+animation; no intersections were found. The asset audits and lint pass;
 `pnpm check --maxWorkers=2` still stops at the existing Effect SQL module
 and type errors described below.
 
@@ -143,6 +167,7 @@ uv run --with numpy art/spirits/rock/quarry/verify.py
 uv run --with pillow --with numpy art/spirits/rock/quarry/review.py
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/rock/quarry/animate.py
 uv run --with numpy art/spirits/rock/quarry/verify-animation.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/rock/quarry/verify-joints.py
 ```
 
 `verify.py` reads the delivered GLB rather than trusting source metadata.
