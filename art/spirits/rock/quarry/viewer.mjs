@@ -1,0 +1,120 @@
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const $ = selector => document.querySelector(selector);
+try {
+  const view = $('#view');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x111f2c);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  view.prepend(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-.7, .7, .55, -.55, .01, 20);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.minZoom = .3;
+  controls.maxZoom = 7;
+  scene.add(new THREE.HemisphereLight(0xd9e5ef, 0x63503d, 1.4));
+  const key = new THREE.DirectionalLight(0xffefd9, 3.2);
+  key.position.set(-2, 4, 3);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  Object.assign(key.shadow.camera, { left: -1.3, right: 1.3, top: 1.3, bottom: -1.3, near: .1, far: 10 });
+  key.shadow.normalBias = .001;
+  key.shadow.bias = -.00002;
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xc1d9ef, .8);
+  fill.position.set(3, 2, -3);
+  scene.add(fill);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x152633, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -.001;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  composer.addPass(new UnrealBloomPass(new THREE.Vector2(800, 600), .35, .4, 1.1));
+  composer.addPass(new OutputPass());
+  const [gltf, info] = await Promise.all([
+    new GLTFLoader().loadAsync('./quarry.glb'),
+    fetch('./audit.json').then(r => { if (!r.ok) throw Error('Model metadata unavailable'); return r.json(); })
+  ]);
+  scene.add(gltf.scene);
+  const meshes = [];
+  gltf.scene.traverse(obj => {
+    if (!obj.isMesh) return;
+    obj.castShadow = !obj.name.startsWith('Eye');
+    obj.receiveShadow = !obj.name.startsWith('Eye');
+    meshes.push(obj);
+  });
+  const center = new THREE.Vector3(0, info.height_m/2, 0);
+  let currentView = 'hero', span = 1.3;
+  function direction(turn, elevation) {
+    const t = THREE.MathUtils.degToRad(turn), e = THREE.MathUtils.degToRad(elevation);
+    return new THREE.Vector3(Math.sin(t)*Math.cos(e), Math.sin(e), Math.cos(t)*Math.cos(e));
+  }
+  const directions = {
+    front: direction(0, 0), back: direction(180, 0), left: direction(-90, 0), right: direction(90, 0),
+    hero: direction(-35, 20), game: direction(-35, 30), top: new THREE.Vector3(0,1,.0001), bottom: new THREE.Vector3(0,-1,.0001)
+  };
+  function resize() {
+    const { width, height } = view.getBoundingClientRect();
+    renderer.setSize(width, height);
+    composer.setSize(width, height);
+    // Preserve the whole footprint in narrow phone viewports.
+    const frame = $('#small').checked ? info.height_m * height/48 : Math.max(span, span*height/width);
+    camera.top = frame/2;
+    camera.bottom = -frame/2;
+    camera.left = -frame*width/height/2;
+    camera.right = -camera.left;
+    camera.updateProjectionMatrix();
+  }
+  function choose(name) {
+    currentView = name;
+    camera.zoom = 1;
+    controls.target.copy(center);
+    camera.position.copy(center).addScaledVector(directions[name], 4);
+    camera.up.set(0,1,0);
+    if (name === 'top' || name === 'bottom') camera.up.set(0,0,1);
+    controls.update();
+    document.querySelectorAll('[data-view]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.view === name)));
+    ground.visible = $('#floor').checked && name !== 'bottom';
+    resize();
+  }
+  function detail(name) {
+    $('#small').checked = false;
+    const settings = {
+      face: { target: [0,.29,.37], span: .56, view: 'front' },
+      moss: { target: [0,.46,0], span: .96, view: 'game' },
+      all: { target: [0,info.height_m/2,0], span: 1.3, view: 'hero' }
+    };
+    const setting = settings[name];
+    center.set(...setting.target);
+    span = setting.span;
+    document.querySelectorAll('[data-detail]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.detail === name)));
+    choose(setting.view);
+  }
+  document.querySelectorAll('[data-view]').forEach(button => button.onclick = () => choose(button.dataset.view));
+  document.querySelectorAll('[data-detail]').forEach(button => button.onclick = () => detail(button.dataset.detail));
+  $('#wireframe').onchange = () => meshes.forEach(obj => {
+    for (const mat of Array.isArray(obj.material) ? obj.material : [obj.material]) mat.wireframe = $('#wireframe').checked;
+  });
+  $('#floor').onchange = () => { ground.visible = $('#floor').checked && currentView !== 'bottom'; };
+  $('#small').onchange = () => { camera.zoom = 1; resize(); };
+  new ResizeObserver(resize).observe(view);
+  choose('hero');
+  renderer.setAnimationLoop(() => { controls.update(); composer.render(); });
+  $('#status').textContent = `${info.triangles.toLocaleString()} triangles · ${info.height_m.toFixed(3)} m · static`;
+  window.quarryPreview = { scene, camera, renderer, composer, controls, gltf, info, choose, detail, meshes };
+} catch (error) {
+  $('#error').textContent = String(error);
+  $('#status').textContent = 'Model could not load';
+  throw error;
+}

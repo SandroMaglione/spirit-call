@@ -1,0 +1,62 @@
+{
+  "status": "static model, awaiting visual review",
+  "triangles": 1570,
+  "materials": [
+    "Amber eyes",
+    "Quarry facets"
+  ],
+  "objects": [
+    "BodyCore",
+    "Cheek.L",
+    "Cheek.R",
+    "CrownStone",
+    "Eye.L",
+    "Eye.R",
+    "Head",
+    "MossCap",
+    "RearStone",
+    "Stone.Front.L",
+    "Stone.Front.R",
+    "Stone.Rear.L",
+    "Stone.Rear.R"
+  ],
+  "bounds_blender_m": [
+    [
+      -0.4795394837856293,
+      0.4780675172805786
+    ],
+    [
+      -0.45933160185813904,
+      0.3881171643733978
+    ],
+    [
+      0.0,
+      0.6269999742507935
+    ]
+  ],
+  "height_m": 0.6269999742507935,
+  "width_m": 0.9576070010662079,
+  "depth_m": 0.8474487662315369,
+  "closed_meshes": {
+    "BodyCore": true,
+    "Cheek.L": true,
+    "Cheek.R": true,
+    "CrownStone": true,
+    "Eye.L": false,
+    "Eye.R": false,
+    "Head": true,
+    "MossCap": true,
+    "RearStone": true,
+    "Stone.Front.L": true,
+    "Stone.Front.R": true,
+    "Stone.Rear.L": true,
+    "Stone.Rear.R": true
+  },
+  "animations": 0,
+  "skeletons": 0,
+  "height_basis": "ground origin to highest static mesh vertex",
+  "coordinates": "GLB +Y up, +Z forward; Blender +Z up, -Y forward",
+  "quarry.blend_sha256": "e97d1402c14392489095ee6c9d79b3bd07080dfb1834cc83dc73d9a0c3d3a11a",
+  "quarry.glb_sha256": "f578455b704bbd326d3099f12df4ed1c0c4f7d99a8d13d571c610d5cad27f392",
+  "reference/sheet.png_sha256": "e8b6bdb477a43188e368a607dcc38d16068c03df2033ef497ae6264f39bc5c92"
+}
