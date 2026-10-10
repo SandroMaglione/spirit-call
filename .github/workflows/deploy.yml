@@ -1,10 +1,11 @@
-# Checks and deploys the game to Cloudflare (deploy/alchemy.run.ts): every
-# pull request deploys a `pr-<n>` preview with a database of its own (its
-# address is commented on the PR), and closing the PR destroys both. Prod is
-# deployed only by hand (Actions, "Deploy", run from main): the game is a
-# finished release and changes only when its developer decides (see
-# docs/server.md, "Releasing"); that run also applies the players'
-# database's new migrations (deploy/stacks/database.ts) first.
+# Checks and deploys the game to Cloudflare (deploy/alchemy.run.ts), as a
+# playtest build: every pull request deploys a `pr-<n>` preview with a
+# database of its own for its runs (its address is commented on the PR), and
+# closing the PR destroys both. Prod is deployed only by hand (Actions,
+# "Deploy", run from main): the game changes only when its developer decides
+# (see docs/playtest.md, "Releasing"); that run also applies the playtest
+# database's new migrations (deploy/stacks/database.ts) first. `pnpm check`
+# also builds a release build and fails if it carries any playtest code.
 # Builds use the published bevy-ts release in package.json `bevyTsRelease`.
 # The Cloudflare secrets come from deploy/stacks/github.ts.
 name: Deploy
@@ -56,8 +57,8 @@ jobs:
       - name: Check deploy tooling
         run: pnpm --dir deploy typecheck
       - name: Deploy the database
-        # Only main changes the database every stage shares (its migrations
-        # only ever add; see deploy/stacks/database.ts)
+        # Only main changes prod's playtest database (its migrations only
+        # ever add; see deploy/stacks/database.ts)
         if: github.ref == 'refs/heads/main'
         working-directory: deploy
         env:

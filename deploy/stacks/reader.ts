@@ -1,6 +1,6 @@
-// A read-only key to the game's database, for reading what players do
-// (`pnpm db`, see docs/server.md), created from a laptop and saved to the
-// repository's git-ignored `.env.database`:
+// A read-only key to the game's databases, for reading what testers do
+// (`pnpm db` and `pnpm runs`, see docs/playtest.md), created from a laptop
+// and saved to the repository's git-ignored `.env.database`:
 //
 //   pnpm alchemy deploy --config stacks/reader.ts --profile admin --stage prod
 //

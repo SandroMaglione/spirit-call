@@ -1,14 +1,17 @@
 // The game on Cloudflare: one Worker serving the Vite build as static assets
-// and the game's server under `/api/` (src/server/worker.ts). Prod uses the
-// players' database (deploy/stacks/database.ts); every other stage (a pull
-// request's preview, a laptop's) has a database of its own, made and
-// destroyed with it, so nothing but prod ever touches the players' accounts.
+// and, while the game is playtested, the server that keeps the runs
+// playtest builds send, under `/api/` (src/server/worker.ts; see
+// docs/playtest.md). Every stage is a playtest build: prod keeps its runs in
+// the playtest database (deploy/stacks/database.ts); every other stage (a
+// pull request's preview, a laptop's) has a database of its own, made and
+// destroyed with it, so only prod's runs are testers'.
 // `pnpm alchemy deploy` (from this folder) builds and deploys a stage; CI
 // deploys `prod` from main and a `pr-<n>` preview for every pull request
 // (.github/workflows/deploy.yml).
 //
 // The deploy tooling is its own package so its dependencies stay out of the
 // game's; both are on the same Effect release.
+import { createHash } from "node:crypto"
 import { fileURLToPath } from "node:url"
 
 import * as Alchemy from "alchemy"
@@ -30,22 +33,27 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const stage = yield* Alchemy.Stage
-    // Prod: the players' database (deploy/stacks/database.ts); any other stage: its own, with the same migrations
+    // Prod: the playtest database (deploy/stacks/database.ts); any other stage: its own, with the same migrations
     const database = stage === "prod"
-      ? yield* Cloudflare.D1.Database.ref("Accounts", { stack: "top-down-team-shooter-database", stage: "shared" })
-      : yield* Cloudflare.D1.Database("Accounts", {
-        name: `top-down-team-shooter-${stage}`,
+      ? yield* Cloudflare.D1.Database.ref("Playtest", { stack: "top-down-team-shooter-database", stage: "shared" })
+      : yield* Cloudflare.D1.Database("Playtest", {
+        name: `top-down-team-shooter-playtest-${stage}`,
         migrations: fileURLToPath(new URL("../src/server/migrations", import.meta.url))
       })
+    // The game is built as a playtest build (its runs sent to this Worker),
+    // with the key the Worker checks. The build carries the key, so it is
+    // not a secret: it only keeps casual traffic out. `PLAYTEST_KEY` in the
+    // environment sets it; otherwise each stage has its own, always the same.
+    const playtestKey = process.env.PLAYTEST_KEY || createHash("sha256").update(`top-down-team-shooter-playtest:${stage}`).digest("hex").slice(0, 32)
+    process.env.PLAYTEST_KEY = playtestKey
     const game = yield* Cloudflare.Website.Vite("Game", {
       rootDir,
-      // The server (src/server/worker.ts) answers `/api/`; the rest is the game's files
+      // The playtest server (src/server/worker.ts) answers `/api/`; the rest is the game's files
       main: fileURLToPath(new URL("../src/server/worker.ts", import.meta.url)),
       assets: { runWorkerFirst: ["/api/*"] },
       env: {
         DB: database,
-        // The dev tool (unlock everything) answers everywhere but prod
-        DEV_TOOLS: stage === "prod" ? "off" : "on"
+        PLAYTEST_KEY: playtestKey
       },
       memo: {
         // Locally the bevy-ts packages are linked from the sibling repository,

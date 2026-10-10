@@ -1,8 +1,8 @@
-// The game's one database (see docs/server.md): players, sessions, and
-// accounts, shared by every stage of the game (prod, pull request previews,
-// and each laptop's own), which bind to it by reference
-// (deploy/alchemy.run.ts). It is its own stack so that no stage of the game
-// owns it: destroying a preview never touches it.
+// The playtest database (see docs/playtest.md): the runs playtest builds
+// send to prod, kept for tuning. Prod binds to it by reference
+// (deploy/alchemy.run.ts); every other stage makes a database of its own.
+// It is its own stack so that no stage of the game owns it: destroying a
+// preview never touches it.
 //
 // Deploying it applies the migrations it has not had yet (src/server/migrations,
 // additive only); CI does that from main before deploying prod:
@@ -21,10 +21,17 @@ export default Alchemy.Stack(
     state: Cloudflare.state()
   },
   Effect.gen(function* () {
-    const database = yield* Cloudflare.D1.Database("Accounts", {
-      name: "top-down-team-shooter-accounts",
+    const playtest = yield* Cloudflare.D1.Database("Playtest", {
+      name: "top-down-team-shooter-playtest",
       migrations: fileURLToPath(new URL("../../src/server/migrations", import.meta.url))
     })
-    return { databaseId: database.databaseId }
+    // Retired: the players' accounts from when the account lived on the
+    // server (until October 2026). Nothing reads or writes it any more; it is
+    // kept, with the migrations it was made with, until it is deleted by hand.
+    yield* Cloudflare.D1.Database("Accounts", {
+      name: "top-down-team-shooter-accounts",
+      migrations: fileURLToPath(new URL("./accounts-migrations", import.meta.url))
+    })
+    return { databaseId: playtest.databaseId }
   })
 )
