@@ -139,7 +139,17 @@
     "quarryThunderKing",
     "swordsmanMastery",
     "tidecallerMastery",
-    "bastionMastery"
+    "bastionMastery",
+    "untilFall7",
+    "untilFall8",
+    "untilFall9",
+    "untilFall10",
+    "gauntlet4",
+    "gauntlet5",
+    "siege4",
+    "siege5",
+    "keep3",
+    "keep4"
   ],
   "attacks": [
     "sword",
