@@ -8,8 +8,11 @@
  *
  * - Flare Jump: a jet of fire thrown ahead as she kicks off an explosion,
  *   the floor scorched.
- * - Barrage: shells fired up from her one by one; explosions where they
- *   land (the Gunner's fire blows up; flames are Hearth's).
+ * - Overdrive: fire bursting out around her as her gun flares up; then,
+ *   while it lasts, her body lit with fire and its halo blazing (see
+ *   `DrawPlayer`), a blaze at the muzzle and a spent casing with every
+ *   shot, and each shot bursting in a quick, hard pop of fire (the
+ *   Gunner's fire blows up; flames are Hearth's).
  * - Tidefall: she bounces in place like a drop of water, stretching up
  *   out of her puddle and splatting back down, wobbling, droplets thrown
  *   out, and the Tide's ring of water around her.
@@ -39,14 +42,14 @@ import { companionStart } from "../features/companions.ts"
 import { toScreen } from "../math/iso.ts"
 import { lerp, normalizeOr, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Barrier, Cast, Companion, Overcharged, Explosion, Game, RenderNodes, Player, Position, PrevPosition, RenderClock, RenderHost, Tuning, UltimateCalled, Zap } from "../schema.ts"
+import { Action, Barrier, Cast, Companion, Overcharged, Overdriven, Explosion, Game, RenderNodes, Player, Position, PrevPosition, RenderClock, RenderHost, Tuning, UltimateCalled, Zap } from "../schema.ts"
 import type { CastValue } from "../schema.ts"
 import type { Fx } from "./fx.ts"
 import type { CompanionNode, FeedbackState } from "./host-types.ts"
 import type { Shapes } from "./shapes.ts"
 
 /** Skills drawn here alone: the shared looks (a nova's ring, a cut's streaks, a zap's bolt) leave them out. */
-export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "tidalWave", "tide", "thunderclap", "sparkStep", "stormFlurry"])
+export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "barrage", "tidalWave", "tide", "thunderclap", "sparkStep", "stormFlurry"])
 
 /** Skills whose hits are seen in their own look alone: the flat shape of what they strike is not drawn too (see `presentation/telegraphs.ts`). */
 export const unmarkedHits: ReadonlySet<SkillId> = new Set<SkillId>(["sparkStep", "stormFlurry"])
@@ -182,6 +185,41 @@ const explosion = (fx: Fx, where: Vec2, radius: number): void => {
   }
   fx.burst(heart, { color: flame, count: 12, speed: 520, size: 3, life: 0.35, stretch: 5, gravity: 900, drag: 2 })
   fx.burst(heart, { color: 0x3a2e2a, count: 8, speed: 380, size: 3.5, life: 0.5, gravity: 1300 })
+}
+
+/** Overdrive taking hold: her gun flaring up, a blast of fire bursting out around her, embers rising off her. */
+const overdriveIgnite = (fx: Fx, feedback: FeedbackState, cast: CastValue, radius: number): void => {
+  explosion(fx, cast.from, radius * 0.8)
+  fx.ring(at(cast.from), z(radius), flame, 0.35)
+  fx.ring(at(cast.from), z(radius * 0.6), fire, 0.3)
+  fx.flash(at(cast.from, 26), z(70), white, 0.12)
+  feedback.shake = Math.max(feedback.shake, view.ultimateShake * 0.7)
+  feedback.punch = Math.max(feedback.punch, 0.9)
+  for (let ember = 0; ember < 24; ember++) {
+    const foot = at(cast.from, Math.random() * 40)
+    fx.mote({ x: foot.x + (Math.random() - 0.5) * z(40), y: foot.y }, (Math.random() - 0.5) * 80, -120 - Math.random() * 160, { color: ember % 3 === 0 ? white : ember % 2 === 0 ? flame : fire, size: 2.5 + Math.random() * 2, life: 0.7, gravity: -80, drag: 1.5 })
+  }
+}
+
+/** An overdriven shot leaving: a blaze at the muzzle, a spent casing thrown out to her side. */
+const overdriveShot = (fx: Fx, from: Vec2, direction: Vec2): void => {
+  const muzzle = at(add(from, direction, 26), 22)
+  const ahead = normalizeOr(toScreen(projection, direction), { x: 1, y: 0 })
+  fx.flash(muzzle, z(26), flame, 0.07)
+  fx.sparks(muzzle, ahead, { color: flame, count: 5, speed: 420, spread: 0.35, size: 2.5, life: 0.12, stretch: 4 })
+  const side = Math.random() < 0.5 ? 1 : -1
+  fx.mote(at(from, 24), -ahead.y * side * 160 - ahead.x * 40, ahead.x * side * 60 - 180, { color: 0xe7c46a, size: 2.5, life: 0.45, gravity: 1100, drag: 0.4 })
+}
+
+/** An overdriven shot bursting: a quick, hard pop of fire, a ring snapping out, a jolt. */
+const shotBlast = (fx: Fx, feedback: FeedbackState, where: Vec2, radius: number): void => {
+  const heart = at(where, 12)
+  fx.flash(heart, z(radius * 0.9), flame, 0.1)
+  fx.flash(heart, z(radius * 0.45), white, 0.05)
+  fx.ring(at(where), z(radius), flame, 0.18)
+  fx.burst(heart, { color: flame, count: 7, speed: 380, size: 2.5, life: 0.25, stretch: 4, gravity: 700, drag: 2 })
+  fx.mote(heart, (Math.random() - 0.5) * 40, -50, { color: 0x5d5560, size: 8, life: 0.5, gravity: -40, drag: 2, alpha: 0.45 })
+  feedback.shake = Math.max(feedback.shake, 2.5)
 }
 
 /**
@@ -460,7 +498,7 @@ const overchargeBlow = (fx: Fx, from: Vec2, direction: Vec2, reach: number): voi
 
 export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), overcharged: Game.Query.optional(Overcharged) }, with: [Player] }),
+    player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition), overcharged: Game.Query.optional(Overcharged), overdriven: Game.Query.optional(Overdriven) }, with: [Player] }),
     barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } }),
     companions: Game.Query({ selection: { companion: Game.Query.read(Companion), position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) } })
   },
@@ -497,6 +535,7 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
         break
       case "barrage":
         if (effect.kind === "barrage") barrageVolley(fx, cast, effect.shells, effect.interval)
+        if (effect.kind === "overdrive") overdriveIgnite(fx, feedback, cast, effect.radius)
         break
       case "tidalWave":
         if (effect.kind === "plunge") tidefallBounce(fx, feedback, cast, effect.rise, effect.dive)
@@ -529,16 +568,23 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
       sparkTear(fx, feedback, from, normalizeOr(sub(to, from), { x: 1, y: 0 }), Math.hypot(to.x - from.x, to.y - from.y), effect.kind === "overcharge" ? effect.dashStrike.width : 70)
     }
   }
-  // Her blade taken over by water: each swing a sweep of water.
   // Overcharged (her body glows, see `DrawPlayer`): lightning thrown out with each blow.
   if (player !== undefined && player.data.overcharged.present) {
     for (const action of events.action.all()) {
       if (action.kind === "attack" && isMelee(action.move)) overchargeBlow(fx, action.at, action.direction, action.move.reach)
     }
   }
-  // Fire blasting from a shell or a grenade: an explosion.
+  // Overdriven (her body glows, see `DrawPlayer`): every shot a blaze at the muzzle, spent casings flying.
+  if (player !== undefined && player.data.overdriven.present) {
+    for (const action of events.action.all()) {
+      if (action.kind === "attack" && action.move.shape === "shot") overdriveShot(fx, action.at, action.direction)
+    }
+  }
+  // Fire blasting from a shell or a grenade: an explosion; an overdriven shot bursting: a quick, hard pop.
   for (const blast of events.explosion.all()) {
-    if (blast.faction === "player" && blast.element === "fire" && blast.kind === "blast") explosion(fx, blast.at, blast.radius)
+    if (blast.faction !== "player" || blast.element !== "fire" || blast.kind !== "blast") continue
+    if (blast.skill === "barrage") shotBlast(fx, feedback, blast.at, blast.radius)
+    else explosion(fx, blast.at, blast.radius)
   }
   // Barriers standing: walls of wind up off the floor, streaks running up them.
   const g = host.overlay

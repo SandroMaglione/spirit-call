@@ -509,6 +509,9 @@ export const skillReach = (effect: SkillEffect): number => {
     case "nova":
     case "thunderclap":
     case "earthrise":
+    // Her gun runs hot: worth it once enemies are in her shots' reach.
+    case "overdrive":
+      return 520
     case "overcharge":
       return effect.radius + more
     case "plunge":

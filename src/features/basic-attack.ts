@@ -25,7 +25,7 @@ import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim, Airborne, Arrival,
-  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, Bracing, RunScope, Overcharged, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
+  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, Bracing, RunScope, Overcharged, Overdriven, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
 import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
 import { attackOf, damageDealt } from "./build.ts"
 import { makeProjectile } from "./combat.ts"
@@ -150,7 +150,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         raising: Game.Query.optional(Raising),
         bracing: Game.Query.optional(Bracing),
         airborne: Game.Query.optional(Airborne),
-        overcharged: Game.Query.optional(Overcharged)
+        overcharged: Game.Query.optional(Overcharged),
+        overdriven: Game.Query.optional(Overdriven)
       },
       with: [Player]
     }),
@@ -207,7 +208,9 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     }
 
     // A body taken over by thunder (see `OverchargeEffect`): every blow carries it.
-    const surge = data.overcharged.present ? data.overcharged.get().effect.element : null
+    // A gun driven past its limit (see `OverdriveEffect`): quicker, never reloading, every shot alight and bursting.
+    const driven = data.overdriven.present ? data.overdriven.get() : null
+    const surge = data.overcharged.present ? data.overcharged.get().effect.element : driven?.effect.element ?? null
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
       const striking = move === spec.dash
       const context: MoveContext = {
@@ -250,7 +253,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
             blow: struck,
             range: move.range,
             pierce: move.pierce,
-            hit: []
+            hit: [],
+            ...(driven === null ? {} : { blast: { radius: driven.effect.blast.radius, blow: driven.blast, skill: driven.skill } })
           }))
         }
       } else if (move.shape === "disc") {
@@ -329,10 +333,12 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       // She faces the way she struck until the move recovers, slowed meanwhile (a heavy move stops her).
       data.facing.set({ direction: aim, hold: move.recovery })
       const slowed = move.heavy ? 0 : spec.attackingSpeed
-      const fired = power && spec.magazine !== null ? spec.magazine.rounds : spent + 1
+      // Overdriven, her magazine never runs dry and her shots come quicker.
+      const fired = driven !== null ? 0 : power && spec.magazine !== null ? spec.magazine.rounds : spent + 1
       const empty = spec.magazine !== null && fired >= spec.magazine.rounds
+      const recovery = move.recovery * (driven?.effect.fireRate ?? 1)
       data.basicAttack.set({
-        ...current, cooldown: move.recovery, recovery: move.recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false, slowed,
+        ...current, cooldown: recovery, recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false, slowed,
         spent: spec.magazine === null ? 0 : fired, reloading: empty && spec.magazine !== null ? spec.magazine.reload : 0,
         sinceDashStrike: move === spec.dash ? 0 : sinceDashStrike
       })

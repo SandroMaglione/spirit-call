@@ -39,9 +39,9 @@ const actorParts = (assets: RenderAssets, look: BodyLook, radius: number, batche
 
 export const enemyColor = (enemy: EnemyKind): number => view.enemies[enemy].color
 
-/** A projectile's color: a disc's, an enemy's bolt in its element's color (water that will soak you looks like water), or its side's. */
+/** A projectile's color: a disc's, a bolt carrying an element in its color (water that will soak you looks like water; an overdriven shot burns), or its side's. */
 export const projectileColor = (faction: Faction, style: ProjectileStyle = "bolt", element: ElementId | null = null): number =>
-  style === "disc" ? view.disc.color : style === "wave" ? (element === null ? view.shockwave.color : view.elements[element]) : faction === "enemy" && element !== null ? view.elements[element] : faction === "player" ? view.playerProjectile : view.enemyProjectile
+  style === "disc" ? view.disc.color : style === "wave" ? (element === null ? view.shockwave.color : view.elements[element]) : element !== null ? view.elements[element] : faction === "player" ? view.playerProjectile : view.enemyProjectile
 
 const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, faction: Faction, style: ProjectileStyle, radius: number, element: ElementId | null): ProjectileNode => {
   const node = pool.pop() ?? (() => {

@@ -12,7 +12,7 @@ import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen, worldHeight } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import { attackOf, dashOf, traitsIn } from "../features/build.ts"
-import { Action, Aim, Airborne, Overcharged, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Overcharged, Overdriven, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -68,6 +68,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         velocity: Game.Query.read(Velocity),
         airborne: Game.Query.optional(Airborne),
         overcharged: Game.Query.optional(Overcharged),
+        overdriven: Game.Query.optional(Overdriven),
         passives: Game.Query.optional(Passives)
       },
       with: [Player]
@@ -170,10 +171,13 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const now = performance.now() / 1000
       const overcharged = data.overcharged.present ? data.overcharged.get() : null
       const strobe = overcharged === null ? 0 : overcharged.remaining < 1.2 ? (Math.sin(now * 40) > 0 ? 1 : 0.2) : 0.8 + 0.2 * Math.sin(now * 23) * Math.sin(now * 7)
-      const surge = charge <= 0 ? 0.6 * strobe : 0
+      // Overdriven: lit with fire, flaring as she fires; flickering out as it runs out.
+      const overdriven = data.overdriven.present ? data.overdriven.get() : null
+      const heat = overdriven === null ? 0 : overdriven.remaining < 1.2 ? (Math.sin(now * 30) > 0 ? 1 : 0.25) : 0.75 + 0.25 * Math.sin(now * 17) * Math.sin(now * 5)
+      const surge = charge <= 0 ? 0.6 * Math.max(strobe, heat) : 0
       node.body.paint(
         stateTint(0xffffff, data.state.get().current),
-        flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : surge > 0 ? view.elements.thunder : view.charge.full,
+        flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : surge > 0 ? (overdriven !== null ? view.elements.fire : view.elements.thunder) : view.charge.full,
         flashing ? 1 : dash.remaining > 0 ? 0.65 : surge > 0 ? surge : glow,
         data.invulnerable.get().remaining > 0 ? 0.55 : 1)
       // Her body says how she is: its halo bright and pulsing while her ultimate is ready, dimming as her health runs low.
@@ -185,8 +189,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const left = health.max > 0 ? health.current / health.max : 1
       const dim = spirit.low + (1 - spirit.low) * Math.min(1, left / spirit.lowHealth)
       const beat = 0.5 + 0.5 * Math.sin((performance.now() / 1000) * spirit.pulseHz * Math.PI * 2)
-      // Overcharged, the halo blazes, larger, surging with her.
-      node.body.aura?.(overcharged !== null ? 1 + 3 * strobe : dim * (ready ? spirit.ready * (1 - spirit.pulse * beat) : 1))
+      // Overcharged or overdriven, the halo blazes, larger, surging with her.
+      node.body.aura?.(overcharged !== null || overdriven !== null ? 1 + 3 * Math.max(strobe, heat) : dim * (ready ? spirit.ready * (1 - spirit.pulse * beat) : 1))
       // Her eyes: shut once she has fallen, wide for a moment after a perfect dodge or coming in after a fall.
       const wide = 1 + (spirit.wide - 1) * Math.min(1, feedback.wideEyes / (spirit.wideSeconds * 0.5))
       if (health.current <= 0) node.body.express?.(1, spirit.shut)

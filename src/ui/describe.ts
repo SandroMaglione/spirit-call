@@ -153,6 +153,8 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `${effect.slams} ${elementWord(effect.element)}slams around you, each wider than the last (${effect.power}% ATK each), the last stunning what it catches for ${effect.stun}s`
     case "brace":
       return `a ${effect.window}s brace, standing still: the first blow on you is taken whole, and you answer with a ${elementWord(effect.element)}slash around you (${effect.power}% ATK) that disarms the attacker for ${effect.disarm}s; if nothing comes, it is ready again ${effect.whiff}s later`
+    case "overdrive":
+      return `your gun runs hot for ${effect.seconds}s, after a ${elementWord(effect.element)}burst around you (${effect.power}% ATK): ${Math.round((1 / effect.fireRate - 1) * 100)}% quicker shots, no reloading, and every shot sets what it hits alight and bursts where it stops (${effect.blast.power}% ATK around)`
     case "overcharge":
       return `you become ${elementWord(effect.element)}for ${effect.seconds}s, after a burst around you (${effect.power}% ATK): you run ${Math.round((effect.speed - 1) * 100)}% faster, your blows carry its element, your dashes come back within ${effect.dash}s, and every dash strikes everything along its way (${effect.dashStrike.power}% ATK)`
     case "vortex":

@@ -115,8 +115,9 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
     // A brace waits for its targets: nothing to aim.
     case "brace":
     case "quake":
-    // Thunder goes through her: nothing to aim.
+    // Thunder goes through her, her gun runs hot: nothing to aim.
     case "overcharge":
+    case "overdrive":
       return { kind: "self" }
   }
 }

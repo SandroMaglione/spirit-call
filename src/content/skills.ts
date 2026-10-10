@@ -409,7 +409,24 @@ export interface LiftEffect extends EffectBase {
   readonly seconds: number
 }
 
-export type SkillEffect = MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
+/**
+ * Her gun driven past its limit for `seconds` (lost if she leaves the
+ * field): her shots come `fireRate` times as often (a share of each move's
+ * recovery), her magazine never runs dry, every shot carries the effect's
+ * element, and each bursts where it stops (on what it hits, a wall, or the
+ * end of its range) in a blast of `blast.radius` (`blast.power` percent of
+ * ATK). As it takes hold, a burst of `radius` all around her, its blow the
+ * effect's.
+ */
+export interface OverdriveEffect extends EffectBase {
+  readonly kind: "overdrive"
+  readonly seconds: number
+  readonly fireRate: number
+  readonly radius: number
+  readonly blast: { readonly radius: number; readonly power: number }
+}
+
+export type SkillEffect = OverdriveEffect | MantleEffect | LiftEffect | OverchargeEffect | BarrierEffect | FaultEffect | QuakeEffect | BraceEffect | CutEffect | BlastEffect | PlungeEffect | LeapEffect | LobEffect | NovaEffect | VortexEffect | BarrageEffect | TotemEffect | CompanionsEffect | ThunderclapEffect | GuardEffect | EarthriseEffect
 
 export interface SkillSpec<Effect extends SkillEffect = SkillEffect> {
   /** Shown on the HUD. */
@@ -441,6 +458,7 @@ export const overcharge = (spec: Omit<OverchargeEffect, "kind">): OverchargeEffe
 export const brace = (spec: Omit<BraceEffect, "kind">): BraceEffect => ({ kind: "brace", ...spec })
 export const barrier = (spec: Omit<BarrierEffect, "kind">): BarrierEffect => ({ kind: "barrier", ...spec })
 export const mantle = (spec: Omit<MantleEffect, "kind">): MantleEffect => ({ kind: "mantle", ...spec })
+export const overdrive = (spec: Omit<OverdriveEffect, "kind">): OverdriveEffect => ({ kind: "overdrive", ...spec })
 export const lift = (spec: Omit<LiftEffect, "kind">): LiftEffect => ({ kind: "lift", ...spec })
 export const fault = (spec: Omit<FaultEffect, "kind">): FaultEffect => ({ kind: "fault", ...spec })
 export const quake = (spec: Omit<QuakeEffect, "kind">): QuakeEffect => ({ kind: "quake", ...spec })
@@ -512,27 +530,18 @@ export const skills = {
     invulnerability: 0.5,
     effect: vortex({ maxRange: 0, radius: 300, seconds: 3.2, tick: 0.35, pull: 0.32, power: 9, element: "wind", knockback: 0, hitStop: 0, heavy: false })
   }),
-  /** The Gunner's ultimate: a volley of fire shells around the cursor, each leaving a fire pool. */
+  /**
+   * The Gunner's ultimate (id `barrage`, from when it was a volley of fire
+   * shells): Overdrive. Her gun runs hot a while: no reload, a little
+   * quicker, every shot setting what it hits alight and bursting in a small
+   * blast of fire.
+   */
   barrage: skill({
-    name: "Barrage",
+    name: "Overdrive",
     cooldown: 10,
     energy: 100,
     invulnerability: 0.5,
-    effect: barrage({
-      maxRange: 380,
-      shells: 7,
-      spread: 110,
-      interval: 0.08,
-      flightTime: 0.45,
-      fuse: 0.15,
-      radius: 70,
-      power: 45,
-      element: "fire",
-      knockback: 260,
-      hitStop: 0,
-      heavy: false,
-      leaves: { element: "fire", radius: 55, seconds: 3 }
-    })
+    effect: overdrive({ seconds: 7, fireRate: 0.85, radius: 160, blast: { radius: 55, power: 8 }, power: 30, element: "fire", knockback: 700, hitStop: 0.05, heavy: true })
   }),
   /**
    * The Tidecaller's ultimate (id `tide`, from when it was a tide breaking

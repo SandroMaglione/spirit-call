@@ -34,6 +34,7 @@ import { CastLifts, CastMantles, KeepMantle, UpdateLifted } from "./features/win
 import { CastGuards, RaiseGuards, ShatterPlates } from "./features/guard.ts"
 import { CastBraces, CounterBraces, TickBraces } from "./features/brace.ts"
 import { CastOvercharges, TickOvercharges } from "./features/sparkfist.ts"
+import { CastOverdrives, TickOverdrives } from "./features/gunner.ts"
 import { CastBarriers, UpdateBarriers } from "./features/barriers.ts"
 import { CastEarthrise, CastFaults, CastQuakes, UpdateRocks } from "./features/earthrise.ts"
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
@@ -107,6 +108,7 @@ const gameplay = Game.Schedule.when(
   LandAirborne,
   ControlPlayer,
   TickOvercharges,
+  TickOverdrives,
   // Casts (from skills, and from passives queued last step) are carried out
   // right after they are made, in the same step.
   ReadySkillsInPractice,
@@ -127,6 +129,7 @@ const gameplay = Game.Schedule.when(
   CastLifts,
   CastThunderclaps,
   CastOvercharges,
+  CastOverdrives,
   CastGuards,
   CastBraces,
   CastBarriers,

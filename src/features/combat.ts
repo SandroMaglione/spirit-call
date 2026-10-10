@@ -28,6 +28,7 @@ import {
   Enemy,
   Energy,
   EnergyLedger,
+  Explosion,
   Game,
   Guard,
   Mantle,
@@ -37,6 +38,7 @@ import {
   Hit,
   HitFlash,
   HitStop,
+  Hitbox,
   Hurtbox,
   Immortal,
   Impact,
@@ -112,9 +114,16 @@ export const MoveProjectiles = (() => {
       barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } })
     },
     resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion), mantle: Game.System.readResource(Mantle) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded) }
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) }
   }, ({ queries, resources, events, commands }) => {
     const dt = resources.time.get().dt
+    /** A shot that bursts where it stops (see `OverdriveEffect`): its blast there. */
+    const burst = (projectile: ProjectileValue, at: Vec2): void => {
+      const blast = projectile.blast
+      if (blast === undefined || blast === null) return
+      commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, { area: { kind: "circle", center: at, radius: blast.radius }, faction: projectile.faction, blow: blast.blow, remaining: 0.06, hit: [] }]))
+      events.explosion.emit({ at, radius: blast.radius, faction: projectile.faction, kind: "blast", heavy: false, element: blast.blow.element?.id ?? null, skill: blast.skill })
+    }
     const window = resources.tuning.get().perfectDodge.window
     const boxes = wallBoxes(queries.walls.each())
 
@@ -214,12 +223,14 @@ export const MoveProjectiles = (() => {
 
       if (shieldedAt !== undefined) {
         data.position.set(shieldedAt)
+        burst(projectile, shieldedAt)
         events.impact.emit({ at: shieldedAt, faction: projectile.faction, wall: false, shielded: true })
         commands.despawn(entity.id)
         continue
       }
       if (stopAt !== undefined) {
         data.position.set({ x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
+        burst(projectile, { x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
         commands.despawn(entity.id)
         continue
       }
@@ -227,6 +238,7 @@ export const MoveProjectiles = (() => {
         const at = { x: origin.x + delta.x * wall.time, y: origin.y + delta.y * wall.time }
         data.position.set(at)
         events.impact.emit({ at, faction: projectile.faction, wall: true, shielded: false })
+        burst(projectile, at)
         commands.despawn(entity.id)
         continue
       }
@@ -235,6 +247,7 @@ export const MoveProjectiles = (() => {
       const range = projectile.range - travel
       if (range <= 1e-6) {
         events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: false })
+        burst(projectile, at)
         commands.despawn(entity.id)
         continue
       }

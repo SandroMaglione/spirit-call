@@ -18,7 +18,7 @@ import type { Tally } from "./content/stars.ts"
 import type { Affinities, ElementId, ReactionKind, ReactionRecord, StateId } from "./content/elements.ts"
 import type { AttackSpec, EnemyKind } from "./content/enemies.ts"
 import type { Passive, TriggeredEffect } from "./content/passives.ts"
-import type { BarrierEffect, BraceEffect, CompanionsEffect, MantleEffect, OverchargeEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
+import type { BarrierEffect, BraceEffect, CompanionsEffect, MantleEffect, OverchargeEffect, OverdriveEffect, GuardEffect, LobEffect, EarthriseEffect, SkillEffect, SkillId, SkillSlot, TotemEffect, VortexEffect } from "./content/skills.ts"
 import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
@@ -206,6 +206,18 @@ export const Overcharged = Descriptor.Component<{
   readonly blow: Blow
   readonly skill: SkillId | null
 }>()("Shooter/Overcharged")
+
+/**
+ * A gun driven past its limit (see `OverdriveEffect`), on the member
+ * overdriven, for `remaining` more seconds: her shots burst with `blast`
+ * where they stop; `skill` names it on what it strikes.
+ */
+export const Overdriven = Descriptor.Component<{
+  readonly remaining: number
+  readonly effect: OverdriveEffect
+  readonly blast: Blow
+  readonly skill: SkillId | null
+}>()("Shooter/Overdriven")
 
 /**
  * A guard being raised (see `GuardEffect`), on the member raising it: she is
@@ -508,6 +520,8 @@ export interface ProjectileValue {
   readonly pierce: number
   /** Entity ids already hit, so a piercing shot hits each target once. */
   readonly hit: ReadonlyArray<number>
+  /** Where it stops (on what it hits, a wall, or the end of its range), a blast of `radius` with `blow` (see `OverdriveEffect`). */
+  readonly blast?: { readonly radius: number; readonly blow: Blow; readonly skill: SkillId | null } | undefined
 }
 export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Projectile")
 
@@ -1292,6 +1306,7 @@ export const Game = Schema.bind(
       Companion,
       Lifted,
       Overcharged,
+      Overdriven,
       Raising,
       Bracing,
       BraceCounter,

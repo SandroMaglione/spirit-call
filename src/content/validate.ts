@@ -231,6 +231,10 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       positive(problems, where, { length: effect.length, width: effect.width, active: effect.active })
       if (!(effect.carries >= 0 && effect.carries <= effect.length)) problems.push(`${where}: carries must be between 0 and its length (is ${effect.carries})`)
       return
+    case "overdrive":
+      positive(problems, where, { seconds: effect.seconds, radius: effect.radius, blastRadius: effect.blast.radius })
+      if (!(effect.fireRate > 0 && effect.fireRate <= 1)) problems.push(`${where}: fireRate must be a share in (0, 1] (is ${effect.fireRate})`)
+      return
     case "overcharge":
       positive(problems, where, { seconds: effect.seconds, speed: effect.speed, dash: effect.dash, radius: effect.radius })
       return

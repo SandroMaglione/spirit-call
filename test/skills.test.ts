@@ -9,8 +9,8 @@ import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { normalizeOr } from "../src/math/vec.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Cast, Companion, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Player, Position, Projectile, Skills } from "../src/schema.ts"
-import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack, hitBy } from "./helpers.ts"
+import { BasicAttack, Cast, Companion, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Overdriven, Player, Position, Projectile, Skills } from "../src/schema.ts"
+import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack, hitBy, volley, withVolley } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
@@ -289,11 +289,45 @@ describe("ultimates (Shift)", () => {
     })
   })
 
-  describe("the Gunner's Barrage", () => {
+  describe("the Gunner's Overdrive", () => {
     const spec = defaultTuning.skills.barrage.effect
+    if (spec.kind !== "overdrive") throw new Error("the Barrage is an Overdrive")
+    const Gun = Game.Inspector("Test/Gun", {
+      queries: { player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack), overdriven: Game.Query.optional(Overdriven) }, with: [Player] }) }
+    }, ({ queries }) => {
+      const { data } = queries.player.each()[0]!
+      return { reloading: data.basicAttack.get().reloading, spent: data.basicAttack.get().spent, overdriven: data.overdriven.present }
+    })
+    /** Taps of the trigger, one every `every` steps from `from`. */
+    const taps = (count: number, from: number, every: number) => Array.from({ length: count }, (_, index) => [{ frame: from + index * every, press: ["primary" as const] }, { frame: from + index * every + 1, release: ["primary" as const] }]).flat()
+
+    it("runs her gun hot a while: her magazine never runs dry, then it wears off", () => {
+      const run = range([], { x: 300, y: 0 }, { build: gunner, keys: [ultimate(1)], pointer: taps(10, 6, 7) })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(4)
+      expect(run.runtime.inspect(Gun).overdriven).toBe(true)
+      run.step(80)
+      expect(run.runtime.inspect(Gun).reloading).toBe(0)
+      expect(run.runtime.inspect(Gun).spent).toBe(0)
+      run.step(steps(spec.seconds))
+      expect(run.runtime.inspect(Gun).overdriven).toBe(false)
+    })
+
+    it("sets what her shots hit alight, and each shot bursts on what it hits, catching what stands by", () => {
+      const run = range([{ x: 300, y: 0 }, { x: 300, y: spec.blast.radius - 5 }], { x: 300, y: 0 }, { tuning: sturdy, build: gunner, keys: [ultimate(1)], pointer: taps(1, 8, 7) })
+      run.runtime.tick(Game.Schedule(FillEnergy))
+      run.step(40)
+      const [aimed, beside] = run.world().enemies
+      expect(aimed!.state).toBe("burning")
+      expect(beside!.health).toBeLessThan(1000)
+    })
+  })
+
+  describe("a volley (the Gunner's Barrage before the Overdrive)", () => {
+    const spec = volley
 
     it("lobs its shells one after the other around the cursor, each blasting and leaving a fire pool", () => {
-      const run = range([{ x: 250, y: 0 }], { x: 250, y: 0 }, { tuning: sturdy, build: gunner, keys: [ultimate(1)] })
+      const run = range([{ x: 250, y: 0 }], { x: 250, y: 0 }, { tuning: withVolley(sturdy), build: gunner, keys: [ultimate(1)] })
       run.runtime.tick(Game.Schedule(FillEnergy))
       run.step(3)
       const shells = run.world().grenades
