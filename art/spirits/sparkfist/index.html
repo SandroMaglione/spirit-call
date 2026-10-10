@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sparkfist · Static model review</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #101c2b; color: #f4eeff; font: 14px/1.5 system-ui, sans-serif; }
+    main { height: 100dvh; display: grid; grid-template-columns: minmax(0,1fr) 300px; }
+    #view { position: relative; min-width: 0; min-height: 0; }
+    canvas { display: block; touch-action: none; }
+    #hint { position: absolute; bottom: 18px; left: 20px; color: #b8b0cb; font-size: 12px; pointer-events: none; }
+    aside { padding: 25px 22px; border-left: 1px solid #3c3554; overflow: auto; }
+    h1 { font-size: 28px; margin: 6px 0; font-weight: 650; }
+    h2 { font-size: 13px; margin: 22px 0 9px; }
+    p { color: #b8b0cb; margin: 8px 0 16px; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 7px; }
+    button, .download { color: #f4eeff; background: #28223c; border: 1px solid #665384; padding: 9px 12px; border-radius: 5px; font: inherit; font-size: 13px; cursor: pointer; min-height: 44px; }
+    button:hover, button[aria-pressed="true"] { color: #211532; background: #ffe476; border-color: #ffe476; }
+    label { display: block; margin: 12px 0; cursor: pointer; }
+    input { accent-color: #ffe476; }
+    a { color: #ffe476; text-underline-offset: 3px; }
+    .download { display: inline-block; text-decoration: none; margin: 6px 2px 0 0; }
+    #status { font-size: 12px; color: #cfb5fb; }
+    #error { color: #ffa6a6; white-space: pre-wrap; }
+    @media (max-width: 700px) {
+      main { grid-template-columns: 1fr; grid-template-rows: 57dvh minmax(0,1fr); }
+      aside { border-left: 0; border-top: 1px solid #3c3554; padding: 17px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div id="view" aria-label="Interactive static Sparkfist model"><div id="hint">Drag to orbit · pinch or scroll to zoom</div></div>
+  <aside>
+    <h1>Sparkfist</h1>
+    <p>Violet facets, gold floating shards, warm electric eyes, and a small rear lightning mark.</p>
+    <div id="status" role="status">Loading model…</div>
+    <h2>Compare</h2>
+    <div class="buttons"><button data-model="sparkfist" aria-pressed="true">Sparkfist</button><button data-model="ice">Ice source</button></div>
+    <h2>Camera</h2>
+    <div class="buttons">
+      <button data-view="hero" aria-pressed="true">Hero</button><button data-view="front">Front</button>
+      <button data-view="back">Back</button><button data-view="left">Left</button><button data-view="right">Right</button>
+      <button data-view="top">Top</button><button data-view="bottom">Bottom</button><button data-view="game">Game camera</button>
+    </div>
+    <label><input id="wireframe" type="checkbox"> Wireframe</label>
+    <label><input id="small" type="checkbox"> Gameplay size, 32 px high</label>
+    <label><input id="floor" type="checkbox" checked> Floor grid</label>
+    <h2>Review files</h2>
+    <p><a href="./renders/review-comparison.png">Before and after</a> · <a href="./renders/review-angles.png">All angles</a> · <a href="./renders/review-game-size.png">Phone scale</a></p>
+    <a class="download" href="./sparkfist-spirit.glb" download>Static GLB</a>
+    <a class="download" href="./sparkfist-spirit.blend" download>Blender source</a>
+    <p><a href="./animation.html">Animation review</a> · <a href="./README.md">Model notes</a></p>
+    <pre id="error" role="alert"></pre>
+  </aside>
+</main>
+<script type="module" src="./viewer.mjs"></script>
+</body>
+</html>

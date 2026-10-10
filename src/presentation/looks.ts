@@ -210,8 +210,11 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   gunner: fireSpirit,
   tidecaller: waterSpirit,
   stormcaller: thunderSpirit,
-  // A placeholder until her own spirit: the thunder spirit, turned an electric blue.
-  sparkfist: { ...thunderSpirit, moments: spiritMoments(4, "sparkStep", "stormFlurry"), tint: { hue: -80, saturation: 1.3, lightness: 1.05 } },
+  sparkfist: {
+    kind: "model", model: "sparkfistSpirit", widthFactor: 1.5, heightFactor: view.bodyHeightFactor,
+    moments: spiritMoments(4, "sparkStep", "stormFlurry"), eyes: spiritEyes,
+    drops: { rate: 20, colors: [0xffe476, 0xc8a8fa, 0x7953c5], size: 1.8, kind: "ember" }
+  },
   // A placeholder until her own spirit: the water spirit, a deeper sea green.
   tidewarden: { ...waterSpirit, moments: spiritMoments(4, "brace", "floodgate"), tint: { hue: -30, saturation: 0.85, lightness: 0.8 } },
   // A placeholder until her own spirit: the rock spirit, a darker, redder stone.

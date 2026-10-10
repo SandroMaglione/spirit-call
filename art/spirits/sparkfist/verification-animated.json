@@ -1,0 +1,27 @@
+{
+  "passed": true,
+  "clips": 10,
+  "triangles": 1218,
+  "meshes": 8,
+  "materials": 3,
+  "channels_per_clip": {
+    "Idle": 24,
+    "Run": 24,
+    "AttackA": 24,
+    "AttackB": 24,
+    "AttackC": 24,
+    "Power": 24,
+    "Dash": 24,
+    "Hurt": 24,
+    "Cast": 24,
+    "Ultimate": 24
+  },
+  "static_source_preserved": true,
+  "accepted_ice_animation_channels_identical": true,
+  "native_dimensions_m": [
+    0.5499999821186066,
+    0.3500000089406967,
+    0.800000011920929
+  ],
+  "sha256": "bf8ba7d8779e2fd016f22a4fac71a4ec5ddd169cc019086b0d045202b8bcaecb"
+}
