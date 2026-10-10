@@ -71,6 +71,14 @@ export const Enemies = ({ store, kinds, inspected, inspect }: { readonly store: 
   </div>)}</div>
 )
 
+/** A fight's enemies as faces over what they are weak to, where room is short (a brief), wrapping onto as many lines as they need. */
+export const EnemyRow = ({ store, kinds }: { readonly store: UiStore; readonly kinds: ReadonlyArray<EnemyKind> }) => (
+  <div class="enemies enemies--wrap">{kinds.map((kind) => <span key={kind} class="enemies__face" title={store.tuning.value.enemies[kind].name} aria-label={store.tuning.value.enemies[kind].name}>
+    <Face of={{ enemy: kind }} size={32} />
+    <Affinities traits={store.tuning.value.enemies[kind].elements} />
+  </span>)}</div>
+)
+
 /** A fight's enemies as faces over what they are weak to, where room is short (a brief), wrapping onto as many lines as they need: tap one to read about it, again to put it back. */
 export const EnemyFaces = ({ store, kinds, inspected, inspect }: { readonly store: UiStore; readonly kinds: ReadonlyArray<EnemyKind>; readonly inspected: EnemyKind | null; readonly inspect: (kind: EnemyKind | null) => void }) => (
   <div class="enemies enemies--wrap">{kinds.map((kind) => <button type="button" key={kind} class="enemies__face face-button" aria-label={store.tuning.value.enemies[kind].name} aria-pressed={kind === inspected} onClick={() => inspect(kind === inspected ? null : kind)}>
@@ -189,7 +197,10 @@ export const describeSource = (store: UiStore, source: Source): string => {
       return `All three stars in one run of ${tuning.quests[source.quest].name}${source.rank > 1 ? ` at rank ${ranks[source.rank - 1]}` : ""}`
     case "tier": {
       const track = tuning.tracks[source.track]
-      if (track.kind === "audition") return track.character !== null && source.tier === track.tiers.length && track.tiers.length !== 3 ? `${track.name}: the mastery` : `${track.name}, part ${source.tier}`
+      if (track.kind === "audition" && track.character !== null) {
+        const name = tuning.characters[track.character].name
+        return source.tier === track.tiers.length ? `${name}'s mastery` : `${name}'s audition, part ${source.tier}`
+      }
       return `First clear of ${track.name}, tier ${source.tier}`
     }
   }

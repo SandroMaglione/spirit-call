@@ -48,6 +48,9 @@
 .relic-prize__stars { display: inline-flex; gap: 1px; font-size: 12px; }
 .relic-prize.is-had .relic-prize__orb { animation: none; filter: grayscale(.6) brightness(.8); }
 .relic-prize.is-had .unlock-badge__glint { display: none; }
+.relic-prize--button { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.relic-prize__icon .face { width: 40px; height: 40px; }
+.goal--perfect .amounts { margin-left: auto; }
 .relic-prize.is-had .relic-prize__ring { animation: none; }
 /* All three in one run: the stars glow as one. */
 .stars.is-perfect { filter: drop-shadow(0 0 4px var(--gold-hi)); }
@@ -103,7 +106,12 @@
 .character__stage[data-tab="gear"] { right: calc(var(--right) + 334px); }
 .character__stage[data-tab="kit"] { right: calc(var(--right) + 456px); left: 130px; }
 /* Room around the faces, so the picked one's glow is never cut square by the scrolling row. */
-.roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); }
+.roster { display: flex; gap: 8px; padding: 14px; margin: -8px; max-width: calc(100% + 16px); overflow-x: auto; scrollbar-width: none; }
+.roster::-webkit-scrollbar { display: none; }
+/* The roster takes a fixed share of the bar and scrolls within it as the cast grows; the name and the close button keep their places. */
+.character .topbar { grid-template-columns: minmax(0, 1fr) minmax(0, 330px) minmax(0, 1fr); }
+.character .topbar__fill { justify-content: safe center; }
+.character .roster { -webkit-mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); mask: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 22px), transparent); }
 /* The roster stands in the middle of the bar whatever sits beside it (a longer name, the gold shown only for one owned), so the faces never shift. */
 .character .crumb { max-width: 190px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .character .crumb { margin-right: auto; }
@@ -215,6 +223,14 @@
 .collection__price { display: inline-flex; align-items: center; gap: 3px; }
 .collection__price .menu-icon { font-size: 14px; }
 .collection__empty { padding: 10px 4px; font-size: 13px; }
+/* A model shelf: the model large over the right, a short tag at its top, Details at its foot. */
+.collection__stage--wide { right: var(--right) !important; }
+.collection__tag { position: absolute; right: var(--right); top: 66px; z-index: 3; display: grid; justify-items: end; gap: 5px; text-align: right; text-shadow: 0 1px 4px #000a; }
+.collection__tag b { font-size: 26px; font-weight: 800; line-height: 1.05; }
+.collection__icons { display: flex; gap: 6px; font-size: 22px; }
+.collection__tag small { display: flex; align-items: center; gap: 5px; max-width: 260px; font-size: 12.5px; font-weight: 700; color: var(--gold-hi); }
+.collection__tag small .menu-icon { font-size: 13px; flex: none; }
+.collection__details { position: absolute; left: calc(var(--left) + 290px); bottom: var(--bottom, 14px); z-index: 3; }
 .collection__from { display: flex; align-items: center; gap: 6px; margin: 8px 0 0; font-size: 13px; font-weight: 700; }
 .collection__from .menu-icon { font-size: 14px; flex: none; color: var(--gold-hi); }
 .collection__tier-from { display: block; margin-top: 2px; font-size: 11.5px; color: var(--dim); }

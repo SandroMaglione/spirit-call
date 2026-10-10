@@ -221,6 +221,7 @@ button.card:active { transform: translateY(0) scale(.96); }
 .dim { color: var(--dim); }
 .row { width: 100%; min-height: 40px; padding: 0 10px; border-radius: 6px; background: var(--band); display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; text-shadow: none; }
 .row__lead { width: 18px; text-align: center; font-size: 12px; opacity: .6; flex: none; }
+.row__lead:has(.face) { width: auto; opacity: 1; margin-right: 6px; }
 .row__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row__end { margin-left: auto; font-size: 12px; color: var(--dim); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
 .row__end .menu-icon { font-size: 14px; }
