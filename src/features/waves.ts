@@ -69,7 +69,9 @@ export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number,
  * enemy that is no champion leads it, an elite of the twist's element (from
  * the second wave) and carrying a shield, as the twist says.
  */
-export const withTwist = (entries: ReadonlyArray<WaveEntry>, twist: TwistValue, number: number): Array<WaveEntry> => {
+export const withTwist = (wave: ReadonlyArray<WaveEntry>, twist: TwistValue, number: number): Array<WaveEntry> => {
+  // A ruleset's leader comes at the head of every wave.
+  const entries = twist.leader === null ? wave : [twist.leader, ...wave]
   const leader = entries.findIndex((entry) => !entryChampion(entry))
   if (leader === -1 || (twist.elites === null && !twist.shields)) return [...entries]
   let led = entries[leader]!

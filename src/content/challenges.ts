@@ -532,6 +532,11 @@ export const challenges = {
   untilFall4: untilFall("necropolis", metBy.four, ["fire", "water"], [["chaser", "chaser", "swarmer"], ["shooter", "charger", "chaser"], ["guardian", "sniper", "swarmer", "chaser"]]),
   untilFall5: untilFall("necropolis", metBy.five, ["fire", "water", "thunder"], [["chaser", "chaser", "swarmer"], ["shooter", "charger", "stalker"], ["guardian", "sniper", "warden", "chaser"]]),
   untilFall6: untilFall("necropolis", metBy.six, ["fire", "water", "thunder"], [["chaser", "chaser", "volatile"], ["shooter", "galeCaster", "stalker"], ["guardian", "juggernaut", "warden", "chaser"]]),
+  // Until Fall's top tiers, each a ruleset of its own (see content/hardcore.ts).
+  untilFall7: untilFall("harbor", ["shooter", "sniper", "charger", "galeCaster", "volatile", "chaser"], ["fire", "thunder"], [["sniper", "chaser", "chaser"], ["shooter", "galeCaster", "charger"], ["sniper", "volatile", "shooter", "chaser"]]),
+  untilFall8: untilFall("kilnworks", ["brute", "juggernaut", "guardian", "warden", "swarmer", "chaser"], ["fire", "water"], [["guardian", "chaser", "swarmer"], ["brute", "warden", "chaser"], ["juggernaut", "guardian", "swarmer", "swarmer"]]),
+  untilFall9: untilFall("cistern", ["stalker", "chaser", "swarmer", "charger", "volatile"], ["thunder"], [["chaser", "chaser", "swarmer"], ["stalker", "charger", "chaser"], ["stalker", "volatile", "swarmer", "swarmer"]]),
+  untilFall10: untilFall("citadel", metBy.six, ["fire", "water", "thunder"], [["guardian", "volatile", "chaser"], ["sniper", "galeCaster", "stalker", "chaser"], ["juggernaut", "warden", "brute", "swarmer"]]),
   /** The Gauntlet's tiers: mixed formations with elite leaders. */
   gauntlet: waves("The Gauntlet", "Clear eight mixed waves in the kilnworks, ending with a burning champion guardian.", "kilnworks", [
     ["chaser", "chaser", "swarmer"],
@@ -562,6 +567,26 @@ export const challenges = {
     ["warden", "stalker", "shooter", "chaser", "swarmer"],
     ["juggernaut", "volatile", "volatile", elite("shooter", "water"), "chaser"],
     [elite("brute", "fire"), elite("guardian", "thunder"), "warden", "stalker", "swarmer"]
+  ]),
+  gauntlet4: waves("The Gauntlet", "Eight waves among the obelisks: wardens guarding snipers, stalkers in between.", "necropolis", [
+    ["warden", "sniper", "chaser"],
+    ["stalker", "shooter", "swarmer"],
+    ["warden", "warden", "sniper", "chaser"],
+    [elite("sniper", "thunder"), "stalker", "galeCaster"],
+    ["warden", "sniper", "sniper", "swarmer", "swarmer"],
+    [elite("stalker", "fire"), "warden", "shooter", "chaser"],
+    ["galeCaster", "sniper", "stalker", "volatile"],
+    [elite("warden", "water"), elite("sniper", "fire"), "stalker", "galeCaster", "chaser"]
+  ]),
+  gauntlet5: waves("The Gauntlet", "Eight waves at the harbor: every kind at its hardest, ending with a champion juggernaut.", "harbor", [
+    ["chaser", "volatile", "swarmer"],
+    ["charger", "sniper", "galeCaster"],
+    [elite("brute", "water"), "warden", "shooter"],
+    ["stalker", "stalker", "volatile", "chaser"],
+    [shielded("guardian"), elite("sniper", "thunder"), "charger", "swarmer"],
+    ["juggernaut", "galeCaster", "shooter", "chaser"],
+    [elite("stalker", "fire"), "warden", "volatile", "volatile"],
+    [champion("juggernaut", "thunder"), "sniper", "charger", "chaser"]
   ]),
   /** Brute Siege's tiers: a champion brute and its guard. */
   siege: waves("Brute Siege", "Nine waves; midway a champion brute joins, and stays until it falls.", "courtyard", [
@@ -597,6 +622,28 @@ export const challenges = {
     ["brute", "stalker", "galeCaster", "swarmer"],
     [elite("guardian", "thunder"), shielded("guardian"), "juggernaut", "chaser"]
   ]),
+  siege4: waves("Brute Siege", "Nine waves in the burning kilnworks; midway a champion juggernaut joins, and stays until it falls.", "kilnworks", [
+    ["chaser", "brute", "swarmer"],
+    ["guardian", "charger", "volatile"],
+    ["brute", "warden", "chaser"],
+    [elite("brute", "fire"), "galeCaster", "swarmer"],
+    [shielded("guardian"), "juggernaut", "chaser"],
+    [champion("juggernaut", "fire"), "charger", "chaser"],
+    [elite("guardian", "water"), "sniper", "volatile"],
+    ["brute", "brute", "warden", "swarmer"],
+    [elite("juggernaut", "thunder"), shielded("brute"), "charger", "chaser"]
+  ]),
+  siege5: waves("Brute Siege", "Nine waves in the cistern; midway a soaked champion brute joins with stalkers at its side, and stays until it falls.", "cistern", [
+    ["chaser", "stalker", "swarmer"],
+    ["brute", "warden", "volatile"],
+    ["stalker", "stalker", "charger"],
+    [elite("juggernaut", "fire"), "guardian", "chaser"],
+    [shielded("brute"), "galeCaster", "sniper"],
+    [champion("brute", "water"), "stalker", "chaser"],
+    [elite("stalker", "thunder"), "volatile", "volatile"],
+    ["juggernaut", "brute", "warden", "swarmer"],
+    [elite("brute", "fire"), elite("guardian", "thunder"), "stalker", "chaser"]
+  ]),
   /** The Keep's tiers: the citadel's last stand. */
   keep: waves("The Keep", "Ten waves in the citadel, hunted by a burning champion stalker, ending with two elite brutes and their guard.", "citadel", [
     ["guardian", "chaser", "chaser"],
@@ -622,7 +669,30 @@ export const challenges = {
     ["juggernaut", "brute", "sniper", "sniper", "swarmer"],
     [elite("juggernaut", "fire"), elite("juggernaut", "thunder"), "guardian", "charger", "chaser", "chaser"]
   ]),
-
+  keep3: waves("The Keep", "Ten waves in the monastery, held by a champion guardian charged with thunder, with wardens on the walls.", "monastery", [
+    ["guardian", "chaser", "swarmer"],
+    ["warden", "sniper", "chaser"],
+    ["brute", "volatile", "volatile"],
+    [elite("guardian", "water"), "shooter", "galeCaster"],
+    [champion("guardian", "thunder"), "chaser", "swarmer"],
+    ["warden", "warden", "sniper", "chaser"],
+    [elite("charger", "fire"), "stalker", "volatile"],
+    ["juggernaut", "sniper", "swarmer", "swarmer"],
+    [elite("sniper", "thunder"), "warden", "brute", "chaser"],
+    [elite("juggernaut", "water"), elite("stalker", "fire"), "guardian", "galeCaster", "chaser"]
+  ]),
+  keep4: waves("The Keep", "Ten waves in the citadel, hunted by a burning champion juggernaut, ending with the whole guard at its hardest.", "citadel", [
+    ["guardian", "volatile", "chaser"],
+    ["stalker", "sniper", "swarmer"],
+    ["brute", "galeCaster", "charger"],
+    [elite("warden", "thunder"), "sniper", "chaser", "chaser"],
+    [champion("juggernaut", "fire"), "stalker", "chaser"],
+    [elite("sniper", "water"), "volatile", "volatile", "swarmer"],
+    [shielded(elite("brute", "thunder")), "charger", "galeCaster"],
+    ["juggernaut", "warden", "stalker", "chaser"],
+    [elite("guardian", "fire"), elite("stalker", "thunder"), "sniper", "swarmer"],
+    [elite("juggernaut", "water"), elite("brute", "fire"), shielded("guardian"), "stalker", "chaser"]
+  ]),
   // The element trials: what each element struggles against, rank by rank as the main line brings it.
   windTrial: trial("Wind Trial", "monastery", ["guardian", "swarmer"], ["chaser", "shooter"], null),
   windTrial2: trial("Wind Trial", "monastery", ["guardian", "brute", "swarmer"], ["chaser", "shooter", "sniper"], null),

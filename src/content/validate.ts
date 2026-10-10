@@ -563,7 +563,7 @@ const checkOpening = (problems: Array<string>, where: string, tuning: Tuning, ch
 const checkGated = (problems: Array<string>, where: string, tuning: Tuning, challenge: ChallengeId, enemyLevel: number, gates: ReadonlyArray<QuestAt>, twist: RankTwist = noTwist): void => {
   if (!has(tuning.challenges, challenge) || gates.length === 0) return
   const shown = challengeShows(tuning, challenge)
-  const shows = { ...shown, elites: new Set([...shown.elites, ...(twist.elites === null ? [] : [twist.elites])]), shield: shown.shield || twist.shields }
+  const shows = { ...shown, enemies: new Set([...shown.enemies, ...(twist.leader === null ? [] : [twist.leader])]), elites: new Set([...shown.elites, ...(twist.elites === null ? [] : [twist.elites])]), shield: shown.shield || twist.shields }
   // Everything that must be cleared before, followed through the gates of the gates.
   const cleared = new Set<string>()
   const follow = (gate: QuestAt): void => {

@@ -4,6 +4,7 @@
   "model": "hearthSpirit",
   "url": "http://192.168.0.45:5208/?play&team=hearth,tidecaller,gunner&challenge=practice&practice=chaser&charged&touch",
   "viewport_css_pixels": [844, 390],
+  "additional_viewport_css_pixels": [390, 844],
   "input": "Synthetic touch PointerEvents through the real canvas input, plus keyboard movement and party switching; pointer capture stubbed for automation",
   "physical_device_tested": false,
   "confirmed": ["idle", "movement", "double-tap dash", "touch dash", "three combo steps", "charged attack", "Kindle", "Wildfire", "hurt from enemies", "switch to Water and Fire and back to Hearth"],
@@ -16,5 +17,5 @@
   },
   "runtime_contact_test": "Puppet reaches AttackC's exported frame 6 pose after Run, including bowl rotation, flame scale and support transforms",
   "source_audit": "All ten clips sampled at 120 Hz; rest geometry and colors preserved; rigid bowl; no horizontal root motion; minimum ground clearance 0.0478 m",
-  "checks": {"files_passed": 83, "tests_passed": 699, "tests_skipped": 1, "build": "passed"}
+  "checks": {"files_passed": 83, "tests_passed": 706, "tests_skipped": 1, "build": "passed", "basis": "After merging current main with Quarry's integration"}
 }

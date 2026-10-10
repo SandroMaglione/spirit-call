@@ -1,0 +1,42 @@
+{
+  "Idle": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "Run": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "AttackA": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "AttackB": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "AttackC": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "Power": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "Dash": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "Hurt": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "Cast": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  },
+  "Ultimate": {
+    "sample_rate_hz": 240,
+    "intersections": []
+  }
+}

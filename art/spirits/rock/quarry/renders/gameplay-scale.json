@@ -1,0 +1,30 @@
+{
+  "reviewedOn": "2026-10-10",
+  "radius": 16,
+  "facing": {
+    "x": 0,
+    "y": 1
+  },
+  "idlePhase": 0,
+  "geometryOnly": true,
+  "measurements": [
+    {
+      "centralWidth": 32.28003068379498,
+      "character": "tidecaller",
+      "fullHeight": 40.76031109712113,
+      "fullWidth": 32.28003068379498
+    },
+    {
+      "centralWidth": 31.658692775819937,
+      "character": "quarry",
+      "fullHeight": 40.71122451625071,
+      "fullWidth": 53.508210009617756
+    },
+    {
+      "centralWidth": 26.235095725482388,
+      "character": "gunner",
+      "fullHeight": 50.772884851043756,
+      "fullWidth": 26.584777903998706
+    }
+  ]
+}

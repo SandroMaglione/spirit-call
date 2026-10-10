@@ -217,7 +217,6 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
   },
   // Opposing crescents frame Tidewarden's dark core; keep the sheet's own colors.
   tidewarden: { ...waterSpirit, model: "waterCrescent", moments: spiritMoments(4, "brace", "floodgate") },
-  // A placeholder until her own spirit: the rock spirit, a darker, redder stone.
   // A placeholder until her own spirit: the wind spirit, a paler, cooler air.
   windwall: { ...windSpirit, moments: spiritMoments(3, "galeWall", "eyeOfTheStorm"), tint: { hue: 25, saturation: 0.75, lightness: 1.1 } },
   // Hearth's floating brazier keeps its stone facets and warm flame colors from the sheet.
@@ -226,7 +225,14 @@ export const characterLooks: Readonly<Record<CharacterId, BodyLook>> = {
     moments: spiritMoments(3, "kindle", "wildfire"), eyes: spiritEyes,
     drops: { rate: 20, colors: [0xffd54a, 0xff8a3d, 0xe6391f], size: 2, kind: "ember" }
   },
-  quarry: { ...rockSpirit, moments: { ...spiritMoments(3, "faultLine", "landslide"), run: { clip: "Run", distance: 115 } }, tint: { hue: -15, saturation: 1.2, lightness: 0.8 } }
+  // Four connected stone legs carry the moss mantle; preserve its approved sheet colors.
+  quarry: {
+    kind: "model", model: "quarrySpirit", widthFactor: 1.5,
+    heightFactor: view.bodyHeightFactor, grounded: true,
+    moments: { ...spiritMoments(3, "faultLine", "landslide"), run: { clip: "Run", distance: 115 } },
+    eyes: spiritEyes,
+    drops: { rate: 12, colors: [0xbfa181, 0x8e7660, 0x82963b], size: 1.5, kind: "wisp" }
+  }
 }
 
 const enemyModel = (kind: EnemyKind, model: ModelId, stride: number, attackClips?: Readonly<Record<string, EnemyAttackClips>>): Extract<BodyLook, { kind: "model" }> => ({

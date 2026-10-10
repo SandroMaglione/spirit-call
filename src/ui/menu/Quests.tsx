@@ -220,20 +220,22 @@ const NewThing = ({ store, challenge, novelty, text, inspect }: { readonly store
   </div>
 }
 
-/** A higher rank's twist, first in its brief where a quest's new thing would be: what makes the replay harder, tagged like a new thing. */
-const RankTwist = ({ rank, twist }: { readonly rank: number; readonly twist: TwistValue }) => {
+/** A higher rank's twist, or a hardcore tier's ruleset (`title`), first in its brief where a quest's new thing would be: what makes it harder, tagged like a new thing. */
+const RankTwist = ({ store, title, twist }: { readonly store: UiStore; readonly title: string; readonly twist: TwistValue }) => {
   const lines = [
-    ...(twist.elites === null ? [] : [`From the second wave, each wave is led by an elite of ${twist.elites}.`]),
+    ...(twist.leader === null ? [] : [`Every wave is led by a ${store.tuning.value.enemies[twist.leader].name.toLowerCase()}.`]),
+    ...(twist.elites === null ? [] : [`From the second wave, each wave's leader is an elite of ${twist.elites}.`]),
     ...(twist.shields ? ["Each wave's leader carries a shield."] : [])
   ]
   return <div class="novelty">
     <span class="novelty__art novelty__floor" data-mark={twist.elites !== null ? "element" : twist.shields ? "ability" : undefined} data-tint={twist.elites ?? ""}><Icon name={twist.elites ?? "def"} /></span>
     <div>
-      <Label><span class="novelty__new">Rank {rankNames[rank - 1] ?? rank}</span>
+      <Label><span class="novelty__new">{title}</span>
+        {twist.leader !== null && <Tag mark="enemy">{`${store.tuning.value.enemies[twist.leader].name} leaders`}</Tag>}
         {twist.elites !== null && <Tag mark="element" tint={twist.elites} icon={twist.elites}>Elite leaders</Tag>}
         {twist.shields && <Tag mark="ability" icon="def">Shields</Tag>}
       </Label>
-      <p>{lines.length === 0 ? "Stronger enemies." : `Stronger enemies. ${lines.join(" ")}`}</p>
+      <p>{lines.length === 0 ? "Stronger enemies." : title.startsWith("Rank") ? `Stronger enemies. ${lines.join(" ")}` : lines.join(" ")}</p>
     </div>
   </div>
 }
@@ -290,7 +292,8 @@ const Brief = ({ store, nav, play }: { readonly store: UiStore; readonly nav: Na
     note={lock !== null ? describeLock(tuning, lock) : lent !== null ? `You play as ${tuning.characters[lent.character].name} alone, at level ${lent.level}: your own levels do not count.` : under !== null ? <>Your party is {under} levels under the enemies: they take less from it and hit harder.{weakest !== undefined && <button type="button" class="panel__link" onClick={() => nav.go({ kind: "character", character: weakest, tab: "overview" })}>Train</button>}</> : undefined}
     noteIcon={lock !== null ? "lock" : "info"}>
     {quest?.introduces != null && rank === 1 && <NewThing store={store} challenge={encounter.challenge} novelty={quest.introduces.novelty} text={quest.introduces.text} inspect={(kind) => (inspected.value = kind)} />}
-    {quest !== null && rank > 1 && <RankTwist rank={rank} twist={encounter.twist} />}
+    {quest !== null && rank > 1 && <RankTwist store={store} title={`Rank ${rankNames[rank - 1] ?? rank}`} twist={encounter.twist} />}
+    {track?.kind === "hardcore" && (encounter.twist.leader !== null || encounter.twist.elites !== null || encounter.twist.shields) && <RankTwist store={store} title="Ruleset" twist={encounter.twist} />}
     {steps.length > 1 && <div class="steps" role="radiogroup" aria-label={selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"}>
       <Label>{selected.kind === "quest" || trial ? "Rank" : track?.kind === "audition" ? "Part" : "Tier"}</Label>
       {steps.map((step) => {

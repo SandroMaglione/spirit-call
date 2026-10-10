@@ -1,0 +1,34 @@
+{
+  "method": "whole silhouette IoU, uniform height normalization, no width stretching",
+  "camera_angles": {
+    "front": [
+      0,
+      0
+    ],
+    "left": [
+      -74,
+      10
+    ],
+    "back": [
+      180,
+      0
+    ],
+    "right": [
+      74,
+      10
+    ],
+    "hero": [
+      -30,
+      20
+    ]
+  },
+  "scores": {
+    "front": 0.5211369833454302,
+    "left": 0.607742639040349,
+    "back": 0.5699741629740692,
+    "right": 0.6089255047207516,
+    "top": 0.8031307020071065,
+    "bottom": 0.690351043343751,
+    "hero": 0.6341842566486322
+  }
+}
