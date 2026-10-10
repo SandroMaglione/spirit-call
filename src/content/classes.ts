@@ -6,7 +6,7 @@
  * equipped. A class's own mechanic names no element. Numbers are
  * live-tunable: they are part of the `Tuning` resource.
  */
-import { arc, disc, lob, shot, spin, thrust } from "./attacks.ts"
+import { arc, disc, lob, shot, slam, spin, thrust } from "./attacks.ts"
 import type { AttackMove } from "./attacks.ts"
 
 export type ClassId = "blade" | "gun" | "disc" | "staff" | "gauntlets" | "hammer"
@@ -237,33 +237,30 @@ export const classes = {
     }
   }),
   /**
-   * Close, reaching to middle: slow, heavy swings, each sending shockwaves
-   * along the ground the way it swings (see `Shockwave`), so a crowd beyond
-   * the swing feels it too.
+   * Close, reaching to middle: slow, heavy blows brought down ahead of her.
+   * Each winds up, then lands on a wide circle a little way off, so she
+   * strikes where the crowd will be, not where it is.
    */
   hammer: classSpec({
     name: "Hammer",
     range: "close",
-    description: "Slow, heavy swings; each sends a shockwave along the ground the way it swings, stopped by walls.",
-    shapes: ["thrust", "arc", "spin"],
+    description: "Slow, heavy blows brought down a little way ahead, each crushing a wide circle where it lands.",
+    shapes: ["slam", "thrust", "spin"],
     magazine: false,
-    handling: {
-      comboWindow: 0.7, inputBuffer: 0.18, active: 0.1, lungeStop: 14, attackingSpeed: 0.45, holdDelay: 0.22, chargingSpeed: 0.5, dashFeed: 0, weave: false,
-      shockwave: { share: 0.35, reach: 1.6, speed: 720, radius: 20, fan: 3, ring: 6 }
-    },
+    handling: { comboWindow: 0.75, inputBuffer: 0.2, active: 0.1, lungeStop: 14, attackingSpeed: 0.35, holdDelay: 0.22, chargingSpeed: 0.5, dashFeed: 0, weave: false, shockwave: null },
     /**
-     * Quake: an overhead blow, a sweep, and a slam all around; charged, a
-     * great blow straight down, its wave running far.
+     * Quake: an overhead blow (lighter, to open), a heavier one, and a great
+     * one; charged, the greatest, widest of all.
      */
     plain: {
       name: "Quake",
-      description: "An overhead blow, a sweep, and a slam all around, each sending a shockwave on. Charged: a great blow, its wave running far.",
+      description: "Two overhead blows and a great one, each landing ahead of you. Charged: the greatest blow, widest of all.",
       combo: [
-        thrust({ reach: 120, width: 70, power: 22, knockback: 480, recovery: 0.34, hitStop: 0.07, heavy: false, lunge: 16 }),
-        arc({ reach: 125, arcDegrees: 150, power: 30, knockback: 620, recovery: 0.45, hitStop: 0.08, heavy: false, lunge: 10 }),
-        spin({ reach: 115, power: 52, knockback: 1050, recovery: 0.75, hitStop: 0.13, heavy: true, lunge: 0 })
+        slam({ reach: 175, radius: 55, windup: 0.2, power: 22, knockback: 520, recovery: 0.52, hitStop: 0.08, heavy: false, lunge: 8 }),
+        slam({ reach: 185, radius: 60, windup: 0.22, power: 48, knockback: 600, recovery: 0.7, hitStop: 0.09, heavy: false, lunge: 8 }),
+        slam({ reach: 200, radius: 80, windup: 0.3, power: 94, knockback: 1100, recovery: 1.08, hitStop: 0.14, heavy: true, lunge: 10 })
       ],
-      charged: { chargeTime: 0.7, move: thrust({ reach: 145, width: 90, power: 90, knockback: 1200, recovery: 0.7, hitStop: 0.15, heavy: true, lunge: 30 }) },
+      charged: { chargeTime: 0.7, move: slam({ reach: 215, radius: 95, windup: 0.14, power: 110, knockback: 1250, recovery: 0.9, hitStop: 0.16, heavy: true, lunge: 0 }) },
       /** A shoulder charge out of the dash. */
       dash: thrust({ reach: 110, width: 70, power: 10, knockback: 700, recovery: 0.3, hitStop: 0.07, heavy: false, lunge: 90 }),
       magazine: null,

@@ -34,11 +34,17 @@ interface MoveBase {
   readonly lunge: number
 }
 
-/** A melee move, reaching `reach` from the player's center: a sweeping arc, a narrow thrust, or a full spin. */
+/**
+ * A melee move, reaching `reach` from the player's center: a sweeping arc, a
+ * narrow thrust, a full spin, or a slam (a heavy blow brought down ahead of
+ * her after a `windup`, striking a circle of `radius` whose far edge is
+ * `reach` away; where it lands is fixed as she swings).
+ */
 export type MeleeMove =
   | (MoveBase & { readonly shape: "arc"; readonly reach: number; readonly arcDegrees: number })
   | (MoveBase & { readonly shape: "thrust"; readonly reach: number; readonly width: number })
   | (MoveBase & { readonly shape: "spin"; readonly reach: number })
+  | (MoveBase & { readonly shape: "slam"; readonly reach: number; readonly radius: number; readonly windup: number })
 
 /** Projectiles from the muzzle along the aim: `count` of them, spread evenly over `spreadDegrees`. */
 export interface ShotMove extends MoveBase {
@@ -91,7 +97,7 @@ export interface LobMove extends MoveBase {
 export type AttackMove = MeleeMove | ShotMove | DiscMove | LobMove
 
 /** Whether a move is a melee move (an area around the attacker), not something thrown or shot. */
-export const isMelee = (move: AttackMove): move is MeleeMove => move.shape === "arc" || move.shape === "thrust" || move.shape === "spin"
+export const isMelee = (move: AttackMove): move is MeleeMove => move.shape === "arc" || move.shape === "thrust" || move.shape === "spin" || move.shape === "slam"
 
 /** How far `move` reaches from her: a melee move's reach, how far a shot or a disc flies, where a lob can land. */
 export const reachOf = (move: AttackMove): number =>
@@ -184,6 +190,7 @@ export interface BasicAttackSpec {
 export const arc = (spec: Omit<Extract<MeleeMove, { shape: "arc" }>, "shape">): AttackMove => ({ shape: "arc", ...spec })
 export const thrust = (spec: Omit<Extract<MeleeMove, { shape: "thrust" }>, "shape">): AttackMove => ({ shape: "thrust", ...spec })
 export const spin = (spec: Omit<Extract<MeleeMove, { shape: "spin" }>, "shape">): AttackMove => ({ shape: "spin", ...spec })
+export const slam = (spec: Omit<Extract<MeleeMove, { shape: "slam" }>, "shape">): AttackMove => ({ shape: "slam", ...spec })
 export const shot = (spec: Omit<ShotMove, "shape">): AttackMove => ({ shape: "shot", ...spec })
 export const disc = (spec: Omit<DiscMove, "shape" | "bounces"> & Partial<Pick<DiscMove, "bounces">>): AttackMove => ({ shape: "disc", bounces: 0, ...spec })
 export const lob = (spec: Omit<LobMove, "shape">): AttackMove => ({ shape: "lob", ...spec })

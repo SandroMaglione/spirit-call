@@ -167,7 +167,9 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()
     const color = hitbox.faction === "enemy" ? view.telegraphLocked : hitbox.blow.element === null ? view.playerArea : view.elements[hitbox.blow.element.id]
-    drawArea(g, hitbox.area, 0, { color, fill: 0.55, outline: 1 })
+    // A hammer's blow (one with a windup) softer: faint while it falls, its own look marking where it lands.
+    const style = hitbox.delay === undefined ? { fill: 0.55, outline: 1 } : hitbox.delay > 0 ? { fill: 0.1, outline: 0.3 } : { fill: 0.3, outline: 0.6 }
+    drawArea(g, hitbox.area, 0, { color, ...style })
   }
 
   // Lobbed skills: an arc through the air (shadow on the floor, orb above it), then the fuse ring.

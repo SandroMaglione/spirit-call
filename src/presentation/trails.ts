@@ -38,6 +38,8 @@ export class SlashTrails {
 
   /** Starts the trail of a melee move facing `direction`; `sweep` -1 swings an arc the other way (a backhand). */
   add(move: MeleeMove, sweep: 1 | -1, direction: Vec2): void {
+    // A hammer's blow leaves no trail around her: it is drawn where it lands (see `ShowHammerBlows`).
+    if (move.shape === "slam") return
     this.trails.push({ move, angle: Math.atan2(direction.y, direction.x), sweep, heavy: move.heavy, age: 0 })
   }
 
@@ -111,6 +113,8 @@ export class SlashTrails {
         g.line(cx!, cy!, tx!, ty!, 3, spec.core, 0.9 * fade)
         return false
       }
+      case "slam":
+        return true
     }
   }
 

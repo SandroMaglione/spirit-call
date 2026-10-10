@@ -10,7 +10,7 @@
  * and a team equips each on one character at most. Numbers are
  * live-tunable: they are part of the `Tuning` resource.
  */
-import { arc, disc, shot, spin, thrust } from "./attacks.ts"
+import { arc, disc, shot, slam, spin, thrust } from "./attacks.ts"
 import type { BasicAttackSpec } from "./attacks.ts"
 import type { ClassId, ClassSpec, Moves } from "./classes.ts"
 import { combo, counter, finisher, lastRound, power } from "./passives.ts"
@@ -278,21 +278,21 @@ export const aspects = {
     infuse: finisher()
   }),
   /**
-   * Furrow (Hammer): long, narrow blows straight ahead, so each wave runs
-   * far down a line, carrying her element on the last; charged, a great
-   * blow whose wave runs farthest. For a line of enemies, or one far off.
+   * Furrow (Hammer): narrower blows, each landing farther down her aim than
+   * the last, carrying her element on the last; charged, a blow landing
+   * farthest. For a line of enemies, or one kept at a distance.
    */
   furrow: aspect({
     name: "Furrow",
-    description: "Long, narrow blows straight ahead, their waves running far down a line. Charged: a great blow whose wave runs farthest.",
+    description: "Narrower blows, each landing farther down a line. Charged: a blow landing farthest.",
     against: "A line of enemies, or one kept at a distance.",
     class: "hammer",
     combo: [
-      thrust({ reach: 140, width: 56, power: 22, knockback: 460, recovery: 0.34, hitStop: 0.07, heavy: false, lunge: 12 }),
-      thrust({ reach: 140, width: 56, power: 26, knockback: 500, recovery: 0.4, hitStop: 0.08, heavy: false, lunge: 12 }),
-      thrust({ reach: 160, width: 72, power: 50, knockback: 1000, recovery: 0.75, hitStop: 0.13, heavy: true, lunge: 16 })
+      slam({ reach: 185, radius: 45, windup: 0.2, power: 21, knockback: 500, recovery: 0.52, hitStop: 0.08, heavy: false, lunge: 8 }),
+      slam({ reach: 235, radius: 45, windup: 0.24, power: 46, knockback: 560, recovery: 0.7, hitStop: 0.09, heavy: false, lunge: 8 }),
+      slam({ reach: 285, radius: 60, windup: 0.32, power: 90, knockback: 1050, recovery: 1.08, hitStop: 0.14, heavy: true, lunge: 10 })
     ],
-    charged: { chargeTime: 0.7, move: thrust({ reach: 175, width: 72, power: 85, knockback: 1200, recovery: 0.7, hitStop: 0.15, heavy: true, lunge: 20 }) },
+    charged: { chargeTime: 0.7, move: slam({ reach: 320, radius: 75, windup: 0.16, power: 105, knockback: 1200, recovery: 0.9, hitStop: 0.16, heavy: true, lunge: 0 }) },
     /** A shoulder charge out of the dash. */
     dash: thrust({ reach: 110, width: 70, power: 10, knockback: 700, recovery: 0.3, hitStop: 0.07, heavy: false, lunge: 90 }),
     magazine: null,
@@ -301,21 +301,20 @@ export const aspects = {
     infuse: finisher()
   }),
   /**
-   * Tremor (Hammer): three slams where she stands, each sending a ring of
-   * short waves all around, carrying her element on the last; charged, a
-   * wider slam. For a crowd closing in from every side.
+   * Tremor (Hammer): short, wide blows right in front of her, carrying her
+   * element on the last; charged, the widest. For a crowd pressing in.
    */
   tremor: aspect({
     name: "Tremor",
-    description: "Three slams where you stand, each sending a ring of short waves all around. Charged: a wider slam.",
-    against: "A crowd closing in from every side.",
+    description: "Short, wide blows right in front of you. Charged: the widest of them.",
+    against: "A crowd pressing in close.",
     class: "hammer",
     combo: [
-      spin({ reach: 105, power: 22, knockback: 480, recovery: 0.36, hitStop: 0.07, heavy: false, lunge: 0 }),
-      spin({ reach: 105, power: 28, knockback: 520, recovery: 0.45, hitStop: 0.08, heavy: false, lunge: 0 }),
-      spin({ reach: 125, power: 50, knockback: 1050, recovery: 0.75, hitStop: 0.13, heavy: true, lunge: 0 })
+      slam({ reach: 150, radius: 80, windup: 0.18, power: 22, knockback: 480, recovery: 0.52, hitStop: 0.08, heavy: false, lunge: 0 }),
+      slam({ reach: 150, radius: 85, windup: 0.2, power: 48, knockback: 540, recovery: 0.7, hitStop: 0.09, heavy: false, lunge: 0 }),
+      slam({ reach: 170, radius: 105, windup: 0.28, power: 94, knockback: 1050, recovery: 1.08, hitStop: 0.14, heavy: true, lunge: 0 })
     ],
-    charged: { chargeTime: 0.7, move: spin({ reach: 145, power: 80, knockback: 1150, recovery: 0.7, hitStop: 0.15, heavy: true, lunge: 0 }) },
+    charged: { chargeTime: 0.7, move: slam({ reach: 185, radius: 125, windup: 0.14, power: 105, knockback: 1150, recovery: 0.9, hitStop: 0.16, heavy: true, lunge: 0 }) },
     /** A spinning swing out of the dash. */
     dash: spin({ reach: 100, power: 10, knockback: 600, recovery: 0.3, hitStop: 0.07, heavy: false, lunge: 40 }),
     magazine: null,

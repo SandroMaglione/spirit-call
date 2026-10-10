@@ -17,6 +17,7 @@ import { ApplyCamera, FadeOccluders, InterpolateActors, OrientBolts, SyncArena, 
 import { DrawOffscreenEnemies } from "./offscreen.ts"
 import { DrawBarriers, DrawBraces, DrawMarks, DrawTelegraphs } from "./telegraphs.ts"
 import { ShowAirborne, ShowChampions, ShowUltimateMoments } from "./flourish.ts"
+import { ShowHammerBlows } from "./hammer.ts"
 import { ShowHazards } from "./hazards.ts"
 
 export const frame = Game.Schedule(
@@ -37,6 +38,7 @@ export const frame = Game.Schedule(
   DrawTouchAim,
   PlaySounds,
   SpawnFx,
+  ShowHammerBlows,
   PlayFalls,
   ShowUltimateMoments,
   ShowAirborne,

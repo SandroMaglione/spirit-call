@@ -628,6 +628,8 @@ export interface HitboxValue {
   readonly follows?: Vec2
   /** How fast a shockwave's ring runs out (its `area` a ring, see `WaveAttack`). */
   readonly grows?: number
+  /** Seconds before it strikes at all (a hammer coming down; 0 once down); its `remaining` runs after. */
+  readonly delay?: number
 }
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
@@ -799,12 +801,12 @@ export const AttackReleased = Descriptor.Event<{ readonly attacker: number; read
 /** A champion entered its `phase` (see `Rampage`): it roars. */
 export const Roused = Descriptor.Event<{ readonly at: Vec2; readonly enemy: EnemyKind; readonly phase: number; readonly element: ElementId | null }>()("Shooter/Roused")
 
-/** An area went off (a lobbed skill's blast, a nova, a rock erupting, a ring of stone bursting out), for effects. */
+/** An area went off (a lobbed skill's blast, a nova, a rock erupting, a ring of stone bursting out, a hammer's blow coming down), for effects. */
 export const Explosion = Descriptor.Event<{
   readonly at: Vec2
   readonly radius: number
   readonly faction: Faction
-  readonly kind: "blast" | "nova" | "eruption" | "upheaval"
+  readonly kind: "blast" | "nova" | "eruption" | "upheaval" | "blow"
   /** A heavy one (an ultimate) gets the big effects; a light one (an aspect's shockwave) a smaller ring. */
   readonly heavy: boolean
   /** Its element, if any, for its color and sound. */

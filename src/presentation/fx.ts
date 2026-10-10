@@ -68,6 +68,23 @@ interface Bolt {
   maxLife: number
 }
 
+/**
+ * Something drawn fresh every frame for `life` seconds, after `delay`: a
+ * hammer swung up and down onto where it lands, cracks spreading from it
+ * (see `presentation/hammer.ts`). `paint` gets how far through its life it
+ * is (0..1), a layer drawn over the floor's effects, and one that adds
+ * light.
+ */
+interface Animation {
+  readonly paint: Painter
+  delay: number
+  life: number
+  readonly maxLife: number
+}
+
+/** What an animation draws each frame (see `Fx.animate`). */
+export type Painter = (t: number, shapes: Shapes, glow: Shapes) => void
+
 interface ParticleOptions {
   readonly color: number
   readonly size: number
@@ -88,15 +105,18 @@ export class Fx {
   private readonly flashes: Array<Flash> = []
   private readonly freeFlashes: Array<Flash> = []
   private readonly bolts: Array<Bolt> = []
+  private readonly animations: Array<Animation> = []
+  private readonly pending: Array<{ delay: number; readonly run: () => void }> = []
   private readonly squash: number
   private readonly ringShapes = new Shapes({ depthTest: false, order: 1 })
+  private readonly sheetShapes = new Shapes({ depthTest: false, order: 1 })
   private readonly particleShapes = new Shapes({ depthTest: false, order: 2 })
   private readonly flashShapes = new Shapes({ depthTest: false, additive: true, order: 3 })
   private readonly digits = new Digits(4)
 
   constructor(layer: Group, squash: number) {
     this.squash = squash
-    layer.add(this.ringShapes.mesh, this.particleShapes.mesh, this.flashShapes.mesh, this.digits.mesh)
+    layer.add(this.ringShapes.mesh, this.sheetShapes.mesh, this.particleShapes.mesh, this.flashShapes.mesh, this.digits.mesh)
   }
 
   /** A shockwave on the floor expanding to `radius` (screen pixels, squashed like the floor). */
@@ -168,6 +188,17 @@ export class Fx {
     this.bolts.push({ points, color, life, maxLife: life })
   }
 
+  /** Draws `paint` every frame for `life` seconds, starting `delay` seconds from now (see `Painter`). */
+  animate(life: number, paint: Painter, delay = 0): void {
+    this.animations.push({ paint, delay, life, maxLife: life })
+  }
+
+  /** Runs `run` `delay` seconds from now (in real time, like every effect): the later beats of a look. */
+  later(delay: number, run: () => void): void {
+    if (delay <= 0) run()
+    else this.pending.push({ delay, run })
+  }
+
   /**
    * A number rising from `at` (projected coordinates) that pops in larger
    * than its resting `size` and drifts sideways by `drift` pixels.
@@ -186,7 +217,30 @@ export class Fx {
   }
 
   update(dt: number): void {
+    for (let index = this.pending.length - 1; index >= 0; index--) {
+      const beat = this.pending[index]!
+      beat.delay -= dt
+      if (beat.delay > 0) continue
+      this.pending[index] = this.pending[this.pending.length - 1]!
+      this.pending.pop()
+      beat.run()
+    }
     const flashes = this.flashShapes.clear()
+    const sheets = this.sheetShapes.clear()
+    for (let index = this.animations.length - 1; index >= 0; index--) {
+      const animation = this.animations[index]!
+      if (animation.delay > 0) {
+        animation.delay -= dt
+        continue
+      }
+      animation.life -= dt
+      if (animation.life <= 0) {
+        this.animations[index] = this.animations[this.animations.length - 1]!
+        this.animations.pop()
+        continue
+      }
+      animation.paint(1 - animation.life / animation.maxLife, sheets, flashes)
+    }
     for (let index = this.flashes.length - 1; index >= 0; index--) {
       const flash = this.flashes[index]!
       flash.life -= dt
@@ -291,18 +345,19 @@ export class Fx {
   /** Uploads this frame's shapes; called before rendering. */
   flush(): void {
     this.ringShapes.flush()
+    this.sheetShapes.flush()
     this.particleShapes.flush()
     this.flashShapes.flush()
     this.digits.flush()
   }
 
   dispose(): void {
-    for (const shapes of [this.ringShapes, this.particleShapes, this.flashShapes]) shapes.dispose()
+    for (const shapes of [this.ringShapes, this.sheetShapes, this.particleShapes, this.flashShapes]) shapes.dispose()
     this.digits.dispose()
   }
 
   get active(): number {
-    return this.particles.length + this.numbers.length + this.rings.length + this.flashes.length
+    return this.particles.length + this.numbers.length + this.rings.length + this.flashes.length + this.animations.length
   }
 
   private emit(at: Vec2, vx: number, vy: number, options: ParticleOptions): void {

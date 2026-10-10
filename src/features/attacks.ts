@@ -58,6 +58,7 @@ import {
   Elite,
   Enemy,
   EnemyMode,
+  Explosion,
   Game,
   Health,
   Hitbox,
@@ -427,7 +428,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     })
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged) }
+  events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged), explosion: Game.System.writeEvent(Explosion) }
 }, ({ queries, resources, events, commands, lookup }) => {
   const dt = resources.time.get().dt
   const slow = resources.slowMotion.get()
@@ -435,6 +436,18 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
   const targets = queries.targets.each()
   for (const { entity, data } of queries.hitboxes.each()) {
     let hitbox = data.hitbox.get()
+    // Not down yet (a hammer's windup): it strikes nothing meanwhile, and goes off as it comes down.
+    if (hitbox.delay !== undefined && hitbox.delay > 0) {
+      const delay = hitbox.delay - dt * paceOf(slow, hitbox.faction)
+      if (delay > 0) {
+        data.hitbox.set({ ...hitbox, delay })
+        continue
+      }
+      hitbox = { ...hitbox, delay: 0 }
+      const at = hitbox.area.kind === "circle" ? hitbox.area.center : hitbox.area.kind === "ring" ? hitbox.area.center : null
+      const radius = hitbox.area.kind === "circle" || hitbox.area.kind === "ring" ? hitbox.area.radius : 0
+      if (at !== null) events.explosion.emit({ at, radius, faction: hitbox.faction, kind: "blow", heavy: hitbox.blow.heavy, element: hitbox.blow.element?.id ?? null })
+    }
     // A blow that moves with its attacker goes where the attacker was pushed (see `HitboxValue.follows`).
     const source = hitbox.follows === undefined ? undefined : hitbox.blow.source?.attacker
     const holder = source === undefined ? undefined : lookup.getHandle(source, Holders)

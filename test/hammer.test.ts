@@ -1,7 +1,6 @@
 /**
- * The Hammer (see `Shockwave` and docs/aspects.md) and Quarry's kit: every
- * swing sends shockwaves along the ground the way it swings, through every
- * enemy in their way; the Fault Line splits the ground along her aim; the
+ * The Hammer (see the `slam` move and docs/aspects.md) and Quarry's kit:
+ * every blow winds up, then comes down on a circle ahead of her; the Fault Line splits the ground along her aim; the
  * Landslide slams ever wider around her.
  */
 import { describe, expect, it } from "vitest"
@@ -12,7 +11,6 @@ import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Health, Player, Stunned } from "../src/schema.ts"
 import { cursorAt, placeDummies, start, steps } from "./helpers.ts"
 
-const wave = defaultTuning.classes.hammer.handling.shockwave!
 const plain = defaultTuning.classes.hammer.plain
 const sturdy = { enemies: { dummy: { hp: 100_000, knockbackTaken: 0 } } } as const
 
@@ -41,29 +39,31 @@ const swinging = (patch: object = {}) => tuningWith({ ...sturdy, characters: { s
 const swing = (frame: number) => [{ frame, press: ["primary" as const] }, { frame: frame + 1, release: ["primary" as const] }]
 
 describe("the Hammer", () => {
-  it("sends a wave on from a thrust: what is beyond the swing's reach is struck too, for a share of its blow", () => {
-    const opener = plain.combo[0]!
-    expect(opener.shape).toBe("thrust")
-    const near = { x: 60, y: 0 }
-    const beyond = { x: (opener.shape === "thrust" ? opener.reach : 0) + 120, y: 0 }
-    const run = arena(swinging(), { character: "swordsman" }, [near, beyond], { pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...swing(1)] })
-    run.step(steps(0.8))
-    const [struck, reached] = run.world()
-    expect(struck!.hurt).toBeGreaterThan(0)
-    expect(reached!.hurt).toBeGreaterThan(0)
-    expect(reached!.hurt / struck!.hurt).toBeCloseTo(wave.share, 1)
-  })
+  const opener = plain.combo[0]!
+  if (opener.shape !== "slam") throw new Error("the Hammer opens with a slam")
+  const lands = { x: opener.reach - opener.radius, y: 0 }
 
-  it("sends no wave without the class's shockwave", () => {
-    const beyond = { x: 260, y: 0 }
-    const run = arena(swinging({ classes: { hammer: { handling: { shockwave: null } } } }), { character: "swordsman" }, [beyond], { pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...swing(1)] })
-    run.step(steps(0.8))
+  it("brings its blow down after its windup: nothing is struck before, what is where it lands after", () => {
+    const run = arena(swinging(), { character: "swordsman" }, [lands], { pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...swing(1)] })
+    run.step(steps(opener.windup * 0.6))
     expect(run.world()[0]!.hurt).toBe(0)
+    run.step(steps(opener.windup))
+    expect(run.world()[0]!.hurt).toBeGreaterThan(0)
   })
 
-  it("sends a ring of waves from a spin: enemies behind her are struck too", () => {
-    const behind = { x: -220, y: 0 }
-    const run = arena(swinging({ classes: { hammer: { plain: { combo: [plain.combo[2]!] } } } }), { character: "swordsman" }, [behind], { pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...swing(1)] })
+  it("comes down ahead of her, not around her: what is behind her is spared", () => {
+    const behind = { x: -60, y: 0 }
+    const run = arena(swinging(), { character: "swordsman" }, [lands, behind], { pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...swing(1)] })
+    run.step(steps(0.8))
+    const [struck, spared] = run.world()
+    expect(struck!.hurt).toBeGreaterThan(0)
+    expect(spared!.hurt).toBe(0)
+  })
+
+  it("comes down where she aimed as she swung, even if she moves before it lands", () => {
+    const run = arena(swinging(), { character: "swordsman" }, [lands], {
+      pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...swing(1), { frame: 3, move: cursorAt({ x: -300, y: 0 }) }]
+    })
     run.step(steps(0.8))
     expect(run.world()[0]!.hurt).toBeGreaterThan(0)
   })

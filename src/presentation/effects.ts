@@ -120,7 +120,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   }
   for (const action of events.action.all()) {
     // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
-    if (action.kind === "attack" && isMelee(action.move)) {
+    if (action.kind === "attack" && isMelee(action.move) && action.move.shape !== "slam") {
       services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)
     }
   }
@@ -250,6 +250,8 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake * grow)
   }
   for (const explosion of events.explosion.all()) {
+    // A hammer's blow is drawn by `ShowHammerBlows`.
+    if (explosion.kind === "blow") continue
     const at = toScreen(projection, explosion.at)
     // A ring of stone bursting out around her (a guard cast): spikes all around, leaning out, dust, a heavy jolt.
     if (explosion.kind === "upheaval") {
