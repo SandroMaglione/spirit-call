@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101c2b">
+  <title>Ice Spirit · Animation review</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #101c2b; color: #ecf5ff; font: 14px/1.5 system-ui, sans-serif; }
+    main { height: 100dvh; display: grid; grid-template-columns: minmax(0,1fr) 300px; }
+    #view { position: relative; min-width: 0; min-height: 0; }
+    canvas { display: block; touch-action: none; }
+    #hint { position: absolute; bottom: 18px; left: 20px; color: #afbdd0; font-size: 12px; pointer-events: none; }
+    aside { padding: 25px 22px; border-left: 1px solid #2a3d52; overflow: auto; }
+    .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .14em; color: #8ecef6; }
+    h1 { font-size: 28px; margin: 6px 0; font-weight: 650; }
+    h2 { font-size: 13px; margin: 22px 0 9px; font-weight: 600; }
+    p { color: #afbdd0; margin: 8px 0 16px; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 7px; }
+    button, .download { color: #e3f1ff; background: #1c3047; border: 1px solid #395b7a; padding: 9px 12px; border-radius: 5px; font: inherit; font-size: 13px; cursor: pointer; }
+    button:hover, button[aria-pressed="true"] { color: #0e2339; background: #9fdafb; border-color: #9fdafb; }
+    label { display: block; margin: 12px 0; cursor: pointer; }
+    input { accent-color: #8ecef6; }
+    select { background: #1c3047; color: #ecf5ff; border: 1px solid #395b7a; border-radius: 5px; padding: 7px; }
+    input[type="range"] { width: 100%; }
+    #clip-name { position: absolute; top: 20px; left: 22px; font-size: 20px; font-weight: 600; pointer-events: none; }
+    a { color: #a8e7ff; text-underline-offset: 3px; }
+    .download { display: inline-block; text-decoration: none; margin: 6px 2px 0 0; }
+    #status, .note { font-size: 12px; color: #9fdafb; }
+    #error { color: #ffa6a6; white-space: pre-wrap; }
+    @media (max-width: 700px) {
+      main { grid-template-columns: 1fr; grid-template-rows: 57dvh minmax(0,1fr); }
+      aside { border-left: 0; border-top: 1px solid #2a3d52; padding: 17px; }
+      h1 { font-size: 24px; } h2 { margin-top: 17px; } button { min-height: 44px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div id="view" aria-label="Interactive animated Ice Spirit model"><div id="clip-name">Idle</div><div id="hint">Drag to orbit · pinch or scroll to zoom</div></div>
+  <aside>
+    <div class="eyebrow">Character animation review</div>
+    <h1>Ice Spirit</h1>
+    <p>Faceted ice, a recessed indigo face, cyan eyes, and four floating shards.</p>
+    <div id="status" role="status">Loading model…</div>
+    <h2>Animation</h2>
+    <div class="buttons" id="clips"></div>
+    <label><input id="playing" type="checkbox" checked> Play animation</label>
+    <label><input id="repeat" type="checkbox" checked> Repeat selected clip</label>
+    <label>Speed <select id="speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select></label>
+    <label for="scrub">Pose <output id="frame">0.00 s</output></label>
+    <input id="scrub" type="range" min="0" max="1" step=".001" value="0" aria-label="Animation pose">
+    <div class="buttons"><button id="showcase">Preview all</button><button id="rest">Rest pose</button></div>
+    <label><input id="game-blend" type="checkbox"> Game blending</label>
+    <h2>Camera</h2>
+    <div class="buttons">
+      <button data-view="hero" aria-pressed="true">Hero</button>
+      <button data-view="front">Front</button><button data-view="back">Back</button>
+      <button data-view="left">Left</button><button data-view="right">Right</button>
+      <button data-view="top">Top</button><button data-view="bottom">Bottom</button>
+      <button data-view="game">Game camera</button>
+    </div>
+    <label><input id="wireframe" type="checkbox"> Wireframe</label>
+    <label><input id="small" type="checkbox"> Gameplay size, 32 px high</label>
+    <label><input id="floor" type="checkbox" checked> Floor grid</label>
+    <h2>Reference and files</h2>
+    <p><a href="./reference/sheet.jpg" target="_blank" rel="noopener">Original sheet</a> · <a href="./renders/review-reference.png" target="_blank" rel="noopener">Front comparison</a> · <a href="./renders/review-angles.png" target="_blank" rel="noopener">All angles</a></p>
+    <a class="download" href="./ice-spirit-animated.glb" download>Animated GLB</a>
+    <a class="download" href="./ice-spirit-animated.blend" download>Animated Blender source</a>
+    <p class="note"><a href="./renders/animation-preview.mp4">Animation reel</a> · <a href="./renders/animation-poses.png">Key poses</a> · <a href="./ice-spirit.blend" download>Approved static source</a></p>
+    <p class="note">Ten clips at 30 fps. Movement and hit timing remain controlled by the game. Game blending previews the actual Puppet player.</p>
+    <p class="note">The front drawing controls the silhouette. Conflicting part dimensions and the oblique side drawing are documented in the <a href="./README.md">model notes</a>.</p>
+    <pre id="error" role="alert"></pre>
+  </aside>
+</main>
+<script type="module" src="./viewer.mjs"></script>
+</body>
+</html>

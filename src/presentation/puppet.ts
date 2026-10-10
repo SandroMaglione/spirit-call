@@ -285,7 +285,9 @@ export class Puppet {
         joint.targetRotation.copy(joint.bone.quaternion)
         joint.targetScale.copy(joint.bone.scale)
         joint.bone.position.lerpVectors(joint.position, joint.bone.position, weight)
-        joint.bone.quaternion.slerpQuaternions(joint.rotation, joint.bone.quaternion, weight)
+        // slerpQuaternions copies its first input before reading the second.
+        // Keep that target separate from the quaternion it writes.
+        joint.bone.quaternion.slerpQuaternions(joint.rotation, joint.targetRotation, weight)
         joint.bone.scale.lerpVectors(joint.scale, joint.bone.scale, weight)
       }
       this.restorePose = weight < 1

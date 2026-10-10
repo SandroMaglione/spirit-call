@@ -1,0 +1,98 @@
+{
+  "name": "Ice Spirit",
+  "stage": "static",
+  "height_m": 0.800000011920929,
+  "dimensions_m": {
+    "width": 0.5499999821186066,
+    "depth": 0.3499999940395355,
+    "height": 0.800000011920929
+  },
+  "native_axes": "meters, +Z up, +Y forward",
+  "glb_axes": "meters, +Y up, +Z forward",
+  "origin": "world (0,0,0), at lowest central crystal tip",
+  "height_basis": "ground origin to highest rest mesh vertex, including crown",
+  "triangles": 1194,
+  "materials": [
+    "Eyes \u2022 cyan emission",
+    "Face \u2022 dark indigo",
+    "Ice \u2022 faceted vertex palette"
+  ],
+  "objects": [
+    {
+      "name": "IceSpirit",
+      "triangles": 738,
+      "native_pivot_m": [
+        0.0,
+        0.0,
+        0.44999998807907104
+      ]
+    },
+    {
+      "name": "Crown",
+      "triangles": 104,
+      "native_pivot_m": [
+        0.0,
+        0.0,
+        0.7300000190734863
+      ]
+    },
+    {
+      "name": "Shard.Upper.L",
+      "triangles": 32,
+      "native_pivot_m": [
+        0.23571428656578064,
+        -0.020322579890489578,
+        0.43139535188674927
+      ]
+    },
+    {
+      "name": "Shard.Upper.R",
+      "triangles": 32,
+      "native_pivot_m": [
+        -0.22951127588748932,
+        -0.020322579890489578,
+        0.43139535188674927
+      ]
+    },
+    {
+      "name": "Shard.Lower.L",
+      "triangles": 32,
+      "native_pivot_m": [
+        0.13233081996440887,
+        0.03951612859964371,
+        0.17558139562606812
+      ]
+    },
+    {
+      "name": "Shard.Lower.R",
+      "triangles": 32,
+      "native_pivot_m": [
+        -0.1292293220758438,
+        0.03951612859964371,
+        0.17558139562606812
+      ]
+    },
+    {
+      "name": "Eye.L",
+      "triangles": 112,
+      "native_pivot_m": [
+        0.03721804544329643,
+        0.10161290317773819,
+        0.3488371968269348
+      ]
+    },
+    {
+      "name": "Eye.R",
+      "triangles": 112,
+      "native_pivot_m": [
+        -0.03721804544329643,
+        0.10161290317773819,
+        0.3488371968269348
+      ]
+    }
+  ],
+  "clips": {},
+  "reference_policy": "sheet.json",
+  "sha256": "cd088f4dce1dcaba7cfb6dd4560eaa566e96a509742f57f228cae9363db17ac8",
+  "bytes": 67584
+}

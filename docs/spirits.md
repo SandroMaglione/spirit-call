@@ -106,6 +106,9 @@ a repeat of the same steps. The rules for model files in general are in
 
 ## Steps for a new spirit
 
+For a worked example of reference decisions, geometry review, and export
+checks, see [what worked in Ice Spirit](#what-worked-in-ice-spirit).
+
 From the repository root, with Blender 4.5 LTS and `uv`; `<spirit>` is its
 folder under `art/spirits/`. Choose the closest example below.
 
@@ -187,6 +190,7 @@ includes deliberate changes for personality and readable facing.
 | Swordsman, wind | [Wind](../art/spirits/wind/README.md) | Pale body, tapered curls and trailing leaves, narrow eyes, lunges and spinning finishers |
 | Stormcaller, thunder | [Thunder](../art/spirits/thunder/README.md) | Gold wings and back bolt, round eyes with blinking rims, tilted halo rotating about its own axis, restrained casting hops |
 | Bastion, rock | [Rock](../art/spirits/rock/README.md) | Broad grounded boulder, round optimistic eyes, weight-bearing feet, short rear heel, floating ornaments, planted Disc recoil and ground slam |
+| Ice, animation asset | [Ice](../art/spirits/ice/README.md) | Approved crystal silhouette, joined crown, recessed face, four floating shards, ten object clips; character kit not yet defined |
 
 Each folder keeps `reference/sheet.png`, cropped views, measurements,
 `build.py`, an editable `.blend`, `animate.py`, `export.py`, and its GLB.
@@ -204,6 +208,101 @@ The shared combat poses and contact frames are in
 `effects.ts` handles falls and trails; `showcase.ts` frames portraits.
 Shared feedback numbers live in `src/config/view.ts` under `spirit`.
 Changing them affects every character, so compare the existing roster too.
+
+## What worked in Ice Spirit
+
+The [Ice Spirit pass](../art/spirits/ice/README.md) was accepted first as a
+static model, then as an animated asset. Its strongest starting point was
+the sheet's clear visual identity: a long crystal crown, a broad hood around
+a dark recessed face, two tall cyan eyes, two upright upper shards, and two
+slanted lower blades. Those few features carry the character. The low-poly,
+flat-faceted style also suits explicit triangle geometry and per-facet
+colors, without a texture or a humanoid rig. The notes below explain the
+decisions that preserved that identity; the front overlap score alone
+cannot establish visual quality.
+
+### Use each reference for what it can establish
+
+The supplied sheet was clear about shape, part arrangement, colors, axes,
+and intended finish. It was less consistent about measurements. The front
+drawing's proportions disagreed with the overall dimension labels; some
+smaller body, crown, and shard-offset labels also contradicted the drawing.
+The side image was oblique, and no rear image was supplied.
+
+We recorded a reference policy in `sheet.json` before building: the front
+landmarks control shape and placement; the overall labels control the
+0.80 m height, 0.55 m width, and 0.35 m depth. This uses separate X and Z
+pixel scales and makes the model a little narrower in proportion than the
+original picture. The rear continues the closed crystal volume without
+adding ornaments. These are explicit compromises, not evidence that the
+sheet is a consistent orthographic blueprint. For the next sheet, request
+views and dimensions that agree, especially a true side and rear view.
+
+The original sheet supplied the visual reference. Existing Water, Fire,
+Wind, Thunder, and Rock sources supplied examples of export conventions,
+object clips, and game wiring. Shared `tools/moves.py` supplied combat poses
+and contact frames. Keep those roles clear when choosing references for a
+new spirit: another character's runtime recipe does not establish the new
+character's proportions or personality.
+
+### Build the features that matter in three dimensions
+
+The face is an actual opening with a bevel and indigo backing about 5.8 cm
+below the outer lip. The eyes sit in that recess. Side and tilted camera
+views therefore retain the hood's depth. The lower shards use the traced
+slanted blade outlines rather than copies of the upper diamonds. Swatches
+are sampled from the supplied sheet, and flat vertex colors give each
+triangle an ice plane. These decisions preserve specific reference
+features from several angles.
+
+Treat a separate mesh according to its visual relationship. The crown has
+its own pivot but joins the body flush, so animation keeps it fixed relative
+to the body. The eyes follow the recessed face. The four detached shards
+have centered local pivots and independent motion under the body. Giving
+every part the same bob would hide their different roles; letting the crown
+bob independently would open an unintended seam.
+
+### Approve geometry before adding motion
+
+The static pass kept its own Blender source, GLB, metadata, topology audit,
+reference comparisons, all-angle renders, and 32/64 px game-size samples.
+It stayed at 1,194 triangles and three materials. The front silhouette
+overlap was 94.8% after normalizing the reference to the labelled dimensions;
+that score measures the mask only. Color, face depth, inferred rear shape,
+and small-screen readability still needed visual review. The user accepted
+that static result before animation began, and the animation pass preserved
+the approved static files.
+
+For the next model, keep the same separation: review the outline, negative
+space, palette, depth, and phone-scale render as geometry, then add clips
+to a separate source. It leaves a stable reference when a motion pose looks
+wrong and avoids changing an approved silhouette to compensate for an
+animation or export problem.
+
+### Check the exported asset through its actual player
+
+Ice's idle and glide use restrained body motion, with more movement in the
+detached shards. Combat uses the existing ten-clip vocabulary and contact
+frames, with reduced squash so the crystal still reads as sharp. The body
+leans about its accepted pivot and is lifted when necessary to keep its tip
+above the floor. The simulation continues to own travel and hit timing.
+
+Testing the GLB through `Puppet` found two failures that a Blender pose
+render would miss. Rotation blending overwrote its target quaternion before
+reading it; keeping that target separate lets the player reach the exported
+contact pose. Blender also removed constant channels, losing Run's held
+stretch. `export_optimize_animation_keep_anim_object=True` retains those
+channels, including open-eye poses after a blink. Test a held non-rest
+transform as well as moving tracks when adding another object-animated
+asset.
+
+The focused tests check exported scale and parenting, floor clearance, loop
+closure, bounded body lean, blink recovery, Run stretch, immediate skill
+lift, contact poses through `Puppet`, and freezing. The inspector offers
+both raw clip playback and the game's blending, plus scrubbing and slower
+playback. Its recorded reel shows the GLB in that player. This is asset
+review evidence: Ice has no character kit yet, and a phone-sized browser
+review does not establish physical-device performance or combat feel.
 
 ## Review before calling a character finished
 
@@ -267,9 +366,17 @@ phone performance check is separate from a phone-sized browser review.
   ellipse from the front and from the sides; a real ring cannot be both.
   Follow the front and the game's camera, give it thickness (a hairline
   vanishes at game size), and accept the lower side scores.
-- **A clip that never moves an object has no track for it:** the exporter
-  drops constant tracks (the dash keeps the body on the spot), so code and
-  tests must not expect every clip to have every track.
+- **Constant channels can be omitted:** some exporters drop unchanged
+  object transforms, so older clips need not have every track. A held
+  non-rest transform still matters: Ice's Run stretch was lost this way.
+  Keep constant object channels with
+  `export_optimize_animation_keep_anim_object=True`, and check transitions
+  from a different pose as well as isolated playback.
+- **Quaternion blending can erase its own target:** Three's
+  `slerpQuaternions` copies its first argument before reading the second.
+  Passing the destination as the second argument overwrites that target.
+  Blend toward a separately saved quaternion; check the resulting rotation
+  through `Puppet` at simulation contact, not only with a raw mixer.
 - **Portraits cropped to the head:** the party list and the menus draw a
   character's portrait (`showcase.ts`). Cropped to the top of the figure,
   as for a person, a spirit shows only its crest: its eyes sit low. A
