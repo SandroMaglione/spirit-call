@@ -1,0 +1,28 @@
+{
+  "source": "../ice/ice-spirit.blend",
+  "source_sha256": "10a722221f3691a8fb31b5af0cb32b65151aac0f0c08da4757950792e8e86cf4",
+  "palette": {
+    "body": [
+      "#392362",
+      "#7953c5",
+      "#c8a8fa"
+    ],
+    "shards": [
+      "#bd701b",
+      "#ffd658",
+      "#fff3b5"
+    ],
+    "face": "#191a35",
+    "eyes": "#fff0a1",
+    "bolt": "#ffe476"
+  },
+  "preserved": [
+    "silhouette",
+    "dimensions",
+    "eight node names",
+    "local pivots",
+    "face recess"
+  ],
+  "detail": "Closed rear lightning mark joined to IceSpirit, sharing its vertex-color material",
+  "animation": "Existing Ice clips retained as the recipe for the next pass; no clips exported here"
+}

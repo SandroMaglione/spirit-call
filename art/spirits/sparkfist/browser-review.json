@@ -1,0 +1,17 @@
+{
+  "url": "http://192.168.0.45:5221/art/spirits/sparkfist/",
+  "glb_sha256": "11a705b0bb82cd505da6f5f8d3bddee52cd08355d4029abd6f39cb1e485c840d",
+  "desktop_viewport": [1280, 800],
+  "phone_viewport": [390, 844],
+  "loaded_without_error": true,
+  "source_comparison": true,
+  "camera_presets": ["hero", "back", "game"],
+  "gameplay_size_pixels": 32,
+  "phone_horizontal_overflow": false,
+  "minimum_button_height_px": 44,
+  "synthetic_touch_orbit_moved_camera": true,
+  "touch_method": "Synthetic PointerEvents with capture temporarily stubbed during dispatch",
+  "screenshot": "Preview snapshot failed; fresh Blender renders provide visual review",
+  "physical_device_tested": false,
+  "gameplay_integration_tested": false
+}
