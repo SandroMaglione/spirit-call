@@ -60,6 +60,8 @@ export interface UiStore {
   readonly runLog: Signal<RunLogValue>
   /** What the last run earned the account, once recorded; `null` until then. */
   readonly earned: Signal<Earned | null>
+  /** The name of the account being played (one of this device's). */
+  readonly accountName: string
   /** Messages for the player (what loading the save had to fix), until dismissed. */
   readonly notices: Signal<ReadonlyArray<string>>
   /** This device's sound: on or off, and how loud (0..1). */
@@ -85,6 +87,7 @@ export const createUiStore = (initial: {
   readonly challenge: ChallengeId
   readonly flow: FlowState
   readonly account: Account
+  readonly accountName: string
   readonly notices: ReadonlyArray<string>
   readonly sound: Sound
 }): UiStore => ({
@@ -104,6 +107,7 @@ export const createUiStore = (initial: {
   result: signal(null),
   runLog: signal(emptyRunLog),
   earned: signal(null),
+  accountName: initial.accountName,
   notices: signal(initial.notices),
   sound: signal(initial.sound),
   extra: signal(null),
@@ -145,4 +149,6 @@ export interface UiActions {
   /** Sound on or off, and how loud (0..1); saved on this device. */
   readonly setMuted: (muted: boolean) => void
   readonly setVolume: (volume: number) => void
+  /** Leave this account for the list of this device's accounts (what it did is already saved). */
+  readonly switchAccount: () => void
 }

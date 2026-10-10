@@ -6,7 +6,9 @@ import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
-import { holdSave, startApp } from "./app/app.ts"
+import { holdAccount, openAccounts, startApp } from "./app/app.ts"
+import type { Accounts } from "./app/app.ts"
+import { showAccounts } from "./ui/Accounts.tsx"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
 import { mountUi } from "./ui/mount.tsx"
@@ -57,24 +59,29 @@ const dev = import.meta.env.DEV
 /** The URL's dev parameters: none outside a dev build. */
 const devQuery = dev ? window.location.search : ""
 
+/** A dev quick start's account: the last played, or a new one. */
+const devAccount = async (accounts: Accounts) => {
+  const last = (await accounts.list())[0]
+  if (last !== undefined) return last
+  const made = await accounts.create("Dev")
+  if (!made.ok) throw new Error(made.problem)
+  return made
+}
+
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(devQuery)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
   const tuning = waveFromQuery(arenaFromQuery(stressLoad !== undefined ? stressTuning() : dev ? loadSavedTuning() : defaultTuning, devQuery), devQuery)
-  // The account is saved on this device, by one tab at a time; the menu starts from its last selection.
-  if (!(await holdSave())) {
-    const message = document.createElement("p")
-    message.className = "boot-error"
-    message.textContent = "The game is already open in another tab. Close it there to play here."
-    mount.append(message)
-    return
-  }
-  const shell = await startApp()
+  // The game opens on this device's accounts: the one picked is played, by one tab at a time.
+  // A dev quick start (`?play`, below) plays the last played account, or a new one.
+  const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
+  const accounts = openAccounts()
+  const picked = quickStart ? await devAccount(accounts) : await showAccounts(mount, accounts, holdAccount)
+  const shell = await startApp(picked.id)
   const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
-  const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
   const flow = quickStart ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
   // A quick start may name aspects and relics the account does not own (a dev tool), but never one twice, or one that does not fit.
@@ -89,7 +96,7 @@ const start = async (mount: HTMLElement) => {
   let recording = true
   const uiRequests = emptyUiRequests()
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
-  const uiStore = createUiStore({ tuning, team, challenge, flow, account, notices: shell.notes, sound: shell.settings })
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: shell.settings })
   // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
   wearLooks(account.worn)
   shell.onAccount((next) => {
@@ -184,7 +191,9 @@ const start = async (mount: HTMLElement) => {
       // Turning the volume up turns the sound on.
       if (sounds.volume() > 0 && sounds.muted()) uiActions.setMuted(false)
       uiStore.sound.value = { ...uiStore.sound.value, volume: sounds.volume() }
-    }
+    },
+    // Everything is saved as it happens: the page starts over on the list of accounts.
+    switchAccount: () => window.location.reload()
   }
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()

@@ -1,6 +1,7 @@
 /**
- * The app shell: the Effect side of the game. The account lives on this
- * device (see docs/saves.md): the shell loads it, runs every change through
+ * The app shell: the Effect side of the game. The accounts live on this
+ * device (see docs/saves.md): the shell lists them for the player to pick
+ * one (`openAccounts`), loads the one picked (`startApp`), runs every change through
  * the account's rules (`account/account.ts`), and saves the account after
  * it, through the stores the runtime is given (`storage.ts` decides where
  * they keep things). The ECS and the UI never see Effect; they call these
@@ -12,6 +13,8 @@ import * as ManagedRuntime from "effect/ManagedRuntime"
 
 import { ascend, encounterOf, openAudition, recordRun, saveTeam, select, train, wear } from "../account/account.ts"
 import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
+import { AccountList, layer as accountListLayer } from "../account/account-list.ts"
+import type { AccountSummary } from "../account/account-list.ts"
 import { AccountStore, layer as accountLayer } from "../account/account-store.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
@@ -53,17 +56,52 @@ export interface App {
   readonly setVolume: (volume: number) => void
 }
 
+/** The accounts on this device, to pick one to play, make one, or delete one. */
+export interface Accounts {
+  /** Every account, the last played first. */
+  readonly list: () => Promise<ReadonlyArray<AccountSummary>>
+  /** Makes an account: its id, or why the name cannot be given (or that it could not be saved), in words. */
+  readonly create: (name: string) => Promise<{ readonly ok: true; readonly id: string; readonly name: string } | { readonly ok: false; readonly problem: string }>
+  /** Deletes an account and its progress, for good: whether it was. */
+  readonly remove: (id: string) => Promise<boolean>
+}
+
+/** The accounts on this device, over its storage. */
+export const openAccounts = (): Accounts => {
+  const runtime = ManagedRuntime.make(accountListLayer().pipe(Layer.provide(storageLayer)))
+  const list = Effect.gen(function*() {
+    return yield* AccountList
+  })
+  return {
+    list: () => runtime.runPromise(list.pipe(Effect.flatMap((accounts) => accounts.list))),
+    create: (name) =>
+      runtime.runPromise(list.pipe(
+        Effect.flatMap((accounts) => accounts.create(name)),
+        Effect.map((entry) => ({ ok: true as const, id: entry.id, name: entry.name })),
+        Effect.catchTag("AccountNameError", (error) => Effect.succeed({ ok: false as const, problem: error.problem })),
+        Effect.catchTag("AccountListSaveError", (error) =>
+          Effect.logWarning("The account could not be made", error.cause).pipe(Effect.as({ ok: false as const, problem: "The account could not be saved on this device." })))
+      )),
+    remove: (id) =>
+      runtime.runPromise(list.pipe(
+        Effect.flatMap((accounts) => accounts.remove(id)),
+        Effect.as(true),
+        Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account could not be deleted", error.cause).pipe(Effect.as(false)))
+      ))
+  }
+}
+
 /**
- * Holds the save for this page as long as it is open, so only one tab of the
- * game plays at a time (two would save over each other's progress): `false`
- * when another tab already holds it. Where the browser cannot tell (no Web
- * Locks, as over a local network's plain HTTP), every tab plays.
+ * Holds the account `id` for this page as long as it is open, so no two tabs
+ * play the same account (they would save over each other's progress):
+ * `false` when another tab already holds it. Where the browser cannot tell
+ * (no Web Locks, as over a local network's plain HTTP), every tab plays.
  */
-export const holdSave = (): Promise<boolean> =>
+export const holdAccount = (id: string): Promise<boolean> =>
   typeof navigator === "undefined" || navigator.locks === undefined
     ? Promise.resolve(true)
     : new Promise((held) => {
-      void navigator.locks.request("shooter.save", { ifAvailable: true }, (lock) => {
+      void navigator.locks.request(`shooter.account.${id}`, { ifAvailable: true }, (lock) => {
         held(lock !== null)
         // Kept until the page goes.
         return lock === null ? undefined : new Promise<void>(() => {})
@@ -71,15 +109,19 @@ export const holdSave = (): Promise<boolean> =>
     })
 
 /**
- * Starts the app runtime over this device's storage, and loads the account.
+ * Starts the app runtime over this device's storage, and loads the account
+ * `id` (picked from `openAccounts`; a new one by that id when it was never
+ * played).
  * A playtest build loads its sender here; in a release build `SHOOTER_PLAYTEST`
  * is `null` as it is built, so the import is left out of the bundle.
  */
-export const startApp = async (): Promise<App> => {
+export const startApp = async (id: string): Promise<App> => {
   const tuning = defaultTuning
   const playtest = SHOOTER_PLAYTEST === null ? Playtest.off : (await import("./playtest-send.ts")).layer(SHOOTER_PLAYTEST)
-  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount), playtest).pipe(Layer.provide(storageLayer)))
+  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
   const { settings, accounts, sender } = await runtime.runPromise(Effect.gen(function*() {
+    // The list shows the last played first.
+    yield* (yield* AccountList).played(id).pipe(Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account list could not be saved", error.cause)))
     return { settings: yield* SettingsStore, accounts: yield* AccountStore, sender: yield* Playtest }
   }))
   let account = accounts.account

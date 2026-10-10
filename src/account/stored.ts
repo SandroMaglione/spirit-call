@@ -1,10 +1,10 @@
 /**
- * What is saved on this device, as JSON: the device settings and the account
- * (see docs/saves.md).
+ * What is saved on this device, as JSON: the device settings, the list of
+ * accounts, and each account (see docs/saves.md).
  *
  * Every version ever saved keeps its schema here. Loading decodes any of them
  * and `migrateSettings` brings it to the latest, one version at a time, so
- * old settings always open. To change a shape: add a version schema, add it
+ * old saves always open. To change a shape: add a version schema, add it
  * to the union, write its step in the migration, and point the latest at it.
  */
 import * as Schema from "effect/Schema"
@@ -106,3 +106,29 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
 
 export const StoredAccountJson = Schema.fromJsonString(StoredAccount)
 export const LatestAccountJson = Schema.fromJsonString(StoredAccountLatest)
+
+// ── The accounts on this device ───────────────────────────────────────────
+
+/** One account in the list: its name, and when it was made and last played (epoch milliseconds). Its save is kept under its id. */
+const AccountEntry = Schema.Struct({ id: Schema.String, name: Schema.String, createdAt: Schema.Number, playedAt: Schema.Number })
+
+/** Version 1: the accounts, as made. */
+export const StoredAccountListV1 = Schema.Struct({
+  version: Schema.Literal(1),
+  accounts: Schema.Array(AccountEntry)
+})
+
+export const StoredAccountList = Schema.Union([StoredAccountListV1])
+export const StoredAccountListLatest = StoredAccountListV1
+export type StoredAccountListLatest = typeof StoredAccountListLatest.Type
+
+/** Brings a saved list of accounts of any version to the latest, one version at a time. */
+export const migrateAccountList = (stored: typeof StoredAccountList.Type): StoredAccountListLatest => {
+  switch (stored.version) {
+    case 1:
+      return stored
+  }
+}
+
+export const StoredAccountListJson = Schema.fromJsonString(StoredAccountList)
+export const LatestAccountListJson = Schema.fromJsonString(StoredAccountListLatest)

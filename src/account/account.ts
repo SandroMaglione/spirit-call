@@ -285,6 +285,9 @@ export const everything = (tuning: Tuning): ReadonlyArray<Item> => [
 ]
 
 /** A new account owning `starter` and nothing else. */
+/** The longest name an account on this device can be given, in characters (see `account-list.ts`). */
+export const accountNameLimit = 20
+
 export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, now: number): Account => {
   const empty: Account = {
     id,
