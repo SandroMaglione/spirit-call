@@ -1,9 +1,10 @@
 # Quarry
 
-Static 3D reconstruction of the supplied moss-covered Rock Spirit sheet,
-kept separately from Bastion's existing Rock Spirit. `quarry.blend` is the
-editable rest source and `quarry.glb` is the static export. There are no
-animation clips, skeleton, textures, lights or cameras in either asset.
+3D reconstruction of the supplied moss-covered Rock Spirit sheet,
+kept separately from Bastion's existing Rock Spirit. The designer approved
+the revised static model and requested animation. `quarry.blend` and
+`quarry.glb` preserve that approved rest model. `quarry-animated.blend` and
+`quarry-animated.glb` add ten object animation clips to the same geometry.
 Quarry has not been registered as a playable character.
 
 The revised model has 1,424 triangles, two materials and 13 named mesh parts.
@@ -51,10 +52,64 @@ can occlude the eyes; the reference comparison uses a modest front turn.
 
 Start `pnpm dev --host --port 5201 --strictPort` at the repository root and
 open `/art/spirits/rock/quarry/index.html` on the printed network address.
-The viewer loads the actual GLB. It offers eight camera presets, orbit and
+The viewer loads the actual animated GLB. It offers clip selection, pause,
+restart, half speed, scrubbing and a rest pose, eight camera presets, orbit and
 zoom, face and moss close-ups, wireframe, a 48 px gameplay preview and
 downloads of both assets. On a narrow screen the controls scroll beneath
 the model. Eye bloom and the ground are only part of the review scene.
+
+## Animation
+
+The run is a heavy diagonal gait: front-left/rear-right step together,
+then front-right/rear-left. A full cycle takes 0.8 seconds. Each stone
+travels 25 cm and lifts 10 cm on its forward return. Fourteen of the
+24 frames belong to stance, so contact overlaps and at least two stones
+support Quarry at every point, including between keys. A small torso
+bounce, forward lean, roll and delayed cap-rock response give the push-offs
+weight. Idle keeps all four supports planted and adds a blink and a quiet
+cap-rock bob.
+
+The moving ground in the viewer travels at 0.536 m/s, matching the linear
+stance part of the stride. It can be switched off to inspect the same
+motion without a travel cue. Ground movement belongs to the review scene;
+the GLB's `Quarry` root is never animated. `Torso` is an animation pivot
+for the connected body, moss, head, eyes and tucked hands. The four large
+stones remain independent so the torso's weight shift cannot lift a
+supporting foot.
+
+`AttackA`, `AttackB`, `AttackC`, `Power`, `Dash`, `Hurt`, `Cast` and
+`Ultimate` are planted one-shots, starting and ending at the accepted
+rest pose. The attack contacts use the existing spirit convention:
+frames 4, 4, 6 and 6 at 30 fps. Cast raises the cap rock immediately;
+Ultimate compresses into a heavy stone pulse. The simulation will own
+movement, hits and timing when this character is integrated.
+
+`animation.json` contains the generated clip timings, contact times and
+gait dimensions. As with the other spirits, Idle and Run omit the repeated
+closing pose. The viewer adds that key with the same operation as the
+game's `closeLoop`; playback needs these metadata loop lengths.
+
+Browser recordings of the actual GLB:
+
+- `renders/run-review.mp4`: the run from hero, side and game cameras.
+- `renders/animation-review.mp4`: all ten clips with their names visible.
+- `renders/run-phone-gameplay.mp4`: the run at 48 px in a 390 by 844 viewport.
+
+The animation review checked pause, scrubbing, rest-to-play and synthetic
+touch orbit (with pointer capture temporarily stubbed). The phone-sized
+browser review is not a physical-device performance test. The shared
+browser's long recording call timed out, but reopening the preview and
+stopping the recording recovered the complete clip sequence.
+
+`verify-animation.py` samples the delivered GLB at 240 Hz using glTF
+linear translation/scale and quaternion interpolation, including loop
+seams. It verifies unchanged rest geometry, clip timing, rest endpoints,
+root-motion absence, supporting soles, all-mesh ground clearance, floating
+rock clearance and planted-foot velocity against preview travel. The
+minimum cap-rock/moss gap is 50.9 mm across the clips. The run's maximum
+stance velocity error is below 0.002 mm/s. The asset audit and lint pass;
+`pnpm check --maxWorkers=2` still stops at the existing Effect SQL module
+and type errors described below.
 
 `renders/quarry.png` is the studio image. `renders/review-reference.png`
 compares all seven sheet views with the reconstructed object and includes
@@ -86,6 +141,8 @@ uv run --with pillow --with numpy art/spirits/rock/quarry/measure.py
 uv run --with numpy art/spirits/rock/quarry/verify.py
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/rock/quarry/render.py
 uv run --with pillow --with numpy art/spirits/rock/quarry/review.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/rock/quarry/animate.py
+uv run --with numpy art/spirits/rock/quarry/verify-animation.py
 ```
 
 `verify.py` reads the delivered GLB rather than trusting source metadata.

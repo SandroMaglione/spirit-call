@@ -1,0 +1,90 @@
+{
+  "passed": true,
+  "clips": {
+    "Run": {
+      "duration_s": 0.8,
+      "sample_rate_hz": 240,
+      "minimum_supports": 2,
+      "minimum_ground_y_m": -2.7755575615628914e-17,
+      "maximum_sole_lift_m": 0.10000000608745165,
+      "minimum_float_moss_gap_m": 0.0524389349482427,
+      "maximum_stance_velocity_error_m_s": 1.14952049912187e-06
+    },
+    "Idle": {
+      "duration_s": 3.0,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.05722223121794068
+    },
+    "AttackA": {
+      "duration_s": 0.36666666666666664,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.06481254506843159
+    },
+    "AttackB": {
+      "duration_s": 0.36666666666666664,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.06285928679106023
+    },
+    "AttackC": {
+      "duration_s": 0.5333333333333333,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.062345236876039656
+    },
+    "Power": {
+      "duration_s": 0.5333333333333333,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.056227475427988005
+    },
+    "Dash": {
+      "duration_s": 0.36666666666666664,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.050923533522808206
+    },
+    "Hurt": {
+      "duration_s": 0.3,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.07077914476394653
+    },
+    "Cast": {
+      "duration_s": 0.4666666666666667,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.07077914476394653
+    },
+    "Ultimate": {
+      "duration_s": 0.6666666666666666,
+      "sample_rate_hz": 240,
+      "minimum_supports": 4,
+      "minimum_ground_y_m": 0.0,
+      "maximum_sole_lift_m": 0,
+      "minimum_float_moss_gap_m": 0.07077914476394653
+    }
+  },
+  "triangles": 1424,
+  "materials": 2,
+  "approved_rest_geometry_unchanged": true,
+  "root_motion": false
+}

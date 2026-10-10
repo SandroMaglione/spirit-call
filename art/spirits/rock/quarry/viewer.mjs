@@ -43,8 +43,8 @@ try {
   composer.addPass(new UnrealBloomPass(new THREE.Vector2(800, 600), .35, .4, 1.1));
   composer.addPass(new OutputPass());
   const [gltf, info] = await Promise.all([
-    new GLTFLoader().loadAsync('./quarry.glb'),
-    fetch('./audit.json').then(r => { if (!r.ok) throw Error('Model metadata unavailable'); return r.json(); })
+    new GLTFLoader().loadAsync('./quarry-animated.glb'),
+    fetch('./animation.json').then(r => { if (!r.ok) throw Error('Model metadata unavailable'); return r.json(); })
   ]);
   scene.add(gltf.scene);
   const meshes = [];
@@ -54,6 +54,51 @@ try {
     obj.receiveShadow = !obj.name.startsWith('Eye');
     meshes.push(obj);
   });
+  // Match the game's models.ts closeLoop: exports omit the repeated end pose.
+  const clips = gltf.animations.map(source => {
+    const clip = source.clone(), timing = info.clips[clip.name];
+    if (timing.loopSeconds !== null) {
+      for (const track of clip.tracks) {
+        const stride = track.getValueSize();
+        track.times = new Float32Array([...track.times, timing.loopSeconds]);
+        track.values = new Float32Array([...track.values, ...track.values.slice(0,stride)]);
+      }
+      clip.duration = timing.loopSeconds;
+    }
+    return clip;
+  });
+  const mixer = new THREE.AnimationMixer(gltf.scene);
+  let action, clipName = 'Run', playing = true, speed = 1, hold = 0;
+  const names = { Idle:'Idle · quiet watch', Run:'Run · heavy diagonal gait', AttackA:'Attack A · left strike', AttackB:'Attack B · right strike', AttackC:'Attack C · heavy finish', Power:'Power · charged blow', Dash:'Dash · braced rush', Hurt:'Hurt · recoil', Cast:'Cast · stone pulse', Ultimate:'Ultimate · quake slam' };
+  for (const clip of clips) $('#clip').add(new Option(names[clip.name],clip.name));
+  function selectClip(name) {
+    mixer.stopAllAction(); hold = 0; clipName = name;
+    action = mixer.clipAction(clips.find(c => c.name === name));
+    action.reset().setLoop(info.clips[name].loopSeconds === null ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
+    action.clampWhenFinished = true;
+    action.play(); mixer.update(0);
+    $('#clip').value = name;
+    playing = true; $('#play').textContent = 'Pause';
+  }
+  function seek(time) {
+    action.play(); action.paused = false; action.enabled = true; action.time = time; mixer.update(0);
+    $('#scrub').value = String(time/action.getClip().duration);
+  }
+  $('#clip').onchange = () => selectClip($('#clip').value);
+  $('#play').onclick = () => { playing = !playing; if (playing) action.play(); $('#play').textContent = playing ? 'Pause' : 'Play'; };
+  $('#restart').onclick = () => selectClip(clipName);
+  $('#slow').onclick = () => { speed = speed === 1 ? .5 : 1; $('#slow').setAttribute('aria-pressed',String(speed === .5)); };
+  $('#scrub').oninput = () => { playing = false; $('#play').textContent = 'Play'; seek(Number($('#scrub').value)*action.getClip().duration); };
+  $('#rest').onclick = () => { mixer.stopAllAction(); playing = false; $('#play').textContent = 'Play'; };
+  const markers = new THREE.Group();
+  const markerMaterial = new THREE.MeshBasicMaterial({color:0x3f5360});
+  for (let i=0;i<24;i++) {
+    const marker = new THREE.Mesh(new THREE.PlaneGeometry(.065,.08), markerMaterial);
+    marker.rotation.x = -Math.PI/2;
+    marker.position.set(i%2 ? -.66 : .66,.0002,(Math.floor(i/2)-6)*.28);
+    markers.add(marker);
+  }
+  scene.add(markers);
   const center = new THREE.Vector3(0, info.height_m/2, 0);
   let currentView = 'hero', span = 1.3;
   function direction(turn, elevation) {
@@ -110,9 +155,29 @@ try {
   $('#small').onchange = () => { camera.zoom = 1; resize(); };
   new ResizeObserver(resize).observe(view);
   choose('hero');
-  renderer.setAnimationLoop(() => { controls.update(); composer.render(); });
-  $('#status').textContent = `${info.triangles.toLocaleString()} triangles · ${info.height_m.toFixed(3)} m · static`;
-  window.quarryPreview = { scene, camera, renderer, composer, controls, gltf, info, choose, detail, meshes };
+  selectClip('Run');
+  let previousTime = performance.now();
+  let groundDistance = 0;
+  renderer.setAnimationLoop(() => {
+    const now = performance.now();
+    const dt = Math.min((now-previousTime)/1000,.05)*speed;
+    previousTime = now;
+    if (playing) {
+      if (action.paused) { hold += dt; if (hold > .7) { action.reset().play(); hold = 0; } }
+      else mixer.update(dt);
+      if (clipName === 'Run') groundDistance += dt*info.gait.travelMetersPerSecond;
+    }
+    markers.visible = $('#travel').checked && $('#floor').checked && clipName === 'Run' && currentView !== 'bottom';
+    markers.position.z = -(groundDistance % .28);
+    $('#scrub').value = String(action.time/action.getClip().duration);
+    $('#time').textContent = `${clipName} · ${action.time.toFixed(2)} / ${action.getClip().duration.toFixed(2)} s`;
+    controls.update(); composer.render();
+  });
+  $('#status').textContent = `${info.triangles.toLocaleString()} triangles · ${clips.length} clips · ${info.height_m.toFixed(3)} m`;
+  window.quarryPreview = { scene, camera, renderer, composer, controls, gltf, info, choose, detail, meshes, mixer, clips, selectClip, seek,
+    pause() { playing = false; $('#play').textContent = 'Play'; },
+    resume() { playing = true; $('#play').textContent = 'Pause'; },
+    state() { return {clip:clipName,time:action.time,duration:action.getClip().duration,playing,speed}; } };
 } catch (error) {
   $('#error').textContent = String(error);
   $('#status').textContent = 'Model could not load';

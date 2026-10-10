@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#111f2c">
-  <title>Quarry · Static model review</title>
+  <title>Quarry · Animation review</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; background: #111f2c; color: #eee2d2; font: 14px/1.5 system-ui,sans-serif; }
@@ -23,6 +23,8 @@
     button:hover, button[aria-pressed=true] { background: #9aae5e; border-color: #9aae5e; color: #13212b; }
     label { display: block; margin: 12px 0; cursor: pointer; }
     input { accent-color: #a1b95f; }
+    select { width: 100%; padding: 9px; background: #203240; color: #eee3d4; border: 1px solid #415363; border-radius: 6px; font: inherit; }
+    #scrub { width: 100%; } #time { color: #9fb6c5; font-size: 12px; }
     a { color: #dcc4a6; text-underline-offset: 3px; }
     .download { display: inline-block; margin: 4px 3px 4px 0; text-decoration: none; }
     .note { font-size: 12px; }
@@ -36,12 +38,17 @@
 </head>
 <body>
   <main>
-    <div id="view" aria-label="Interactive static Quarry model"><div id="hint">Drag to orbit · pinch or scroll to zoom</div></div>
+    <div id="view" aria-label="Interactive animated Quarry model"><div id="hint">Drag to orbit · pinch or scroll to zoom</div></div>
     <aside>
-      <div class="eyebrow">Rock spirit / static model</div>
+      <div class="eyebrow">Rock spirit / animation review</div>
       <h1>Quarry</h1>
       <p>A squat stone spirit with broad moss facets, a floating rock and amber eyes beneath a softened stone brow.</p>
       <div id="status" role="status">Loading model…</div>
+      <h2>Animation</h2>
+      <select id="clip" aria-label="Animation clip"></select>
+      <div class="buttons" style="margin-top:8px"><button id="play">Pause</button><button id="restart">Restart</button><button id="slow" aria-pressed="false">Half speed</button><button id="rest">Rest pose</button></div>
+      <input id="scrub" type="range" min="0" max="1" step=".001" value="0" aria-label="Animation time"><div id="time"></div>
+      <label><input id="travel" type="checkbox" checked> Moving ground for run</label>
       <h2>Camera</h2>
       <div class="buttons">
         <button data-view="hero" aria-pressed="true">Hero</button><button data-view="front">Front</button>
@@ -55,8 +62,9 @@
       <label><input id="floor" type="checkbox" checked> Ground &amp; shadows</label>
       <h2>Reference and files</h2>
       <p class="note"><a href="./reference/sheet.png" target="_blank" rel="noopener">Character sheet</a> · <a href="./renders/review-reference.png" target="_blank" rel="noopener">Reference comparison</a> · <a href="./renders/overlay-all.png" target="_blank" rel="noopener">Silhouette overlays</a></p>
-      <a class="download" href="./quarry.glb" download>Download GLB</a><a class="download" href="./quarry.blend" download>Blender source</a>
-      <p class="note">Static model for review. All stone parts and both eyes are separate named objects.</p>
+      <a class="download" href="./quarry-animated.glb" download>Animated GLB</a><a class="download" href="./quarry-animated.blend" download>Blender source</a>
+      <p class="note">Ten clips. The run uses alternating diagonal steps and planted push-offs. The ground moves to show travel; the model runs in place.</p>
+      <p class="note"><a href="./quarry.glb" download>Approved static GLB</a> · <a href="./quarry.blend" download>Static source</a></p>
       <pre id="error" role="alert"></pre>
     </aside>
   </main>
