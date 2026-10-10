@@ -24,7 +24,9 @@ import { defaultTuning } from "../src/config/tuning.ts"
  * material on a curve (an account loading drops what it no longer knows);
  * the Spirit Call's banners, crystals, dust, and sigils, the shop's tints,
  * and the "clear with her" discoveries, when the game became a complete
- * release with auditions (every account reset, migrations/0011).
+ * release with auditions (every account reset, migrations/0011), and the
+ * three quest characters' mastery tracks, when their tints moved to rank
+ * III of the quest that brings them (the game had no players yet).
  */
 const { retired = {}, ...shipped } = JSON.parse(readFileSync(new URL("./content-ids.json", import.meta.url), "utf8")) as Record<string, ReadonlyArray<string>> & {
   readonly retired?: Record<string, ReadonlyArray<string>>

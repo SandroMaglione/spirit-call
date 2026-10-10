@@ -6,8 +6,8 @@
  * Clearing the third makes her the account's, at its level (with the aspect
  * written on it). A fourth tier, her mastery, opens with rank III: her
  * champion fight again at level 50, with rank III's twists, giving her
- * tint. The three characters the quests give have a track with their
- * mastery alone.
+ * tint. The three characters the quests give have no audition: their
+ * tints come with the rank III first clear of the quest that brings them.
  *
  * The player chooses who auditions next: an audition opens by spending an
  * **invitation** (a currency, from a few milestones along the game, see
@@ -104,16 +104,7 @@ const audition = (
   }
 }
 
-/** A character the quests give: her mastery alone. */
-const masteryOnly = (character: CharacterId, challenge: ChallengeId, tint: CosmeticId): TrackSpec => ({
-  name: `${characters[character].name}'s Mastery`,
-  kind: "audition",
-  element: characters[character].element,
-  character,
-  tiers: [mastery(character, challenge, tint)]
-})
-
-/** Every audition, by track id: the seven characters a player invites, in any order, then the quest characters' masteries. */
+/** Every audition, by track id: the seven characters a player invites, in any order. */
 export const auditions = {
   gunnerAudition: audition("gunner", ["gunnerOpenGround", "gunnerHoldTheRange", "gunnerPackReturns"], "marksman", "blueFlame"),
   stormcallerAudition: audition("stormcaller", ["stormSpreadOut", "stormByTheTotem", "stormDrownedBrute"], "arc", "crimsonStorm"),
@@ -121,8 +112,5 @@ export const auditions = {
   tidewardenAudition: audition("tidewarden", ["tideHeavyBlows", "tideHoldTheGate", "tideIronGiant"], null, "glacier"),
   hearthAudition: audition("hearth", ["hearthKeepBurning", "hearthEmbersToHealth", "hearthBrood"], "furrow", "emberRose"),
   windwallAudition: audition("windwall", ["windUnderFire", "windTheGale", "windStormGuard"], null, "duskGale"),
-  quarryAudition: audition("quarry", ["quarryStoneAndShield", "quarryBreakThem", "quarryThunderKing"], null, "rust"),
-  swordsmanMastery: masteryOnly("swordsman", "swordsmanMastery", "moonwind"),
-  tidecallerMastery: masteryOnly("tidecaller", "tidecallerMastery", "coral"),
-  bastionMastery: masteryOnly("bastion", "bastionMastery", "jade")
+  quarryAudition: audition("quarry", ["quarryStoneAndShield", "quarryBreakThem", "quarryThunderKing"], null, "rust")
 } satisfies { readonly [id: string]: TrackSpec }

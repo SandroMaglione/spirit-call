@@ -318,8 +318,9 @@ How everything is owned is in `docs/collection.md`; in short:
   pays for kills or for speed. No stamina, no daily tasks, no weekly caps.
 - **Everything else is a reward written on a card**: a character on an
   audition's last quest, an aspect on a first clear, a relic and its tiers
-  on perfect clears, a look on a mastery audition or a hardcore tier. Each
-  comes from one place, shown before it is played, and never at random.
+  on perfect clears, a look on a mastery audition, a rank, or a hardcore
+  tier. Each comes from one place, shown before it is played, and never at
+  random.
 - **Pacing.** About 55 hours to own everything, about 100 to take all ten
   characters to 60; something new every three to five hours. Every level
   adds stats, so each run moves something forward.

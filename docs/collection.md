@@ -80,8 +80,11 @@ played and kept like a hardcore track's tiers.
 **A mastery audition** is a fourth tier of each character's audition: her
 champion fight again at level 50, with rank III's twists (elite leaders
 carrying shields), still alone and lent. It opens with rank III (the Pack
-Leader at rank III) and gives her tint. The three quest characters have a
-track with this tier only.
+Leader at rank III) and gives her tint. The three quest characters have no
+audition (the Auditions tab lists the seven to invite); each takes her tint
+with the rank III first clear of the quest that brings her: the Swordsman
+from First Blood, the Tidecaller from the Pack Leader, Bastion from the
+Brute King.
 
 ## Aspects
 
@@ -115,7 +118,7 @@ An aspect is owned once: there are no copies and no duplicates.
 
 | Kind | How many | From |
 |---|---|---|
-| Tint | one per character | her mastery audition |
+| Tint | one per character | her mastery audition (a quest character's: her quest at rank III) |
 | Trail | seven, anyone's | hardcore tiers, written on them |
 
 ## Resources

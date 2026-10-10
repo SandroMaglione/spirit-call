@@ -162,6 +162,8 @@ const champion = (kind: EnemyKind): Novelty => ({ kind: "champion", enemy: kind 
 const shields: Novelty = { kind: "shield" }
 const character = (id: CharacterId): Unlock => ({ kind: "character", id })
 const aspect = (id: AspectId): Unlock => ({ kind: "aspect", id })
+/** A character's tint: the three the quests give take theirs at rank III of the quest that brought them (the others' come with their mastery). */
+const tint = (id: CosmeticId): Unlock => ({ kind: "cosmetic", id })
 const relic = (id: RelicId): Unlock => ({ kind: "relic", id })
 const pays = (gold: number, unlocks: ReadonlyArray<Unlock> = []): Rewards => ({ currencies: { gold }, unlocks })
 /** A side quest's first clear: a little less gold than a main quest's. */
@@ -197,7 +199,8 @@ export const quests = {
     after: null,
     introduces: brings("Chasers: they run in and swipe twice. Dodge, then strike back", enemy("chaser")),
     stars: [atLeast("healthLeft", 25), atLeast("perfectDodges", 3), atMost("hitsTaken", 3)],
-    rewards: pays(300)
+    rewards: pays(300),
+    rankUnlocks: { 3: [tint("moonwind")] }
   }),
   crossfire: quest({
     name: "Crossfire",
@@ -221,7 +224,8 @@ export const quests = {
     after: "crossfire",
     introduces: brings("A champion: a chaser, much tougher, staying across waves", champion("chaser")),
     stars: [atMost("hitsTaken", 8), atLeast("breaks", 15), atLeast("healthLeft", 60)],
-    rewards: pays(700, [character("tidecaller")])
+    rewards: pays(700, [character("tidecaller")]),
+    rankUnlocks: { 3: [tint("coral")] }
   }),
 
   // Chapter 2: the Swordsman and the Gunner.
@@ -329,7 +333,7 @@ export const quests = {
     after: "theBrute",
     introduces: brings("A burning champion brute in the kilnworks", champion("brute")),
     stars: [atMost("hitsTaken", 10), atLeast("longestChain", 3), atMost("hitsTaken", 3)],
-    rankUnlocks: { 3: [aspect("grapple")] },
+    rankUnlocks: { 3: [aspect("grapple"), tint("jade")] },
     rankCurrencies: { 2: invitation },
     rewards: pays(5000, [character("bastion")])
   }),
