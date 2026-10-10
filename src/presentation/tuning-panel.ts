@@ -50,13 +50,7 @@ const stepFor = (value: number): number => {
   return 0.005
 }
 
-/** Dev actions on the account, from the app shell. */
-export interface DevAccountActions {
-  /** Own every character and aspect, with plenty of each currency. */
-  readonly unlockEverything: () => void
-}
-
-export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: DevCommandsValue, account: DevAccountActions) => {
+export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: DevCommandsValue) => {
   let current = initial
   const overrides = new Map<string, { path: TuningPath; value: number | boolean }>()
   for (const saved of (() => {
@@ -77,7 +71,6 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
       <div class="tuning__actions">
         <button data-copy>Copy JSON</button>
         <button data-reset>Reset</button>
-        <button data-unlock title="Own every character and aspect on this account, with plenty of each currency">Unlock all</button>
       </div>
     </header>
     <section class="tuning__spawn">
@@ -179,7 +172,6 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
   root.querySelector("[data-copy]")!.addEventListener("click", () => {
     void navigator.clipboard?.writeText(JSON.stringify(current, null, 2))
   })
-  root.querySelector("[data-unlock]")!.addEventListener("click", account.unlockEverything)
   root.querySelector("[data-reset]")!.addEventListener("click", () => {
     overrides.clear()
     localStorage.removeItem(storageKey)
