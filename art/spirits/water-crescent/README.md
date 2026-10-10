@@ -1,4 +1,4 @@
-# Water Spirit, crescent study
+# Water Spirit, crescent model and animations
 
 A static model of the supplied Water Spirit sheet. The dark faceted core,
 tall cyan eyes, large left crescent, smaller right crescent, soft head highlight and
@@ -81,9 +81,61 @@ The eye surfaces have extra triangles to follow the faceted core.
 All parts share one vertex-color material except the emissive eyes. Separate
 meshes still mean eight draw calls in this standalone inspector.
 
-Typecheck, lint and all 79 test files pass, with 665 tests passed and one
-skipped. The production build passes. Gameplay content and the shipped Water
-Spirit are unchanged. Animation and runtime registration follow static review.
+The static pass passed typecheck, lint, 665 tests and the production build.
+The approved static source and export remain the geometry reference.
+
+## Animation
+
+The animated source preserves the approved geometry, including the soft
+head highlight and the two floating crystals moved to the right. The core
+carries the eyes and all ornaments. The crescents sway slightly, while the
+detached crystals bob out of phase and trail during a glide or dash. The
+round core flexes more than the sharp shell shapes. Large blows turn the
+whole assembly, with more separation between the floating pieces.
+
+| Clip | Motion |
+| --- | --- |
+| Idle | Two-second hover, gentle facet movement and one paired blink |
+| Run | Short repeating glide, forward lean and trailing ornaments |
+| AttackA | Wind back and sweep through the first strike |
+| AttackB | Opposing sweep for the second strike |
+| AttackC | Stronger turning combo finisher |
+| Power | Larger reverse turn for the charged strike |
+| Dash | Forward stretch, narrowed eyes and streaming crystals |
+| Hurt | Backward recoil, compression and recovery |
+| Cast | Immediate lift and open eyes, with the ornaments spreading |
+| Ultimate | Immediate leap, a full turn and a settling landing |
+
+All ten clips use the shared spirit vocabulary at 30 fps. Idle is 2 seconds
+and Run is 16 frames; their closing keys come from `closeLoop`. AttackA/B
+contact is frame 4, AttackC/Power frame 6. The simulation owns travel and
+hits; clips return to their starting floor position. Entrance and falling
+remain the game's procedural spirit presentation, as for the other spirits.
+The whole assembly is checked for floor clearance, including the lower fin.
+Constant channels stay in the export so a blink cannot leave Run's eyes shut
+or lose its held stretch.
+
+`water-crescent-animated.blend` and `water-crescent-animated.glb` contain eight
+object-animated meshes, 1,798 triangles and two materials. `animation.json`
+records timing, contact frames, rest height and hashes. `export-animated.py`
+generates `src/presentation/assets/water-crescent.ts`; the model is registered
+as `waterCrescent` for the actual `Puppet` preview. This animation asset does
+not replace Tidecaller's current gameplay look or change her kit.
+
+The inspector now opens the animated model, with all ten clip buttons,
+Preview all, rest pose, scrubbing, speed controls and the game's blending.
+`static.html` keeps the static viewer. The [animation reel](renders/animation-preview.mp4)
+renders the animated Blender object keys; [key poses](renders/animation-poses.png)
+show the same source. Game-player verification is separate: tests compare
+every object's exported contact transform through `Puppet`, verify hit-stop,
+loop closure, floor clearance, constant Run scale, restored eyes, and
+immediate Cast/Ultimate lift.
+
+Typecheck, lint and all 80 test files pass, with 669 tests passed and one
+skipped. The production build passes. The live GLB preview was checked at
+1280 x 800 and 390 x 844 with a synthetic touch orbit. All ten representative
+poses fit the phone viewport. These checks do not establish physical-device
+performance. `animation-review.json` records the asset hash and review data.
 
 ## Rebuild
 
@@ -96,6 +148,12 @@ uv run --with pillow art/spirits/water-crescent/sheet.py
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/water-crescent/verify.py
 /Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/water-crescent/render.py
 uv run --with pillow --with numpy art/spirits/water-crescent/review.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/water-crescent/export-animated.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/water-crescent/verify-animated.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/water-crescent/render-animation.py
+uv run --with pillow art/spirits/water-crescent/review-animation.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python-exit-code 1 --python art/spirits/water-crescent/render-reel.py
+uv run --with pillow art/spirits/water-crescent/encode-reel.py
 pnpm dev --host --port 5219
 ```
 

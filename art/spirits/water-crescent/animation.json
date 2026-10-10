@@ -1,0 +1,342 @@
+{
+  "name": "Water Spirit \u2022 crescent study",
+  "stage": "animated",
+  "height_m": 0.6000000238418579,
+  "dimensions_m": {
+    "width": 0.6958060562610626,
+    "depth": 0.2975969761610031,
+    "height": 0.6000000238418579
+  },
+  "native_axes": "meters, +Z up, -Y forward",
+  "glb_axes": "meters, +Y up, +Z forward",
+  "origin": "world (0,0,0), ground under the floating core",
+  "height_basis": "ground origin to highest rest mesh vertex, including shell",
+  "triangles": 1798,
+  "materials": [
+    "Eyes \u2022 cyan emission",
+    "Water \u2022 faceted vertex palette"
+  ],
+  "objects": [
+    {
+      "name": "WaterCore",
+      "triangles": 320,
+      "native_pivot_m": [
+        0.03888249397277832,
+        -0.011149383150041103,
+        0.2561797797679901
+      ],
+      "local_pivot_m": [
+        0.03888249397277832,
+        -0.011149383150041103,
+        0.2561797797679901
+      ],
+      "parent": null
+    },
+    {
+      "name": "Shell.Main",
+      "triangles": 156,
+      "native_pivot_m": [
+        -0.10442236065864563,
+        -0.04326115548610687,
+        0.3109130561351776
+      ],
+      "local_pivot_m": [
+        -0.14330485463142395,
+        -0.032111771404743195,
+        0.0547332763671875
+      ],
+      "parent": "WaterCore"
+    },
+    {
+      "name": "Shell.Right",
+      "triangles": 132,
+      "native_pivot_m": [
+        0.17775042355060577,
+        -0.07531125843524933,
+        0.2999504506587982
+      ],
+      "local_pivot_m": [
+        0.13886792957782745,
+        -0.06416187435388565,
+        0.043770670890808105
+      ],
+      "parent": "WaterCore"
+    },
+    {
+      "name": "Fin.Upper",
+      "triangles": 14,
+      "native_pivot_m": [
+        0.3069133460521698,
+        -0.0669688880443573,
+        0.4059390127658844
+      ],
+      "local_pivot_m": [
+        0.2680308520793915,
+        -0.05581950396299362,
+        0.1497592329978943
+      ],
+      "parent": "WaterCore"
+    },
+    {
+      "name": "Fin.Tail",
+      "triangles": 14,
+      "native_pivot_m": [
+        0.3462587296962738,
+        -0.07825098931789398,
+        0.2195826768875122
+      ],
+      "local_pivot_m": [
+        0.3073762357234955,
+        -0.0671016052365303,
+        -0.036597102880477905
+      ],
+      "parent": "WaterCore"
+    },
+    {
+      "name": "Fin.Lower",
+      "triangles": 10,
+      "native_pivot_m": [
+        -0.17002777755260468,
+        0.06985792517662048,
+        0.05258427560329437
+      ],
+      "local_pivot_m": [
+        -0.208910271525383,
+        0.08100730925798416,
+        -0.20359550416469574
+      ],
+      "parent": "WaterCore"
+    },
+    {
+      "name": "Eye.L",
+      "triangles": 576,
+      "native_pivot_m": [
+        -0.006532464176416397,
+        -0.1450720727443695,
+        0.2089887112379074
+      ],
+      "local_pivot_m": [
+        -0.04541495814919472,
+        -0.13392269611358643,
+        -0.0471910685300827
+      ],
+      "parent": "WaterCore"
+    },
+    {
+      "name": "Eye.R",
+      "triangles": 576,
+      "native_pivot_m": [
+        0.08049273490905762,
+        -0.14730551838874817,
+        0.2089887112379074
+      ],
+      "local_pivot_m": [
+        0.0416102409362793,
+        -0.1361561417579651,
+        -0.0471910685300827
+      ],
+      "parent": "WaterCore"
+    }
+  ],
+  "clips": {
+    "Idle": {
+      "lastKeySeconds": 1.9666666666666666,
+      "loopSeconds": 2.0
+    },
+    "Run": {
+      "lastKeySeconds": 0.5,
+      "loopSeconds": 0.5333333333333333
+    },
+    "AttackA": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "AttackB": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "AttackC": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null
+    },
+    "Power": {
+      "lastKeySeconds": 0.5333333333333333,
+      "loopSeconds": null
+    },
+    "Dash": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Hurt": {
+      "lastKeySeconds": 0.3,
+      "loopSeconds": null
+    },
+    "Cast": {
+      "lastKeySeconds": 0.36666666666666664,
+      "loopSeconds": null
+    },
+    "Ultimate": {
+      "lastKeySeconds": 0.5666666666666667,
+      "loopSeconds": null
+    }
+  },
+  "reference_policy": "sheet.json",
+  "sha256": "f780e9749683925106f22e134126ae8f631dda9b8b1e62116c40767f1079dec9",
+  "bytes": 215644,
+  "file": "water-crescent-animated.glb",
+  "contacts": {
+    "AttackA": 0.13333333333333333,
+    "AttackB": 0.13333333333333333,
+    "AttackC": 0.2,
+    "Power": 0.2
+  },
+  "static_source_sha256": "e08a19f4ae9e613663d2d678831d05b4f75cbb289b164ace739f4011aeb4bef4",
+  "style": {
+    "lunge": 0.035,
+    "back": 0.024,
+    "twist": 0.55,
+    "roll": 0.09,
+    "hop": 0.016,
+    "spin": true,
+    "cast": 0.1
+  },
+  "animation_base": {
+    "WaterCore": {
+      "location": [
+        0.03888249397277832,
+        -0.011149383150041103,
+        0.2561797797679901
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Shell.Main": {
+      "location": [
+        -0.14330485463142395,
+        -0.032111771404743195,
+        0.0547332763671875
+      ],
+      "rotation_euler": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Shell.Right": {
+      "location": [
+        0.13886792957782745,
+        -0.06416187435388565,
+        0.043770670890808105
+      ],
+      "rotation_euler": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Fin.Upper": {
+      "location": [
+        0.2680308520793915,
+        -0.05581950396299362,
+        0.1497592329978943
+      ],
+      "rotation_euler": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Fin.Tail": {
+      "location": [
+        0.3073762357234955,
+        -0.0671016052365303,
+        -0.036597102880477905
+      ],
+      "rotation_euler": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Fin.Lower": {
+      "location": [
+        -0.208910271525383,
+        0.08100730925798416,
+        -0.20359550416469574
+      ],
+      "rotation_euler": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Eye.L": {
+      "location": [
+        -0.04541498050093651,
+        -0.13392268121242523,
+        -0.0471910685300827
+      ],
+      "rotation_euler": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "Eye.R": {
+      "location": [
+        0.0416102409362793,
+        -0.1361561417579651,
+        -0.0471910685300827
+      ],
+      "rotation_euler": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "animations": 10
+}

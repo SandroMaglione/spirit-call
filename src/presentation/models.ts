@@ -21,7 +21,7 @@ import { necropolisModels } from "./assets/necropolis.ts"
 import { monasteryModels } from "./assets/monastery.ts"
 import { arenaPropModels } from "./assets/arena-props.ts"
 import { enemyModels } from "./assets/enemies.ts"
-import { fireSpiritModel, iceSpiritModel, rockSpiritModel, sparkfistSpiritModel, thunderSpiritModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
+import { fireSpiritModel, iceSpiritModel, rockSpiritModel, sparkfistSpiritModel, thunderSpiritModel, waterCrescentModel, waterSpiritModel, windSpiritModel } from "./assets/spirits.ts"
 import { addGlow } from "./glow.ts"
 import type { GlowSpec } from "./glow.ts"
 
@@ -101,6 +101,7 @@ export const models = {
     }
   },
   waterSpirit: { ...waterSpiritModel, glow: waterGlow },
+  waterCrescent: { ...waterCrescentModel },
   fireSpirit: { ...fireSpiritModel, glow: fireGlow },
   windSpirit: { ...windSpiritModel, glow: windGlow },
   thunderSpirit: { ...thunderSpiritModel, glow: thunderGlow },
