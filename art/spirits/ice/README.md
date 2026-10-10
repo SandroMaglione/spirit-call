@@ -9,6 +9,9 @@ Open [index.html](index.html) through Vite to play each clip, scrub a pose,
 change speed, preview the sequence, or enable the actual game's blending.
 It also has camera presets, wireframe, and a 32 px view.
 
+The modelling lessons from this pass are recorded in
+[the spirit pipeline](../../../docs/spirits.md#what-worked-in-ice-spirit).
+
 ## Animation delivery
 
 | Clip | Motion |
@@ -69,8 +72,10 @@ refresh the animation reel after edits.
 
 ### Animation verification
 
-`pnpm check --maxWorkers=2` passes: 69 files, 569 tests passed, one skipped.
-`pnpm build` passes. The focused GLB tests check rest dimensions and
+At the animation review (`5c85e57`, before rebasing for the PR),
+`pnpm check --maxWorkers=2` passed: 69 files, 569 tests passed, one skipped.
+`pnpm build` passed. The PR records fresh checks against current main.
+The focused GLB tests check rest dimensions and
 parenting, floor clearance, loop closure, no horizontal loop travel,
 blink recovery, Run stretch, immediate skill lift, attack contact poses
 through `Puppet`, and freeze behavior.
