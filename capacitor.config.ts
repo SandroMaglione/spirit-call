@@ -11,7 +11,11 @@ const config: CapacitorConfig = {
   webDir: "dist",
   // The page's own colour while it starts, as on the web (index.html).
   backgroundColor: "#0d1117",
-  ios: { contentInset: "never" }
+  ios: { contentInset: "never" },
+  plugins: {
+    // The splash stays until the game shows its own first screen (`hideSplash` in src/app/device.ts).
+    SplashScreen: { launchAutoHide: false, backgroundColor: "#0d1117", showSpinner: false }
+  }
 }
 
 export default config

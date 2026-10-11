@@ -24,13 +24,17 @@
     "effect-source": "node scripts/effect-source.ts",
     "app": "vite build && cap sync",
     "app:android": "pnpm app && cap open android",
-    "app:ios": "pnpm app && cap open ios"
+    "app:ios": "pnpm app && cap open ios",
+    "app:assets": "capacitor-assets generate --android --ios --iconBackgroundColor '#072845' --iconBackgroundColorDark '#072845' --splashBackgroundColor '#0d1117' --splashBackgroundColorDark '#0d1117'"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.5.3",
+    "@capacitor/haptics": "8.0.2",
     "@capacitor/ios": "8.5.3",
     "@capacitor/preferences": "8.0.1",
+    "@capacitor/splash-screen": "8.0.2",
     "@effect/platform-browser": "4.0.1",
     "@effect/sql-d1": "4.0.1",
     "@fontsource/alegreya-sans": "^5.3.0",
@@ -44,6 +48,7 @@
     "three": "0.186.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.5.3",
     "@effect/sql-sqlite-node": "4.0.1",
     "@typeonce/bevy-ts-devtools": "link:../../bevy-ts/packages/devtools",
@@ -54,5 +59,10 @@
     "typescript": "7.0.2",
     "vite": "8.3.1",
     "vitest": "4.0.18"
+  },
+  "pnpm": {
+    "overrides": {
+      "sharp": "0.34.5"
+    }
   }
 }
