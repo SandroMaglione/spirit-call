@@ -5,6 +5,21 @@ room for mistakes, and crowd damage fuels frequent ultimates. Low-level
 clears can demand perfect play. Upgrades should noticeably improve safety
 and the pace of a fight. No clear timer or character-level entry gate is needed.
 
+## The Swordsman in the air (2026-10-11)
+
+The Gust now lands beyond a low wall it would come down on, and the
+Cyclone carries her up for 1.3 s (untouchable all the while, from 0.5 s)
+before she glides down where she steers (PR #122). The bot hops with the
+Gust as before but does not steer the glide, so it lands back in the
+middle of the whirl and spends the air time not attacking. CI's audit moved
+the Swordsman's rows both ways: five outcomes flipped (First Blood's
+learning Swordsman falls on seed 1337; the Pack Leader's skilled Swordsman
+clears 1337; the Warlord's matched Swordsman falls on 42; the Warlord's
+team with skills falls on 1337 and times out on 42), the rest moved in
+damage and time both ways. Read as the bot's noise around a kit it plays
+less well than a player would; the baseline is CI's report of this change
+(the same as a local run's).
+
 ## Every character's own kit (2026-10-10)
 
 Every special and ultimate was reworked or given its own look (PR #117).
