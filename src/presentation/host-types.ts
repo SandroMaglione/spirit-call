@@ -201,6 +201,8 @@ export interface HudRefs {
   readonly focus: HTMLElement
   /** An ultimate's moment (see `ShowUltimateMoments`): the dim around her, her element's glow at the edges, and its lines turning in. */
   readonly moment: HTMLElement
+  /** Its parts, built up by their opacity and scale: the glow it starts with, its glow at full strength, and its lines. */
+  readonly momentParts: { readonly start: HTMLElement; readonly full: HTMLElement; readonly lines: HTMLElement }
   /** A fall: the screen darkens at its edges for a moment, glowing in her color (see `SpawnFx`). */
   readonly fall: HTMLElement
 }

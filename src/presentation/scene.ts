@@ -11,6 +11,7 @@ import { arenaOf, hazardBoxes } from "../features/arena.ts"
 import { Camera, Challenge, Disc, Game, Lobbed, Player, Position, PrevPosition, Projectile, RenderClock, RenderHost, RenderNodes, Renderable, SlowMotion, Tuning, Velocity, Wall } from "../schema.ts"
 import { createNode, placeTracer, projectileColor } from "./nodes.ts"
 import { mixColor } from "./draw.ts"
+import { setStyle } from "./styles.ts"
 
 /**
  * Creates nodes for new renderables (placed once from their position) and
@@ -71,11 +72,11 @@ export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   // Reduced motion keeps the zoom still on heavy blows.
   const punch = comfort.reducedMotion ? 0 : view.impact.zoomPunch * feedback.punch
   target.pixelsPerUnit = projection.zoom * viewZoom(services.host.size) * (1 + punch) * (1 + view.ultimateMoment.zoom * feedback.moment)
-  services.host.hud.vignette.style.opacity = feedback.hurt.toFixed(3)
+  setStyle(services.host.hud.vignette, "opacity", feedback.hurt.toFixed(3))
   // A perfect dodge's slow motion glows at full strength, fading out over its last part (a fall's beat does not).
   const motion = resources.slowMotion.get()
   const slow = motion.dodge ? motion.remaining / Math.max(1e-6, resources.tuning.get().perfectDodge.slowSeconds) : 0
-  services.host.hud.focus.style.opacity = Math.min(1, slow * 2.5).toFixed(3)
+  setStyle(services.host.hud.focus, "opacity", Math.min(1, slow * 2.5).toFixed(3))
 })
 
 /** Draws moving entities between their previous and current fixed-step positions. */

@@ -167,6 +167,8 @@ interface RunReport {
   /** Hits over the whole script (warm-up included): the same as the Node benchmark's when the browser plays the same fight. */
   readonly allHits: number
   readonly gcShare: number
+  /** The page's paints per frame (the HUD's layers and the canvas): what the compositor cannot do alone. */
+  readonly paints: number
   readonly longTasks: number
   readonly longestTaskMs: number
   readonly top: ReadonlyArray<{ readonly name: string; readonly selfMs: number; readonly share: number }>
@@ -298,6 +300,7 @@ const measure = async (cdp: Cdp, base: string, scene: string, rate: number): Pro
       hits: column("hits").reduce((sum, value) => sum + value, 0),
       allHits: all["hits"]!.reduce((sum, value) => sum + value, 0),
       gcShare: gcMs / Math.max(1e-9, to - from),
+      paints: onMain.filter((event) => event.name === "Paint").length / Math.max(1, frames),
       longTasks: tasks.filter((event) => (event.dur ?? 0) > 50_000).length,
       longestTaskMs: max(tasks.map((event) => (event.dur ?? 0) / 1000)),
       top
@@ -330,6 +333,7 @@ const row = (report: RunReport) => ({
   voices: report.maxVoices,
   "nodes/f": report.maxNodes,
   "gc %": fixed(report.gcShare * 100),
+  "paint/f": fixed(report.paints ?? 0, 2),
   long: report.longTasks
 })
 
@@ -410,6 +414,7 @@ try {
         tris: change(report.meanTriangles, then.meanTriangles, 0),
         particles: `${then.maxParticles} → ${report.maxParticles}`,
         "nodes/f": `${then.maxNodes} → ${report.maxNodes}`,
+        "paint/f": `${fixed(then.paints ?? 0, 2)} → ${fixed(report.paints ?? 0, 2)}`,
         long: `${then.longTasks} → ${report.longTasks}`
       }]
     }))

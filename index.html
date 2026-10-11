@@ -101,15 +101,20 @@
       .hud__state--charged { --state: #b48cff; }
       .hud__state--swept { --state: #c9fff1; }
       .hud__state--cracked { --state: #e5ad58; }
-      .hud__vignette { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 160px 40px rgba(255, 40, 40, 0.9); }
+      /* The fading layers each get a layer of their own (will-change): changing their opacity every frame only recomposites them, never repaints. */
+      .hud__vignette { position: absolute; inset: 0; opacity: 0; box-shadow: inset 0 0 160px 40px rgba(255, 40, 40, 0.9); will-change: opacity; }
       /* Slow motion after a perfect dodge: the edges glow cold and the world dims around her. */
-      .hud__focus { position: absolute; inset: 0; opacity: 0; pointer-events: none; box-shadow: inset 0 0 240px 80px rgba(120, 255, 240, 0.6); background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 28, 44, 0.45) 100%); }
-      /* An ultimate's moment: the world dims around her, the edges glow in her element's color, and its lines turn in toward her, faster as it builds (`--build`, 0..1). */
-      .hud__moment { position: absolute; inset: 0; opacity: 0; pointer-events: none; --el: #ffd166; --build: 0; background: radial-gradient(ellipse at 50% 52%, transparent 14%, rgba(4, 6, 16, 0.78) 68%); box-shadow: inset 0 0 calc(60px + var(--build) * 90px) calc(4px + var(--build) * 18px) color-mix(in srgb, var(--el) 50%, transparent); }
-      .hud__moment::before { content: ""; position: absolute; left: 50%; top: 52%; width: 180vmax; height: 180vmax; translate: -50% -50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--el) 60%, transparent) 0 1.2deg, transparent 1.2deg 9deg); -webkit-mask: radial-gradient(closest-side, transparent calc(30% - var(--build) * 12%), #000 60%, transparent 92%); mask: radial-gradient(closest-side, transparent calc(30% - var(--build) * 12%), #000 60%, transparent 92%); opacity: calc(0.35 + var(--build) * 0.4); animation: moment-lines 1.2s linear infinite; }
+      .hud__focus { position: absolute; inset: 0; opacity: 0; pointer-events: none; box-shadow: inset 0 0 240px 80px rgba(120, 255, 240, 0.6); background: radial-gradient(ellipse at center, transparent 40%, rgba(8, 28, 44, 0.45) 100%); will-change: opacity; }
+      /* An ultimate's moment: the world dims around her, the edges glow in her element's color, and its lines turn in toward her, closing in as it builds.
+         It builds by its parts' opacity and scale only (see `ShowUltimateMoments`), so nothing repaints: the glow it starts with gives way to its glow at full strength, and the lines (their mask as it is at full strength) shrink to it. */
+      .hud__moment { position: absolute; inset: 0; opacity: 0; pointer-events: none; --el: #ffd166; background: radial-gradient(ellipse at 50% 52%, transparent 14%, rgba(4, 6, 16, 0.78) 68%); will-change: opacity; }
+      .hud__moment-glow { position: absolute; inset: 0; will-change: opacity; }
+      .hud__moment-glow--start { box-shadow: inset 0 0 60px 4px color-mix(in srgb, var(--el) 50%, transparent); }
+      .hud__moment-glow--full { box-shadow: inset 0 0 150px 22px color-mix(in srgb, var(--el) 50%, transparent); opacity: 0; }
+      .hud__moment-lines { position: absolute; left: 50%; top: 52%; width: 180vmax; height: 180vmax; translate: -50% -50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--el) 60%, transparent) 0 1.2deg, transparent 1.2deg 9deg); -webkit-mask: radial-gradient(closest-side, transparent 18%, #000 60%, transparent 92%); mask: radial-gradient(closest-side, transparent 18%, #000 60%, transparent 92%); opacity: 0.537; scale: 1.667; animation: moment-lines 1.2s linear infinite; will-change: opacity, scale, rotate; }
       @keyframes moment-lines { to { rotate: 40deg; } }
       /* A fall: for a moment the world darkens at its edges, glowing in her element's color as her light goes out (`--el`). */
-      .hud__fall { position: absolute; inset: 0; opacity: 0; pointer-events: none; --el: #ffffff; background: radial-gradient(ellipse at 50% 52%, transparent 30%, rgba(8, 6, 18, 0.62) 100%); box-shadow: inset 0 0 220px 50px color-mix(in srgb, var(--el) 45%, transparent); }
+      .hud__fall { position: absolute; inset: 0; opacity: 0; pointer-events: none; --el: #ffffff; background: radial-gradient(ellipse at 50% 52%, transparent 30%, rgba(8, 6, 18, 0.62) 100%); box-shadow: inset 0 0 220px 50px color-mix(in srgb, var(--el) 45%, transparent); will-change: opacity; }
       .hud__fall.is-on { animation: fall-dim 1s ease-in-out forwards; }
       @keyframes fall-dim { 0% { opacity: 0; } 20% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
       .hud__banner { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font: 800 italic 48px "Barlow Condensed", sans-serif; letter-spacing: 0.08em; color: #fff; opacity: 0; text-shadow: 0 2px 12px #000; white-space: nowrap; }
