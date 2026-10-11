@@ -191,6 +191,8 @@ export const inArena = (tuning: Tuning, arena: ArenaId): Tuning => ({
 })
 
 export interface StartOptions {
+  /** What the controls start as (see `SimulationOptions.device`). */
+  readonly device?: "desktop" | "touch"
   readonly keys?: Keyboard.Timeline<typeof keyBindings>
   readonly pointer?: Pointer.Timeline
   readonly touch?: Touch.Timeline<TouchButton>
@@ -245,7 +247,8 @@ export const start = (options: StartOptions = {}) => {
     ...(options.build === undefined ? {} : { build: options.build }),
     ...(options.team === undefined ? {} : { team: options.team }),
     ...(options.challenge === undefined ? {} : { challenge: options.challenge }),
-    ...(options.flow === undefined ? {} : { flow: options.flow })
+    ...(options.flow === undefined ? {} : { flow: options.flow }),
+    ...(options.device === undefined ? {} : { device: options.device })
   })
   const setup = sim.runtime.tick(sim.setup)
   if (!setup.ok) throw new Error("setup failed")

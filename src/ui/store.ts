@@ -90,6 +90,8 @@ export const createUiStore = (initial: {
   readonly accountName: string
   readonly notices: ReadonlyArray<string>
   readonly sound: Sound
+  /** What the controls start as. */
+  readonly device: "desktop" | "touch"
 }): UiStore => ({
   feedback: signal(null),
   menuPlay: signal(initial.account.selection.play),
@@ -98,7 +100,7 @@ export const createUiStore = (initial: {
   menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),
   paused: signal(false),
-  device: signal("desktop"),
+  device: signal(initial.device),
   tuning: signal(initial.tuning),
   team: signal(initial.team),
   challenge: signal(initial.challenge),

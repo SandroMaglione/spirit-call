@@ -19,6 +19,7 @@ import { scriptedPartyTaps, touchButtons } from "./config/input.ts"
 import type { KeyboardSource, PartyTaps, PointerSource, TouchSource } from "./config/input.ts"
 import { defaultTuning } from "./config/tuning.ts"
 import type { Tuning } from "./config/tuning.ts"
+import { initialControls } from "./features/input.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
 import { FrameContext, Game, KeyboardInput, PartyInput, PointerInput, TouchInput } from "./schema.ts"
@@ -47,6 +48,8 @@ export interface SimulationOptions {
   readonly flow?: "Menu" | "Playing"
   /** Defaults to 1280×720. */
   readonly viewport?: ViewportValue
+  /** What the controls start as (a phone's browser starts as touch); defaults to desktop. */
+  readonly device?: "desktop" | "touch"
 }
 
 export const defaultViewport: ViewportValue = { width: 1280, height: 720 }
@@ -65,7 +68,10 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(FrameContext, { viewport }),
       Game.Runtime.service(UiRequests, requests)
     ),
-    resources: initialResources(tuning, viewport, options.team ?? (options.build === undefined ? undefined : [options.build]), options.challenge, options.enemyLevel, options.twist),
+    resources: {
+      ...initialResources(tuning, viewport, options.team ?? (options.build === undefined ? undefined : [options.build]), options.challenge, options.enemyLevel, options.twist),
+      Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }, options.device)
+    },
     machines: initialMachines(options.flow),
     debug: true
   })

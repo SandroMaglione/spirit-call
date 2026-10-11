@@ -334,9 +334,13 @@ const touchSkill = (touch: TouchSnapshot, slot: SkillSlot, effect: SkillEffect, 
   }
 }
 
-/** `aimPoint` starts at the player spawn, so nothing is aimed at before the mouse moves. */
-export const initialControls = (aimPoint: Vec2): ControlsValue => ({
-  device: "desktop",
+/**
+ * `aimPoint` starts at the player spawn, so nothing is aimed at before the
+ * mouse moves. `device` is what the controls start as (the browser picks
+ * touch on a phone, see `main.ts`); using the other switches to it.
+ */
+export const initialControls = (aimPoint: Vec2, device: ControlsValue["device"] = "desktop"): ControlsValue => ({
+  device,
   move: zero,
   aimPoint,
   skills: idleSkills(aimPoint),

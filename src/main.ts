@@ -30,6 +30,7 @@ import { createMenuInputHost } from "./presentation/menu-input.ts"
 import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
+import { initialControls } from "./features/input.ts"
 import {
   FrameContext,
   Game,
@@ -156,7 +157,11 @@ const start = async (mount: HTMLElement) => {
   let recording = true
   const uiRequests = emptyUiRequests()
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
-  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: shell.settings })
+  // The game is for phones: in the apps, and on a touch screen, the controls start as touch (the pad shows from the
+  // first fight); a key or a mouse button switches to the keyboard's, and a touch back.
+  const touchScreen = inApp || window.matchMedia("(pointer: coarse)").matches || new URLSearchParams(window.location.search).has("touch")
+  const device = touchScreen ? "touch" : "desktop"
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: shell.settings, device })
   // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
   wearLooks(account.worn)
   shell.onAccount((next) => {
@@ -310,7 +315,11 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(UiRequests, uiRequests),
       Game.Runtime.service(UiStoreService, uiStore)
     ),
-    resources: { ...initialResources(tuning, frameContext.viewport, team, challenge, enemyLevel), ...(practice === undefined ? {} : { Practice: practice }) },
+    resources: {
+      ...initialResources(tuning, frameContext.viewport, team, challenge, enemyLevel),
+      Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }, device),
+      ...(practice === undefined ? {} : { Practice: practice })
+    },
     machines: initialMachines(flow),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true

@@ -26,6 +26,9 @@ knows it is in an app.
   dialog, pauses and resumes a run). On the list of accounts and the home
   screen it asks "Leave Spirit Call?" and closes the app once confirmed
   (`leaveApp`); over the crash screen it closes the app.
+- The controls start as touch in the apps and on any touch screen (`pointer:
+  coarse`), so the first fight opens with the pad; a key or a mouse button
+  switches to the keyboard's.
 - Sound that a call or another app interrupted comes back on the next tap.
 
 ## Icons and the splash screen
