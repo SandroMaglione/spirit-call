@@ -1,0 +1,32 @@
+# GitHub runs only the general checks. Builds, balance audits, native apps,
+# and deployments are run locally (docs/local-workflows.md).
+name: Check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Use the published bevy-ts
+        run: node scripts/use-published-bevy-ts.ts
+      - name: Install
+        run: pnpm install --no-frozen-lockfile
+      - name: Typecheck, lint, and test
+        run: pnpm check

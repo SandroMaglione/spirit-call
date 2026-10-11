@@ -7,7 +7,7 @@ android {
         applicationId "com.sandromaglione.spiritcall"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // CI sets these for a store build (a rising run number, and the release's name); a local build is 1.
+        // Set these for a local store build; VERSION_CODE must exceed every previous upload.
         versionCode((System.getenv("VERSION_CODE") ?: "1").toInteger())
         versionName(System.getenv("VERSION_NAME") ?: "0.1.0")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -18,7 +18,7 @@ android {
         }
     }
     // The upload key signs the store build (Play App Signing keeps the key the app is
-    // finally signed with). It is never in the repository: CI writes it from its secrets
+    // finally signed with). It is never in the repository: local builds load it from protected storage
     // (see docs/mobile.md, "Releasing on Google Play"). Without it a release build is unsigned.
     def uploadKey = System.getenv("UPLOAD_KEYSTORE")
     signingConfigs {

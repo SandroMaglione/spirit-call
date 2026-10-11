@@ -1,4 +1,7 @@
-// The credentials CI deploys with, created once from a laptop and stored as
+// Legacy deployment credentials: GitHub now runs only general checks and
+// does not use these secrets. Keep this stack to manage the existing token;
+// local deployments use a local Cloudflare profile (docs/local-workflows.md).
+// The credentials were created once from a laptop and stored as
 // the repository's Actions secrets (rerun to rotate the token or change its
 // permissions):
 //
