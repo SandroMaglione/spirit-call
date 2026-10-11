@@ -12,6 +12,7 @@ export type Screen =
   | { readonly kind: "discoveries" }
   | { readonly kind: "extra"; readonly mode: "training" | "practice" }
   | { readonly kind: "settings" }
+  | { readonly kind: "inventory" }
 
   | { readonly kind: "gear"; readonly character: CharacterId; readonly tab: GearTab; readonly focus?: GearFocus }
   | { readonly kind: "collection"; readonly tab: CollectionTab }
@@ -22,8 +23,8 @@ export type CharacterTab = "overview" | "gear" | "kit"
 export type GearTab = "aspect" | "relics" | "looks"
 /** Where the gear screen opens within its tab: a relic slot, or a kind of look. */
 export type GearFocus = RelicSlot | CosmeticKind
-/** The collection's shelves (see docs/collection.md): characters, aspects, relics, looks, and the inventory (what the wallet holds). */
-export type CollectionTab = "characters" | "aspects" | "relics" | "looks" | "inventory"
+/** The collection's shelves (see docs/collection.md): characters, aspects, relics, and looks. */
+export type CollectionTab = "characters" | "aspects" | "relics" | "looks"
 
 /** Moving between screens: `go` opens one over the current one, `replace` swaps it (a tab), `back` returns to the one before. */
 export interface Nav {

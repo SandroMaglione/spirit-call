@@ -199,10 +199,11 @@ is left, and keep text off it.
 - **The collection** (`menu/Collection.tsx`, from the home) shows
   everything to own, shelf by shelf (characters, aspects, relics, looks),
   owned or locked, each saying where it comes from (and a relic each of its
-  tiers), with Go there to open that card in the challenges. Its last tab
-  is the **inventory** (`menu/Inventory.tsx`: what the wallet holds, where
-  each comes from, and what it is for at the panel's foot). The home's top
+  tiers), with Go there to open that card in the challenges. The home's top
   shows how much of the collection is owned.
+- **Inventory** (`menu/Inventory.tsx`) is the last destination in Home's
+  list: what the wallet holds, where each comes from, and what it is for
+  at the panel's foot.
 - **Auditions** are a tab of the challenges: each lends its character, so
   the party strip gives way to her face, and the brief says she is played
   alone at the tier's level.

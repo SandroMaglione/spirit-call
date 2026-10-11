@@ -50,7 +50,7 @@ export const Loading = ({ progress }: { readonly progress: ReadonlySignal<number
           const fill = Math.max(0, Math.min(1, share * order.length - i))
           return <div key={element} class="loading__stone" data-element={element} data-full={fill >= 1 ? "" : undefined} data-filling={i === filling && fill < 1 ? "" : undefined}>
             <div class="loading__dim"><EmblemIcon kind={element} /></div>
-            <div class="loading__lit" style={{ clipPath: `inset(${(1 - fill) * 100}% 0 0 0)` }}><EmblemIcon kind={element} /></div>
+            <div class="loading__lit" style={{ clipPath: fill >= 1 ? undefined : `inset(${(1 - fill) * 100}% 0 0 0)` }}><EmblemIcon kind={element} /></div>
           </div>
         })}
       </div>

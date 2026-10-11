@@ -41,7 +41,8 @@ export const Home = ({ store, nav, leader, play, enter }: {
     characters: { kind: "character", character: leader, tab: "overview" },
     challenges: { kind: "quests", tab: tabOf(tuning, play) },
     collection: { kind: "collection", tab: "characters" },
-    practice: { kind: "extra", mode: "training" }
+    practice: { kind: "extra", mode: "training" },
+    inventory: { kind: "inventory" }
   }
   return <Screen name="home">
     <div class="home__stage"><ModelStage key={leader} character={leader} /></div>
@@ -60,6 +61,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
       { id: "challenges", label: "Challenges" },
       { id: "characters", label: "Characters", badge: canTrain },
       { id: "collection", label: "Collection" },
+      { id: "inventory", label: "Inventory" },
     ]} />
     {store.notices.value.length > 0 && <div class="home__notices" role="status">{store.notices.value.map((notice, i) => <p key={i}>{notice}</p>)}<Pill size="small" tone="dark" onClick={() => (store.notices.value = [])}>Dismiss</Pill></div>}
     <div class="home__party in-left">
@@ -74,7 +76,7 @@ export const Home = ({ store, nav, leader, play, enter }: {
         <span>Lv {encounter.enemyLevel}</span><Icon name="next" />
       </button>
       <div class="home__play">
-        <Pill tone="dark" size="small" icon="practice" onClick={() => nav.go(places["practice"]!)}>Practice</Pill>
+        <Pill tone="dark" size="large" icon="practice" onClick={() => nav.go(places["practice"]!)}>Practice</Pill>
         <Pill icon="play" size="large" onClick={enter}>Play</Pill>
       </div>
     </div>

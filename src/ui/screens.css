@@ -102,7 +102,7 @@
 .home__next { position: absolute; right: var(--right); bottom: var(--bottom); width: 340px; z-index: 3; display: grid; gap: 7px; justify-items: end; text-align: right; text-shadow: 0 1px 4px #0009; }
 .home__next h2 { font-size: 24px; font-weight: 800; line-height: 1; }
 .home__play { display: flex; align-items: center; gap: 10px; }
-.home__play .pill[data-size="small"] { --pill-height: 36px; }
+.home__play .pill[data-tone="dark"] { min-width: 0; font-size: 17px; padding-right: 16px; }
 .home__foes { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; position: relative; margin-bottom: 14px; }
 .home__foes::after { content: ""; position: absolute; inset: -8px; }
 .home__foes .face { background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); }
@@ -231,7 +231,7 @@
 .collection__price { display: inline-flex; align-items: center; gap: 3px; }
 .collection__price .menu-icon { font-size: 14px; }
 .collection__empty { padding: 10px 4px; font-size: 13px; }
-/* A model shelf: the model large over the right, a short tag at its top, Details at its foot. */
+/* A model shelf: the model large over the right, a short tag at its top. */
 .collection__stage--wide { right: var(--right) !important; }
 .collection__tag { position: absolute; right: var(--right); top: 66px; z-index: 3; display: grid; justify-items: end; gap: 5px; text-align: right; text-shadow: 0 1px 4px #000a; }
 .collection__tag b { font-size: 26px; font-weight: 800; line-height: 1.05; }
@@ -473,9 +473,10 @@
 .loading__stone { position: relative; isolation: isolate; width: 52px; height: 52px; font-size: 52px; }
 .loading__stone > div { position: absolute; inset: 0; }
 .loading__dim { opacity: .28; filter: grayscale(1) brightness(.75); }
-.loading__lit { transition: clip-path .5s ease-out; filter: drop-shadow(0 0 0 transparent); }
+.loading__lit { transition: clip-path .5s ease-out; }
+.loading__lit .emblem-icon { overflow: visible; }
 .loading__stone[data-filling] { animation: stone-bob 1.6s ease-in-out infinite; }
-.loading__stone[data-full] .loading__lit { animation: stone-lit .7s ease-out both; }
+.loading__stone[data-full] .loading__lit .emblem-icon { animation: stone-lit .7s ease-out both; }
 .loading__stone::after { content: ""; position: absolute; left: 50%; top: 50%; width: 90px; height: 90px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 55%, transparent), transparent); opacity: 0; z-index: -1; }
 .loading__stone[data-full]::after { animation: stone-flash .9s ease-out; }
 .loading__tip { margin: 0; max-width: 460px; min-height: 2.6em; text-align: center; color: var(--dim); font-size: 15px; line-height: 1.35; animation: fade .6s backwards; }

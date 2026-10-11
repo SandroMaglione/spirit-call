@@ -14,6 +14,7 @@ import { Gear } from "./menu/Gear.tsx"
 import { Collection } from "./menu/Collection.tsx"
 import { Extra } from "./menu/Extra.tsx"
 import { Home } from "./menu/Home.tsx"
+import { Inventory } from "./menu/Inventory.tsx"
 import { Quests } from "./menu/Quests.tsx"
 import { Settings } from "./menu/Settings.tsx"
 import { Team } from "./menu/Team.tsx"
@@ -77,6 +78,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} />
       case "gear": return <Gear store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} focus={screen.focus} save={save} />
       case "collection": return <Collection store={store} nav={nav} tab={screen.tab} />
+      case "inventory": return <Inventory store={store} nav={nav} />
       case "discoveries": return <Discoveries store={store} nav={nav} />
       case "extra": return <Extra store={store} actions={actions} nav={nav} mode={screen.mode} leader={leader} />
       case "settings": return <Settings store={store} actions={actions} nav={nav} />

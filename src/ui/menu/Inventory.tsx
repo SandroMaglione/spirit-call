@@ -1,6 +1,6 @@
 /**
- * The inventory, a shelf of the collection (see `Collection.tsx`): everything
- * the wallet holds, a card each (gold, then each essence),
+ * The inventory, opened from Home: everything the wallet holds, a card each
+ * (gold, then each essence),
  * and the one selected explained beside them: where it comes from, and
  * what it is for (at its foot).
  */
@@ -10,9 +10,11 @@ import type { MaterialId } from "../../content/materials.ts"
 import { Icon } from "../Icon.tsx"
 import { Card, Cards } from "../kit/Card.tsx"
 import { Panel } from "../kit/panel.tsx"
+import { Screen, TopBar } from "../kit/shell.tsx"
 import type { UiStore } from "../store.ts"
 import type { IconName } from "../Icon.tsx"
 import { ids, materialIconOf } from "./parts.tsx"
+import type { Nav } from "./screens.ts"
 
 const isMaterial = (store: UiStore, id: ResourceId): id is MaterialId => Object.hasOwn(store.tuning.value.materials, id)
 
@@ -45,7 +47,7 @@ const useOf = (store: UiStore, id: ResourceId): string => {
   return `ascending ${element === null ? "any" : element} characters past level ${steps}`
 }
 
-export const InventoryShelf = ({ store }: { readonly store: UiStore }) => {
+export const Inventory = ({ store, nav }: { readonly store: UiStore; readonly nav: Nav }) => {
   const tuning = store.tuning.value, account = store.account.value
   const all: ReadonlyArray<ResourceId> = [...ids(tuning.currencies), ...ids(tuning.materials)]
   const selected = useSignal<ResourceId>(all[0]!)
@@ -53,7 +55,8 @@ export const InventoryShelf = ({ store }: { readonly store: UiStore }) => {
   const name = isMaterial(store, id) ? tuning.materials[id].name : tuning.currencies[id as keyof typeof tuning.currencies].name
   const element = isMaterial(store, id) ? tuning.materials[id].element ?? undefined : undefined
   const icon = (each: ResourceId): IconName => isMaterial(store, each) ? materialIconOf(store, each) : "gold"
-  return <>
+  return <Screen name="inventory">
+    <TopBar icon="gold" title="Inventory" close={nav.back} />
     <div class="inventory__cards scroll in-left"><Cards>{all.map((each) => {
       const material = isMaterial(store, each)
       return <Card key={each} tint={material ? tuning.materials[each].element ?? undefined : undefined} label={material ? tuning.materials[each].name : tuning.currencies[each as keyof typeof tuning.currencies].name}
@@ -64,5 +67,5 @@ export const InventoryShelf = ({ store }: { readonly store: UiStore }) => {
       note={`For ${useOf(store, id)}`}>
       <div class="inventory__sources">{sources(store, id).map((line) => <p key={line} class="inventory__source">{line}</p>)}</div>
     </Panel>
-  </>
+  </Screen>
 }
