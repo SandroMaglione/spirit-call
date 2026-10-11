@@ -51,7 +51,7 @@ const unitCircle = (segments: number): { readonly cos: Float64Array; readonly si
 /** 0xRRGGBB to linear RGB (vertex colors are linear), memoized: shapes reuse a handful of colors. */
 const linear = new Map<number, readonly [number, number, number]>()
 const scratch = new Color()
-const rgbOf = (hex: number): readonly [number, number, number] => {
+export const linearRgb = (hex: number): readonly [number, number, number] => {
   const known = linear.get(hex)
   if (known !== undefined) return known
   scratch.setHex(hex)
@@ -300,7 +300,7 @@ export class Shapes {
   }
 
   private paint(color: number, alpha: number): void {
-    const [r, g, b] = rgbOf(color)
+    const [r, g, b] = linearRgb(color)
     this.r = r
     this.g = g
     this.b = b
