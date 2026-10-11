@@ -39,12 +39,12 @@
     "@effect/sql-d1": "4.0.2",
     "@fontsource/alegreya-sans": "^5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
-    "@preact/signals": "2.11.2",
+    "@preact/signals": "2.11.3",
     "@typeonce/bevy-ts": "link:../../bevy-ts/packages/core",
     "@typeonce/bevy-ts-browser": "link:../../bevy-ts/packages/browser",
     "@typeonce/bevy-ts-pixi": "link:../../bevy-ts/packages/pixi",
     "effect": "4.0.2",
-    "preact": "10.29.8",
+    "preact": "11.0.1",
     "three": "0.186.1"
   },
   "devDependencies": {
