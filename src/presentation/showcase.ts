@@ -26,6 +26,7 @@ import { characterLooks, cosmeticLooks, enemyLooks, enemyPortraits, wornLook, wo
 import type { BodyLook, Drops } from "./looks.ts"
 import type { ModelId, ModelSource } from "./models.ts"
 import { Puppet } from "./puppet.ts"
+import { renderQuality } from "./render-quality.ts"
 
 /** How the models are shown: the camera's field of view, how far they turn toward it, and how much of a place they fill. */
 const stage = {
@@ -170,8 +171,9 @@ export interface Showcase {
 }
 
 export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId, ModelSource>): Showcase => {
-  const renderer = new WebGLRenderer({ antialias: window.devicePixelRatio < 2, alpha: true, powerPreference: "high-performance" })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  const quality = renderQuality(window.devicePixelRatio, window.matchMedia("(pointer: coarse)").matches)
+  const renderer = new WebGLRenderer({ antialias: quality.antialias, alpha: true, powerPreference: "high-performance" })
+  renderer.setPixelRatio(quality.pixelRatio)
   renderer.setClearColor(0x000000, 0)
   renderer.autoClear = false
   const canvas = renderer.domElement
