@@ -44,16 +44,22 @@ changes. Tests give an in-memory one (`KeyValueStore.layerMemory`).
 | `shooter.account.<id>` | One account. |
 | `shooter.settings` | The device's settings. |
 | `shooter.playtest.outbox`, `.device`, `.tester` | A playtest build's runs waiting to be sent, and who is playing (see [playtest.md](playtest.md)). |
-| `<key>.unreadable` | A save that could not be read, set aside. |
+| `<key>.unreadable`, `<key>.unreadable.2` … `.5` | A save that could not be read, set aside (each copy kept; a later one goes beside it). |
 
-## Loading never fails
+## Loading never loses a save
 
 - **No save**: a new account (the starter set, `content/account.ts`), by
   the id the list gave it.
 - **A save that cannot be read** (broken, or from a newer version of the
-  game than this one): it is set aside under `shooter.account.<id>.unreadable`,
-  never overwritten, and a new account starts, with a notice on the home
-  screen.
+  game than this one): it is set aside under `shooter.account.<id>.unreadable`
+  (or the next free copy beside it), never overwritten, and a new account
+  starts, with a notice on the home screen. If it cannot be set aside,
+  nothing starts over it: loading fails as below.
+- **A read the storage failed** (a phone's storage can fail now and then):
+  it is tried again twice; if it still fails, nothing is written, and the
+  game says the save could not be read just now and offers to try again.
+  A failed read is never taken for "no save", so a new account is never
+  saved over one the device could not see.
 - **An older save** is brought to the latest shape, one version at a time
   (`migrateAccount`).
 - **Content that changed** since it was saved is repaired as it loads
@@ -61,10 +67,15 @@ changes. Tests give an in-memory one (`KeyValueStore.layerMemory`).
   on it is set right, and what the cards it has met give is given. The
   home screen says what was done.
 
-What loading repaired or migrated is saved at once.
+What loading repaired or migrated is saved at once (only ever after a read
+that worked).
 
 The list loads the same way: one that cannot be read is set aside
-(`shooter.accounts.unreadable`) and the device starts with none. A device
+(`shooter.accounts.unreadable`) and the device starts with none; one the
+storage failed to read shows "could not be read just now" and a way to try
+again, and no account is made or deleted until it is read. Settings the
+storage failed to read play as the defaults and are not written until a
+change. A device
 that played before it could hold several accounts has one save under
 `shooter.account`: it joins the list as "Player" the first time the list is
 read.

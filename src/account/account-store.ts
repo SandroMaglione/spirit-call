@@ -4,9 +4,10 @@
  * `KeyValueStore` is provided (the browser's storage on the web; the app's
  * own on a phone), so the game's code never names where it is kept.
  *
- * Loading never fails: a missing save starts a new account; a save that
- * cannot be read is set aside (see `persisted.ts`) and a new account
- * started; an old save is brought to the latest version (`stored.ts`) and
+ * A missing save starts a new account; a save that cannot be read is set
+ * aside (see `persisted.ts`) and a new account started; a read the device's
+ * storage failed fails loading (`AccountReadError`), and nothing is written:
+ * the save it could not see is never replaced. An old save is brought to the latest version (`stored.ts`) and
  * then repaired where it no longer fits the content (`fromRecord`), and what
  * that had to do is said in `notes`.
  */
@@ -31,6 +32,9 @@ export const accountKey = (id: string) => `shooter.account.${id}`
 
 export class AccountSaveError extends Data.TaggedError("AccountSaveError")<{ readonly cause: unknown }> {}
 
+/** The device's storage failed to read the account: nothing was changed, and trying again may work. */
+export class AccountReadError extends Data.TaggedError("AccountReadError")<{}> {}
+
 export interface AccountStoreShape {
   /** The account as loaded. */
   readonly account: Account
@@ -42,11 +46,12 @@ export interface AccountStoreShape {
 
 export class AccountStore extends Context.Service<AccountStore, AccountStoreShape>()("Shooter/AccountStore") {}
 
-/** The account saved as `id`, or a new one by that id, and what loading had to do. */
+/** The account saved as `id`, or a new one by that id, and what loading had to do; fails when the storage could not be read. */
 export const load = (store: KeyValueStore.KeyValueStore, tuning: Tuning, starter: StarterSet, id: string) =>
   Effect.gen(function*() {
     const now = yield* Clock.currentTimeMillis
     const saved = yield* read(store, accountKey(id), StoredAccountJson)
+    if (saved._tag === "Failed") return yield* new AccountReadError()
     if (saved._tag === "Missing") return { account: createAccount(tuning, starter, id, now), notes: [] }
     if (saved._tag === "Unreadable") {
       return {
@@ -75,7 +80,7 @@ export const layer = (tuning: Tuning, starter: StarterSet, id: string) =>
         queue.withPermits(1)(write(store, accountKey(id), LatestAccountJson, { version: 1, account: toRecord(account) })).pipe(
           Effect.mapError((cause) => new AccountSaveError({ cause }))
         )
-      // What loading repaired or migrated is saved at once.
+      // What loading repaired or migrated is saved at once (only ever after a read that worked).
       yield* save(loaded.account).pipe(Effect.ignore)
       return AccountStore.of({ ...loaded, save })
     })

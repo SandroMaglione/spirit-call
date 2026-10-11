@@ -25,17 +25,19 @@ export interface Picked {
   readonly name: string
 }
 
-/** An account in the list, and how far it got: never played, a save that cannot be read, or its numbers. */
+/** An account in the list, and how far it got: never played, a save that cannot be read, one not read just now, or its numbers. */
 export interface AccountSummary extends Picked {
   readonly progress:
     | { readonly kind: "new" }
     | { readonly kind: "unreadable" }
+    | { readonly kind: "unknown" }
     | { readonly kind: "played"; readonly characters: number; readonly secondsPlayed: number }
 }
 
 /** What the picker can ask of this device's accounts: plain functions (the shell's `openAccounts`). */
 export interface Accounts {
-  readonly list: () => Promise<ReadonlyArray<AccountSummary>>
+  /** `null` when this device's storage failed to read them (nothing was changed). */
+  readonly list: () => Promise<ReadonlyArray<AccountSummary> | null>
   /** The account made, or why it could not be, in words. */
   readonly create: (name: string) => Promise<({ readonly ok: true } & Picked) | { readonly ok: false; readonly problem: string }>
   /** Whether it was deleted. */
@@ -55,6 +57,8 @@ const progressOf = (account: AccountSummary) => {
       return "New"
     case "unreadable":
       return "Cannot be read"
+    case "unknown":
+      return "Not read just now"
     case "played":
       return `${account.progress.characters} ${account.progress.characters === 1 ? "character" : "characters"} · ${playedFor(account.progress.secondsPlayed)}`
   }
@@ -65,13 +69,13 @@ const AccountPicker = ({ accounts, play }: {
   /** Plays the account: `false` when another tab is playing it. */
   readonly play: (account: Picked) => Promise<boolean>
 }) => {
-  const list = useSignal<ReadonlyArray<AccountSummary> | null>(null)
+  const list = useSignal<ReadonlyArray<AccountSummary> | "unread" | null>(null)
   const name = useSignal("")
   const problem = useSignal<string | null>(null)
   const busy = useSignal(false)
   const deleting = useSignal<AccountSummary | null>(null)
   const refresh = async () => {
-    list.value = await accounts.list()
+    list.value = (await accounts.list()) ?? "unread"
   }
   useEffect(() => {
     void refresh()
@@ -100,6 +104,18 @@ const AccountPicker = ({ accounts, play }: {
       return removed ? null : `${account.name} could not be deleted.`
     })
   if (list.value === null) return null
+  // The storage failed to read the list: nothing may be made or deleted over what it could not see.
+  if (list.value === "unread") {
+    return <div class="ui-screen">
+      <Panel class="accounts in-below" title="Your accounts">
+        <p class="accounts__problem" role="alert">The accounts on this device could not be read just now. Nothing was changed.</p>
+        <button type="button" class="pill" disabled={busy.value} onClick={() => void run(async () => {
+          await refresh()
+          return null
+        })}><span class="pill__label">Try again</span></button>
+      </Panel>
+    </div>
+  }
   const none = list.value.length === 0
   return <div class="ui-screen">
     <Panel class="accounts in-below" title={none ? "Name your account" : "Choose an account"}>

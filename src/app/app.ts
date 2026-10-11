@@ -15,7 +15,7 @@ import { ascend, encounterOf, openAudition, recordRun, saveTeam, select, train, 
 import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
 import { AccountList, layer as accountListLayer } from "../account/account-list.ts"
 import type { AccountSummary } from "../account/account-list.ts"
-import { AccountStore, layer as accountLayer } from "../account/account-store.ts"
+import { AccountReadError, AccountStore, layer as accountLayer } from "../account/account-store.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
 import { defaultTuning } from "../config/tuning.ts"
@@ -58,12 +58,25 @@ export interface App {
 
 /** The accounts on this device, to pick one to play, make one, or delete one. */
 export interface Accounts {
-  /** Every account, the last played first. */
-  readonly list: () => Promise<ReadonlyArray<AccountSummary>>
+  /** Every account, the last played first; `null` when this device's storage failed to read them (nothing changed; trying again may work). */
+  readonly list: () => Promise<ReadonlyArray<AccountSummary> | null>
   /** Makes an account: its id, or why the name cannot be given (or that it could not be saved), in words. */
   readonly create: (name: string) => Promise<{ readonly ok: true; readonly id: string; readonly name: string } | { readonly ok: false; readonly problem: string }>
   /** Deletes an account and its progress, for good: whether it was. */
   readonly remove: (id: string) => Promise<boolean>
+}
+
+const unreadList = "The accounts on this device could not be read just now, so nothing was changed. Try again."
+
+/**
+ * The account's save could not be read just now (the device's storage
+ * failed): nothing was changed, and starting again may work.
+ */
+export class SaveReadFailed extends Error {
+  constructor() {
+    super("The save could not be read")
+    this.name = "SaveReadFailed"
+  }
 }
 
 /** The accounts on this device, over its storage. */
@@ -73,12 +86,17 @@ export const openAccounts = (): Accounts => {
     return yield* AccountList
   })
   return {
-    list: () => runtime.runPromise(list.pipe(Effect.flatMap((accounts) => accounts.list))),
+    list: () =>
+      runtime.runPromise(list.pipe(
+        Effect.flatMap((accounts) => accounts.list),
+        Effect.catchTag("AccountListReadError", () => Effect.logWarning("The accounts could not be read").pipe(Effect.as(null)))
+      )),
     create: (name) =>
       runtime.runPromise(list.pipe(
         Effect.flatMap((accounts) => accounts.create(name)),
         Effect.map((entry) => ({ ok: true as const, id: entry.id, name: entry.name })),
         Effect.catchTag("AccountNameError", (error) => Effect.succeed({ ok: false as const, problem: error.problem })),
+        Effect.catchTag("AccountListReadError", () => Effect.succeed({ ok: false as const, problem: unreadList })),
         Effect.catchTag("AccountListSaveError", (error) =>
           Effect.logWarning("The account could not be made", error.cause).pipe(Effect.as({ ok: false as const, problem: "The account could not be saved on this device." })))
       )),
@@ -86,7 +104,8 @@ export const openAccounts = (): Accounts => {
       runtime.runPromise(list.pipe(
         Effect.flatMap((accounts) => accounts.remove(id)),
         Effect.as(true),
-        Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account could not be deleted", error.cause).pipe(Effect.as(false)))
+        Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account could not be deleted", error.cause).pipe(Effect.as(false))),
+        Effect.catchTag("AccountListReadError", () => Effect.logWarning("The accounts could not be read").pipe(Effect.as(false)))
       ))
   }
 }
@@ -121,9 +140,15 @@ export const startApp = async (id: string, name: string): Promise<App> => {
   const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
   const { settings, accounts, sender } = await runtime.runPromise(Effect.gen(function*() {
     // The list shows the last played first.
-    yield* (yield* AccountList).played(id).pipe(Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account list could not be saved", error.cause)))
+    yield* (yield* AccountList).played(id).pipe(Effect.catchTags({
+      AccountListSaveError: (error) => Effect.logWarning("The account list could not be saved", error.cause),
+      AccountListReadError: () => Effect.logWarning("The account list could not be read")
+    }))
     return { settings: yield* SettingsStore, accounts: yield* AccountStore, sender: yield* Playtest }
-  }))
+  })).catch((error: unknown) => {
+    // A save the storage failed to read is left as it is: the game says so, and starting again may work.
+    throw error instanceof AccountReadError ? new SaveReadFailed() : error
+  })
   let account = accounts.account
   const listeners: Array<(account: Account) => void> = []
   const failures: Array<() => void> = []

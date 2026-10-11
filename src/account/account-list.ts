@@ -6,8 +6,10 @@
  * (`holdAccount`, in the shell).
  *
  * The list is read fresh for every change, so one made or deleted in
- * another tab shows. Reading never fails: a list that cannot be read is set
- * aside (see `persisted.ts`) and the device starts with none.
+ * another tab shows. A list that cannot be read is set aside (see
+ * `persisted.ts`) and the device starts with none; a read the device's
+ * storage failed fails (`AccountListReadError`), and nothing is changed: a
+ * list it could not see is never replaced.
  */
 import * as Clock from "effect/Clock"
 import * as Context from "effect/Context"
@@ -20,7 +22,7 @@ import * as Semaphore from "effect/Semaphore"
 import { randomId } from "../app/ids.ts"
 import { accountNameLimit } from "./account.ts"
 import { accountKey } from "./account-store.ts"
-import { read, write } from "./persisted.ts"
+import { asideKeys, read, write } from "./persisted.ts"
 import { LatestAccountListJson, migrateAccount, migrateAccountList, StoredAccountJson, StoredAccountListJson } from "./stored.ts"
 
 export const listKey = "shooter.accounts"
@@ -35,10 +37,11 @@ export interface AccountEntry {
   readonly playedAt: number
 }
 
-/** How far an account got, to tell them apart: never played yet, a save that cannot be read, or its numbers. */
+/** How far an account got, to tell them apart: never played yet, a save that cannot be read, one the storage failed to read just now, or its numbers. */
 export type AccountProgress =
   | { readonly kind: "new" }
   | { readonly kind: "unreadable" }
+  | { readonly kind: "unknown" }
   | { readonly kind: "played"; readonly characters: number; readonly clears: number; readonly secondsPlayed: number }
 
 export interface AccountSummary extends AccountEntry {
@@ -48,18 +51,21 @@ export interface AccountSummary extends AccountEntry {
 /** A name that cannot be given, and why, in words. */
 export class AccountNameError extends Data.TaggedError("AccountNameError")<{ readonly problem: string }> {}
 
+/** The device's storage failed to read the list: nothing was changed, and trying again may work. */
+export class AccountListReadError extends Data.TaggedError("AccountListReadError")<{}> {}
+
 /** The list could not be written on this device. */
 export class AccountListSaveError extends Data.TaggedError("AccountListSaveError")<{ readonly cause: unknown }> {}
 
 export interface AccountListShape {
   /** Every account, the last played first. */
-  readonly list: Effect.Effect<ReadonlyArray<AccountSummary>>
+  readonly list: Effect.Effect<ReadonlyArray<AccountSummary>, AccountListReadError>
   /** Makes an account named `name` (trimmed), to play at once. */
-  readonly create: (name: string) => Effect.Effect<AccountEntry, AccountNameError | AccountListSaveError>
-  /** Deletes the account `id` and its save, for good. */
-  readonly remove: (id: string) => Effect.Effect<void, AccountListSaveError>
+  readonly create: (name: string) => Effect.Effect<AccountEntry, AccountNameError | AccountListReadError | AccountListSaveError>
+  /** Deletes the account `id` and its save (and any copy of it set aside), for good. */
+  readonly remove: (id: string) => Effect.Effect<void, AccountListReadError | AccountListSaveError>
   /** Marks the account `id` as played now (the list shows the last played first). */
-  readonly played: (id: string) => Effect.Effect<void, AccountListSaveError>
+  readonly played: (id: string) => Effect.Effect<void, AccountListReadError | AccountListSaveError>
 }
 
 export class AccountList extends Context.Service<AccountList, AccountListShape>()("Shooter/AccountList") {}
@@ -84,20 +90,23 @@ export const layer = (newId: () => string = randomId) =>
       const save = (accounts: ReadonlyArray<AccountEntry>) =>
         write(store, listKey, LatestAccountListJson, { version: 1, accounts }).pipe(Effect.mapError((cause) => new AccountListSaveError({ cause })))
 
-      /** The one account saved before there could be several, moved into a list of its own; none when there is nothing to move, or it cannot be. */
+      /** The one account saved before there could be several, moved into a list of its own; none when there is nothing to move, or it cannot be (it stays to move next time). */
       const moveSingle = Effect.gen(function*() {
-        const single = yield* store.get(singleAccountKey).pipe(Effect.orElseSucceed(() => undefined))
+        const single = yield* store.get(singleAccountKey).pipe(Effect.mapError(() => new AccountListReadError()))
         if (single === undefined) return []
-        const now = yield* Clock.currentTimeMillis
-        const entry: AccountEntry = { id: newId(), name: "Player", createdAt: now, playedAt: now }
-        yield* store.set(accountKey(entry.id), single)
-        yield* save([entry])
-        yield* store.remove(singleAccountKey)
-        return [entry]
-      }).pipe(Effect.orElseSucceed((): ReadonlyArray<AccountEntry> => []))
+        return yield* Effect.gen(function*() {
+          const now = yield* Clock.currentTimeMillis
+          const entry: AccountEntry = { id: newId(), name: "Player", createdAt: now, playedAt: now }
+          yield* store.set(accountKey(entry.id), single)
+          yield* save([entry])
+          yield* store.remove(singleAccountKey)
+          return [entry]
+        }).pipe(Effect.orElseSucceed((): ReadonlyArray<AccountEntry> => []))
+      })
 
       const entries = Effect.gen(function*() {
         const saved = yield* read(store, listKey, StoredAccountListJson)
+        if (saved._tag === "Failed") return yield* new AccountListReadError()
         if (saved._tag === "Read") return migrateAccountList(saved.value).accounts
         if (saved._tag === "Unreadable") return []
         return yield* moveSingle
@@ -107,6 +116,7 @@ export const layer = (newId: () => string = randomId) =>
         read(store, accountKey(id), StoredAccountJson).pipe(Effect.map((saved): AccountProgress => {
           if (saved._tag === "Missing") return { kind: "new" }
           if (saved._tag === "Unreadable") return { kind: "unreadable" }
+          if (saved._tag === "Failed") return { kind: "unknown" }
           const { account } = migrateAccount(saved.value)
           return { kind: "played", characters: Object.keys(account.owned.characters).length, clears: account.totals.clears, secondsPlayed: account.totals.secondsPlayed }
         }))
@@ -131,8 +141,8 @@ export const layer = (newId: () => string = randomId) =>
           })),
         remove: (id) =>
           change((accounts) => accounts.filter((entry) => entry.id !== id)).pipe(
-            Effect.andThen(Effect.all([store.remove(accountKey(id)), store.remove(`${accountKey(id)}.unreadable`)])),
-            Effect.mapError((cause) => (cause instanceof AccountListSaveError ? cause : new AccountListSaveError({ cause }))),
+            Effect.andThen(Effect.forEach([accountKey(id), ...asideKeys(accountKey(id))], (key) => store.remove(key))),
+            Effect.mapError((cause) => (cause instanceof AccountListSaveError || cause instanceof AccountListReadError ? cause : new AccountListSaveError({ cause }))),
             Effect.asVoid
           ),
         played: (id) => Clock.currentTimeMillis.pipe(Effect.flatMap((now) => change((accounts) => accounts.map((entry) => (entry.id === id ? { ...entry, playedAt: now } : entry)))))

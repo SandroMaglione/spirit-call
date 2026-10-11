@@ -63,7 +63,7 @@ const devQuery = dev ? window.location.search : ""
 /** A dev quick start's account: the last played, or a new one. */
 const devAccount = async (accounts: Accounts) => {
   const loaded = () => undefined
-  const last = (await accounts.list())[0]
+  const last = (await accounts.list())?.[0]
   if (last !== undefined) return { id: last.id, name: last.name, loaded }
   const made = await accounts.create("Dev")
   if (!made.ok) throw new Error(made.problem)

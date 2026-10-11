@@ -3,6 +3,7 @@ import * as KeyValueStore from "effect/persistence/KeyValueStore"
 import { describe, expect, it } from "vitest"
 
 import { layer as settingsLayer, SettingsStore, settingsKey } from "../src/account/settings.ts"
+import { flakyStorage } from "./flaky-storage.ts"
 
 const savedJson = (kv: KeyValueStore.KeyValueStore, key: string) => kv.get(key).pipe(Effect.map((raw) => (raw === undefined ? undefined : JSON.parse(raw))))
 
@@ -33,5 +34,15 @@ describe("settings store", () => {
     const second = await withSettings({ [settingsKey]: JSON.stringify({ version: 2, muted: false, volume: 0.4 }) })
     expect(second.loaded).toEqual({ muted: false, volume: 0.4 })
     expect(second.saved).toEqual({ version: 2, muted: true, volume: 0.4 })
+  })
+
+  it("plays with the defaults when the storage fails to read the settings, and writes nothing over them", async () => {
+    const saved = JSON.stringify({ version: 2, muted: true, volume: 0.3 })
+    const device = flakyStorage({ [settingsKey]: saved }, { failsRead: () => true })
+    const loaded = await Effect.runPromise(Effect.gen(function*() {
+      return yield* (yield* SettingsStore).get
+    }).pipe(Effect.provide(settingsLayer), Effect.provideService(KeyValueStore.KeyValueStore, device.store)))
+    expect(loaded).toEqual({ muted: false, volume: 1 })
+    expect(device.held.get(settingsKey)).toBe(saved)
   })
 })

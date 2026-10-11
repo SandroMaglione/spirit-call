@@ -5,9 +5,10 @@ import * as KeyValueStore from "effect/persistence/KeyValueStore"
 import { describe, expect, it } from "vitest"
 
 import { train } from "../src/account/account.ts"
-import { AccountStore, accountKey, layer as accountLayer } from "../src/account/account-store.ts"
+import { AccountReadError, AccountStore, accountKey, layer as accountLayer } from "../src/account/account-store.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
+import { flakyStorage } from "./flaky-storage.ts"
 
 /** Every version of the save ever shipped, as a player's device holds it: each must always load. */
 const fixture = (version: number) => readFileSync(new URL(`saves/v${version}.json`, import.meta.url), "utf8")
@@ -82,5 +83,45 @@ describe("account store", () => {
     expect(store.account.owned.characters).not.toHaveProperty("retiredHero")
     expect(store.notes.join(" ")).toContain("retiredHero")
     expect(saved.account.owned.characters).not.toHaveProperty("retiredHero")
+  })
+
+  describe("on a device whose storage fails", () => {
+    /** Opens the account store over `device`: the store, or the error loading failed with. */
+    const open = (device: ReturnType<typeof flakyStorage>) =>
+      Effect.runPromise(Effect.gen(function*() {
+        return yield* AccountStore
+      }).pipe(Effect.provide(accountLayer(defaultTuning, newAccount, id)), Effect.provideService(KeyValueStore.KeyValueStore, device.store), Effect.result))
+
+    it("leaves a save it failed to read as it is, writing nothing", async () => {
+      const device = flakyStorage({ [key]: fixture(1) }, { failsRead: (read) => read === key })
+      const opened = await open(device)
+      expect(opened._tag).toBe("Failure")
+      if (opened._tag === "Failure") expect(opened.failure).toBeInstanceOf(AccountReadError)
+      expect(device.writes).toEqual([])
+      expect(device.held.get(key)).toBe(fixture(1))
+    })
+
+    it("tries a failed read again, and loads the save when it works", async () => {
+      const device = flakyStorage({ [key]: fixture(1) }, { failsRead: (read) => read === key, times: 2 })
+      const opened = await open(device)
+      expect(opened._tag).toBe("Success")
+      if (opened._tag === "Success") expect(opened.success.account.totals.runs).toBe(1)
+    })
+
+    it("never starts over a save it cannot read when it cannot set it aside", async () => {
+      const broken = "{\"version\":1,\"account\":"
+      const device = flakyStorage({ [key]: broken }, { failsWrite: (written) => written.includes(".unreadable") })
+      const opened = await open(device)
+      expect(opened._tag).toBe("Failure")
+      expect(device.held.get(key)).toBe(broken)
+    })
+
+    it("keeps a copy set aside before, and sets the next one beside it", async () => {
+      const device = flakyStorage({ [key]: "not json", [`${key}.unreadable`]: "older" })
+      const opened = await open(device)
+      expect(opened._tag).toBe("Success")
+      expect(device.held.get(`${key}.unreadable`)).toBe("older")
+      expect(device.held.get(`${key}.unreadable.2`)).toBe("not json")
+    })
   })
 })
