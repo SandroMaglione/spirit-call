@@ -543,7 +543,8 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
 
   const unlock = () => {
     const audio = ensure()?.context
-    if (audio !== undefined && audio.state === "suspended") void audio.resume().catch(() => {})
+    // Suspended until a first tap, or interrupted (a call, another app taking the sound on a phone): any tap resumes it.
+    if (audio !== undefined && audio.state !== "running" && audio.state !== "closed") void audio.resume().catch(() => {})
   }
   unlockHost.addEventListener("pointerdown", unlock)
   unlockHost.addEventListener("keydown", unlock)
