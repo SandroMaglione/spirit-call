@@ -107,6 +107,17 @@ A change always shows at once. If writing it fails (storage full or not
 allowed), the player is told once, and play goes on; the next change saves
 the whole account again.
 
+## When the game fails
+
+A failure that stops the game (in its loop, drawing the UI, or starting)
+shows the crash screen (`src/ui/crash.ts`): what happened in a line, a way
+to start again, and the details folded away. It writes nothing: the
+account stays as it was last saved (every change is saved as it happens),
+and Restart waits for a save going on before the page starts over. A run
+going on when it stopped is not counted. A save the storage failed to read
+shows here too, with "Try again". The tuning panel's Crash button (dev
+builds) fails the next step, to see it.
+
 ## Not yet
 
 - **Moving an account** to another device (export and import) is left for

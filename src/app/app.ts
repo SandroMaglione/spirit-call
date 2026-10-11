@@ -37,6 +37,8 @@ export interface App {
   readonly onAccount: (listener: (account: Account) => void) => void
   /** Calls `listener` when a change could not be saved on this device (it still shows, and the next change saves it with everything else). */
   readonly onSaveFailed: (listener: () => void) => void
+  /** Once every save asked so far is done (or failed): before the page starts over. */
+  readonly flush: () => Promise<void>
   /** Takes a character to its next level with gold: the account after it, or `undefined` when refused (without enough, or at the maximum). */
   readonly train: (character: CharacterId) => Account | undefined
   /** Takes a character past the ascension step she stands at (refused without the gold or the material). */
@@ -152,14 +154,18 @@ export const startApp = async (id: string, name: string): Promise<App> => {
   let account = accounts.account
   const listeners: Array<(account: Account) => void> = []
   const failures: Array<() => void> = []
+  /** The saves going on (the store runs them one at a time, in order). */
+  const saving = new Set<Promise<void>>()
   /** Shows `next` and saves it; a failed save is logged and said, and the game goes on. */
   const changed = (next: Account) => {
     account = next
     for (const listener of listeners) listener(next)
-    runtime.runFork(accounts.save(next).pipe(
+    const saved = runtime.runPromise(accounts.save(next).pipe(
       Effect.tapError((error) => Effect.logWarning("The account could not be saved", error.cause).pipe(Effect.andThen(Effect.sync(() => failures.forEach((failed) => failed()))))),
       Effect.ignore
     ))
+    saving.add(saved)
+    void saved.finally(() => saving.delete(saved))
     return next
   }
   /** Runs a rule on the account: the account after it, saved, or `undefined` when the rule refused. */
@@ -179,6 +185,7 @@ export const startApp = async (id: string, name: string): Promise<App> => {
     onSaveFailed: (listener) => {
       failures.push(listener)
     },
+    flush: () => Promise.all(saving).then(() => undefined),
     train: (character) => apply(train(tuning, account, character)),
     ascend: (character) => apply(ascend(tuning, account, character)),
     select: (team, play, aspects, relics) => {

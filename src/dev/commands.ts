@@ -34,11 +34,13 @@ export interface DevCommandsValue {
   readonly spawns: Array<WaveEntry>
   /** Remove every enemy and pending spawn. */
   clear: boolean
+  /** Fail the next step, to see what a failure leaves (the crash screen). */
+  crash: boolean
 }
 
 export const DevCommands = Descriptor.Service<DevCommandsValue>()("Shooter/DevCommands")
 
-export const emptyDevCommands = (): DevCommandsValue => ({ replace: undefined, edits: [], spawns: [], clear: false })
+export const emptyDevCommands = (): DevCommandsValue => ({ replace: undefined, edits: [], spawns: [], clear: false, crash: false })
 
 /** Returns `tuning` with the value at `path` replaced. */
 export const setAt = (tuning: ReadonlyValue<TuningValue>, path: TuningPath, value: number | boolean): TuningValue => {
@@ -83,6 +85,10 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
   services: { commands: Game.System.service(DevCommands) }
 }, ({ queries, resources, services, commands }) => {
   const queue = services.commands
+  if (queue.crash) {
+    queue.crash = false
+    throw new Error("A crash asked for from the tuning panel")
+  }
   if (queue.replace !== undefined || queue.edits.length > 0) {
     // setAt copies along the edited path, so the current value is never mutated.
     let tuning: ReadonlyValue<TuningValue> = queue.replace ?? resources.tuning.get()

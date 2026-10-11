@@ -1,4 +1,5 @@
 import { effect, signal } from "@preact/signals"
+import { Result } from "@typeonce/bevy-ts"
 import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchLayout } from "./config/input.ts"
@@ -6,10 +7,11 @@ import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
-import { holdAccount, openAccounts, startApp } from "./app/app.ts"
+import { holdAccount, openAccounts, SaveReadFailed, startApp } from "./app/app.ts"
 import { buzz, hideSplash, onBackButton } from "./app/device.ts"
 import type { Accounts } from "./app/app.ts"
 import { showAccounts } from "./ui/Accounts.tsx"
+import { crashShowing, describeError, showCrash } from "./ui/crash.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
 import { mountUi } from "./ui/mount.tsx"
@@ -73,6 +75,43 @@ const devAccount = async (accounts: Accounts) => {
 /** Takes the loading view away: once the game is up, or failed to start (its error shows instead). */
 let loaded: () => void = () => undefined
 
+/** Every save asked so far, done: once the account is loaded. */
+let flushSaves: () => Promise<void> = () => Promise.resolve()
+/** Stops the game where it is (the loop, the sound, the input): once it runs. */
+let halt: () => void = () => undefined
+/** Whether the game got as far as running. */
+let running = false
+
+/** Starts the page over, once what was being saved is saved (a few seconds at most). */
+const restart = async () => {
+  await Promise.race([flushSaves().catch(() => undefined), new Promise((done) => setTimeout(done, 3000))])
+  window.location.reload()
+}
+
+/**
+ * A failure that stops the game (in the loop, drawing the UI, or starting):
+ * the game stops where it is, and the crash screen says so, with a way to
+ * start again. Nothing is written: the account stays as it was last saved,
+ * and a run going on is not counted.
+ */
+const crash = (error: unknown) => {
+  if (crashShowing()) return
+  console.error("The game stopped", error)
+  try {
+    halt()
+  } catch (stopping) {
+    console.error("The game could not be stopped", stopping)
+  }
+  loaded()
+  hideSplash()
+  const detail = describeError(error, SHOOTER_BUILD)
+  showCrash(document.body, error instanceof SaveReadFailed
+    ? { title: "Your save could not be read", message: "This device's storage did not answer just now. Nothing was changed: try again.", action: "Try again", onAction: restart, detail }
+    : running
+    ? { title: "Something went wrong", message: "The game stopped. Your progress is saved; a run going on when it stopped does not count.", action: "Restart", onAction: restart, detail }
+    : { title: "The game could not start", message: "Something went wrong while starting. Your progress is as it was last saved.", action: "Try again", onAction: restart, detail })
+}
+
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(devQuery)
@@ -93,6 +132,7 @@ const start = async (mount: HTMLElement) => {
   const picked = await picking
   loaded = picked.loaded
   const shell = await startApp(picked.id, picked.name)
+  flushSaves = shell.flush
   const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
@@ -269,7 +309,7 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(setup)
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
-  mountUi(mount, uiStore, uiActions)
+  mountUi(mount, uiStore, uiActions, crash)
   loaded()
   // Android's back button is Escape: it steps back in the menus, closes a dialog, pauses and resumes a run.
   onBackButton(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true })))
@@ -301,40 +341,51 @@ const start = async (mount: HTMLElement) => {
     maxStepsPerFrame: engine.maxStepsPerFrame,
     update: () => {
       const started = performance.now()
-      const result = runtime.tick(step)
+      // A step that throws stops the loop as a failed one does (see `onFailure`).
+      let result: ReturnType<typeof runtime.tick>
+      try {
+        result = runtime.tick(step)
+      } catch (error) {
+        return Result.failure(error)
+      }
       simMs += performance.now() - started
       return result
     },
-    render: ({ alpha, elapsedSeconds, fixedSteps }) => {
-      clock.alpha = alpha
-      // While paused, what is drawn stands still with the world (animations, effects, the camera's shake).
-      clock.frameSeconds = uiStore.paused.value ? 0 : elapsedSeconds
-      stats.steps = fixedSteps
-      if (elapsedSeconds > 0) stats.fps += (1 / elapsedSeconds - stats.fps) * 0.05
-      stats.simMs += (simMs - stats.simMs) * 0.05
-      simMs = 0
-      const started = performance.now()
-      runtime.tick(frame)
-      browser.host.render()
-      showcase.render(elapsedSeconds)
-      stats.drawMs += (performance.now() - started - stats.drawMs) * 0.05
+    render: (frameTiming) => {
+      try {
+        draw(frameTiming)
+      } catch (error) {
+        crash(error)
+      }
     },
-    onFailure: (failure) => {
-      console.error("Game loop stopped", failure)
-    }
+    onFailure: (failure) => crash(failure.kind === "UpdateFailure" ? failure.error : new Error(`The game loop stopped: ${failure.kind}`))
   })
   if (!loop.ok) throw new Error(`Invalid loop option: ${loop.error.field}`)
+  halt = () => {
+    loop.value.stop()
+    input.cancel()
+    sounds.setMuted(true)
+  }
+  running = true
+
+  /** Draws one frame (`alpha` of the way to the next step). */
+  function draw({ alpha, elapsedSeconds, fixedSteps }: FixedLoop.Frame) {
+    clock.alpha = alpha
+    // While paused, what is drawn stands still with the world (animations, effects, the camera's shake).
+    clock.frameSeconds = uiStore.paused.value ? 0 : elapsedSeconds
+    stats.steps = fixedSteps
+    if (elapsedSeconds > 0) stats.fps += (1 / elapsedSeconds - stats.fps) * 0.05
+    stats.simMs += (simMs - stats.simMs) * 0.05
+    simMs = 0
+    const started = performance.now()
+    runtime.tick(frame)
+    browser.host.render()
+    showcase.render(elapsedSeconds)
+    stats.drawMs += (performance.now() - started - stats.drawMs) * 0.05
+  }
 }
 
 const mount = document.querySelector<HTMLElement>("#game")
 if (mount === null) throw new Error("Missing #game element")
-start(mount).catch((error: unknown) => {
-  // A failure while starting would otherwise leave a blank page: say so, with what went wrong.
-  console.error("The game could not start", error)
-  loaded()
-  hideSplash()
-  const message = document.createElement("pre")
-  message.className = "boot-error"
-  message.textContent = `The game could not start.\n\n${error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error)}`
-  mount.append(message)
-})
+// A failure while starting would otherwise leave a blank page.
+start(mount).catch(crash)
