@@ -271,9 +271,8 @@
 .lineup__relic { font-size: 14px; display: block; }
 .lineup__relic[data-empty] { opacity: .3; filter: grayscale(1); }
 /* The roster opens at the left, over the places. */
-.lineup__picker { position: absolute; left: var(--left); top: 60px; bottom: 62px; width: 294px; z-index: 4; }
+.lineup__picker { position: absolute; left: var(--left); top: 60px; bottom: var(--bottom); width: 294px; z-index: 4; }
 .lineup__picker .cards { padding: 3px; }
-.lineup__picker-actions { position: absolute; left: var(--left); bottom: var(--bottom); z-index: 3; display: flex; gap: 8px; }
 
 /* ---------- challenges ---------- */
 .quests__list { --list: clamp(200px, 31cqw, 262px); position: absolute; left: var(--left); top: 62px; bottom: 0; width: var(--list); z-index: 3; display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; align-content: start; padding-bottom: 28px; mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); }

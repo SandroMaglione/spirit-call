@@ -238,7 +238,9 @@ is left, and keep text off it.
   label in bold.
 - **The party's roster opens beside a place** when it is tapped (a panel of
   cards that scrolls, since the roster will grow), over the left of the
-  screen; a tap on a card puts her there and closes it.
+  screen; a tap on a card puts her there and closes it. Remove and Done
+  stay in a solid footer inside the panel, below its scrolling cards and
+  any explanation. Done is cream; they never overlap the character's gear.
 - **Leading**: a tap on a party face on the home leads the next run with
   her, without changing the party's order.
 - **Locked things stay visible** and say where they come from, from the

@@ -80,8 +80,10 @@ export const Team = ({ store, actions, nav, draft }: {
         </>}
       </section>
     })}</div>
-    {picking.value && <>
-      <Panel class="lineup__picker in-left" title={`Place ${focus + 1}`} detail={team[focus] === undefined ? "Empty" : tuning.characters[team[focus]!].name} note={inUse && team.length === 1 ? "Use another party to remove the last character." : undefined} noteIcon="info">
+    {picking.value && <Panel class="lineup__picker in-left" title={`Place ${focus + 1}`} detail={team[focus] === undefined ? "Empty" : tuning.characters[team[focus]!].name} note={inUse && team.length === 1 ? "Use another party to remove the last character." : undefined} noteIcon="info" actions={<>
+      <Pill size="small" tone="dark" disabled={(inUse && team.length === 1) || team[focus] === undefined} onClick={() => keep(removeFromTeam(draft.value, focus))}>Remove</Pill>
+      <Pill size="small" onClick={() => (picking.value = false)}>Done</Pill>
+    </>}>
         <Cards>{ids(tuning.characters).map((id) => {
           const at = team.indexOf(id)
           return <CharacterCard key={id} store={store} character={id} mark={at >= 0 ? at + 1 : undefined} selected={team[focus] === id} onClick={() => {
@@ -89,11 +91,6 @@ export const Team = ({ store, actions, nav, draft }: {
             keep(placeInTeam(draft.value, id))
           }} />
         })}</Cards>
-      </Panel>
-      <div class="lineup__picker-actions in-below">
-        <Pill size="small" tone="dark" disabled={(inUse && team.length === 1) || team[focus] === undefined} onClick={() => keep(removeFromTeam(draft.value, focus))}>Remove</Pill>
-        <Pill size="small" tone="dark" onClick={() => (picking.value = false)}>Done</Pill>
-      </div>
-    </>}
+    </Panel>}
   </Screen>
 }

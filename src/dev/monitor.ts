@@ -19,6 +19,10 @@ export const attachMonitor = <S extends Schema.Any, Root>(
   host: RenderHostValue,
   nodes: NodeRegistry.NodeRegistry<RenderNode>
 ): Monitor.Monitor => {
+  // The corner tab must not cover the roster's actions. Backslash still opens it.
+  const style = document.createElement("style")
+  style.textContent = "body:has(.lineup__picker) .btm-toggle { visibility: hidden; }"
+  document.head.append(style)
   const screenOf = (node: RenderNode) => {
     const rect = host.canvas.getBoundingClientRect()
     const at = host.toCanvas({ x: node.root.position.x, y: node.root.position.z }, bodyLift)

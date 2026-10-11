@@ -214,6 +214,9 @@ button.card:active { transform: translateY(0) scale(.96); }
 .panel__note { flex: none; background: var(--cream); color: var(--ink); font-weight: 700; font-size: 12px; line-height: 1.25; padding: 6px 14px; display: flex; align-items: center; gap: 6px; }
 .panel__note .menu-icon { font-size: 14px; }
 .panel__note > span { flex: 1; display: flex; align-items: center; gap: 10px; }
+/* Actions stay on a solid foot while the panel's cards scroll above them. */
+.panel__actions { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--ink); border-top: 1px solid var(--line); }
+.panel__actions > .pill { flex: 1; min-width: 0; }
 .panel__link { margin-left: auto; flex: none; font: inherit; color: var(--ink); background: none; border: 0; padding: 2px 0; text-decoration: underline; cursor: pointer; }
 .scroll { overflow-y: auto; touch-action: pan-y; scrollbar-width: none; }
 .scroll-x { overflow-x: auto; touch-action: pan-x; scrollbar-width: none; }

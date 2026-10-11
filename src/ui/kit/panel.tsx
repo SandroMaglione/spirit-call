@@ -15,13 +15,15 @@ import type { IconName } from "../Icon.tsx"
  * the one line that sets it apart, and a few quiet words at its right), the body (it scrolls when long), and a cream `note` at the
  * foot for the one thing not to miss (why it is locked, what it costs).
  */
-export const Panel = ({ title, subtitle, icon, detail, note, noteIcon = "info", children, class: className = "", element }: {
+export const Panel = ({ title, subtitle, icon, detail, note, noteIcon = "info", actions, children, class: className = "", element }: {
   readonly title?: ComponentChildren
   readonly subtitle?: ComponentChildren
   readonly icon?: ComponentChildren
   readonly detail?: ComponentChildren
   readonly note?: ComponentChildren
   readonly noteIcon?: IconName
+  /** Fixed actions below the scrolling body and note. */
+  readonly actions?: ComponentChildren
   readonly children: ComponentChildren
   readonly class?: string
   /** The head's colours, when not the screen's (an element's own panel). */
@@ -31,6 +33,7 @@ export const Panel = ({ title, subtitle, icon, detail, note, noteIcon = "info", 
     {title !== undefined && <header class="panel__head">{icon}<span class="panel__title">{title}{subtitle !== undefined && <em>{subtitle}</em>}</span>{detail !== undefined && <small>{detail}</small>}</header>}
     <div class="panel__body">{children}</div>
     {note !== undefined && note !== null && note !== false && <footer class="panel__note"><Icon name={noteIcon} /><span>{note}</span></footer>}
+    {actions !== undefined && <div class="panel__actions">{actions}</div>}
   </section>
 )
 
