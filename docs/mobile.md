@@ -91,10 +91,13 @@ but not kept. `android/app/build.gradle` signs with the key named by
 variables set and `./gradlew bundleRelease`.
 
 The listing's graphics are in `store/google-play/`: the 512 icon, the
-1024x500 feature graphic (`feature-graphic.html`, screenshotted at that
-size), and landscape phone screenshots at 1920x1080. The screenshots are
+1024x500 feature graphic, and landscape phone screenshots at 1920x1080. The
+feature graphic is a dev-only page, `/tools/store/` on the dev server
+(`tools/store/`): the five element spirits (cut out of
+`art/spirits/<element>/renders/hero.png` into `tools/store/spirits/`) over
+the menu's element emblems, screenshotted at 1024x500. The screenshots are
 the game itself on a 960x540 screen at twice its pixels, the fights from a
 dev build (`?play&touch&team=...&challenge=...&wave=3&charged`, the
-on-screen controls in use). Settings, About, lists the open-source packages
+on-screen controls in use, the ultimates set off from their button). Settings, About, lists the open-source packages
 the game contains with their licenses (`scripts/licenses.ts` writes them
 into the build as `licenses.json`).
