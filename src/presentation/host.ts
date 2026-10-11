@@ -124,9 +124,16 @@ export interface BrowserHost {
   destroy(): void
 }
 
-export const createBrowserHost = async (mount: HTMLElement, arena: { readonly width: number; readonly height: number; readonly cells: number }): Promise<BrowserHost> => {
+/** Every model the looks use: start it early (`loadLooks`), the menu waits on it. `onProgress` hears the share loaded. */
+export const loadLooks = (onProgress?: (share: number) => void) => loadModels(modelsInLooks(), onProgress)
+
+export const createBrowserHost = async (
+  mount: HTMLElement,
+  arena: { readonly width: number; readonly height: number; readonly cells: number },
+  looks: Promise<ReadonlyMap<ModelId, ModelSource>> = loadLooks()
+): Promise<BrowserHost> => {
   // Every model the looks use, before the arena opens (nodes are made synchronously).
-  const models = await loadModels(modelsInLooks())
+  const models = await looks
   // Phones have very dense screens: past 2 device pixels per CSS pixel the cost grows faster than the sharpness,
   // and at 2 or more edges are fine without multisampling (which would cost 4x the pixels again).
   const renderer = new WebGLRenderer({ antialias: window.devicePixelRatio < 2, powerPreference: "high-performance" })

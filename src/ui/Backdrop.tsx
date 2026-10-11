@@ -8,7 +8,7 @@ import { elementOf } from "./draft.ts"
 import type { UiStore } from "./store.ts"
 
 /** Motes at fixed places: the same sky on every visit. */
-const motes = Array.from({ length: 28 }, (_, i) => ({ left: `${(i * 37 + 7) % 98}%`, top: `${(i * 23 + 11) % 96}%`, animationDelay: `${-(i * 1.7) % 9}s`, animationDuration: `${7 + (i % 5) * 1.5}s` }))
+export const motes = Array.from({ length: 28 }, (_, i) => ({ left: `${(i * 37 + 7) % 98}%`, top: `${(i * 23 + 11) % 96}%`, animationDelay: `${-(i * 1.7) % 9}s`, animationDuration: `${7 + (i % 5) * 1.5}s` }))
 
 /** The element the menu shows in: a sky asked for, else the inspected character's, else the leader's; `undefined` for plain stone. */
 export const menuElement = (store: UiStore): string | undefined => {

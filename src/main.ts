@@ -1,4 +1,4 @@
-import { effect } from "@preact/signals"
+import { effect, signal } from "@preact/signals"
 import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchLayout } from "./config/input.ts"
@@ -20,7 +20,7 @@ import { wearLooks } from "./presentation/looks.ts"
 import type { Play } from "./account/account.ts"
 import { attachMonitor } from "./dev/monitor.ts"
 import { chargedFromQuery, KeepCharged } from "./dev/charged.ts"
-import { createBrowserHost } from "./presentation/host.ts"
+import { createBrowserHost, loadLooks } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
 import { createShowcase } from "./presentation/showcase.ts"
 import { createMenuInputHost } from "./presentation/menu-input.ts"
@@ -61,12 +61,16 @@ const devQuery = dev ? window.location.search : ""
 
 /** A dev quick start's account: the last played, or a new one. */
 const devAccount = async (accounts: Accounts) => {
+  const loaded = () => undefined
   const last = (await accounts.list())[0]
-  if (last !== undefined) return last
+  if (last !== undefined) return { id: last.id, name: last.name, loaded }
   const made = await accounts.create("Dev")
   if (!made.ok) throw new Error(made.problem)
-  return made
+  return { id: made.id, name: made.name, loaded }
 }
+
+/** Takes the loading view away: once the game is up, or failed to start (its error shows instead). */
+let loaded: () => void = () => undefined
 
 const start = async (mount: HTMLElement) => {
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
@@ -76,8 +80,14 @@ const start = async (mount: HTMLElement) => {
   // The game opens on this device's accounts: the one picked is played, by one tab at a time.
   // A dev quick start (`?play`, below) plays the last played account, or a new one.
   const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
+  // The models load while the account is picked: they are most of the wait on a phone's network.
+  const progress = signal(0)
+  const looks = loadLooks((share) => (progress.value = share))
+  // Awaited below; a failure before then is reported there, not as unhandled.
+  looks.catch(() => undefined)
   const accounts = openAccounts()
-  const picked = quickStart ? await devAccount(accounts) : await showAccounts(mount, accounts, holdAccount)
+  const picked = quickStart ? await devAccount(accounts) : await showAccounts(mount, accounts, holdAccount, progress)
+  loaded = picked.loaded
   const shell = await startApp(picked.id, picked.name)
   const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
@@ -197,7 +207,7 @@ const start = async (mount: HTMLElement) => {
   }
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
-  const browser = await createBrowserHost(mount, tuning.arena)
+  const browser = await createBrowserHost(mount, tuning.arena, looks)
   const { canvas, size } = browser.host
   // Native Enter/Space activation and sliders must keep working in menus.
   const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek())
@@ -254,6 +264,7 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
   mountUi(mount, uiStore, uiActions)
+  loaded()
   mount.addEventListener("click", (event) => {
     const button = event.target instanceof Element ? event.target.closest<HTMLButtonElement>(".ui button") : null
     if (button !== null && !button.disabled) sounds.play("uiTap")
@@ -312,6 +323,7 @@ if (mount === null) throw new Error("Missing #game element")
 start(mount).catch((error: unknown) => {
   // A failure while starting would otherwise leave a blank page: say so, with what went wrong.
   console.error("The game could not start", error)
+  loaded()
   const message = document.createElement("pre")
   message.className = "boot-error"
   message.textContent = `The game could not start.\n\n${error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error)}`

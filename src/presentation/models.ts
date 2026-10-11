@@ -217,10 +217,12 @@ export const disposeModel = (source: ModelSource): void => {
   })
 }
 
-/** Loads `ids` (each once), checking each file has exactly the clips its spec lists. */
-export const loadModels = async (ids: Iterable<ModelId>): Promise<ReadonlyMap<ModelId, ModelSource>> => {
+/** Loads `ids` (each once), checking each file has exactly the clips its spec lists; `onProgress` hears the share loaded, 0 to 1. */
+export const loadModels = async (ids: Iterable<ModelId>, onProgress: (share: number) => void = () => undefined): Promise<ReadonlyMap<ModelId, ModelSource>> => {
   const loader = new GLTFLoader()
-  const loaded = await Promise.all([...new Set(ids)].map(async (id): Promise<ModelSource> => {
+  const all = [...new Set(ids)]
+  let done = 0
+  const loaded = await Promise.all(all.map(async (id): Promise<ModelSource> => {
     const spec: ModelSpec = models[id]
     const gltf = await loader.loadAsync(spec.url)
     const clips = new Map<string, AnimationClip>()
@@ -234,6 +236,8 @@ export const loadModels = async (ids: Iterable<ModelId>): Promise<ReadonlyMap<Mo
     }
     plainMaterials(gltf.scene)
     if (spec.glow !== undefined && spec.height !== null) addGlow(gltf.scene, spec.glow, spec.height)
+    done += 1
+    onProgress(done / all.length)
     return { id, spec, scene: gltf.scene, clips }
   }))
   return new Map(loaded.map((source) => [source.id, source]))
