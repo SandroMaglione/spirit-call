@@ -439,7 +439,7 @@ export const Quests = ({ store, actions, nav, tab, play, leader, enter }: {
       {lent === null
         ? <PartyStrip store={store} team={store.menuDraft.value.team} leader={leader} size={34} pick={() => nav.go({ kind: "team" })} edit={() => nav.go({ kind: "team" })} />
         : <Face of={{ character: lent.character }} tint={elementOf(tuning, lent.character)} size={38} selected />}
-      {lent !== null && <Pill icon="practice" tone="dark" onClick={() => actions.enterExtra(store.menuDraft.value.team, store.menuDraft.value.aspects, { kind: "trial", character: lent.character }, store.menuDraft.value.relics)}>Try</Pill>}
+      {lent !== null && <Pill icon="practice" tone="dark" size="small" onClick={() => actions.enterExtra(store.menuDraft.value.team, store.menuDraft.value.aspects, { kind: "trial", character: lent.character }, store.menuDraft.value.relics)}>Try</Pill>}
       {/* An audition not opened yet is opened here, with an invitation: the player's choice of who auditions next. */}
       {inviting !== null
         ? <Pill icon="invitations" disabled={(store.account.value.wallet.invitations ?? 0) < 1} onClick={() => actions.openAudition(inviting)}>
