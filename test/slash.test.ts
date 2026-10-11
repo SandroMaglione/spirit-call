@@ -101,6 +101,17 @@ describe("attack assist (touch)", () => {
     off.step(3)
     expect(off.player().aim).toEqual({ x: 1, y: 0 })
   })
+
+  it("can be turned off by the player (the device's settings): the slash keeps the facing", () => {
+    // Set before the tap (requests apply after the step's input).
+    const off = arena([at(40, 90)], 1, { touch: [{ frame: 1, press: ["attack"] }, { frame: 2, release: ["attack"] }] })
+    off.requests.pending.push({ kind: "controlOptions", options: { aimAssist: false } })
+    off.step(1)
+    const facing = off.player().aim
+    off.step(3)
+    expect(off.player().aim.x).toBeCloseTo(facing.x, 9)
+    expect(off.player().aim.y).toBeCloseTo(facing.y, 9)
+  })
 })
 
 describe("sword slash", () => {

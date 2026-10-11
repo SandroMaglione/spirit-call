@@ -56,16 +56,19 @@ export const ApplyCamera = Game.System("Shooter/ApplyCamera", {
   feedback.entrance += seconds
   feedback.wideEyes = Math.max(0, feedback.wideEyes - seconds)
   feedback.punch = feedback.punch * Math.exp(-view.impact.punchDecay * seconds) < 0.01 ? 0 : feedback.punch * Math.exp(-view.impact.punchDecay * seconds)
-  // Shake jitters; a kick moves the view along the blow and eases back.
+  // Shake jitters; a kick moves the view along the blow and eases back. Both as much as the player wants (see `comfort`).
   const target = services.host.view
-  target.offset.x = (Math.random() * 2 - 1) * feedback.shake - feedback.kick.x
-  target.offset.y = (Math.random() * 2 - 1) * feedback.shake - feedback.kick.y
+  const { comfort } = services.host
+  target.offset.x = ((Math.random() * 2 - 1) * feedback.shake - feedback.kick.x) * comfort.shake
+  target.offset.y = ((Math.random() * 2 - 1) * feedback.shake - feedback.kick.y) * comfort.shake
   const center = lerp({ x: camera.prevX, y: camera.prevY }, camera, services.clock.alpha)
   target.center.x = center.x
   target.center.y = center.y
   // Phones zoom out (see view.camera); the camera stays centered on the player. Heavy blows punch in.
   // An ultimate's moment pushes in on her (see `ShowUltimateMoments`).
-  target.pixelsPerUnit = projection.zoom * viewZoom(services.host.size) * (1 + view.impact.zoomPunch * feedback.punch) * (1 + view.ultimateMoment.zoom * feedback.moment)
+  // Reduced motion keeps the zoom still on heavy blows.
+  const punch = comfort.reducedMotion ? 0 : view.impact.zoomPunch * feedback.punch
+  target.pixelsPerUnit = projection.zoom * viewZoom(services.host.size) * (1 + punch) * (1 + view.ultimateMoment.zoom * feedback.moment)
   services.host.hud.vignette.style.opacity = feedback.hurt.toFixed(3)
   // A perfect dodge's slow motion glows at full strength, fading out over its last part (a fall's beat does not).
   const motion = resources.slowMotion.get()

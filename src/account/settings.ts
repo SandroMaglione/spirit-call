@@ -1,5 +1,6 @@
 /**
- * Device settings (sound and its volume now; controls and graphics later): they belong to
+ * Device settings (sound and its volume, buzzes, screen shake, reduced
+ * motion, the aim assist on touch): they belong to
  * this device, not to the account. Loaded once, saved on every change;
  * loading never fails (see `persisted.ts`): when the storage cannot read
  * them, the game plays with the defaults and writes nothing until a change.
@@ -16,11 +17,29 @@ import { LatestSettingsJson, migrateSettings, StoredSettingsJson } from "./store
 
 export const settingsKey = "shooter.settings"
 
+/** How much the screen shakes on heavy blows. */
+export type Shake = "full" | "reduced" | "off"
+
 export interface Settings {
   readonly muted: boolean
   /** How loud, 0..1. */
   readonly volume: number
+  /** Whether the phone buzzes. */
+  readonly haptics: boolean
+  readonly shake: Shake
+  /** Fewer moving things: the menus' animations, zoom punches, an ultimate's spinning lines. */
+  readonly reducedMotion: boolean
+  /** Whether a tap's attack turns toward the enemy the assist picks (touch only; the mouse is never assisted). */
+  readonly aimAssist: boolean
 }
+
+/** What this device asks for before anything is set (reduced motion, when the phone asks for it). */
+export interface DeviceDefaults {
+  readonly reducedMotion: boolean
+}
+
+/** The settings of a device that never set any. */
+export const defaultSettings = (device: DeviceDefaults): Settings => ({ muted: false, volume: 1, haptics: true, shake: "full", reducedMotion: device.reducedMotion, aimAssist: true })
 
 export class SettingsSaveError extends Data.TaggedError("SettingsSaveError")<{ readonly cause: unknown }> {}
 
@@ -31,25 +50,23 @@ export interface SettingsStoreShape {
 
 export class SettingsStore extends Context.Service<SettingsStore, SettingsStoreShape>()("Shooter/SettingsStore") {}
 
-const defaults: Settings = { muted: false, volume: 1 }
-
 /** The settings saved, and whether they may be saved over at once (not when the storage failed to read them). */
-const load = (store: KeyValueStore.KeyValueStore) =>
+const load = (store: KeyValueStore.KeyValueStore, device: DeviceDefaults) =>
   Effect.gen(function*() {
     const saved = yield* read(store, settingsKey, StoredSettingsJson)
-    if (saved._tag !== "Read") return { settings: defaults, readable: saved._tag !== "Failed" }
-    const { muted, volume } = migrateSettings(saved.value)
-    return { settings: { muted, volume }, readable: true }
+    if (saved._tag !== "Read") return { settings: defaultSettings(device), readable: saved._tag !== "Failed" }
+    const { version: _, ...settings } = migrateSettings(saved.value, device)
+    return { settings, readable: true }
   })
 
-/** The settings store over whatever `KeyValueStore` is provided. */
-export const layer = Layer.effect(
+/** The settings store over whatever `KeyValueStore` is provided; what is not set yet starts as `device` asks. */
+export const layer = (device: DeviceDefaults = { reducedMotion: false }) => Layer.effect(
   SettingsStore,
   Effect.gen(function*() {
     const store = yield* KeyValueStore.KeyValueStore
     const save = (settings: Settings) =>
-      write(store, settingsKey, LatestSettingsJson, { version: 2, ...settings }).pipe(Effect.mapError((cause) => new SettingsSaveError({ cause })))
-    const loaded = yield* load(store)
+      write(store, settingsKey, LatestSettingsJson, { version: 3, ...settings }).pipe(Effect.mapError((cause) => new SettingsSaveError({ cause })))
+    const loaded = yield* load(store, device)
     if (loaded.readable) yield* save(loaded.settings).pipe(Effect.ignore)
     const current = yield* Ref.make(loaded.settings)
     return SettingsStore.of({

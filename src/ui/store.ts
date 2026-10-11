@@ -66,6 +66,8 @@ export interface UiStore {
   readonly notices: Signal<ReadonlyArray<string>>
   /** This device's sound: on or off, and how loud (0..1). */
   readonly sound: Signal<Sound>
+  /** This device's comfort settings. */
+  readonly comfort: Signal<Comfort>
   /** The Extra being played, or last played; `null` for a quest or tier (or a dev quick start). */
   readonly extra: Signal<Extra | null>
   /** Enemy Practice's picks, kept while the app is open. */
@@ -81,6 +83,14 @@ export interface Sound {
   readonly volume: number
 }
 
+/** How the game feels on this device: buzzes, how much the screen shakes, fewer moving things, and the aim assist on touch. */
+export interface Comfort {
+  readonly haptics: boolean
+  readonly shake: "full" | "reduced" | "off"
+  readonly reducedMotion: boolean
+  readonly aimAssist: boolean
+}
+
 export const createUiStore = (initial: {
   readonly tuning: Tuning
   readonly team: ReadonlyArray<BuildValue>
@@ -90,6 +100,7 @@ export const createUiStore = (initial: {
   readonly accountName: string
   readonly notices: ReadonlyArray<string>
   readonly sound: Sound
+  readonly comfort: Comfort
   /** What the controls start as. */
   readonly device: "desktop" | "touch"
 }): UiStore => ({
@@ -112,6 +123,7 @@ export const createUiStore = (initial: {
   accountName: initial.accountName,
   notices: signal(initial.notices),
   sound: signal(initial.sound),
+  comfort: signal(initial.comfort),
   extra: signal(null),
   practicePicks: signal({ kinds: [], elites: false }),
   menuOpens: signal(null),
@@ -151,6 +163,8 @@ export interface UiActions {
   /** Sound on or off, and how loud (0..1); saved on this device. */
   readonly setMuted: (muted: boolean) => void
   readonly setVolume: (volume: number) => void
+  /** Changes this device's comfort settings (saved, and applied at once). */
+  readonly setComfort: (change: Partial<Comfort>) => void
   /** Leave this account for the list of this device's accounts (what it did is already saved). */
   readonly switchAccount: () => void
   /** Closes the game (Android's back button on the home screen, once confirmed); `null` where the game cannot close itself. */

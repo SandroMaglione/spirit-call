@@ -313,6 +313,8 @@ export interface RenderHostValue {
   readonly hud: HudRefs
   readonly stats: FrameStats
   readonly feedback: FeedbackState
+  /** The player's comfort settings, as the app sets them: how much the screen shakes (0..1), and whether motion is reduced (no zoom punches). */
+  readonly comfort: { shake: number; reducedMotion: boolean }
   /** Characters who just fell, until they are gone (see `PlayFalls`). */
   readonly fallen: Array<Fallen>
   /** Lays out the floor (none over `holes`, the hazards laid into it) and scenery of arena `id` (see `SyncArena`); nothing to do when it is already shown. */

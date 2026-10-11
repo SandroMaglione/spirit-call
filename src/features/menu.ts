@@ -10,8 +10,8 @@
 import { Descriptor } from "@typeonce/bevy-ts"
 
 import type { ChallengeId } from "../content/challenges.ts"
-import { Challenge, EnemyLevel, Flow, Game, noTwist, Paused, Practice, RunResult, Team, Tuning, Twist } from "../schema.ts"
-import type { BuildValue, PracticeValue, TwistValue } from "../schema.ts"
+import { Challenge, ControlOptions, EnemyLevel, Flow, Game, noTwist, Paused, Practice, RunResult, Team, Tuning, Twist } from "../schema.ts"
+import type { BuildValue, ControlOptionsValue, PracticeValue, TwistValue } from "../schema.ts"
 import { withValidAspects, withValidRelics } from "./build.ts"
 
 export type UiRequest =
@@ -34,6 +34,8 @@ export type UiRequest =
   | { readonly kind: "pause" }
   /** From the in-game menu: back to the run. */
   | { readonly kind: "resume" }
+  /** From the settings, anywhere: the player's choices about the controls. */
+  | { readonly kind: "controlOptions"; readonly options: ControlOptionsValue }
 
 export interface UiRequestsValue {
   readonly pending: Array<UiRequest>
@@ -53,7 +55,8 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
     paused: Game.System.writeResource(Paused),
     result: Game.System.readResource(RunResult),
     practice: Game.System.writeResource(Practice),
-    tuning: Game.System.readResource(Tuning)
+    tuning: Game.System.readResource(Tuning),
+    controlOptions: Game.System.writeResource(ControlOptions)
   },
   machines: { flow: Game.System.machine(Flow) },
   nextMachines: { flow: Game.System.nextState(Flow) },
@@ -92,6 +95,9 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
         break
       case "resume":
         resources.paused.set({ paused: false })
+        break
+      case "controlOptions":
+        resources.controlOptions.set(request.options)
         break
     }
   }

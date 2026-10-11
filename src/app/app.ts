@@ -53,9 +53,8 @@ export interface App {
   readonly saveTeam: (slot: number, team: SavedTeam | null) => Account | undefined
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, played by `team` (as it entered the arena), and its log: what it earned. A playtest build also sends it. */
   readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue, team: ReadonlyArray<BuildValue>) => Earned
-  /** Saves the sound settings (the sound board applies them itself). */
-  readonly setMuted: (muted: boolean) => void
-  readonly setVolume: (volume: number) => void
+  /** Saves a change to this device's settings (what each one changes applies it itself: the sound board, the camera, the arena). */
+  readonly changeSettings: (change: Partial<Settings>) => void
 }
 
 /** The accounts on this device, to pick one to play, make one, or delete one. */
@@ -139,7 +138,9 @@ export const holdAccount = (id: string): Promise<boolean> =>
 export const startApp = async (id: string, name: string): Promise<App> => {
   const tuning = defaultTuning
   const playtest = SHOOTER_PLAYTEST === null ? Playtest.off : (await import("./playtest-send.ts")).layer(SHOOTER_PLAYTEST)
-  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
+  // Reduced motion starts as the phone asks for it.
+  const device = { reducedMotion: typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches }
+  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer(device), accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
   const { settings, accounts, sender } = await runtime.runPromise(Effect.gen(function*() {
     // The list shows the last played first.
     yield* (yield* AccountList).played(id).pipe(Effect.catchTags({
@@ -213,7 +214,6 @@ export const startApp = async (id: string, name: string): Promise<App> => {
       runtime.runFork(sender.recordRun(reportOf({ id: randomId(), at, build: SHOOTER_BUILD, play, enemyLevel, team, result, log, earned: recorded.earned }), name))
       return recorded.earned
     },
-    setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),
-    setVolume: (volume) => saveSettings((current) => ({ ...current, volume }))
+    changeSettings: (change) => saveSettings((current) => ({ ...current, ...change }))
   }
 }

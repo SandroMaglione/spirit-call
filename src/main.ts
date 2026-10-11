@@ -113,7 +113,17 @@ const crash = (error: unknown) => {
     : { title: "The game could not start", message: "Something went wrong while starting. Your progress is as it was last saved.", action: "Try again", onAction: restart, detail })
 }
 
+/** Whether the page moves less (the menus' animations, zoom punches): the CSS and the showcase read it. */
+const setMotion = (reduced: boolean) => {
+  document.documentElement.dataset["motion"] = reduced ? "reduced" : "full"
+}
+
+/** How much the screen shakes, by setting. */
+const shakeScale = { full: 1, reduced: 0.4, off: 0 } as const
+
 const start = async (mount: HTMLElement) => {
+  // Until the settings load, as the phone asks.
+  setMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(devQuery)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
@@ -161,7 +171,9 @@ const start = async (mount: HTMLElement) => {
   // first fight); a key or a mouse button switches to the keyboard's, and a touch back.
   const touchScreen = inApp || window.matchMedia("(pointer: coarse)").matches || new URLSearchParams(window.location.search).has("touch")
   const device = touchScreen ? "touch" : "desktop"
-  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: shell.settings, device })
+  const { muted, volume, ...comfort } = shell.settings
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: { muted, volume }, comfort, device })
+  setMotion(comfort.reducedMotion)
   // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
   wearLooks(account.worn)
   shell.onAccount((next) => {
@@ -238,8 +250,8 @@ const start = async (mount: HTMLElement) => {
     wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
       sounds.play(cueSounds[cue])
-      // A short buzz where the phone allows it (in the apps, and browsers but iOS Safari): longer for what matters more.
-      if (cueBuzz[cue] !== 0) buzz(cueBuzz[cue])
+      // A short buzz where the phone allows it (in the apps, and browsers but iOS Safari) and the player wants it: longer for what matters more.
+      if (cueBuzz[cue] !== 0 && uiStore.comfort.peek().haptics) buzz(cueBuzz[cue])
     },
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
@@ -249,17 +261,22 @@ const start = async (mount: HTMLElement) => {
     resume: () => uiRequests.pending.push({ kind: "resume" }),
     setMuted: (muted) => {
       sounds.setMuted(muted)
-      shell.setMuted(muted)
+      shell.changeSettings({ muted })
       uiStore.sound.value = { ...uiStore.sound.value, muted }
     },
     setVolume: (volume) => {
       sounds.setVolume(volume)
-      shell.setVolume(sounds.volume())
+      shell.changeSettings({ volume: sounds.volume() })
       // Turning the volume up turns the sound on.
       if (sounds.volume() > 0 && sounds.muted()) uiActions.setMuted(false)
       uiStore.sound.value = { ...uiStore.sound.value, volume: sounds.volume() }
     },
     // Everything is saved as it happens: the page starts over on the list of accounts.
+    setComfort: (change) => {
+      uiStore.comfort.value = { ...uiStore.comfort.value, ...change }
+      shell.changeSettings(change)
+      applyComfort()
+    },
     switchAccount: () => window.location.reload(),
     leave: leaveApp,
     // Listed by the build beside the game (scripts/licenses.ts); a dev build has none.
@@ -327,6 +344,15 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(setup)
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
+  /** Applies the comfort settings: the camera's shake and zoom, the page's motion, and the aim assist in the arena. */
+  function applyComfort() {
+    const comfort = uiStore.comfort.peek()
+    browser.host.comfort.shake = shakeScale[comfort.shake]
+    browser.host.comfort.reducedMotion = comfort.reducedMotion
+    setMotion(comfort.reducedMotion)
+    uiRequests.pending.push({ kind: "controlOptions", options: { aimAssist: comfort.aimAssist } })
+  }
+  applyComfort()
   mountUi(mount, uiStore, uiActions, crash)
   loaded()
   mount.addEventListener("click", (event) => {
