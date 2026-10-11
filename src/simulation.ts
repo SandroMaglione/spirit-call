@@ -20,7 +20,6 @@ import type { KeyboardSource, PartyTaps, PointerSource, TouchSource } from "./co
 import { defaultTuning } from "./config/tuning.ts"
 import type { Tuning } from "./config/tuning.ts"
 import { initialControls } from "./features/input.ts"
-import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
 import { FrameContext, Game, KeyboardInput, PartyInput, PointerInput, TouchInput } from "./schema.ts"
 import type { BuildValue, TwistValue, ViewportValue } from "./schema.ts"
@@ -57,8 +56,6 @@ export const defaultViewport: ViewportValue = { width: 1280, height: 720 }
 export const createSimulation = (options: SimulationOptions) => {
   const tuning = options.tuning ?? defaultTuning
   const viewport = options.viewport ?? defaultViewport
-  // What a menu would ask for; tests queue requests here (see `features/menu.ts`).
-  const requests = emptyUiRequests()
   const runtime = Game.Runtime.make({
     services: Game.Runtime.services(
       Game.Runtime.service(KeyboardInput, options.keyboard),
@@ -66,7 +63,6 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(TouchInput, options.touch ?? Touch.scripted(touchButtons, [])),
       Game.Runtime.service(PartyInput, options.party ?? scriptedPartyTaps([])),
       Game.Runtime.service(FrameContext, { viewport }),
-      Game.Runtime.service(UiRequests, requests)
     ),
     resources: {
       ...initialResources(tuning, viewport, options.team ?? (options.build === undefined ? undefined : [options.build]), options.challenge, options.enemyLevel, options.twist),
@@ -76,5 +72,5 @@ export const createSimulation = (options: SimulationOptions) => {
     debug: true
   })
   runtime.debug.nameSchedules({ setup, fixedUpdate })
-  return { runtime, setup, fixedUpdate, requests }
+  return { runtime, setup, fixedUpdate }
 }

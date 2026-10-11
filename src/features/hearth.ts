@@ -104,12 +104,12 @@ export const UpdateEmberRings = Game.System("Shooter/UpdateEmberRings", {
     const struck = [...ring.struck]
     for (const body of queries.bodies.each()) {
       const hurtbox = body.data.hurtbox.get()
-      if (hurtbox.faction === ring.faction || body.data.health.get().current <= 0 || struck.includes(body.entity.id.value)) continue
+      if (hurtbox.faction === ring.faction || body.data.health.get().current <= 0 || struck.includes(body.entity.id)) continue
       const at = body.data.position.get()
       const distance = Math.hypot(at.x - center.x, at.y - center.y)
       // Kept at a distance: what is closer is spared.
       if (distance < effect.inner || distance - hurtbox.radius > effect.outer) continue
-      struck.push(body.entity.id.value)
+      struck.push(body.entity.id)
       const element = effect.element
       if (element !== null) {
         const before = body.data.state.get().current

@@ -1,4 +1,4 @@
-import { NodeRegistry } from "@typeonce/bevy-ts-pixi"
+import { NodeRegistry } from "@typeonce/bevy-ts-render"
 import { BoxGeometry, Group, MeshLambertMaterial } from "three"
 import { expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
@@ -36,7 +36,7 @@ it("raises and holds Warden's staff from its ward state, with attacks and stun t
   }, ({ queries }) => {
     const ally = queries.allies.each().find(({ data }) => data.enemy.get().kind === "chaser")!
     for (const { entity, data } of queries.warders.each()) {
-      data.ward.set({ ally: linked ? { handle: Game.Entity.handle(ally.entity.id, Position), id: ally.entity.id.value } : null, formed, wait: 0 })
+      data.ward.set({ ally: linked ? { handle: Game.Entity.handle(ally.entity.id, Position), id: ally.entity.id } : null, formed, wait: 0 })
       data.phase.set(phase)
       data.attacker.set({ ...data.attacker.get(), attack: 0, elapsed: .4 })
       data.stunned.set({ remaining: stunned ? .2 : 0 })

@@ -243,7 +243,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       invulnerable: player.data.invulnerable.get().remaining,
       skillReady: { special: player.data.skills.get().special.cooldown <= 0, ultimate: player.data.skills.get().ultimate.cooldown <= 0 }
     },
-    enemies: queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, at: data.position.get() })),
+    enemies: queries.enemies.each().map(({ entity, data }) => ({ id: entity.id, at: data.position.get() })),
     threats,
     walls: queries.walls.each().map(({ data }) => data.wall.get())
   }

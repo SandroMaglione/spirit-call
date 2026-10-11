@@ -12,7 +12,6 @@ import { buzz, hideSplash, inApp, leaveApp, onBackButton } from "./app/device.ts
 import type { Accounts } from "./app/app.ts"
 import { showAccounts } from "./ui/Accounts.tsx"
 import { crashShowing, describeError, showCrash } from "./ui/crash.ts"
-import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
@@ -33,6 +32,7 @@ import { initialMachines, initialResources } from "./runtime.ts"
 import { initialControls } from "./features/input.ts"
 import { newAccount } from "./content/account.ts"
 import {
+  UiRequest,
   FrameContext,
   Game,
   KeyboardInput,
@@ -180,7 +180,6 @@ const start = async (mount: HTMLElement) => {
   let playing: Play | null = null
   /** Whether the run going on is recorded on the account: not an Extra's (training, practice, the tutorial). */
   let recording = !tutorialFirst
-  const uiRequests = emptyUiRequests()
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
   // The game is for phones: in the apps, and on a touch screen, the controls start as touch (the pad shows from the
   // first fight); a key or a mouse button switches to the keyboard's, and a touch back.
@@ -216,7 +215,7 @@ const start = async (mount: HTMLElement) => {
   /** Takes the player from the tutorial (done or skipped) to the menu; it counts as done. */
   const leaveTutorial = () => {
     shell.finishTutorial()
-    uiRequests.pending.push({ kind: "leave" })
+    runtime.send(UiRequest, { kind: "leave" })
   }
   // Completion is saved at once; the win screen stays until the player chooses where to go.
   effect(() => {
@@ -264,7 +263,7 @@ const start = async (mount: HTMLElement) => {
       uiStore.play.value = play
       uiStore.extra.value = null
       // An audition lends its character alone, at its level (see `entryTeam`).
-      uiRequests.pending.push({ kind: "start", team: entryTeam(tuning, selected.value, play, team), ...encounterOf(tuning, play, selected.value) })
+      runtime.send(UiRequest, { kind: "start", team: entryTeam(tuning, selected.value, play, team), ...encounterOf(tuning, play, selected.value) })
     },
     enterExtra: (team, aspects, extra, relics = uiStore.account.peek().selection.relics) => {
       const account = uiStore.account.value
@@ -274,7 +273,7 @@ const start = async (mount: HTMLElement) => {
       uiStore.extra.value = extra
       // A trial: her alone, at the party's level (owned or not), on the Training Ground.
       const level = teamLevel(tuning, account, team)
-      uiRequests.pending.push({
+      runtime.send(UiRequest, {
         kind: "start",
         // Not saved: the draft's aspects and relics, as far as the rules allow.
         team: extra.kind === "trial" ? [{ character: extra.character, level }] : teamOf(tuning, account, team, validAspects(tuning, account, team, aspects), validRelics(tuning, account, team, relics)),
@@ -292,22 +291,22 @@ const start = async (mount: HTMLElement) => {
     },
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
-    retry: () => uiRequests.pending.push({ kind: "retry" }),
+    retry: () => runtime.send(UiRequest, { kind: "retry" }),
     menu: () => {
       // Leaving the tutorial from the in-game menu skips it.
       if (uiStore.extra.peek()?.kind === "tutorial") shell.finishTutorial()
-      uiRequests.pending.push({ kind: "menu" })
+      runtime.send(UiRequest, { kind: "menu" })
     },
     playTutorial: () => {
       playing = null
       recording = false
       uiStore.play.value = null
       uiStore.extra.value = { kind: "tutorial" }
-      uiRequests.pending.push({ kind: "start", team: tutorialTeam(), challenge: "tutorial", enemyLevel: 1 })
+      runtime.send(UiRequest, { kind: "start", team: tutorialTeam(), challenge: "tutorial", enemyLevel: 1 })
     },
     skipTutorial: () => leaveTutorial(),
-    pause: () => uiRequests.pending.push({ kind: "pause" }),
-    resume: () => uiRequests.pending.push({ kind: "resume" }),
+    pause: () => runtime.send(UiRequest, { kind: "pause" }),
+    resume: () => runtime.send(UiRequest, { kind: "resume" }),
     setMuted: (muted) => {
       sounds.setMuted(muted)
       shell.changeSettings({ muted })
@@ -383,7 +382,6 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(RenderNodes, browser.nodes),
       Game.Runtime.service(Sounds, sounds),
       Game.Runtime.service(DevCommands, devCommands),
-      Game.Runtime.service(UiRequests, uiRequests),
       Game.Runtime.service(UiStoreService, uiStore)
     ),
     resources: {
@@ -404,7 +402,7 @@ const start = async (mount: HTMLElement) => {
     browser.host.comfort.shake = shakeScale[comfort.shake]
     browser.host.comfort.reducedMotion = comfort.reducedMotion
     setMotion(comfort.reducedMotion)
-    uiRequests.pending.push({ kind: "controlOptions", options: { aimAssist: comfort.aimAssist } })
+    runtime.send(UiRequest, { kind: "controlOptions", options: { aimAssist: comfort.aimAssist } })
   }
   applyComfort()
   mountUi(mount, uiStore, uiActions, crash)

@@ -140,19 +140,19 @@ export const PassiveHolders = Game.Query({ selection: { position: Game.Query.rea
  */
 export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
   queries: { players: Game.Query({ selection: { position: Game.Query.read(Position), passives: Game.Query.read(Passives) }, with: [Player] }) },
-  events: { action: Game.System.readEvent(Action), hit: Game.System.readEvent(Hit), perfect: Game.System.readEvent(PerfectDodged), broke: Game.System.readEvent(Broke) },
-  resources: { queue: Game.System.writeResource(TriggeredEffects), cooldowns: Game.System.writeResource(PassiveCooldowns), time: Game.System.readResource(Time) }
+  events: { action: Game.System.readEvent(Action), hit: Game.System.readEvent(Hit), perfect: Game.System.readEvent(PerfectDodged), broke: Game.System.readEvent(Broke), triggered: Game.System.writeEvent(TriggeredEffects) },
+  resources: { cooldowns: Game.System.writeResource(PassiveCooldowns), time: Game.System.readResource(Time) }
 }, ({ queries, events, resources, lookup }) => {
   const now = resources.time.get().elapsed
   const cooldowns = { ...resources.cooldowns.get() }
   let waited = false
-  const queued: Array<TriggeredEffectsValue[number]> = []
+  const queued: Array<TriggeredEffectsValue> = []
   /** Queues what `holder`'s passives set off for `happened`, at `there`. */
-  const fire = (holder: TriggeredEffectsValue[number]["holder"], passives: ReadonlyArray<Passive>, happened: (trigger: Trigger) => boolean, there: Vec2) => {
+  const fire = (holder: TriggeredEffectsValue["holder"], passives: ReadonlyArray<Passive>, happened: (trigger: Trigger) => boolean, there: Vec2) => {
     passives.forEach((passive, index) => {
       if (passive.kind !== "on" || !happened(passive.trigger)) return
       if (passive.every > 0) {
-        const key = `${holder.value}/${index}`
+        const key = `${holder}/${index}`
         if ((cooldowns[key] ?? -Infinity) > now) return
         cooldowns[key] = now + passive.every
         waited = true
@@ -180,7 +180,7 @@ export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
     if (!found.ok) continue
     fire(hit.source.attacker, found.value.data.passives.get(), (trigger) => trigger.kind === "kill" && killMatches(trigger.state, hit.state), hit.at)
   }
-  if (queued.length > 0) resources.queue.update((queue) => [...queue, ...queued])
+  for (const effect of queued) events.triggered.emit(effect)
   if (waited) resources.cooldowns.set(cooldowns)
 })
 
@@ -207,12 +207,11 @@ const Wielders = Game.Query({
  * dropped.
  */
 export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects", {
-  resources: { queue: Game.System.writeResource(TriggeredEffects), tuning: Game.System.readResource(Tuning) },
-  events: { cast: Game.System.writeEvent(Cast), heal: Game.System.writeEvent(Heal) }
+  resources: { tuning: Game.System.readResource(Tuning) },
+  events: { triggered: Game.System.readEvent(TriggeredEffects), cast: Game.System.writeEvent(Cast), heal: Game.System.writeEvent(Heal) }
 }, ({ resources, events, lookup, commands }) => {
-  const queue = resources.queue.get()
+  const queue = events.triggered.all()
   if (queue.length === 0) return
-  resources.queue.set([])
   const tuning = resources.tuning.get()
   for (const { holder, effect, there } of queue) {
     const found = lookup.getHandle(holder, Wielders)

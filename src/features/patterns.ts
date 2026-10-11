@@ -16,7 +16,7 @@
 import type { Vec2 } from "../math/vec.ts"
 import { circleOverlapsBox } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
-import { AttackReleased, Elite, Enemy, Game, Hit, Hitbox, Rampage, RunScope, Time, Tuning } from "../schema.ts"
+import { AttackReleased, Elite, Enemy, Game, Health, Hit, Hitbox, Rampage, RunScope, Time, Tuning } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { makeGround } from "./ground.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -72,7 +72,7 @@ export const CallSupport = Game.System("Shooter/CallSupport", {
     const clearance = Math.max(...spec.calls.map((kind) => tuning.enemies[kind].radius)) + 12
     const points = callPoints(released.at, spec.radius, spec.calls.length, clearance, tuning.arena, boxes)
     // The first few come as elites of the caller's element (see `Tuning.elites`).
-    const element = queries.elites.each().find(({ entity }) => entity.id.value === released.attacker)?.data.elite.get().element ?? null
+    const element = queries.elites.each().find(({ entity }) => entity.id === released.attacker)?.data.elite.get().element ?? null
     spec.calls.forEach((kind, index) => {
       for (const spawn of makeGroupSpawns(tuning, kind, points[index]!, tuning.waves.spawnWarning, index < spec.elites ? element : null)) commands.spawnIn(RunScope, spawn)
     })
@@ -94,7 +94,7 @@ export const PressChampions = Game.System("Shooter/PressChampions", {
   const dt = resources.time.get().dt
   const hits = events.hit.all()
   for (const { entity, data } of queries.rampages.each()) {
-    const struck = hits.filter((hit) => hit.entity === entity.id.value && !hit.periodic).length
+    const struck = hits.filter((hit) => hit.entity === Game.Entity.handle(entity.id, Health) && !hit.periodic).length
     data.rampage.update((rampage) => ({ ...rampage, pressure: Math.max(0, rampage.pressure - rules.drain * dt) + struck }))
   }
 })

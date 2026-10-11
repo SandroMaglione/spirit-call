@@ -14,8 +14,8 @@ import { championPower, enemyStats, restOf } from "../src/features/enemies.ts"
 import { knockbackTaken } from "../src/features/motion.ts"
 import { movesetOf } from "../src/features/moveset.ts"
 import { poiseOf } from "../src/features/poise.ts"
-import { Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
-import { plainEnemies, start } from "./helpers.ts"
+import { UiRequest, Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
+import { ReadFlow, plainEnemies, start } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
 const rules = defaultTuning.champions
@@ -44,7 +44,7 @@ const Field = Game.Inspector("Test/Champions", {
 }, ({ queries, resources }) => ({
   waves: resources.waves.get(),
   enemies: queries.enemies.each().map(({ entity, data }) => ({
-    id: entity.id.value,
+    id: entity.id,
     kind: data.enemy.get().kind,
     champion: data.enemy.get().champion,
     health: data.health.get(),
@@ -69,7 +69,7 @@ const Shield = Game.System("Test/Shield", { queries: { player: Game.Query({ sele
 /** The swarm challenge (replaced by the test's) with waves on, stepped with the field wiped as it comes. */
 const play = (tuning: Tuning) => {
   const run = start({ tuning, waves: true, challenge: "swarm" })
-  const flow = () => run.runtime.debug.dump().machines["Shooter/Flow"]?.current
+  const flow = () => run.runtime.inspect(ReadFlow)
   const tick = (count: number, champions: boolean) => {
     for (let index = 0; index < count; index++) {
       run.runtime.tick(Game.Schedule(Shield, wipe(champions), Game.Schedule.applyDeferred()))
@@ -161,7 +161,7 @@ describe("champions", () => {
 
   it("join Enemy Practice when asked: a champion of the first pick that fights up close, with the others", () => {
     const run = start({ flow: "Menu", waves: true })
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "practice", enemyLevel: 1, practice: { kinds: ["sniper", "chaser"], elites: false, champion: true } })
+    run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "practice", enemyLevel: 1, practice: { kinds: ["sniper", "chaser"], elites: false, champion: true } })
     run.step(steps(timing.firstDelay + 10 * timing.spawnInterval + timing.spawnWarning) + 3)
     const champions = run.runtime.inspect(Field).enemies.filter((enemy) => enemy.champion)
     expect(champions.map((enemy) => enemy.kind)).toEqual(["chaser"])

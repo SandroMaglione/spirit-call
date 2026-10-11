@@ -42,7 +42,7 @@ export const RecordRunLog = Game.System("Shooter/RecordRunLog", {
   const before = resources.log.get()
   if (hits.length === 0 && casts.length === 0 && actions.length === 0 && (wave === 0 || before.waves.at(-1)?.wave === wave)) return
   const now = resources.run.get().time
-  const characters = new Map<number, CharacterId>(queries.members.each().map(({ entity, data }) => [entity.id.value, data.member.get().character]))
+  const characters = new Map<number, CharacterId>(queries.members.each().map(({ entity, data }) => [entity.id, data.member.get().character]))
   let log = before
 
   // A wave begun: its own line.
@@ -50,7 +50,7 @@ export const RecordRunLog = Game.System("Shooter/RecordRunLog", {
 
   for (const hit of hits) {
     const label = hit.source?.label
-    const by = hit.source === null ? undefined : characters.get(hit.source.attacker.value)
+    const by = hit.source === null ? undefined : characters.get(hit.source.attacker)
     if (hit.faction === "player") {
       // A blow on the team: what dealt it, in which wave, on whom.
       const source: RunLogSource = label?.kind === "enemy" ? { enemy: label.enemy, attack: label.attack } : { enemy: null, attack: null }
@@ -71,7 +71,7 @@ export const RecordRunLog = Game.System("Shooter/RecordRunLog", {
   }
 
   for (const cast of casts) {
-    const character = characters.get(cast.caster.value)
+    const character = characters.get(cast.caster)
     if (cast.faction === "player" && cast.skill !== null && cast.landing !== true && character !== undefined) log = skill(log, character, cast.skill, (entry) => ({ ...entry, uses: entry.uses + 1 }))
   }
 

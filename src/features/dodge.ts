@@ -48,7 +48,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     const dash = data.dash.get()
     if (dash.perfect) continue
     const dodged = dodges.find((dodge) => {
-      if (dodge.target !== entity.id.value) return false
+      if (dodge.target !== Game.Entity.handle(entity.id, Health)) return false
       const attacker = dodge.attacker === null ? undefined : lookup.getHandle(dodge.attacker, DodgeAttackers)
       return dash.since <= dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
     })

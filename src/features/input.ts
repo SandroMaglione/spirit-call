@@ -113,7 +113,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   const party = (controls: ControlsValue) => withParty(controls, previous, resources.party.get(), fieldSlot)
   if (device === "touch") {
     const player = field
-    const enemies = queries.enemies.each().map(({ entity, data }) => ({ id: entity.id.value, position: data.position.get(), radius: data.hurtbox.get().radius }))
+    const enemies = queries.enemies.each().map(({ entity, data }) => ({ id: entity.id, position: data.position.get(), radius: data.hurtbox.get().radius }))
     const state = player === undefined
       ? undefined
       : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get(), attack: attackOf(resources.tuning.get(), player.data.basicAttack.get().attack) }

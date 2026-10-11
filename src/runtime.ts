@@ -34,7 +34,6 @@ export const initialResources = (
   Challenge: challenge,
   EnemyLevel: enemyLevel,
   Twist: twist,
-  TriggeredEffects: [],
   PassiveCooldowns: {},
   Mending: { ready: 0 },
   Time: initialTime(),

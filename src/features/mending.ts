@@ -35,7 +35,7 @@ export const MendFromMarks = Game.System("Shooter/MendFromMarks", {
 }, ({ queries, resources, events }) => {
   const tuning = resources.tuning.get()
   const { dt, elapsed } = resources.time.get()
-  const marked = new Map(queries.marked.each().map(({ entity, data }) => [entity.id.value, data.marked]))
+  const marked = new Map(queries.marked.each().map(({ entity, data }) => [Game.Entity.handle(entity.id, Health), data.marked]))
   for (const mark of marked.values()) {
     const remaining = mark.get().remaining
     if (remaining > 0) mark.set({ ...mark.get(), remaining: Math.max(0, remaining - dt) })

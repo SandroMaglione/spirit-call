@@ -492,7 +492,7 @@ export const ReactToHits = Game.System("Shooter/ReactToHits", {
   for (const { entity, data } of queries.enemies.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "enemy") continue
-    const recoil = recoils.get(entity.id.value)
+    const recoil = recoils.get(entity.id)
     const pivot = node.pivot
     if (recoil === undefined || recoil.age >= recoil.life) {
       pivot.scale.setScalar(1)

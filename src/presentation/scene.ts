@@ -2,7 +2,7 @@
  * The scene: render nodes for renderables, the camera, interpolated actor
  * positions, and pillars fading in front of the player.
  */
-import { RenderSync } from "@typeonce/bevy-ts-pixi"
+import { RenderSync } from "@typeonce/bevy-ts-render"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { engine } from "../config/tuning.ts"
 import { depthOf, screenHeight, toScreen, worldHeight } from "../math/iso.ts"
@@ -141,7 +141,7 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
     if (speed > 0) node.orb.object.rotation.y = node.bolt.rotation.y = Math.atan2(-velocity.y, velocity.x)
     placeTracer(node, speed * (node.look === "round" ? 0.065 : node.look === "orb" ? 0.09 : 0.04))
     const thunder = data.projectile.get().blow.element?.id === "thunder"
-    const flicker = thunder ? 0.8 + Math.random() * 0.5 : 1 + 0.1 * Math.sin(now * 38 + entity.id.value)
+    const flicker = thunder ? 0.8 + Math.random() * 0.5 : 1 + 0.1 * Math.sin(now * 38 + entity.id)
     const halo = node.radius * (node.look === "round" ? 0.9 : view.bolt.halo) * flicker
     node.halo.object.scale.set(node.look === "round" ? halo * 2 : node.look === "spark" ? halo * 1.2 : halo, node.look === "spark" ? halo * 0.35 : halo, node.look === "spark" ? halo * 0.35 : halo)
     if (node.look !== "round") {
@@ -189,7 +189,7 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
     const offset = resources.tuning.get().player.muzzleOffset
     const muzzle = { x: lob.from.x + direction.x * offset, y: worldHeight(projection, view.projectileHeight), z: lob.from.y + direction.y * offset }
     const at = { x: muzzle.x + (lob.to.x - muzzle.x) * flight, y: worldHeight(projection, 4 * view.grenadeArc * flight * (1 - flight) + view.projectileHeight * (1 - flight) + 6 * flight), z: muzzle.z + (lob.to.y - muzzle.z) * flight }
-    light.lob(entity.id.value, at, muzzle, direction, flight, lob.effect.element === null ? 0xc8bb83 : view.elements[lob.effect.element])
+    light.lob(entity.id, at, muzzle, direction, flight, lob.effect.element === null ? 0xc8bb83 : view.elements[lob.effect.element])
   }
 })
 

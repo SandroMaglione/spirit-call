@@ -97,12 +97,8 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
  * the hurtboxes of the other faction (see `sweepTargets`); the earliest
  * contacts win, so nothing fast can pass through what it should hit.
  */
-export const MoveProjectiles = (() => {
-  const grid = new SpatialGrid(96)
-  const targets: Array<Target> = []
-  const nearby: Array<Target> = []
-
-  return Game.System("Shooter/MoveProjectiles", {
+export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
+    local: () => ({ grid: new SpatialGrid(96), targets: new Array<Target>(), nearby: new Array<Target>() }),
     queries: {
       projectiles: Game.Query({
         selection: { position: Game.Query.write(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.write(Projectile) }
@@ -113,7 +109,8 @@ export const MoveProjectiles = (() => {
     },
     resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion), mantle: Game.System.readResource(Mantle) },
     events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) }
-  }, ({ queries, resources, events, commands, lookup }) => {
+  }, ({ queries, resources, events, commands, lookup, local }) => {
+    const { grid, targets, nearby } = local
     const dt = resources.time.get().dt
     /** A shot that bursts where it stops (see `OverdriveEffect`): its blast there. */
     const burst = (projectile: ProjectileValue, at: Vec2): void => {
@@ -254,8 +251,7 @@ export const MoveProjectiles = (() => {
       }
       data.projectile.set({ ...projectile, range, pierce, hit })
     }
-  })
-})()
+})
 
 
 const Damageable = Game.Query({
@@ -363,7 +359,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       if (benched.ok && damage.blow.periodic) burnOnBench(tuning, benched.value.data, damage.blow, levelGap(tuning, benched.value.data.member.get().level, enemyLevel).taken)
       continue
     }
-    if (dead.has(found.value.entity.id.value)) continue
+    if (dead.has(found.value.entity.id)) continue
     const { entity, data } = found.value
     if (data.hurtbox.get().faction === damage.faction) continue
     const { blow } = damage
@@ -405,7 +401,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const soaked = dealer?.ok === true ? stateDamage(tuning, dealer.value.data.state.get()) : 1
     // Under the team's mantle of wind, blows on the one on the field land weaker (see `features/windwall.ts`).
     const mantled = mantleTaken(resources.mantle.get(), data.player.present, damage.faction, blow.periodic)
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * mantled * (warded.get(entity.id.value) ?? 1), data.stats.get().def)
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * mantled * (warded.get(entity.id) ?? 1), data.stats.get().def)
     // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
     let current = data.immortal.present
       ? health.current
@@ -425,10 +421,10 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     if (landed > 0 && blow.charges && !blow.periodic && blow.energyAction !== undefined && data.hurtbox.get().faction === "enemy") {
       const action = blow.energyAction
       const entry = ledger[action.key] ?? { targets: [], gained: 0, expires: now + 60 }
-      if (!entry.targets.includes(entity.id.value)) {
+      if (!entry.targets.includes(Game.Entity.handle(entity.id, Health))) {
         const gain = Math.max(0, Math.min(action.base / 2 ** entry.targets.length, action.base * tuning.energy.targetCap - entry.gained))
         energy += gain
-        ledger[action.key] = { ...entry, targets: [...entry.targets, entity.id.value], gained: entry.gained + gain }
+        ledger[action.key] = { ...entry, targets: [...entry.targets, Game.Entity.handle(entity.id, Health)], gained: entry.gained + gain }
       }
     }
     data.health.set({ current, max: health.max })
@@ -451,7 +447,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const killed = current <= 0
     events.hit.emit({
       source: blow.source,
-      entity: entity.id.value,
+      entity: Game.Entity.handle(entity.id, Health),
       at,
       direction: damage.direction,
       amount,
@@ -466,7 +462,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     // The state it held bursts, even on the blow that ends it; the new state holds on a body that survives.
     const side = data.hurtbox.get().faction
     if (afflicted?.burst != null) {
-      commands.spawnIn(RunScope, Game.Command.spawn([StateBurst, { at, state: afflicted.burst, target: entity.id.value, side, by: damage.faction, direction: damage.direction }]))
+      commands.spawnIn(RunScope, Game.Command.spawn([StateBurst, { at, state: afflicted.burst, target: entity.id, side, by: damage.faction, direction: damage.direction }]))
     }
     if (afflicted !== null && !killed) {
       data.state.set({ current: afflicted.state })
@@ -475,12 +471,12 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     // A blow on a charged body arcs on to the next (an arc or a burn never does).
     const charged = afflicted === null ? state : afflicted.state
     if (!blow.periodic && !blow.arc && damage.faction !== null && charged?.id === "charged" && charged.nextTick <= 0 && amount > 0) {
-      commands.spawnIn(RunScope, Game.Command.spawn([Arc, { from: entity.id.value, at, side, by: damage.faction, damage: blow.damage * tuning.elements.charged.arcShare, atk: charged.atk, charges: false }]))
+      commands.spawnIn(RunScope, Game.Command.spawn([Arc, { from: entity.id, at, side, by: damage.faction, damage: blow.damage * tuning.elements.charged.arcShare, atk: charged.atk, charges: false }]))
       if (!killed) data.state.set({ current: { ...charged, nextTick: tuning.elements.charged.arcEvery } })
     }
     if (!killed) continue
 
-    dead.add(entity.id.value)
+    dead.add(entity.id)
     events.death.emit({ at, faction: data.hurtbox.get().faction, enemy, atk: data.stats.get().atk })
     // A fallen team member stays (out of the fight); everything else is gone.
     if (data.player.present) data.state.set({ current: null })

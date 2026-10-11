@@ -7,7 +7,7 @@ import { defaultTuning } from "../src/config/tuning.ts"
 import { tutorialSteps } from "../src/content/tutorial.ts"
 import { tutorialSpot, tutorialSuccessSeconds } from "../src/features/tutorial.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { AttackPhase, Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, SlowMotion, Tutorial, tutorialStart } from "../src/schema.ts"
+import { UiRequest, AttackPhase, Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, SlowMotion, Tutorial, tutorialStart } from "../src/schema.ts"
 import { doubleTap, start, steps } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Tutorial", {
@@ -104,7 +104,7 @@ describe("the tutorial", () => {
     expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Cleared")
 
     // Starting the first quest uses the normal results-to-quest path and clears the tutorial state.
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "firstBlood", enemyLevel: 1 })
+    run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "firstBlood", enemyLevel: 1 })
     run.step(2)
     expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Playing")
     expect(world().result).toBeNull()
@@ -165,12 +165,12 @@ describe("the tutorial", () => {
     run.runtime.tick(putAt(tutorialSpot(defaultTuning, move.to)))
     run.step(2)
     expect(run.runtime.inspect(World).step).toBe(1)
-    run.requests.pending.push({ kind: "leave" })
+    run.runtime.send(UiRequest, { kind: "leave" })
     run.step(2)
     expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Menu")
     expect(run.runtime.inspect(World).result).toBeNull()
 
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "tutorial", enemyLevel: 1 })
+    run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "tutorial", enemyLevel: 1 })
     run.step(2)
     expect(run.runtime.inspect(World)).toMatchObject({ step: 0, count: 0, enemies: [], result: null })
     expect(run.player()).toBeDefined()

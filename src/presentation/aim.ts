@@ -99,7 +99,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   // The enemy an attack now would turn toward (attack assist), ringed on the floor.
   if (controls.assistTarget !== null) {
     for (const { entity, data } of queries.enemies.each()) {
-      if (entity.id.value !== controls.assistTarget) continue
+      if (entity.id !== controls.assistTarget) continue
       const target = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
       const radius = data.hurtbox.get().radius + 8
       g.fillCircle(target.x, target.y, radius, view.reticle, controls.attackHeld ? 0.18 : 0.08)

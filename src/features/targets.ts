@@ -4,16 +4,17 @@
  * first, never the thrower's own side or an invulnerable body, and a
  * frontal shield facing the blow stops it.
  */
-import type { OptionalReadCell, ReadCell } from "@typeonce/bevy-ts/Query"
+import type { EntityId, Handle } from "@typeonce/bevy-ts/Entity"
+import type { Query } from "@typeonce/bevy-ts/Query"
 
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleCircle } from "../physics/collide.ts"
 import { Dash, Game, Health, Hurtbox, Invulnerable, Position, Shield } from "../schema.ts"
-import type { Faction } from "../schema.ts"
+import type { Faction, Root } from "../schema.ts"
 
 export interface Target {
-  readonly entity: Parameters<typeof Game.Entity.handle>[0]
-  readonly id: number
+  readonly entity: EntityId<typeof Game.schema, typeof Root>
+  readonly id: Handle<typeof Root, typeof Health>
   readonly at: Vec2
   readonly radius: number
   readonly faction: Faction
@@ -39,17 +40,11 @@ export const Targets = Game.Query({
 
 /** A match of `Targets` as a `Target`. */
 export const targetOf = (
-  entity: Target["entity"] & { readonly value: number },
-  data: {
-    readonly position: ReadCell<Vec2>
-    readonly hurtbox: ReadCell<{ readonly radius: number; readonly faction: Faction }>
-    readonly invulnerable: OptionalReadCell<{ readonly remaining: number }>
-    readonly shield: OptionalReadCell<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>
-    readonly dash?: OptionalReadCell<{ readonly from: Vec2; readonly since: number }>
-  }
+  entity: Target["entity"],
+  data: Query.Cells<typeof Targets>
 ): Target => ({
   entity,
-  id: entity.value,
+  id: Game.Entity.handle(entity, Health),
   at: data.position.get(),
   radius: data.hurtbox.get().radius,
   faction: data.hurtbox.get().faction,
@@ -79,7 +74,7 @@ export const sweepTargets = (
   r: number,
   candidates: Iterable<Target>,
   faction: Faction,
-  hit: ReadonlyArray<number>,
+  hit: ReadonlyArray<Target["id"]>,
   until = 1
 ): Array<{ readonly time: number; readonly at: Vec2; readonly target: Target }> => {
   const contacts: Array<{ readonly time: number; readonly at: Vec2; readonly target: Target }> = []
@@ -102,7 +97,7 @@ export const sweepDodgers = (
   r: number,
   candidates: Iterable<Target>,
   faction: Faction,
-  hit: ReadonlyArray<number>,
+  hit: ReadonlyArray<Target["id"]>,
   window: number,
   until = 1
 ): Array<Target> => {

@@ -978,9 +978,9 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   const shown = new Set<number>()
   for (const { entity, data } of queries.companions.each()) {
     const companion = data.companion.get()
-    const seen = companionsSeen.get(entity.id.value)
-    shown.add(entity.id.value)
-    companionsSeen.set(entity.id.value, { at: lerp(data.previous.get(), data.position.get(), services.clock.alpha), dealt: companion.dealt })
+    const seen = companionsSeen.get(entity.id)
+    shown.add(entity.id)
+    companionsSeen.set(entity.id, { at: lerp(data.previous.get(), data.position.get(), services.clock.alpha), dealt: companion.dealt })
     const node = services.nodes.get(entity.id)
     if (node?.kind === "companion") moveCompanion(node, companion.facing, seen !== undefined && companion.dealt > seen.dealt, companion.effect.seconds - companion.remaining, companion.remaining, services.clock.frameSeconds, now)
   }

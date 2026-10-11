@@ -194,7 +194,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const was = data.rampage.get().phase
     // Phases only go on: healing back over a line does not take one back.
     const phase = Math.max(was, phases.filter((next) => share <= next.below).length)
-    rampages.set(entity.id.value, { phase, was, opened: data.rampage.get().opened, pressure: data.rampage.get().pressure })
+    rampages.set(entity.id, { phase, was, opened: data.rampage.get().opened, pressure: data.rampage.get().pressure })
   }
 
   // The nearest enemies attack first: they take the free windups (see `Tuning.crowd.windups`).
@@ -206,7 +206,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   const standing = attackers.length + queries.pending.each().length
   // Enemies turned to her side (see `Turned`) and those still against her: each fights the nearest of the other.
   const sides = attackers.map(({ entity, data }) => ({
-    id: entity.id.value,
+    id: entity.id,
     turned: data.turned.present,
     moving: { at: data.position.get(), velocity: data.velocity.get() } satisfies Moving
   }))
@@ -221,7 +221,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   for (const { entity, data } of order.map((index) => attackers[index]!)) {
     const kind = data.enemy.get().kind
     const attacks = movesetOf(tuning, data.enemy.get())
-    const rampage = rampages.get(entity.id.value)
+    const rampage = rampages.get(entity.id)
     const phase = rampage?.phase ?? 0
     // Struck again and again lately (see `PressChampions`): its answer to it comes first.
     const pressed = rampage !== undefined && rampage.pressure >= tuning.champions.pressed.hits
@@ -233,7 +233,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     // Turned, it fights for her side (see `Turned`), at the nearest of its old side, past the crowd's windups.
     const turned = data.turned.present ? data.turned.get() : null
     const faction: Faction = turned?.faction ?? "enemy"
-    const goal = targetOf(entity.id.value, data.position.get(), turned !== null)
+    const goal = targetOf(entity.id, data.position.get(), turned !== null)
     const moving = goal?.moving
     const open = goal?.her === true && openToRush
     const cooldownRate = open ? tuning.reading.cooldownRate : 1
@@ -336,7 +336,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       windingUp -= 1
       // A blink: it appears in the middle of its mark (walls push it out as it moves on), with nothing to blend from.
       const struckFrom = spec.kind === "blink" && area.kind === "circle" ? area.center : position
-      events.released.emit({ attacker: entity.id.value, at: struckFrom, attack: spec, area, blow: struck, faction })
+      events.released.emit({ attacker: entity.id, at: struckFrom, attack: spec, area, blow: struck, faction })
       if (struckFrom !== position) {
         data.position.set(struckFrom)
         data.previous.set(struckFrom)
@@ -372,7 +372,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         if (turned === null) commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
           area, faction: "player", blow: blow({ damage: 0, knockback: spec.knockback, element: { id: "wind", atk } }),
           // Not the caster itself, at the cone's tip.
-          remaining: Math.max(spec.active, 1e-6), hit: [entity.id.value], follows: struckFrom, pushAlong: along
+          remaining: Math.max(spec.active, 1e-6), hit: [Game.Entity.handle(entity.id, Health)], follows: struckFrom, pushAlong: along
         }]))
       } else if (spec.kind === "charge") {
         // The charge itself is the attack: contact damage while active (below).
@@ -390,13 +390,13 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     if (cycle.get() === "active" && spec.kind === "charge" && area !== null && area.kind === "lane") {
       for (const other of queries.targets.each()) {
         const hurtbox = other.data.hurtbox.get()
-        if (hurtbox.faction === faction || hit.includes(other.entity.id.value)) continue
+        if (hurtbox.faction === faction || hit.includes(Game.Entity.handle(other.entity.id, Health))) continue
         const invulnerable = other.data.invulnerable
         if (invulnerable.present && invulnerable.get().remaining > 0) continue
         const at = other.data.position.get()
         const reach = spec.width / 2 + hurtbox.radius
         if ((at.x - position.x) ** 2 + (at.y - position.y) ** 2 > reach * reach) continue
-        hit = [...hit, other.entity.id.value]
+        hit = [...hit, Game.Entity.handle(other.entity.id, Health)]
         events.damage.emit({ target: Game.Entity.handle(other.entity.id, Health), faction, direction: pushDirection({ ...area, origin: position, length: 1 }, at), blow: struck })
       }
     }
@@ -430,7 +430,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   }
   resources.rng.set({ state: random.state })
   for (const { entity, data } of queries.rampages.each()) {
-    const rampage = rampages.get(entity.id.value)
+    const rampage = rampages.get(entity.id)
     if (rampage !== undefined) data.rampage.set({ phase: rampage.phase, opened: rampage.opened, pressure: rampage.pressure })
   }
 })
@@ -490,7 +490,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     const hit = [...hitbox.hit]
     for (const target of targets) {
       const hurtbox = target.data.hurtbox.get()
-      if (hurtbox.faction === hitbox.faction || hit.includes(target.entity.id.value)) continue
+      if (hurtbox.faction === hitbox.faction || hit.includes(Game.Entity.handle(target.entity.id, Health))) continue
       const invulnerable = target.data.invulnerable.present && target.data.invulnerable.get().remaining > 0
       const position = target.data.position.get()
       const attacker = hitbox.blow.source?.attacker ?? null
@@ -498,16 +498,16 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
         // Not in its way any more, but it lands where she stood when she dashed, just now: dodged.
         const dash = target.data.dash.present ? target.data.dash.get() : undefined
         if (dash !== undefined && dash.since <= window && areaTouchesCircle(hitbox.area, dash.from, hurtbox.radius)) {
-          events.dodged.emit({ target: target.entity.id.value, at: position, attacker })
+          events.dodged.emit({ target: Game.Entity.handle(target.entity.id, Health), at: position, attacker })
         }
         continue
       }
       // In its way but untouchable: dodged (it may still land if the invulnerability ends while it is out).
       if (invulnerable) {
-        events.dodged.emit({ target: target.entity.id.value, at: position, attacker })
+        events.dodged.emit({ target: Game.Entity.handle(target.entity.id, Health), at: position, attacker })
         continue
       }
-      hit.push(target.entity.id.value)
+      hit.push(Game.Entity.handle(target.entity.id, Health))
       events.damage.emit({
         target: Game.Entity.handle(target.entity.id, Health),
         faction: hitbox.faction,
