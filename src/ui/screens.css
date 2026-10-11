@@ -418,6 +418,7 @@
 .results__content h1 { font-size: 46px; font-weight: 800; letter-spacing: .06em; line-height: 1; text-transform: uppercase; color: var(--cream); }
 .results.is-cleared .results__content h1 { color: var(--gold-hi); text-shadow: 0 0 24px rgba(255, 231, 173, .5); }
 .results__name { color: var(--text); font-weight: 700; }
+.tutorial-complete .results__content { gap: 16px; }
 /* What a chest gave: its card carries the chest in a gold badge. */
 .results__loot .card.is-new .card__corner { left: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: var(--gold-hi); color: var(--ink); filter: none; box-shadow: 0 1px 3px #0008; }
 /* The goals on one line: the screen's height is the cards' and the buttons'. */

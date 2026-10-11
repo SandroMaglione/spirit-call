@@ -93,6 +93,18 @@ describe("the tutorial", () => {
     run.step(2)
     expect(world().step).toBe(tutorialSteps.length)
     expect(world().player).toBeDefined()
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Cleared")
+    expect(world().result).toMatchObject({ cleared: true, challenge: "tutorial" })
+    // The clear stays for the player's choice, even after the former automatic exit time.
+    run.step(steps(5))
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Cleared")
+
+    // Starting the first quest uses the normal results-to-quest path and clears the tutorial state.
+    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "firstBlood", enemyLevel: 1 })
+    run.step(2)
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Playing")
+    expect(world().result).toBeNull()
+    expect(world().step).toBe(0)
   })
 
   it("never lets the team fall, and has no waves", () => {

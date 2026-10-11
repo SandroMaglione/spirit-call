@@ -3,9 +3,8 @@
  * step asked at a time. Each step is set up as it comes (its dummy stood up,
  * never falling; its skill readied), then counted from what the player did
  * this step (walking into the circle, dashes, blows landed, skills used,
- * perfect dodges); once it is done, the next comes. The run never ends on
- * its own: once the last is done (`Tutorial.step` past the steps), the app
- * takes the player on (see `main.ts`).
+ * perfect dodges); once it is done, the next comes. The last clears the run
+ * (see `CheckObjective`), and the app lets the player choose a quest or the menu.
  */
 import type { TutorialStep } from "../content/tutorial.ts"
 import { distance } from "../math/vec.ts"

@@ -5,14 +5,14 @@
  * no objective; Enemy Practice goes on until the team falls.
  */
 import type { ChallengeId, ChallengeSpec, Objective } from "../content/challenges.ts"
-import { Challenge, Flow, Game, Run, RunResult, Stats, Team, Time, Tuning, Waves } from "../schema.ts"
+import { Challenge, Flow, Game, Run, RunResult, Stats, Team, Time, Tuning, Tutorial, Waves } from "../schema.ts"
 import type { BuildValue, RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
 
 /** The challenge id the game starts with. */
 export const defaultChallenge = "gauntlet3" as const
 
-/** Whether `objective` is met, given the waves so far. */
-export const objectiveMet = (objective: Objective, waves: WavesValue): boolean => {
+/** Whether `objective` is met, given the waves or tutorial steps so far. */
+export const objectiveMet = (objective: Objective, waves: WavesValue, tutorialStep = 0): boolean => {
   switch (objective.kind) {
     case "clearWaves":
       return waves.phase === "complete"
@@ -20,11 +20,11 @@ export const objectiveMet = (objective: Objective, waves: WavesValue): boolean =
     case "endure":
       return false
     // Extras: training never ends (it is left from the in-game menu); practice ends when the team falls.
-    // The tutorial is left by the app, once its last step is done (see `features/tutorial.ts`).
     case "training":
     case "practice":
-    case "tutorial":
       return false
+    case "tutorial":
+      return tutorialStep >= objective.steps.length
   }
 }
 
@@ -96,16 +96,18 @@ export const CheckObjective = Game.System("Shooter/CheckObjective", {
     challenge: Game.System.readResource(Challenge),
     team: Game.System.readResource(Team),
     tuning: Game.System.readResource(Tuning),
+    tutorial: Game.System.readResource(Tutorial),
     time: Game.System.readResource(Time)
   },
   nextMachines: { flow: Game.System.nextState(Flow) }
 }, ({ resources, nextMachines }) => {
   const tuning = resources.tuning.get()
   const run = resources.run.get()
-  if (!tuning.waves.enabled || run.endedAt !== null) return
+  if (run.endedAt !== null) return
   const challenge = resources.challenge.get()
   const spec = tuning.challenges[challenge]
-  if (!objectiveMet(spec.objective, resources.waves.get())) return
+  if (!tuning.waves.enabled && spec.objective.kind !== "tutorial") return
+  if (!objectiveMet(spec.objective, resources.waves.get(), resources.tutorial.get().step)) return
   const ended = { ...run, endedAt: resources.time.get().elapsed }
   resources.run.set(ended)
   resources.result.set(runResultOf(true, challenge, spec, ended, resources.waves.get(), resources.stats.get(), resources.team.get()))

@@ -19,6 +19,7 @@ import { Menu } from "./Menu.tsx"
 import { Pause } from "./Pause.tsx"
 import { Results } from "./Results.tsx"
 import { TutorialBar } from "./TutorialBar.tsx"
+import { TutorialComplete } from "./TutorialComplete.tsx"
 import type { UiActions, UiStore } from "./store.ts"
 import "./kit/kit.css"
 import "./screens.css"
@@ -29,6 +30,7 @@ const Screen = ({ store, actions }: { readonly store: UiStore; readonly actions:
       return <Menu store={store} actions={actions} />
     case "GameOver":
     case "Cleared":
+      if (store.extra.value?.kind === "tutorial" && store.tutorialDone.value) return <TutorialComplete store={store} actions={actions} />
       return <Results store={store} actions={actions} />
     case "Playing":
       // The entrance stays put while the in-game menu comes and goes (it plays once a run).

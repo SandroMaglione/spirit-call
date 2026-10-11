@@ -207,15 +207,10 @@ const start = async (mount: HTMLElement) => {
     shell.finishTutorial()
     uiRequests.pending.push({ kind: "leave" })
   }
-  // The tutorial's last step done: a moment to read "Well done", then the menu.
-  let leaving: ReturnType<typeof setTimeout> | undefined
+  // Completion is saved at once; the win screen stays until the player chooses where to go.
   effect(() => {
     const done = uiStore.tutorialDone.value && uiStore.extra.value?.kind === "tutorial"
-    clearTimeout(leaving)
-    if (done) {
-      shell.finishTutorial()
-      leaving = setTimeout(leaveTutorial, 2600)
-    }
+    if (done) shell.finishTutorial()
   })
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined
   const notify = (message: string, error = false, title?: string) => {
@@ -322,7 +317,7 @@ const start = async (mount: HTMLElement) => {
   const browser = await createBrowserHost(mount, tuning.arena, looks)
   const { canvas, size } = browser.host
   // Native Enter/Space activation and sliders must keep working in menus.
-  const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek())
+  const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek() && !(uiStore.extra.peek()?.kind === "tutorial" && uiStore.tutorialDone.peek()))
   const keyboard = Keyboard.actions(input.host, keyBindings, { preventDefault: false })
   const pointer = Pointer.track(canvas, input.host)
   // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.
