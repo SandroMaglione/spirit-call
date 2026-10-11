@@ -6,7 +6,7 @@ import type { ChallengeSpec } from "../src/content/challenges.ts"
 import { clearWaves, endure } from "../src/content/challenges.ts"
 import { objectiveProgress, runResultOf, waveLevelBonus } from "../src/features/challenges.ts"
 import { Enemy, Game, Invulnerable, Player, RunResult, Waves } from "../src/schema.ts"
-import { start } from "./helpers.ts"
+import { ReadFlow, start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 import { noTally } from "../src/content/stars.ts"
 
@@ -34,7 +34,7 @@ const ResultNow = Game.Inspector("Test/ResultNow", { resources: { result: Game.S
 /** The swarm challenge (replaced by the test's) with waves on. */
 const play = (tuning: Tuning, options: Pick<StartOptions, "keys"> = {}) => {
   const run = start({ ...options, tuning, waves: true, challenge: "swarm" })
-  const flow = () => run.runtime.debug.dump().machines["Shooter/Flow"]?.current
+  const flow = () => run.runtime.inspect(ReadFlow)
   const tick = (count: number, wipe: boolean) => {
     for (let index = 0; index < count; index++) {
       run.runtime.tick(Game.Schedule(Shield, ...(wipe ? [Wipe] : []), Game.Schedule.applyDeferred()))

@@ -81,7 +81,7 @@ export const CastEarthrise = Game.System("Shooter/CastEarthrise", {
     if (effect.kind !== "earthrise") continue
     const all = queries.bodies.each()
     const bodies = all.map(({ entity, data }) => ({
-      id: entity.id.value,
+      id: entity.id,
       at: data.position.get(),
       radius: data.hurtbox.get().radius,
       faction: data.hurtbox.get().faction,
@@ -91,7 +91,7 @@ export const CastEarthrise = Game.System("Shooter/CastEarthrise", {
     }))
     const blow = castBlow(cast, effect)
     earthriseTargets(effect, cast.faction, cast.from, cast.direction, bodies).forEach(({ at, target }, index) => {
-      const body = target === null ? undefined : all.find(({ entity }) => entity.id.value === target)
+      const body = target === null ? undefined : all.find(({ entity }) => entity.id === target)
       commands.spawnIn(RunScope, Game.Command.spawn([Rock, {
         at,
         target: body === undefined ? null : Game.Entity.handle(body.entity.id, Position),
@@ -142,7 +142,7 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
       if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
       const there = body.data.position.get()
       if (Math.hypot(there.x - at.x, there.y - at.y) - hurtbox.radius > effect.size) continue
-      caught.add(body.entity.id.value)
+      caught.add(body.entity.id)
       events.damage.emit({
         target: Game.Entity.handle(body.entity.id, Health),
         faction: rock.faction,
@@ -153,7 +153,7 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
     // An enemy it catches is held: stunned a while (never a champion: skills do not hold the fight's own), its break
     // bar filled (unless broken already).
     for (const { entity: held, data: enemy } of queries.holdable.each()) {
-      if (!caught.has(held.id.value)) continue
+      if (!caught.has(held.id)) continue
       if (effect.stun > 0 && !enemy.enemy.get().champion) enemy.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
       const bar = poiseOf(tuning, enemy.enemy.get().kind, enemy.health.get().max, enemy.enemy.get().champion)
       if (bar > 0 && effect.breakFill > 0 && enemy.poise.get().broken <= 0) {

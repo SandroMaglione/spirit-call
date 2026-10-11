@@ -4,6 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@10.17.1",
   "bevyTsRelease": "0.3.0",
+  "bevyTsSource": "9861573068cd6e912a8af4267a9881819d777538",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -42,7 +43,7 @@
     "@preact/signals": "2.11.3",
     "@typeonce/bevy-ts": "link:../../bevy-ts/packages/core",
     "@typeonce/bevy-ts-browser": "link:../../bevy-ts/packages/browser",
-    "@typeonce/bevy-ts-pixi": "link:../../bevy-ts/packages/pixi",
+    "@typeonce/bevy-ts-render": "link:../../bevy-ts/packages/render",
     "effect": "4.0.2",
     "preact": "11.0.1",
     "three": "0.186.1"

@@ -64,7 +64,7 @@ export const ShowSplinters = Game.System("Shooter/ShowSplinters", {
     const dx = lobbed.to.x - lobbed.from.x
     const dz = lobbed.to.y - lobbed.from.y
     const length = Math.hypot(dx, dz) || 1
-    const seed = entity.id.value * 1.618
+    const seed = entity.id * 1.618
     if (t < 1) {
       // In flight: along its arc, end over end.
       const height = flight.from * (1 - t) + 4 * flight.arc * t * (1 - t)

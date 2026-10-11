@@ -82,17 +82,17 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
     if (!active(ground)) continue
     const newer = live.some((other) => {
       const there = other.data.ground.get()
-      if (other === pool || there.element === ground.element || !active(there) || out.has(other.entity.id.value)) return false
+      if (other === pool || there.element === ground.element || !active(there) || out.has(other.entity.id)) return false
       if (there.permanent || age(there) >= age(ground)) return false
       return Math.hypot(there.center.x - ground.center.x, there.center.y - ground.center.y) < there.radius + ground.radius
     })
     if (!newer) continue
-    out.add(pool.entity.id.value)
+    out.add(pool.entity.id)
     if (ground.permanent) pool.data.ground.set({ ...ground, out: tuning.hazards.relightSeconds })
     else commands.despawn(pool.entity.id)
     events.reaction.emit({ at: ground.center, kind: "out", state: elements[ground.element].state, faction: null })
   }
-  const standing = live.filter((pool) => active(pool.data.ground.get()) && !out.has(pool.entity.id.value))
+  const standing = live.filter((pool) => active(pool.data.ground.get()) && !out.has(pool.entity.id))
 
   for (const { data } of queries.bodies.each()) {
     if (data.invulnerable.get().remaining > 0) continue

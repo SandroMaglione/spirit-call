@@ -110,7 +110,7 @@ export const UpdateDomes = Game.System("Shooter/UpdateDomes", {
       if (hurtbox.faction === dome.faction) continue
       const at = body.data.position.get()
       if (Math.hypot(at.x - center.x, at.y - center.y) > dome.effect.radius + hurtbox.radius) continue
-      inside.push(body.entity.id.value)
+      inside.push(body.entity.id)
       if (element === null || (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0)) continue
       // Like a pool: given to a body in none, kept on one in it, never bursting another.
       const before = body.data.state.get().current

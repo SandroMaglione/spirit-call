@@ -20,7 +20,7 @@ import { attackOf, damageDealt, damageTaken } from "../src/features/build.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Aim, Dash, Enemy, Game, Invulnerable, Player, Position, RunScope, Velocity } from "../src/schema.ts"
+import { Aim, Dash, Enemy, Flow, Game, Invulnerable, Player, Position, RunScope, Velocity } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
@@ -288,3 +288,6 @@ export const placeDummies = (offsets: ReadonlyArray<Vec2>, tuning: Tuning = defa
   })
   return Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())
 }
+
+/** Current mode read through the public inspector API. */
+export const ReadFlow = Game.Inspector("Test/Flow", { machines: { flow: Game.System.machine(Flow) } }, ({ machines }) => machines.flow.get())

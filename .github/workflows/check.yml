@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - name: Use the published bevy-ts
+      - name: Use the pinned or published bevy-ts
         run: node scripts/use-published-bevy-ts.ts
       - name: Install
         run: pnpm install --no-frozen-lockfile

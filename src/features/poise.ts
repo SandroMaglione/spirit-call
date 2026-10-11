@@ -63,7 +63,7 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
     const armor = tuning.enemies[kind].armor?.taken ?? 1
     let gained = 0
     for (const hit of hits) {
-      if (hit.entity !== entity.id.value || hit.killed) continue
+      if (hit.entity !== Game.Entity.handle(entity.id, Health) || hit.killed) continue
       gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1) * (hit.periodic ? 1 : impact)
     }
     const at = data.position.get()

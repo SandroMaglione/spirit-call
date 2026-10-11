@@ -134,7 +134,7 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
   }
   for (const hit of events.hit.all()) {
     if (hit.periodic || hit.killed) continue
-    const node = services.nodes.get({ value: hit.entity })
+    const node = services.nodes.get(hit.entity)
     if (node?.kind !== "player" && node?.kind !== "enemy") continue
     const clip = node.body.moments?.hurt
     if (clip !== undefined) node.body.play(clip, null, null)

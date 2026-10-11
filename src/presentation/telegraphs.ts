@@ -93,7 +93,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
 
   // Wards: the tether from the warder to its ally, growing while it forms, then steady and pulsing; a ring under
   // the ally it holds. Crossing it cuts it.
-  const bodies = new Map(queries.enemyBodies.each().map(({ entity, data }) => [entity.id.value, { at: lerp(data.previous.get(), data.position.get(), services.clock.alpha), radius: data.body.get().radius }]))
+  const bodies = new Map<number, { at: { x: number; y: number }; radius: number }>(queries.enemyBodies.each().map(({ entity, data }) => [entity.id, { at: lerp(data.previous.get(), data.position.get(), services.clock.alpha), radius: data.body.get().radius }]))
   for (const { data } of queries.wards.each()) {
     const ward = data.ward.get()
     const spec = tuning.enemies[data.enemy.get().kind].ward
@@ -249,17 +249,17 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const grown = Math.max(0, Math.min(1, 1 - rock.remaining / effect.warning))
     if (grown <= 0) continue
     const spec = view.earthrise
-    const glow = 0.5 + 0.5 * Math.sin(now * 30 + entity.id.value)
+    const glow = 0.5 + 0.5 * Math.sin(now * 30 + entity.id)
     g.fillCircle(at.x, at.y, effect.size * grown, view.stone.glow, (0.1 + 0.08 * glow) * grown)
     g.strokeCircle(at.x, at.y, effect.size, 2, view.stone.glow, 0.35 * grown)
     for (let crack = 0; crack < spec.cracks; crack++) {
       // Each crack zigzags out, the same way every frame (its turns come from the rock and the crack).
-      let angle = (crack / spec.cracks) * Math.PI * 2 + entity.id.value
+      let angle = (crack / spec.cracks) * Math.PI * 2 + entity.id
       let from = at
       const steps = 3
       for (let step = 1; step <= steps; step++) {
-        angle += Math.sin(entity.id.value * 7.1 + crack * 3.3 + step * 5.7) * 0.5
-        const out = effect.size * grown * (step / steps) * (0.8 + 0.25 * Math.sin(crack * 2.9 + entity.id.value))
+        angle += Math.sin(entity.id * 7.1 + crack * 3.3 + step * 5.7) * 0.5
+        const out = effect.size * grown * (step / steps) * (0.8 + 0.25 * Math.sin(crack * 2.9 + entity.id))
         const to = { x: at.x + Math.cos(angle) * out, y: at.y + Math.sin(angle) * out }
         g.line(from.x, from.y, to.x, to.y, spec.width * (1.4 - step / steps), view.stone.glow, 0.85 * grown)
         from = to

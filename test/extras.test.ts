@@ -4,11 +4,11 @@ import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { objectiveMet } from "../src/features/challenges.ts"
 import { practiceSpots } from "../src/features/practice.ts"
 import { initialWaves } from "../src/features/waves.ts"
-import { blow, Damage, Enemy, Game, Health, Immortal, Player, Poise } from "../src/schema.ts"
-import { start } from "./helpers.ts"
+import { UiRequest, blow, Damage, Enemy, Game, Health, Immortal, Player, Poise } from "../src/schema.ts"
+import { ReadFlow, start } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
-const flowOf = (run: ReturnType<typeof start>) => run.runtime.debug.dump().machines["Shooter/Flow"]?.current
+const flowOf = (run: ReturnType<typeof start>) => run.runtime.inspect(ReadFlow)
 
 const Ground = Game.Inspector("Test/TrainingGround", {
   queries: {
@@ -17,7 +17,7 @@ const Ground = Game.Inspector("Test/TrainingGround", {
   }
 }, ({ queries }) => ({
   enemies: queries.enemies.each().map(({ entity, data }) => ({
-    id: entity.id.value,
+    id: entity.id,
     kind: data.enemy.get().kind,
     health: data.health.get(),
     broken: data.poise.get().broken > 0,
@@ -33,7 +33,7 @@ const strike = (run: ReturnType<typeof start>, target: number | "player", damage
     events: { damage: Game.System.writeEvent(Damage) }
   }, ({ queries, events }) => {
     for (const { entity, data } of queries.bodies.each()) {
-      const hit = target === "player" ? data.player.present : entity.id.value === target
+      const hit = target === "player" ? data.player.present : entity.id === target
       if (hit) events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: target === "player" ? "enemy" : "player", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0 }) })
     }
   })
@@ -103,7 +103,7 @@ describe("enemy practice", () => {
 
   it("brings the picks together, and one that falls comes back a few seconds later", () => {
     const run = start({ flow: "Menu", waves: true })
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "practice", enemyLevel: 1, practice: { kinds: ["stalker", "volatile"], elites: false } })
+    run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "practice", enemyLevel: 1, practice: { kinds: ["stalker", "volatile"], elites: false } })
     const spots = practiceSpots(defaultTuning, ["stalker", "volatile"], field)
     run.step(steps(defaultTuning.waves.firstDelay + spots.length * defaultTuning.waves.spawnInterval + defaultTuning.waves.spawnWarning) + 2)
     const enemies = run.runtime.inspect(Ground).enemies

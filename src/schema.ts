@@ -4,7 +4,7 @@
  */
 import { Descriptor, Schema } from "@typeonce/bevy-ts"
 import type * as Entity from "@typeonce/bevy-ts/Entity"
-import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
+import type { NodeRegistry } from "@typeonce/bevy-ts-render"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
@@ -105,7 +105,7 @@ export const Skills = Descriptor.Component<SkillsValue>()("Shooter/Skills")
 export const Energy = Descriptor.Component<{ readonly current: number }>()("Shooter/Energy")
 
 /** Landed targets and energy already awarded by each attack or special. */
-export const EnergyLedger = Descriptor.Resource<Readonly<Record<string, { readonly targets: ReadonlyArray<number>; readonly gained: number; readonly expires: number }>>>()("Shooter/EnergyLedger")
+export const EnergyLedger = Descriptor.Resource<Readonly<Record<string, { readonly targets: ReadonlyArray<Entity.Handle<typeof Root, typeof Health>>; readonly gained: number; readonly expires: number }>>>()("Shooter/EnergyLedger")
 
 export interface EnergyAction {
   readonly key: string
@@ -594,7 +594,7 @@ export interface ProjectileValue {
   /** Further targets it may pass through. */
   readonly pierce: number
   /** Entity ids already hit, so a piercing shot hits each target once. */
-  readonly hit: ReadonlyArray<number>
+  readonly hit: ReadonlyArray<Entity.Handle<typeof Root, typeof Health>>
   /** Where it stops (on what it hits, a wall, or the end of its range), a blast of `radius` with `blow` (see `OverdriveEffect`). */
   readonly blast?: { readonly radius: number; readonly blow: Blow; readonly skill: SkillId | null } | undefined
 }
@@ -622,7 +622,7 @@ export interface DiscValue {
   readonly nextTick: number
   /** Seconds on the way back; a disc that cannot reach its thrower is dropped after a while. */
   readonly back: number
-  readonly hit: ReadonlyArray<number>
+  readonly hit: ReadonlyArray<Entity.Handle<typeof Root, typeof Health>>
   /** Turns left toward the next soaked enemy after hitting a soaked one (see `DiscMove.bounces`). */
   readonly bounces: number
 }
@@ -658,7 +658,7 @@ export interface AttackerValue {
   readonly cooldown: number
   readonly area: Area | null
   /** Entity ids a contact attack (charge) already hit during this activation. */
-  readonly hit: ReadonlyArray<number>
+  readonly hit: ReadonlyArray<Entity.Handle<typeof Root, typeof Health>>
 }
 export const Attacker = Descriptor.Component<AttackerValue>()("Shooter/Attacker")
 
@@ -739,7 +739,7 @@ export interface HitboxValue {
   readonly blow: Blow
   readonly remaining: number
   /** Entity ids already hit, so each target is hit at most once. */
-  readonly hit: ReadonlyArray<number>
+  readonly hit: ReadonlyArray<Entity.Handle<typeof Root, typeof Health>>
   /** Push every target this way instead of away from the area (a cut of wind drives enemies along it). */
   readonly pushAlong?: Vec2
   /**
@@ -811,6 +811,31 @@ export const Renderable = Descriptor.Component<RenderableValue>()("Shooter/Rende
 
 // ── Events ────────────────────────────────────────────────────────────────
 
+export type UiRequest =
+  /** Enter the arena with this team (in order) to face this challenge. */
+  | {
+    readonly kind: "start"
+    readonly team: ReadonlyArray<BuildValue>
+    readonly challenge: ChallengeId
+    readonly enemyLevel: number
+    /** A rank's twist on the waves (see `Twist`); none when absent. */
+    readonly twist?: TwistValue
+    /** Enemy Practice's picks (see `Practice`); none for anything else. */
+    readonly practice?: PracticeValue
+  }
+  /** From the results or the in-game menu: the same challenge again, with the same team, from the start. */
+  | { readonly kind: "retry" }
+  /** From the results or the in-game menu: back to the menu (a run left this way is not recorded). */
+  | { readonly kind: "menu" }
+  /** During a run: open the in-game menu; the world stands still. */
+  | { readonly kind: "pause" }
+  /** From the in-game menu: back to the run. */
+  | { readonly kind: "resume" }
+  /** From the settings, anywhere: the player's choices about the controls. */
+  | { readonly kind: "controlOptions"; readonly options: ControlOptionsValue }
+
+export const UiRequest = Descriptor.Event<UiRequest>()("Shooter/UiRequest")
+
 export type DamageTarget = Entity.Handle<typeof Root, typeof Health>
 
 /** A request to damage an entity; `ApplyDamage` decides what happens. */
@@ -831,7 +856,7 @@ export const Damage = Descriptor.Event<DamageValue>()("Shooter/Damage")
  */
 export const Hit = Descriptor.Event<{
   readonly source: DamageSource | null
-  readonly entity: number
+  readonly entity: Entity.Handle<typeof Root, typeof Health>
   readonly at: Vec2
   readonly direction: Vec2
   readonly amount: number
@@ -895,7 +920,7 @@ export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Fac
  * A blow passed through an invulnerable body (a hitbox or a shot touching
  * it): `target` dodged it, if it was dashing. `attacker` dealt it, when known.
  */
-export const Dodged = Descriptor.Event<{ readonly target: number; readonly at: Vec2; readonly attacker: Entity.Handle<typeof Root, typeof Position> | null }>()("Shooter/Dodged")
+export const Dodged = Descriptor.Event<{ readonly target: Entity.Handle<typeof Root, typeof Health>; readonly at: Vec2; readonly attacker: Entity.Handle<typeof Root, typeof Position> | null }>()("Shooter/Dodged")
 
 /** The player dodged perfectly (see `features/dodge.ts`), for effects. */
 /** A perfect dodge at `at`, the `chain`th one after another (see `DodgeChain`; 1 for a first). */
@@ -1104,16 +1129,15 @@ export const Twist = Descriptor.Resource<TwistValue>()("Shooter/Twist")
 
 /**
  * Triggered passive effects waiting to be carried out (see
- * `features/passives.ts`). A queue rather than events, so an effect set off
- * by a kill survives the hit-stop that kill starts.
+ * `features/passives.ts`). Paused readers hold these events through hit-stop.
  */
-export type TriggeredEffectsValue = ReadonlyArray<{
+export interface TriggeredEffectsValue {
   readonly holder: Entity.Handle<typeof Root, typeof Position>
   readonly effect: TriggeredEffect
   /** Where its trigger happened (see `Place`). */
   readonly there: Vec2
-}>
-export const TriggeredEffects = Descriptor.Resource<TriggeredEffectsValue>()("Shooter/TriggeredEffects")
+}
+export const TriggeredEffects = Descriptor.Event<TriggeredEffectsValue>()("Shooter/TriggeredEffects")
 
 /**
  * When each passive that goes off at most every so often (see `Passive`) may
@@ -1440,7 +1464,6 @@ export const Game = Schema.bind(
       Challenge,
       EnemyLevel,
       Twist,
-      TriggeredEffects,
       PassiveCooldowns,
       Mending,
       Time,
@@ -1466,7 +1489,7 @@ export const Game = Schema.bind(
       Practice,
       PracticeField
     },
-    events: { Damage, Hit, Death, Broke, Roused, AttackReleased, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
+    events: { UiRequest, TriggeredEffects, Damage, Hit, Death, Broke, Roused, AttackReleased, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
   }),
   Root
 )
@@ -1516,5 +1539,3 @@ export const whileRunIsLive = [Game.Condition.inState(Flow, "Playing"), Game.Con
 
 /** Entities that belong to one run; despawned on restart. */
 export const RunScope = Game.EntityScope("Shooter/Run")
-/** The arena; lives as long as the runtime. */
-export const ArenaScope = Game.EntityScope("Shooter/Arena")

@@ -1,6 +1,6 @@
 import { Descriptor } from "@typeonce/bevy-ts"
 import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
-import { NodeRegistry, RenderSync } from "@typeonce/bevy-ts-pixi"
+import { NodeRegistry, RenderSync } from "@typeonce/bevy-ts-render"
 import { describe, expect, it } from "vitest"
 
 import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
@@ -8,12 +8,11 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands, setAt } from "../src/dev/commands.ts"
 import { makeStress, stressTuning } from "../src/dev/stress.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { emptyUiRequests, UiRequests } from "../src/features/menu.ts"
 import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
 import { Dash, FrameContext, Game, HitStop, KeyboardInput, PartyInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning } from "../src/schema.ts"
 import { defaultViewport } from "../src/simulation.ts"
-import { doubleTap, gunner, start, withGun } from "./helpers.ts"
+import { ReadFlow, doubleTap, gunner, start, withGun } from "./helpers.ts"
 
 const HitStopState = Game.Inspector("Test/HitStopState", {
   resources: { hitStop: Game.System.readResource(HitStop), time: Game.System.readResource(Time) },
@@ -117,7 +116,7 @@ describe("render sync under multi-rate ticking", () => {
       renderable: Renderable,
       transform: Renderable,
       registry: TestNodes,
-      create: ({ entity }) => ({ id: entity.value }),
+      create: ({ entity }) => ({ id: entity }),
       apply: () => {}
     })
     const Count = Game.Inspector("Test/Renderables", {
@@ -133,8 +132,7 @@ describe("render sync under multi-rate ticking", () => {
         Game.Runtime.service(PartyInput, scriptedPartyTaps([])),
         Game.Runtime.service(FrameContext, { viewport: defaultViewport }),
         Game.Runtime.service(TestNodes, registry),
-        Game.Runtime.service(UiRequests, emptyUiRequests())
-      ),
+        ),
       resources: initialResources(tuning, defaultViewport),
       machines: initialMachines()
     })
@@ -163,7 +161,7 @@ describe("hit-stop and game over", () => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: 1000, y: 900 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
-    const flow = () => run.runtime.debug.dump().machines["Shooter/Flow"]?.current
+    const flow = () => run.runtime.inspect(ReadFlow)
     for (let step = 0; step < 300 && flow() === "Playing"; step++) run.step()
     expect(flow()).toBe("GameOver")
   })

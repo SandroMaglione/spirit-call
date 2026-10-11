@@ -1,4 +1,4 @@
-import { NodeRegistry } from "@typeonce/bevy-ts-pixi"
+import { NodeRegistry } from "@typeonce/bevy-ts-render"
 import { DirectionalLight, Group, HemisphereLight, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import { actionButtons, teamSlots } from "../config/input.ts"

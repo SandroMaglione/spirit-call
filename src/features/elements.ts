@@ -250,11 +250,11 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
       target.data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
     }
     const away = (target: (typeof bodies)[number]) =>
-      target.entity.id.value === burst.target ? burst.direction : normalizeOr(sub(target.data.position.get(), at), burst.direction)
+      target.entity.id === burst.target ? burst.direction : normalizeOr(sub(target.data.position.get(), at), burst.direction)
     switch (state.id) {
       case "burning": {
         const left = burnDps(tuning, state.atk) * Math.max(0, state.remaining)
-        for (const { body } of around) deal(body, body.entity.id.value === burst.target ? left : left * rules.burning.share, away(body))
+        for (const { body } of around) deal(body, body.entity.id === burst.target ? left : left * rules.burning.share, away(body))
         break
       }
       case "soaked": {
@@ -283,7 +283,7 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
       }
       case "cracked": {
         const struck = (state.atk * rules.cracked.power) / 100
-        for (const { body } of around) deal(body, body.entity.id.value === burst.target ? struck : struck * rules.cracked.share, away(body))
+        for (const { body } of around) deal(body, body.entity.id === burst.target ? struck : struck * rules.cracked.share, away(body))
         break
       }
     }
@@ -312,7 +312,7 @@ export const ArcCharges = Game.System("Shooter/ArcCharges", {
     let next: (typeof bodies)[number] | undefined
     let nearest = Infinity
     for (const body of bodies) {
-      if (body.entity.id.value === arc.from || body.data.hurtbox.get().faction !== arc.side) continue
+      if (body.entity.id === arc.from || body.data.hurtbox.get().faction !== arc.side) continue
       if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
       const there = body.data.position.get()
       const gap = Math.hypot(there.x - arc.at.x, there.y - arc.at.y) - body.data.hurtbox.get().radius

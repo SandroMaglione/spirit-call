@@ -9,7 +9,8 @@
  * enemy in range) and the Thunderclap (strikes the enemies around the
  * caster and heals the whole team, the bench too).
  */
-import type { OptionalReadCell, ReadCell } from "@typeonce/bevy-ts/Query"
+import type { EntityId } from "@typeonce/bevy-ts/Entity"
+import type { Query } from "@typeonce/bevy-ts/Query"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { normalizeOr, sub } from "../math/vec.ts"
@@ -38,7 +39,7 @@ import {
   Tuning,
   Zap
 } from "../schema.ts"
-import type { Blow, DamageValue, Faction } from "../schema.ts"
+import type { Blow, DamageValue, Faction, Root } from "../schema.ts"
 import { healTeam, stateHealPercent } from "./mending.ts"
 import { knockbackTaken } from "./motion.ts"
 import { poiseOf } from "./poise.ts"
@@ -88,19 +89,15 @@ const Strikeable = Game.Query({
   with: [Health]
 })
 
-type StrikeableId = Parameters<typeof Game.Entity.handle>[0]
+type StrikeableId = EntityId<typeof Game.schema, typeof Root>
 
 /** Matches of `Strikeable` as bodies to strike. */
 const struckOf = (entries: ReadonlyArray<{
-  readonly entity: { readonly id: StrikeableId & { readonly value: number } }
-  readonly data: {
-    readonly position: ReadCell<Vec2>
-    readonly hurtbox: ReadCell<{ readonly radius: number; readonly faction: Faction }>
-    readonly invulnerable: OptionalReadCell<{ readonly remaining: number }>
-  }
+  readonly entity: { readonly id: StrikeableId }
+  readonly data: Query.Cells<typeof Strikeable>
 }>): Array<Struck> =>
   entries.map(({ entity, data }) => ({
-    id: entity.id.value,
+    id: entity.id,
     entity: entity.id,
     at: data.position.get(),
     radius: data.hurtbox.get().radius,
@@ -211,11 +208,11 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
         inside.push(body.id)
         if (totem.inside.includes(body.id) || body.entity === null) continue
         strike(tuning, events, at, body, bodies, { faction: totem.faction, blow: totem.blow, jumps: 0 })
-        const pushed = queries.pushed.each().find(({ entity: other }) => other.id.value === body.id)
-        if (pushed !== undefined) {
+        const pushed = queries.pushed.get(body.entity)
+        if (pushed.ok) {
           const out = normalizeOr(sub(body.at, at), { x: 1, y: 0 })
-          const push = effect.repel * knockbackTaken(tuning, pushed.data.enemy.present ? pushed.data.enemy.get().kind : undefined, pushed.data.enemy.present && pushed.data.enemy.get().champion)
-          pushed.data.knockback.update((current) => ({ x: current.x + out.x * push, y: current.y + out.y * push }))
+          const push = effect.repel * knockbackTaken(tuning, pushed.value.data.enemy.present ? pushed.value.data.enemy.get().kind : undefined, pushed.value.data.enemy.present && pushed.value.data.enemy.get().champion)
+          pushed.value.data.knockback.update((current) => ({ x: current.x + out.x * push, y: current.y + out.y * push }))
         }
       }
     }
@@ -269,7 +266,7 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
     // What it struck is held: stunned a while (never a champion: skills do not hold the fight's own), its break bar
     // filled up (a full one breaks, see `BuildPoise`).
     for (const { entity, data } of queries.stunnable.each()) {
-      if (!struck.has(entity.id.value)) continue
+      if (!struck.has(entity.id)) continue
       if (effect.stun > 0 && !data.enemy.get().champion) data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
       const bar = poiseOf(tuning, data.enemy.get().kind, data.health.get().max, data.enemy.get().champion)
       if (bar > 0 && effect.breakFill > 0 && data.poise.get().broken <= 0) {
@@ -279,7 +276,7 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
     // It heals by what it struck in its state, read before its own thunder lands (a clap that heals nobody, a relic's discharge, shows no healing either).
     if (effect.heals !== null) {
       const state = effect.heals.state
-      const held = queries.states.each().filter(({ entity, data }) => struck.has(entity.id.value) && data.state.get().current?.id === state).length
+      const held = queries.states.each().filter(({ entity, data }) => struck.has(entity.id) && data.state.get().current?.id === state).length
       healTeam(queries.members.each(), stateHealPercent(effect.heals, held), (amount) => events.heal.emit({ at, amount }))
     }
     events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })

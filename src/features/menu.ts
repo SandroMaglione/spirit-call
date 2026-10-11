@@ -3,47 +3,12 @@
  * the run (and its in-game menu, `Paused`), and the results. The game owns
  * this state (the `Flow` machine, the `Team`, `Challenge`, and `Paused`
  * resources); the UI (src/ui) only shows it and asks
- * for changes by queueing requests in the `UiRequests` service, which
- * `ApplyUiRequests` applies at the start of the next step. Tests queue the
+ * for changes by sending `UiRequest` events, which
+ * `ApplyUiRequests` applies at the end of the next step. Tests queue the
  * same requests, so menus are testable without a browser.
  */
-import { Descriptor } from "@typeonce/bevy-ts"
-
-import type { ChallengeId } from "../content/challenges.ts"
-import { Challenge, ControlOptions, EnemyLevel, Flow, Game, noTwist, Paused, Practice, RunResult, Team, Tuning, Twist } from "../schema.ts"
-import type { BuildValue, ControlOptionsValue, PracticeValue, TwistValue } from "../schema.ts"
+import { UiRequest, Challenge, ControlOptions, EnemyLevel, Flow, Game, noTwist, Paused, Practice, RunResult, Team, Tuning, Twist } from "../schema.ts"
 import { withValidAspects, withValidRelics } from "./build.ts"
-
-export type UiRequest =
-  /** Enter the arena with this team (in order) to face this challenge. */
-  | {
-    readonly kind: "start"
-    readonly team: ReadonlyArray<BuildValue>
-    readonly challenge: ChallengeId
-    readonly enemyLevel: number
-    /** A rank's twist on the waves (see `Twist`); none when absent. */
-    readonly twist?: TwistValue
-    /** Enemy Practice's picks (see `Practice`); none for anything else. */
-    readonly practice?: PracticeValue
-  }
-  /** From the results or the in-game menu: the same challenge again, with the same team, from the start. */
-  | { readonly kind: "retry" }
-  /** From the results or the in-game menu: back to the menu (a run left this way is not recorded). */
-  | { readonly kind: "menu" }
-  /** During a run: open the in-game menu; the world stands still. */
-  | { readonly kind: "pause" }
-  /** From the in-game menu: back to the run. */
-  | { readonly kind: "resume" }
-  /** From the settings, anywhere: the player's choices about the controls. */
-  | { readonly kind: "controlOptions"; readonly options: ControlOptionsValue }
-
-export interface UiRequestsValue {
-  readonly pending: Array<UiRequest>
-}
-
-export const UiRequests = Descriptor.Service<UiRequestsValue>()("Shooter/UiRequests")
-
-export const emptyUiRequests = (): UiRequestsValue => ({ pending: [] })
 
 /** Applies queued UI requests; a request that does not fit the current screen is dropped. */
 export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
@@ -60,9 +25,9 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
   },
   machines: { flow: Game.System.machine(Flow) },
   nextMachines: { flow: Game.System.nextState(Flow) },
-  services: { requests: Game.System.service(UiRequests) }
-}, ({ resources, machines, nextMachines, services }) => {
-  const pending = services.requests.pending.splice(0)
+  events: { requests: Game.System.readEvent(UiRequest) }
+}, ({ resources, machines, nextMachines, events }) => {
+  const pending = events.requests.all()
   const flow = machines.flow.get()
   const onResults = flow === "GameOver" || flow === "Cleared"
   // A run that just ended (its result is in, the results screen comes with this step's transitions) is no longer paused.

@@ -7,9 +7,9 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { enemyStats, makeEnemy } from "../src/features/enemies.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
+import { UiRequest, Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { doubleTap, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
+import { ReadFlow, doubleTap, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 import { noTally } from "../src/content/stars.ts"
 
@@ -189,7 +189,7 @@ describe("enemy levels", () => {
       queries: { enemies: Game.Query({ selection: { stats: Game.Query.read(CombatStats), kind: Game.Query.read(Enemy) } }) }
     }, ({ queries }) => queries.enemies.each().map(({ data }) => ({ kind: data.kind.get().kind, stats: data.stats.get() })))
     const run = start({ flow: "Menu", waves: true })
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "swarm", enemyLevel: 12 })
+    run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "swarm", enemyLevel: 12 })
     run.step(240)
     const spawned = run.runtime.inspect(Enemies)
     expect(spawned.length).toBeGreaterThan(0)
@@ -203,7 +203,7 @@ describe("game over and restart", () => {
     const restartAt = 400
     const run = duel("chaser", { x: 150, y: 0 }, { tuning, keys: [{ frame: restartAt, press: ["restart"], release: ["restart"] }] })
     stepUntil(run, () => run.world().player === undefined)
-    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("GameOver")
+    expect(run.runtime.inspect(ReadFlow)).toBe("GameOver")
     const Result = Game.Inspector("Test/Result", { resources: { result: Game.System.readResource(RunResult) } }, ({ resources }) => resources.result.get())
     expect(run.runtime.inspect(Result)).toMatchObject({ cleared: false })
 
@@ -212,7 +212,7 @@ describe("game over and restart", () => {
     expect(run.world().enemies).toEqual(frozen)
 
     stepUntil(run, () => run.world().player !== undefined)
-    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Playing")
+    expect(run.runtime.inspect(ReadFlow)).toBe("Playing")
     const fresh = run.world()
     expect(fresh.player!.health).toBe(tuning.characters.swordsman.stats.hp)
     expect(fresh.player!.position).toEqual(center)

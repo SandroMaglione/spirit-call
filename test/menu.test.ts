@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning } from "../src/config/tuning.ts"
-import { Challenge, CombatStats, Game, HitStop, Paused, Player, Run, SlowMotion, Team, Time, Waves } from "../src/schema.ts"
+import { UiRequest, Challenge, CombatStats, Game, HitStop, Paused, Player, Run, SlowMotion, Team, Time, Waves } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
 import { answers, aspectsFor, elementOf, equipInDraft, equipRelicInDraft, relicsFor, placeInTeam, removeFromTeam, startingWith } from "../src/ui/draft.ts"
-import { start, aspectId } from "./helpers.ts"
+import { ReadFlow, start, aspectId } from "./helpers.ts"
 import { cast, damageBonus, doing, finisher, heal, kill, on, targetHealthBelow } from "../src/content/passives.ts"
 import { nova } from "../src/content/skills.ts"
 
@@ -17,13 +17,13 @@ const Screen = Game.Inspector("Test/Screen", {
   challenge: resources.challenge.get()
 }))
 
-const flowOf = (run: ReturnType<typeof start>) => run.runtime.debug.dump().machines["Shooter/Flow"]?.current
+const flowOf = (run: ReturnType<typeof start>) => run.runtime.inspect(ReadFlow)
 
 describe("menu requests", () => {
   it("enter the arena from the menu with the chosen team and challenge, in a fresh run, the first one on the field", () => {
     const run = start({ flow: "Menu" })
     const team = [{ character: "gunner" as const }, { character: "swordsman" as const }]
-    run.requests.pending.push({ kind: "start", team, challenge: "crossfire", enemyLevel: 1 })
+    run.runtime.send(UiRequest, { kind: "start", team, challenge: "crossfire", enemyLevel: 1 })
     run.step()
     const screen = run.runtime.inspect(Screen)
     expect(flowOf(run)).toBe("Playing")
@@ -34,7 +34,8 @@ describe("menu requests", () => {
 
   it("retry and back to the menu only from the results screen; start again from the menu", () => {
     const run = start({ waves: true })
-    run.requests.pending.push({ kind: "menu" }, { kind: "retry" })
+    run.runtime.send(UiRequest, { kind: "menu" })
+    run.runtime.send(UiRequest, { kind: "retry" })
     run.step()
     expect(flowOf(run)).toBe("Playing")
 
@@ -45,11 +46,11 @@ describe("menu requests", () => {
     run.runtime.tick(Game.Schedule(Complete))
     run.step()
     expect(flowOf(run)).toBe("Cleared")
-    run.requests.pending.push({ kind: "menu" })
+    run.runtime.send(UiRequest, { kind: "menu" })
     run.step()
     expect(flowOf(run)).toBe("Menu")
 
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "swarm", enemyLevel: 1 })
+    run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "swarm", enemyLevel: 1 })
     run.step()
     expect(flowOf(run)).toBe("Playing")
     expect(run.runtime.inspect(Screen).challenge).toBe("swarm")
@@ -68,13 +69,13 @@ describe("the in-game menu", () => {
     })
     const timers = Game.Inspector("Test/PauseTimers", { resources: { time: Game.System.readResource(Time), hit: Game.System.readResource(HitStop), slow: Game.System.readResource(SlowMotion) } }, ({ resources }) => ({ time: resources.time.get(), hit: resources.hit.get(), slow: resources.slow.get() }))
     const run = start({ waves: true })
-    run.requests.pending.push({ kind: "pause" })
+    run.runtime.send(UiRequest, { kind: "pause" })
     run.step()
     run.runtime.tick(Game.Schedule(seed))
     const at = run.runtime.inspect(timers)
     run.step(120)
     expect(run.runtime.inspect(timers)).toEqual(at)
-    run.requests.pending.push({ kind: "resume" })
+    run.runtime.send(UiRequest, { kind: "resume" })
     run.step(2)
     expect(run.runtime.inspect(timers).time.elapsed).toBeGreaterThan(at.time.elapsed)
     expect(run.runtime.inspect(timers).slow.remaining).toBeLessThan(at.slow.remaining)
@@ -82,7 +83,7 @@ describe("the in-game menu", () => {
   it("pauses a run going on: the world stands still until it resumes", () => {
     const run = start({ waves: true })
     run.step(10)
-    run.requests.pending.push({ kind: "pause" })
+    run.runtime.send(UiRequest, { kind: "pause" })
     run.step()
     const at = run.runtime.inspect(Pause)
     expect(at.paused).toBe(true)
@@ -90,7 +91,7 @@ describe("the in-game menu", () => {
     expect(run.runtime.inspect(Pause)).toEqual(at)
     expect(flowOf(run)).toBe("Playing")
 
-    run.requests.pending.push({ kind: "resume" })
+    run.runtime.send(UiRequest, { kind: "resume" })
     run.step(30)
     expect(run.runtime.inspect(Pause).paused).toBe(false)
     expect(run.runtime.inspect(Pause).time).toBeGreaterThan(at.time)
@@ -99,21 +100,21 @@ describe("the in-game menu", () => {
   it("restarts the run, or leaves it for the menu, only once paused", () => {
     const run = start({ waves: true })
     run.step(60)
-    run.requests.pending.push({ kind: "pause" })
+    run.runtime.send(UiRequest, { kind: "pause" })
     run.step()
-    run.requests.pending.push({ kind: "retry" })
+    run.runtime.send(UiRequest, { kind: "retry" })
     run.step()
     expect(flowOf(run)).toBe("Playing")
     expect(run.runtime.inspect(Pause)).toEqual({ paused: false, time: 0 })
 
-    run.requests.pending.push({ kind: "pause" })
+    run.runtime.send(UiRequest, { kind: "pause" })
     run.step()
-    run.requests.pending.push({ kind: "menu" })
+    run.runtime.send(UiRequest, { kind: "menu" })
     run.step()
     expect(flowOf(run)).toBe("Menu")
     expect(run.runtime.inspect(Pause).paused).toBe(false)
     // Nothing to pause on the menu.
-    run.requests.pending.push({ kind: "pause" })
+    run.runtime.send(UiRequest, { kind: "pause" })
     run.step()
     expect(run.runtime.inspect(Pause).paused).toBe(false)
   })

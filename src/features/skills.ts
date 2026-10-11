@@ -233,7 +233,7 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
         at: facing ? { x: from.x + direction.x, y: from.y + direction.y } : input.at,
         direction,
         charges: spec.energy === 0,
-        energyAction: spec.energy === 0 ? { key: `${entity.id.value}/${resources.time.get().step}/special`, base: tuning.energy.special } : undefined
+        energyAction: spec.energy === 0 ? { key: `${entity.id}/${resources.time.get().step}/special`, base: tuning.energy.special } : undefined
       }
       const moment = tuning.ultimate.moment
       if (slot === "ultimate" && moment > 0) {

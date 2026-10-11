@@ -224,7 +224,7 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
     }
     commands.despawn(entity.id)
     // Alternate strafing directions so groups of shooters spread out.
-    const made = makeEnemy(tuning, pending.kind, pending.at, entity.id.value % 2 === 0 ? 1 : -1, level, pending.elite, pending.champion === true, pending.shield === true)
+    const made = makeEnemy(tuning, pending.kind, pending.at, entity.id % 2 === 0 ? 1 : -1, level, pending.elite, pending.champion === true, pending.shield === true)
     // Enemy Practice's: it holds its spot (see `KeepPracticeField`).
     const draft = pending.slot === undefined ? made : Game.Command.insert(made, [PracticeUnit, { slot: pending.slot }])
     commands.spawnIn(RunScope, pending.kind === "dummy"
@@ -240,13 +240,8 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
  * so crowds do not stack. Enemies stand still while an attack is in
  * progress: attacks are commitments.
  */
-export const SteerEnemies = (() => {
-  const grid = new SpatialGrid(64)
-  const bodies: Array<{ x: number; y: number; r: number; id: number }> = []
-  // Rebuilt only when the walls or the tuning's cell size change (see `FlowField`).
-  let paths = new FlowField(30)
-
-  return Game.System("Shooter/SteerEnemies", {
+export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
+    local: () => ({ grid: new SpatialGrid(64), bodies: new Array<{ x: number; y: number; r: number; id: number }>(), paths: new FlowField(30) }),
     queries: {
       enemies: Game.Query({
         selection: {
@@ -274,7 +269,9 @@ export const SteerEnemies = (() => {
       walls: Walls
     },
     resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), slowMotion: Game.System.readResource(SlowMotion) }
-  }, ({ queries, resources }) => {
+  }, ({ queries, resources, local }) => {
+    const { grid, bodies } = local
+    let { paths } = local
     const tuning = resources.tuning.get()
     const dt = resources.time.get().dt
     // Enemies walk at their pace (slow motion), which tells how far one should have got in a step.
@@ -293,7 +290,7 @@ export const SteerEnemies = (() => {
       ? [{ minX: pool.center.x - pool.half.x, minY: pool.center.y - pool.half.y, maxX: pool.center.x + pool.half.x, maxY: pool.center.y + pool.half.y }]
       : []))
     const avoided = laid.length === 0 ? boxes : [...boxes, ...laid]
-    if (paths.cellSize !== tuning.paths.cellSize) paths = new FlowField(tuning.paths.cellSize)
+    if (paths.cellSize !== tuning.paths.cellSize) local.paths = paths = new FlowField(tuning.paths.cellSize)
     paths.setWalls(avoided, tuning.paths.clearance)
     if (target !== undefined) paths.setGoal(target)
 
@@ -304,12 +301,12 @@ export const SteerEnemies = (() => {
       const position = data.position.get()
       const r = data.body.get().radius
       grid.insert(bodies.length, position.x, position.y, r + tuning.crowd.spacing)
-      bodies.push({ x: position.x, y: position.y, r, id: entity.id.value })
+      bodies.push({ x: position.x, y: position.y, r, id: entity.id })
     }
     if (player !== undefined && target !== undefined) {
       const r = player.data.body.get().radius
       grid.insert(bodies.length, target.x, target.y, r + tuning.crowd.spacing)
-      bodies.push({ x: target.x, y: target.y, r, id: player.entity.id.value })
+      bodies.push({ x: target.x, y: target.y, r, id: player.entity.id })
     }
 
     // Engagement slots: free ones go to the circling skirmishers nearest the player.
@@ -338,7 +335,7 @@ export const SteerEnemies = (() => {
     }
 
     // Enemies turned to her side (see `Turned`) and those still against her: each goes for the nearest of the other.
-    const sides = enemies.map(({ entity, data }) => ({ id: entity.id.value, at: data.position.get(), turned: data.turned.present }))
+    const sides = enemies.map(({ entity, data }) => ({ id: entity.id, at: data.position.get(), turned: data.turned.present }))
     /** Where an enemy goes: a turned one, to the nearest still against her; the others, to her or a turned one, the nearer. */
     const goalOf = (id: number, at: Vec2, turned: boolean): { readonly at: Vec2; readonly her: boolean } | undefined => {
       const others = sides.filter((side) => side.id !== id && side.turned !== turned).map((side) => ({ at: side.at, her: false }))
@@ -350,7 +347,7 @@ export const SteerEnemies = (() => {
     for (const { entity, data } of enemies) {
       const kind = data.enemy.get().kind
       const spec = tuning.enemies[kind]
-      const chase = goalOf(entity.id.value, data.position.get(), data.turned.present)
+      const chase = goalOf(entity.id, data.position.get(), data.turned.present)
       // What it makes of the one it goes for: only she is read (see `readPlayer`).
       const read = chase?.her === true ? herRead : undefined
       // Speed is a stat, so what changes stats (levels) changes it.
@@ -462,14 +459,14 @@ export const SteerEnemies = (() => {
       const reach = radius + tuning.crowd.spacing
       grid.forEachIn(position.x - reach, position.y - reach, position.x + reach, position.y + reach, (index) => {
         const other = bodies[index]!
-        if (other.id === entity.id.value) return
+        if (other.id === entity.id) return
         const dx = position.x - other.x
         const dy = position.y - other.y
         const distance = Math.hypot(dx, dy)
         const minimum = radius + other.r + tuning.crowd.spacing
         if (distance >= minimum) return
         const overlap = minimum - distance
-        const nx = distance > 1e-6 ? dx / distance : (entity.id.value % 2 === 0 ? 1 : -1)
+        const nx = distance > 1e-6 ? dx / distance : (entity.id % 2 === 0 ? 1 : -1)
         const ny = distance > 1e-6 ? dy / distance : 0
         pushX += nx * overlap * tuning.crowd.separation
         pushY += ny * overlap * tuning.crowd.separation
@@ -495,5 +492,4 @@ export const SteerEnemies = (() => {
         data.shield.set({ ...shield, facing: { x: Math.cos(have + step), y: Math.sin(have + step) } })
       }
     }
-  })
-})()
+})

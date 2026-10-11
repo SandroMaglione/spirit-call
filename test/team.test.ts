@@ -5,7 +5,7 @@ import { nextAlive } from "../src/features/team.ts"
 import type { Vec2 } from "../src/math/vec.ts"
 import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, SlowMotion, Stats, TeamSwitch, BasicAttack } from "../src/schema.ts"
 import type { ActiveState, BuildValue } from "../src/schema.ts"
-import { cursorAt, doubleTap, placeDummies, start, steps, plainAttack } from "./helpers.ts"
+import { ReadFlow, cursorAt, doubleTap, placeDummies, start, steps, plainAttack } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
@@ -78,7 +78,7 @@ const fire = (dps: number, seconds = 30): ActiveState => ({ id: "burning", remai
 
 const Tallied = Game.Inspector("Test/Tally", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().tally)
 
-const flowOf = (started: ReturnType<typeof start>) => started.runtime.debug.dump().machines["Shooter/Flow"]?.current
+const flowOf = (started: ReturnType<typeof start>) => started.runtime.inspect(ReadFlow)
 
 describe("a team in the arena", () => {
   it("starts with the first one on the field and the others on the bench, with no body", () => {
