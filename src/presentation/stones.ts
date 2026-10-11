@@ -12,6 +12,7 @@ import type { BufferAttribute, BufferGeometry, Object3D } from "three"
 
 import { view } from "../config/view.ts"
 import type { Vec2 } from "../math/vec.ts"
+import { showInstances } from "./uploads.ts"
 
 /** A spike of an Earthrise: where it stands, how tall and wide, its tilt and turn, and its life (rising, standing, sinking). */
 interface Spike {
@@ -127,9 +128,7 @@ export class Stones {
       this.plateMesh.setMatrixAt(index, this.matrix)
       this.plateMesh.setColorAt(index, index % 2 === 0 ? this.light : this.middle)
     }
-    this.plateMesh.count = shown
-    this.plateMesh.instanceMatrix.needsUpdate = true
-    if (this.plateMesh.instanceColor !== null) this.plateMesh.instanceColor.needsUpdate = true
+    showInstances(this.plateMesh, shown)
   }
 
   /** Stone erupting at `at` (a floor point) over `size` world units: a tall spike and a ring of smaller ones, leaning out, with chunks thrown up. */
@@ -185,9 +184,7 @@ export class Stones {
       this.splinterMesh.setMatrixAt(index, this.matrix)
       this.splinterMesh.setColorAt(index, index % 3 === 0 ? this.light : this.middle)
     }
-    this.splinterMesh.count = shown
-    this.splinterMesh.instanceMatrix.needsUpdate = true
-    if (this.splinterMesh.instanceColor !== null) this.splinterMesh.instanceColor.needsUpdate = true
+    showInstances(this.splinterMesh, shown)
   }
 
   /** Chunks of stone thrown up and out from `at` (a floor point), `height` up. */
@@ -269,7 +266,7 @@ export class Stones {
       this.spikeMesh.setColorAt(shown, spike.color)
       shown += 1
     }
-    this.spikeMesh.count = shown
+    showInstances(this.spikeMesh, shown)
     this.chunks.forEach((chunk, index) => {
       const size = chunk.size * Math.min(1, chunk.life / 0.3)
       this.position.set(chunk.x, chunk.y, chunk.z)
@@ -279,11 +276,7 @@ export class Stones {
       this.chunkMesh.setMatrixAt(index, this.matrix)
       this.chunkMesh.setColorAt(index, chunk.color)
     })
-    this.chunkMesh.count = this.chunks.length
-    for (const mesh of [this.spikeMesh, this.chunkMesh]) {
-      mesh.instanceMatrix.needsUpdate = true
-      if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true
-    }
+    showInstances(this.chunkMesh, this.chunks.length)
   }
 
   get active(): number {
