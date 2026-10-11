@@ -23,7 +23,7 @@ export const Pill = ({ children, icon, onClick, tone = "cream", size, disabled =
   /** For screen readers, when the name alone is not enough. */
   readonly label?: string
 }) => (
-  <button type="button" class="pill" data-tone={tone} data-size={size} disabled={disabled} aria-label={label} onClick={onClick}>
+  <button type="button" class="pill" data-tone={tone} data-size={size} data-icon={icon} disabled={disabled} aria-label={label} onClick={onClick}>
     {icon !== undefined && <span class="pill__dot"><Icon name={icon} /></span>}
     <span class="pill__label">{children}</span>
   </button>
