@@ -34,6 +34,8 @@ export type UiRequest =
   | { readonly kind: "pause" }
   /** From the in-game menu: back to the run. */
   | { readonly kind: "resume" }
+  /** From a run that records nothing and has no results (the tutorial, done or skipped): back to the menu. */
+  | { readonly kind: "leave" }
   /** From the settings, anywhere: the player's choices about the controls. */
   | { readonly kind: "controlOptions"; readonly options: ControlOptionsValue }
 
@@ -95,6 +97,12 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
         break
       case "resume":
         resources.paused.set({ paused: false })
+        break
+      case "leave":
+        if (flow === "Playing" && resources.tuning.get().challenges[resources.challenge.get()].objective.kind === "tutorial") {
+          resources.paused.set({ paused: false })
+          nextMachines.flow.set("Menu")
+        }
         break
       case "controlOptions":
         resources.controlOptions.set(request.options)

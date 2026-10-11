@@ -7,20 +7,21 @@ import { defaultTuning } from "../src/config/tuning.ts"
 import { tutorialSteps } from "../src/content/tutorial.ts"
 import { tutorialSpot } from "../src/features/tutorial.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, Tutorial } from "../src/schema.ts"
+import { Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, Tutorial } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Tutorial", {
   queries: {
-    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), immortal: Game.Query.optional(Immortal) } }),
+    enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), health: Game.Query.read(Health), immortal: Game.Query.optional(Immortal) } }),
     player: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health) }, with: [Player] })
   },
-  resources: { tutorial: Game.System.readResource(Tutorial) }
+  resources: { tutorial: Game.System.readResource(Tutorial), result: Game.System.readResource(RunResult) }
 }, ({ queries, resources }) => ({
   step: resources.tutorial.get().step,
   count: resources.tutorial.get().count,
-  enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, immortal: data.immortal.present, health: data.health.get().current })),
-  player: queries.player.each()[0]!.data.position.get()
+  result: resources.result.get(),
+  enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, position: data.position.get(), immortal: data.immortal.present, health: data.health.get().current })),
+  player: queries.player.each()[0]?.data.position.get()
 }))
 
 /** Puts the player at `at` (a test's shortcut for walking there). */
@@ -42,7 +43,6 @@ const tap = (button: TouchButton, frame: number): Touch.Timeline<TouchButton> =>
 
 describe("the tutorial", () => {
   it("asks each thing in turn, counting what the player does, and stands up dummies that never fall", () => {
-    const dummy = tutorialSpot(defaultTuning, { x: 0.6, y: 0.4 })
     const run = start({
       challenge: "tutorial",
       waves: true,
@@ -69,7 +69,10 @@ describe("the tutorial", () => {
     run.step(60)
     expect(world().step).toBe(2)
     // A dummy to hit, which never falls.
-    expect(world().enemies).toMatchObject([{ kind: "dummy", immortal: true }])
+    expect(world().enemies).toMatchObject([{ kind: "sparringDummy", immortal: true }])
+    const dummy = world().enemies[0]!.position
+    const player = world().player!
+    expect(Math.hypot(dummy.x - player.x, dummy.y - player.y)).toBeLessThanOrEqual(220)
 
     // Attack: four blows on it.
     run.runtime.tick(putAt({ x: dummy.x - 50, y: dummy.y }))
@@ -96,6 +99,24 @@ describe("the tutorial", () => {
     const run = start({ challenge: "tutorial", waves: true })
     run.step(600)
     expect(run.runtime.inspect(World).enemies).toEqual([])
+    expect(run.player()).toBeDefined()
+  })
+
+  it("leaves without results, then replays from the first step", () => {
+    const run = start({ challenge: "tutorial", waves: true })
+    const move = tutorialSteps[0]!
+    if (move.kind !== "move") throw new Error("the tutorial starts by moving")
+    run.runtime.tick(putAt(tutorialSpot(defaultTuning, move.to)))
+    run.step(2)
+    expect(run.runtime.inspect(World).step).toBe(1)
+    run.requests.pending.push({ kind: "leave" })
+    run.step(2)
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Menu")
+    expect(run.runtime.inspect(World).result).toBeNull()
+
+    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "tutorial", enemyLevel: 1 })
+    run.step(2)
+    expect(run.runtime.inspect(World)).toMatchObject({ step: 0, count: 0, enemies: [], result: null })
     expect(run.player()).toBeDefined()
   })
 })

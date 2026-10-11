@@ -10,7 +10,7 @@
 import type { TutorialStep } from "../content/tutorial.ts"
 import { distance } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Cast, Challenge, Enemy, EnemyLevel, Energy, Game, Hit, Immortal, PendingSpawn, PerfectDodged, Player, Position, RunScope, Skills, Tuning, Tutorial, UltimateCalled } from "../schema.ts"
+import { Action, Cast, Challenge, Dash, Enemy, EnemyLevel, Energy, Game, Hit, Immortal, PendingSpawn, PerfectDodged, Player, Position, RunScope, Skills, Tuning, Tutorial, UltimateCalled } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { makeEnemy } from "./enemies.ts"
@@ -39,7 +39,7 @@ export const stepGoal = (step: TutorialStep): number => {
 /** Sets the tutorial's steps going, and counts the one asked. */
 export const RunTutorial = Game.System("Shooter/RunTutorial", {
   queries: {
-    player: Game.Query({ selection: { position: Game.Query.read(Position), skills: Game.Query.write(Skills), energy: Game.Query.write(Energy) }, with: [Player] }),
+    player: Game.Query({ selection: { position: Game.Query.read(Position), dash: Game.Query.read(Dash), skills: Game.Query.write(Skills), energy: Game.Query.write(Energy) }, with: [Player] }),
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }),
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
   },
@@ -67,6 +67,8 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
 
   // A step coming in: the dummy it asks for (the one standing stays, when it is the same), and its skill ready.
   if (state.ready !== state.step) {
+    // Let the last dash end before placing the next step's dummy beside the player.
+    if (player.data.dash.get().remaining > 0) return
     const wanted = "dummy" in step ? step.dummy : null
     const standing = queries.enemies.each()
     const keep = wanted !== null && standing.length === 1 && standing[0]!.data.enemy.get().kind === wanted.kind
@@ -74,7 +76,11 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
       for (const { entity } of standing) commands.despawn(entity.id)
       for (const { entity } of queries.pending.each()) commands.despawn(entity.id)
       if (wanted !== null) {
-        commands.spawnIn(RunScope, Game.Command.insert(makeEnemy(tuning, wanted.kind, tutorialSpot(tuning, wanted.at), 1, resources.level.get()), [Immortal, {}]))
+        const offset = tutorialSpot(tuning, wanted.offset)
+        const at = player.data.position.get()
+        const radius = tuning.enemies[wanted.kind].radius
+        const near = { x: Math.max(radius, Math.min(tuning.arena.width - radius, at.x + offset.x)), y: Math.max(radius, Math.min(tuning.arena.height - radius, at.y + offset.y)) }
+        commands.spawnIn(RunScope, Game.Command.insert(makeEnemy(tuning, wanted.kind, near, 1, resources.level.get()), [Immortal, {}]))
       }
     }
     if (step.kind === "special" || step.kind === "ultimate") {
@@ -97,7 +103,7 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
         return events.action.all().filter((action) => action.kind === "dash").length
       case "attack":
         // Blows that landed on an enemy (a `Hit` carries the side of whom it hit).
-        return events.hit.all().filter((hit) => hit.faction === "enemy" && !hit.periodic).length
+        return events.hit.all().filter((hit) => hit.faction === "enemy" && hit.source?.move !== undefined && !hit.periodic).length
       case "special":
         return used("special")
       case "ultimate":

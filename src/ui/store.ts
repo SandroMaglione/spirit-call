@@ -20,9 +20,10 @@ import type { BuildValue, FlowState, PracticeValue, RunLogValue, RunResultValue 
 import type { Screen } from "./menu/screens.ts"
 import type { TeamDraft } from "./draft.ts"
 
-/** An Extra to play (nothing recorded): the Training Ground, Enemy Practice with its picks, or a character's trial (the Training Ground with her alone, owned or not: trying her before her audition). */
+/** An Extra to play (nothing recorded): the Training Ground, Enemy Practice with its picks, a character's trial (the Training Ground with her alone, owned or not: trying her before her audition), or the tutorial. */
 export type Extra =
   | { readonly kind: "training" }
+  | { readonly kind: "tutorial" }
   | { readonly kind: "practice"; readonly picks: PracticeValue }
   | { readonly kind: "trial"; readonly character: CharacterId }
 
@@ -68,6 +69,8 @@ export interface UiStore {
   readonly sound: Signal<Sound>
   /** This device's comfort settings. */
   readonly comfort: Signal<Comfort>
+  /** Whether the tutorial being played has had its last step done. */
+  readonly tutorialDone: Signal<boolean>
   /** The Extra being played, or last played; `null` for a quest or tier (or a dev quick start). */
   readonly extra: Signal<Extra | null>
   /** Enemy Practice's picks, kept while the app is open. */
@@ -124,6 +127,7 @@ export const createUiStore = (initial: {
   notices: signal(initial.notices),
   sound: signal(initial.sound),
   comfort: signal(initial.comfort),
+  tutorialDone: signal(false),
   extra: signal(null),
   practicePicks: signal({ kinds: [], elites: false }),
   menuOpens: signal(null),
@@ -163,6 +167,10 @@ export interface UiActions {
   /** Sound on or off, and how loud (0..1); saved on this device. */
   readonly setMuted: (muted: boolean) => void
   readonly setVolume: (volume: number) => void
+  /** Plays the tutorial again (from the settings). */
+  readonly playTutorial: () => void
+  /** Leaves the tutorial for the menu: it counts as done. */
+  readonly skipTutorial: () => void
   /** Changes this device's comfort settings (saved, and applied at once). */
   readonly setComfort: (change: Partial<Comfort>) => void
   /** Leave this account for the list of this device's accounts (what it did is already saved). */

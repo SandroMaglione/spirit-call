@@ -93,6 +93,14 @@ is no undoing an update, so:
 - **Content changes need no migration** of their own: `fromRecord` repairs
   them. A renamed content id is the exception (see `AGENTS.md`).
 
+## The tutorial
+
+The save's second version remembers when the tutorial was completed or
+skipped, per account. Until then, opening the account starts the tutorial
+again from its first step. Saves from version 1 that already recorded a
+run are marked done; an account never played starts the tutorial. Playing
+it again from Settings changes no rewards, run totals, or party selection.
+
 ## One tab per account
 
 Two tabs playing one account would write over each other's progress, so the

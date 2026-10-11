@@ -403,6 +403,8 @@
 .pause__sound { position: absolute; left: 330px; right: var(--right); max-width: 400px; top: 96px; }
 
 /* ---------- entering the arena (see Entrance.tsx) ---------- */
+/* Over the tutorial: Skip, top right, clear of the HUD's menu button (top left) and the step (top center). */
+.tutorial-bar { position: absolute; top: var(--top); right: var(--right); z-index: 5; }
 .entrance { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; pointer-events: none; background: radial-gradient(ellipse at center, rgba(14, 17, 28, .82), #070910 75%); animation: entrance-out .35s ease-in .55s forwards; }
 .entrance__card { display: grid; justify-items: center; gap: 10px; animation: entrance-card .9s ease-out both; }
 .entrance__card b { font-size: 30px; font-weight: 800; font-style: italic; letter-spacing: .04em; text-transform: uppercase; color: var(--gold-hi); text-shadow: 0 0 18px rgba(255, 220, 140, .4); }

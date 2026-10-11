@@ -18,6 +18,7 @@ import { fitToScreen } from "./kit/scale.ts"
 import { Menu } from "./Menu.tsx"
 import { Pause } from "./Pause.tsx"
 import { Results } from "./Results.tsx"
+import { TutorialBar } from "./TutorialBar.tsx"
 import type { UiActions, UiStore } from "./store.ts"
 import "./kit/kit.css"
 import "./screens.css"
@@ -31,7 +32,7 @@ const Screen = ({ store, actions }: { readonly store: UiStore; readonly actions:
       return <Results store={store} actions={actions} />
     case "Playing":
       // The entrance stays put while the in-game menu comes and goes (it plays once a run).
-      return <>{store.paused.value ? <Pause store={store} actions={actions} /> : null}<Entrance store={store} /></>
+      return <>{store.paused.value ? <Pause store={store} actions={actions} /> : null}<TutorialBar store={store} actions={actions} /><Entrance store={store} /></>
   }
 }
 

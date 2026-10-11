@@ -63,6 +63,7 @@ export const Settings = ({ store, actions, nav }: { readonly store: UiStore; rea
       <Fact tall label="Playing as" value={store.accountName} />
       <Fact tall label="On this device" value={<Pill tone="dark" size="small" onClick={actions.switchAccount}>Switch account</Pill>} />
     </div> : <div class="settings__rows">
+      <Fact tall label="Tutorial" value={<Pill tone="dark" size="small" icon="play" onClick={actions.playTutorial}>Play the tutorial</Pill>} />
       {(store.device.value === "touch" ? touchControls : desktopControls).map(([what, how]) => <Fact tall key={what} label={what} value={how} />)}
       <Fact tall label="In the menu" value="Drag a spirit to turn it" />
     </div>}</div>

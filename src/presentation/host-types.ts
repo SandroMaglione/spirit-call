@@ -1,4 +1,4 @@
-import type { BufferGeometry, Group, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
+import type { BufferGeometry, Group, Mesh, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton, SafeArea } from "../config/input.ts"
 import type { StateId } from "../content/elements.ts"
@@ -212,6 +212,8 @@ export interface FeedbackState {
   kick: { x: number; y: number }
   /** Zoom punch, 0..1, decaying (heavy blows). */
   punch: number
+  /** The tutorial's words on the floor (see `ShowTutorial`): made when first shown, the step they show, and where she stood as it came. */
+  tutorial: { words: { readonly mesh: Mesh; readonly draw: (title: string, hint: string) => void; readonly dispose: () => void } | null; step: number; anchor: Vec2 }
   /** How far an ultimate's moment has pushed the camera in, 0..1 (see `ShowUltimateMoments`). */
   moment: number
   /** Seconds left of the protection of a character who came in after a fall (shown around her feet). */

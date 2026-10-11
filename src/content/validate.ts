@@ -895,7 +895,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
         if ("dummy" in step) {
           if (!has(tuning.enemies, step.dummy.kind)) problems.push(`${where}: unknown dummy ${step.dummy.kind}`)
           else if (tuning.enemies[step.dummy.kind].cost > 0) problems.push(`${where}: ${step.dummy.kind} is no dummy (it comes in waves)`)
-          if (!inside(step.dummy.at)) problems.push(`${where}: a dummy must stand inside the arena`)
+          if (![step.dummy.offset.x, step.dummy.offset.y].every((value) => Number.isFinite(value) && Math.abs(value) <= 1)) problems.push(`${where}: a dummy's offset must be finite and within one arena length`)
         }
         // The perfect dodge needs a blow to dodge.
         if (step.kind === "perfectDodge" && has(tuning.enemies, step.dummy.kind) && tuning.enemies[step.dummy.kind].attacks.length === 0) problems.push(`${where}: the perfect dodge needs a dummy that strikes`)

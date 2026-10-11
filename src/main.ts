@@ -31,6 +31,7 @@ import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
 import { initialControls } from "./features/input.ts"
+import { newAccount } from "./content/account.ts"
 import {
   FrameContext,
   Game,
@@ -151,20 +152,26 @@ const start = async (mount: HTMLElement) => {
   const shell = await startApp(picked.id, picked.name)
   flushSaves = shell.flush
   const account = shell.account
-  // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
+  /** The tutorial's team: the starter's character alone, as the account has her, with nothing equipped. */
+  const tutorialTeam = () => teamOf(tuning, uiStore.account.peek(), [newAccount.selection.character], {}, {})
+  // The game opens on the menu; an account that has not done the tutorial opens on it (see `features/tutorial.ts`).
+  // `?play` skips both (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
-  const flow = quickStart ? "Playing" : "Menu"
+  const tutorialFirst = !quickStart && account.tutorialDoneAt === null
+  const flow = quickStart || tutorialFirst ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
   // A quick start may name aspects and relics the account does not own (a dev tool), but never one twice, or one that does not fit.
-  const team = withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, devQuery, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
+  const team = tutorialFirst
+    ? teamOf(tuning, account, [newAccount.selection.character], {}, {})
+    : withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, devQuery, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
   const selected = encounterOf(tuning, account.selection.play, account)
-  const challenge = quickStart ? challengeFromQuery(tuning, devQuery, selected.challenge) : selected.challenge
-  const enemyLevel = quickStart ? enemyLevelFromQuery(devQuery, selected.enemyLevel) : selected.enemyLevel
+  const challenge = tutorialFirst ? "tutorial" : quickStart ? challengeFromQuery(tuning, devQuery, selected.challenge) : selected.challenge
+  const enemyLevel = tutorialFirst ? 1 : quickStart ? enemyLevelFromQuery(devQuery, selected.enemyLevel) : selected.enemyLevel
   const practice = quickStart && challenge === "practice" ? practiceFromQuery(tuning, devQuery) : undefined
   /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
   let playing: Play | null = null
-  /** Whether the run going on is recorded on the account: not an Extra's (training, practice). */
-  let recording = true
+  /** Whether the run going on is recorded on the account: not an Extra's (training, practice, the tutorial). */
+  let recording = !tutorialFirst
   const uiRequests = emptyUiRequests()
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
   // The game is for phones: in the apps, and on a touch screen, the controls start as touch (the pad shows from the
@@ -174,6 +181,7 @@ const start = async (mount: HTMLElement) => {
   const { muted, volume, ...comfort } = shell.settings
   const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: { muted, volume }, comfort, device })
   setMotion(comfort.reducedMotion)
+  if (tutorialFirst) uiStore.extra.value = { kind: "tutorial" }
   // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
   wearLooks(account.worn)
   shell.onAccount((next) => {
@@ -193,6 +201,21 @@ const start = async (mount: HTMLElement) => {
     reported = result
     if (!recording) return
     uiStore.earned.value = shell.recordRun(playing, result, uiStore.runLog.peek(), uiStore.team.peek())
+  })
+  /** Takes the player from the tutorial (done or skipped) to the menu; it counts as done. */
+  const leaveTutorial = () => {
+    shell.finishTutorial()
+    uiRequests.pending.push({ kind: "leave" })
+  }
+  // The tutorial's last step done: a moment to read "Well done", then the menu.
+  let leaving: ReturnType<typeof setTimeout> | undefined
+  effect(() => {
+    const done = uiStore.tutorialDone.value && uiStore.extra.value?.kind === "tutorial"
+    clearTimeout(leaving)
+    if (done) {
+      shell.finishTutorial()
+      leaving = setTimeout(leaveTutorial, 2600)
+    }
   })
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined
   const notify = (message: string, error = false, title?: string) => {
@@ -256,7 +279,19 @@ const start = async (mount: HTMLElement) => {
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
     retry: () => uiRequests.pending.push({ kind: "retry" }),
-    menu: () => uiRequests.pending.push({ kind: "menu" }),
+    menu: () => {
+      // Leaving the tutorial from the in-game menu skips it.
+      if (uiStore.extra.peek()?.kind === "tutorial") shell.finishTutorial()
+      uiRequests.pending.push({ kind: "menu" })
+    },
+    playTutorial: () => {
+      playing = null
+      recording = false
+      uiStore.play.value = null
+      uiStore.extra.value = { kind: "tutorial" }
+      uiRequests.pending.push({ kind: "start", team: tutorialTeam(), challenge: "tutorial", enemyLevel: 1 })
+    },
+    skipTutorial: () => leaveTutorial(),
     pause: () => uiRequests.pending.push({ kind: "pause" }),
     resume: () => uiRequests.pending.push({ kind: "resume" }),
     setMuted: (muted) => {

@@ -22,6 +22,7 @@ import { ShowSplinters } from "./splinters.ts"
 import { ShowHazards } from "./hazards.ts"
 import { ShowSignatures } from "./signatures.ts"
 import { ShowWindwall } from "./windwall.ts"
+import { ShowTutorial } from "./tutorial.ts"
 
 export const frame = Game.Schedule(
   SyncArena,
@@ -37,6 +38,7 @@ export const frame = Game.Schedule(
   DrawTelegraphs,
   DrawMarks,
   DrawBarriers,
+  ShowTutorial,
   DrawTouchAim,
   PlaySounds,
   SpawnFx,

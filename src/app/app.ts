@@ -11,7 +11,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
 
-import { ascend, encounterOf, openAudition, recordRun, saveTeam, select, train, wear } from "../account/account.ts"
+import { ascend, encounterOf, finishTutorial, openAudition, recordRun, saveTeam, select, train, wear } from "../account/account.ts"
 import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
 import { AccountList, layer as accountListLayer } from "../account/account-list.ts"
 import type { AccountSummary } from "../account/account-list.ts"
@@ -53,6 +53,8 @@ export interface App {
   readonly saveTeam: (slot: number, team: SavedTeam | null) => Account | undefined
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, played by `team` (as it entered the arena), and its log: what it earned. A playtest build also sends it. */
   readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue, team: ReadonlyArray<BuildValue>) => Earned
+  /** Marks the tutorial done (finished or skipped): the game no longer opens on it. */
+  readonly finishTutorial: () => Account
   /** Saves a change to this device's settings (what each one changes applies it itself: the sound board, the camera, the arena). */
   readonly changeSettings: (change: Partial<Settings>) => void
 }
@@ -214,6 +216,7 @@ export const startApp = async (id: string, name: string): Promise<App> => {
       runtime.runFork(sender.recordRun(reportOf({ id: randomId(), at, build: SHOOTER_BUILD, play, enemyLevel, team, result, log, earned: recorded.earned }), name))
       return recorded.earned
     },
+    finishTutorial: () => (account.tutorialDoneAt === null ? changed(finishTutorial(account, Date.now())) : account),
     changeSettings: (change) => saveSettings((current) => ({ ...current, ...change }))
   }
 }

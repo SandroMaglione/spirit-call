@@ -12,10 +12,10 @@ export interface Spot {
   readonly y: number
 }
 
-/** A dummy a step stands up (it never falls), at `at`. */
+/** A dummy a step stands up (it never falls), offset from the player when it first appears. */
 export interface TutorialDummy {
   readonly kind: EnemyKind
-  readonly at: Spot
+  readonly offset: Spot
 }
 
 export type TutorialStep =
@@ -34,15 +34,16 @@ export type TutorialStep =
 
 export type TutorialStepKind = TutorialStep["kind"]
 
-/** Where the dummies stand: ahead of the player's spawn (the arena's middle), right and up on screen. */
-const dummy = (kind: EnemyKind): TutorialDummy => ({ kind, at: { x: 0.6, y: 0.4 } })
+/** Above the player on screen, clear of the touch buttons, wherever the dashes ended. */
+const dummy = (kind: EnemyKind): TutorialDummy => ({ kind, offset: { x: -0.08, y: -0.08 } })
 
 /** The tutorial's steps, in order: moving, dashing, the attack, the special, the ultimate, and the perfect dodge. */
 export const tutorialSteps: ReadonlyArray<TutorialStep> = [
-  { kind: "move", text: "Move here", to: { x: 0.5, y: 0.62 } },
+  // Left of the spawn (the arena's middle) on screen, clear of the buttons on the right.
+  { kind: "move", text: "Move here", to: { x: 0.355, y: 0.535 } },
   { kind: "dash", text: "Dash", times: 2 },
-  { kind: "attack", text: "Attack", hits: 4, dummy: dummy("dummy") },
-  { kind: "special", text: "Special skill", dummy: dummy("dummy") },
-  { kind: "ultimate", text: "Ultimate", dummy: dummy("dummy") },
+  { kind: "attack", text: "Attack", hits: 4, dummy: dummy("sparringDummy") },
+  { kind: "special", text: "Special skill", dummy: dummy("sparringDummy") },
+  { kind: "ultimate", text: "Ultimate", dummy: dummy("sparringDummy") },
   { kind: "perfectDodge", text: "Dodge as it strikes", times: 1, dummy: dummy("sparringDummy") }
 ]
