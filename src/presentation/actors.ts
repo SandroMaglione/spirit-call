@@ -3,7 +3,7 @@
  * enemies (hit flash, windup tint, health bars, stars over stunned ones).
  * Bodies in a state (burning, soaked) are tinted toward its color.
  */
-import { Vector3 } from "three"
+import { Quaternion, Vector3 } from "three"
 
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
@@ -21,15 +21,44 @@ import { mixColor } from "./draw.ts"
 import { characterLooks } from "./looks.ts"
 
 const leanAxis = new Vector3()
+const upAxis = new Vector3(0, 1, 0)
+const spinTurn = new Quaternion()
+
+/** What drawing a body in the air needs of it (see `Airborne`). */
+type InAir = {
+  readonly remaining: number
+  readonly seconds: number
+  readonly kind: "plunge" | "leap" | "soar"
+  readonly dive: { readonly seconds: number } | null
+  readonly glide: { readonly rise: number; readonly seconds: number } | null
+}
+
+/** Where a soar is (see `SoarSpec`): rising (`rising`, 0 to 1), hanging, or gliding down (`left` of the glide, 1 to 0). */
+export const soarPhase = (airborne: InAir): { readonly phase: "rise" | "hang" | "glide"; readonly rising: number; readonly hung: number; readonly left: number } => {
+  const rise = airborne.glide?.rise ?? 0
+  const glide = airborne.glide?.seconds ?? 0
+  const elapsed = airborne.seconds - airborne.remaining
+  if (elapsed < rise) return { phase: "rise", rising: elapsed / rise, hung: 0, left: 1 }
+  if (airborne.remaining > glide) return { phase: "hang", rising: 1, hung: elapsed - rise, left: 1 }
+  return { phase: "glide", rising: 1, hung: 0, left: glide > 0 ? Math.max(0, airborne.remaining / glide) : 0 }
+}
 
 /**
  * How high a body in the air is (world units): a plunge goes straight up,
  * easing out, then dives, falling faster and faster (it moves ahead as it
- * does, see `Airborne.dive`); a leap arcs (see `view.airborne`).
+ * does, see `Airborne.dive`); a leap arcs; a soar rises, bobs as it hangs,
+ * and glides down (see `view.airborne`).
  */
-export const airborneLift = (airborne: { readonly remaining: number; readonly seconds: number; readonly kind: "plunge" | "leap"; readonly dive: { readonly seconds: number } | null }): number => {
+export const airborneLift = (airborne: InAir): number => {
   const t = airborne.seconds > 0 ? Math.min(1, Math.max(0, 1 - airborne.remaining / airborne.seconds)) : 1
   if (airborne.kind === "leap") return worldHeight(projection, view.airborne.leap.height) * Math.sin(Math.PI * t)
+  if (airborne.kind === "soar") {
+    const top = worldHeight(projection, view.airborne.soar.height)
+    const soar = soarPhase(airborne)
+    if (soar.phase === "rise") return top * (1 - (1 - soar.rising) ** 3)
+    if (soar.phase === "hang") return top + worldHeight(projection, view.airborne.soar.bob) * Math.sin(soar.hung * Math.PI * 2 * 1.5)
+    return top * (1 - (1 - soar.left) ** 2)
+  }
   const top = worldHeight(projection, view.airborne.plunge.height)
   const dive = airborne.dive?.seconds ?? 0
   if (airborne.remaining > dive) {
@@ -38,6 +67,13 @@ export const airborneLift = (airborne: { readonly remaining: number; readonly se
   }
   const left = dive > 0 ? Math.max(0, airborne.remaining / dive) : 0
   return top * (1 - (1 - left) ** 2)
+}
+
+/** How far round a soaring body has spun (radians, about the up axis): whole turns on the way up, easing out, so she ends facing as she was. */
+export const soarSpin = (airborne: InAir): number => {
+  if (airborne.kind !== "soar") return 0
+  const soar = soarPhase(airborne)
+  return soar.phase === "rise" ? view.airborne.soar.turns * Math.PI * 2 * (1 - (1 - soar.rising) ** 2) : 0
 }
 
 /** Whether a body in the air is diving (see `airborneLift`). */
@@ -241,6 +277,9 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         leanAxis.set(tilt.y, 0, -tilt.x).normalize()
         node.pivot.quaternion.setFromAxisAngle(leanAxis, lean)
       } else node.pivot.quaternion.identity()
+      // Soaring up, she spins round.
+      const spin = data.airborne.present ? soarSpin(data.airborne.get()) : 0
+      if (spin !== 0) node.pivot.quaternion.multiply(spinTurn.setFromAxisAngle(upAxis, spin))
       // Only a change of pace squashes her, not her aim.
       const squash = grounded ? 0 : Math.min(springs.most, Math.hypot(sway.x, sway.y)) * springs.squash
       // Coming onto the field she pops up to her size, a little past it (not before the one who fell is down).

@@ -21,7 +21,7 @@
  */
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
-import { clampLength, normalizeOr, rotate, scale, sub } from "../math/vec.ts"
+import { add, clampLength, normalizeOr, rotate, scale, sub } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
@@ -29,6 +29,7 @@ import {
   Aim,
   Airborne,
   Arrival,
+  Body,
   Facing,
   HitStop,
   Member,
@@ -64,7 +65,7 @@ import {
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeGround } from "./ground.ts"
-import { knockbackTaken, Walls, wallBoxes } from "./motion.ts"
+import { hopLanding, knockbackTaken, tallWallBoxes, Walls, wallBoxes } from "./motion.ts"
 import { paceOf } from "./time.ts"
 
 export const initialSkills = (build: { readonly skills: { readonly [Slot in SkillSlot]: SkillId } }): SkillsValue =>
@@ -390,8 +391,10 @@ export const CastBlasts = Game.System("Shooter/CastBlasts", {
  * she keeps facing that way.
  */
 export const CastPlunges = Game.System("Shooter/CastPlunges", {
+  queries: { walls: Walls },
   events: { cast: Game.System.readEvent(Cast) }
-}, ({ events, lookup, commands }) => {
+}, ({ queries, events, lookup, commands }) => {
+  const walls = queries.walls.each()
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "plunge") continue
@@ -403,11 +406,17 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
     if (!caster.ok) continue
     const seconds = rise + dive
     caster.value.data.facing.set({ direction: cast.direction, hold: seconds + active + 0.2 })
+    // Where she comes down: over low walls in her way, never past a tall one or the arena's edge.
+    const body = lookup.getHandle(cast.caster, Hoppers)
+    const to = body.ok
+      ? hopLanding(cast.from, cast.direction, distance, body.value.data.body.get().radius, tallWallBoxes(walls), wallBoxes(walls.filter((wall) => wall.data.low.present)))
+      : add(cast.from, scale(cast.direction, distance))
     commands.insert(caster.value.entity.id, [Airborne, {
       remaining: seconds,
       seconds,
       kind: "plunge",
-      dive: dive > 0 ? { seconds: dive, velocity: scale(cast.direction, distance / dive) } : null,
+      dive: dive > 0 ? { seconds: dive, velocity: scale(sub(to, cast.from), 1 / dive), to } : null,
+      glide: null,
       landing: [{ ...cast, effect: landing }]
     }])
   }
@@ -420,6 +429,7 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
  * the air meanwhile.
  */
 const Leapers = Game.Query({ selection: { position: Game.Query.read(Position), knockback: Game.Query.write(Knockback) } })
+const Hoppers = Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) } })
 const TeamMembers = Game.Query({ selection: { position: Game.Query.read(Position), member: Game.Query.read(Member) } })
 
 export const CastLeaps = Game.System("Shooter/CastLeaps", {
@@ -444,7 +454,7 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
     if (caster.ok) {
       const away = scale(cast.direction, -effect.distance * decay)
       caster.value.data.knockback.update((push) => ({ x: push.x + away.x, y: push.y + away.y }))
-      if (effect.air > 0 && lookup.getHandle(cast.caster, TeamMembers).ok) commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, landing: [] }])
+      if (effect.air > 0 && lookup.getHandle(cast.caster, TeamMembers).ok) commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, glide: null, landing: [] }])
       // She keeps facing the way she was as she flies back.
       const facer = lookup.getHandle(cast.caster, Facers)
       if (facer.ok) facer.value.data.facing.set({ direction: cast.direction, hold: effect.air + 0.1 })
@@ -489,13 +499,23 @@ export const CastBarrages = Game.System("Shooter/CastBarrages", {
   }
 })
 
-/** Whirls: set down at the aim, clamped to their range; their first strike comes at once. */
+/**
+ * Whirls: set down at the aim, clamped to their range; their first strike
+ * comes at once. One she soars on (see `SoarSpec`), used as a skill, carries
+ * her up into the air above it, to glide down where she steers.
+ */
 export const CastVortices = Game.System("Shooter/CastVortices", {
   events: { cast: Game.System.readEvent(Cast) }
-}, ({ events, commands }) => {
+}, ({ events, lookup, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "vortex") continue
+    const soar = effect.soar
+    const rider = soar !== null && cast.skill !== null && cast.landing !== true ? lookup.getHandle(cast.caster, TeamMembers) : undefined
+    if (soar !== null && rider?.ok === true) {
+      const seconds = soar.rise + soar.hang + soar.glide
+      commands.insert(rider.value.entity.id, [Airborne, { remaining: seconds, seconds, kind: "soar", dive: null, glide: { rise: soar.rise, seconds: soar.glide, speed: soar.speed }, landing: [] }])
+    }
     commands.spawnIn(RunScope, Game.Command.spawn([Vortex, {
       center: lobTarget(effect, cast.from, cast.at),
       faction: cast.faction,
