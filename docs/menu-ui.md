@@ -221,7 +221,13 @@ is left, and keep text off it.
   slot is highlighted and named beside Party, or "No slot" when none is
   selected. Edits save to the active slot immediately, with no Save button.
   The slot survives leaving the screen, a run, and restarting the game.
-  The party strip on Home and before a challenge also names the active slot.
+  The starter party occupies Slot 1. Home's portraits have no slot caption.
+  The party screen has no Play button; its three places use the full height
+  below the top bar. Playing starts from Home or a challenge.
+  In a dev build, `?partyTest&touch` opens Party with a separate test account:
+  every character owned, the Swordsman alone in Slot 1, and edits kept on
+  later visits. It uses the normal loading screen and leaves other accounts
+  alone.
 - **The top bar's tabs never move**: the bar is three columns with equal
   sides, so its middle stays centered whatever stands at its ends (a
   wallet shown on one tab and not another), and a tab is as wide as its

@@ -146,7 +146,9 @@ const start = async (mount: HTMLElement) => {
     else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }))
   })
   const accounts = openAccounts()
-  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress, leaveApp, { resumeLast: !choosingAccount })
+  const partyTest = dev && !choosingAccount && new URLSearchParams(devQuery).has("partyTest")
+  const pickAccounts = partyTest ? (await import("./app/party-test.ts")).partyTestAccounts(accounts) : accounts
+  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, pickAccounts, holdAccount, progress, leaveApp, { resumeLast: !choosingAccount })
   // In the apps, the splash screen gives way to the list of accounts (or a quick start's loading).
   hideSplash()
   const picked = await picking
@@ -186,6 +188,7 @@ const start = async (mount: HTMLElement) => {
   const device = touchScreen ? "touch" : "desktop"
   const { muted, volume, ...comfort } = shell.settings
   const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: { muted, volume }, comfort, device })
+  if (partyTest) uiStore.menuScreens.value = [{ kind: "home" }, { kind: "team" }]
   setMotion(comfort.reducedMotion)
   if (tutorialFirst) uiStore.extra.value = { kind: "tutorial" }
   // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
