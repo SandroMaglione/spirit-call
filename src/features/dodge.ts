@@ -3,7 +3,8 @@
  * attack rather than running from it. A dash started at most
  * `perfectDodge.window` seconds before an enemy blow lands where she stood
  * when she dashed, or on her through the dash's invulnerability (see
- * `Dodged`), is perfect; a dash taken earlier is a plain dodge.
+ * `Dodged`), is perfect; a dash taken earlier is a plain dodge. Practice
+ * partners can allow more time through their content's `perfectDodgeWindow`.
  * It rewards once per dash (see `Tuning.perfectDodge`): the enemies slowed, the
  * attacker's break bar, the dash back, energy, a full magazine, and a
  * moment more of invulnerability to strike back in. Perfect dodges one
@@ -13,6 +14,7 @@
 import { Dash, DodgeChain, Dodged, Energy, Enemy, Game, Health, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, SlowMotion, Time, Tuning, BasicAttack } from "../schema.ts"
 import { dashOf, traitsIn } from "./build.ts"
 import { poiseOf } from "./poise.ts"
+import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 const Attackers = Game.Query({ selection: { position: Game.Query.read(Position), enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), poise: Game.Query.write(Poise) } })
 
@@ -44,8 +46,12 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
   if (dodges.length === 0) return
   for (const { entity, data } of queries.player.each()) {
     const dash = data.dash.get()
-    if (dash.perfect || dash.since > rules.window) continue
-    const dodged = dodges.find((dodge) => dodge.target === entity.id.value)
+    if (dash.perfect) continue
+    const dodged = dodges.find((dodge) => {
+      if (dodge.target !== entity.id.value) return false
+      const attacker = dodge.attacker === null ? undefined : lookup.getHandle(dodge.attacker, DodgeAttackers)
+      return dash.since <= dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
+    })
     if (dodged === undefined) continue
     // Dashes back (whole charges; all of them back stops the wait for the next).
     const traits = traitsIn(data.passives)

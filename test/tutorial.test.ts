@@ -7,8 +7,8 @@ import { defaultTuning } from "../src/config/tuning.ts"
 import { tutorialSteps } from "../src/content/tutorial.ts"
 import { tutorialSpot } from "../src/features/tutorial.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, Tutorial } from "../src/schema.ts"
-import { start } from "./helpers.ts"
+import { AttackPhase, Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, Tutorial } from "../src/schema.ts"
+import { doubleTap, start, steps } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Tutorial", {
   queries: {
@@ -100,6 +100,31 @@ describe("the tutorial", () => {
     run.step(600)
     expect(run.runtime.inspect(World).enemies).toEqual([])
     expect(run.player()).toBeDefined()
+  })
+
+  it("finishes from a real dodge of the sparring dummy during its practice window", () => {
+    const BeginDodge = Game.Schedule(Game.System("Test/BeginTutorialDodge", { resources: { tutorial: Game.System.writeResource(Tutorial) } }, ({ resources }) => {
+      resources.tutorial.set({ step: 5, count: 0, ready: -1 })
+    }))
+    const Phase = Game.Inspector("Test/TutorialDummyPhase", { queries: { enemies: Game.Query({ selection: { phase: Game.Query.read(AttackPhase) } }) } }, ({ queries }) => queries.enemies.each()[0]?.data.phase.get())
+    const prepare = (run: ReturnType<typeof start>) => {
+      run.runtime.tick(BeginDodge)
+      run.step(2)
+      const dummy = run.runtime.inspect(World).enemies[0]!.position
+      run.runtime.tick(putAt({ x: dummy.x - 60, y: dummy.y }))
+    }
+    const dry = start({ challenge: "tutorial", waves: true, toughness: true })
+    prepare(dry)
+    let landsAt = 2
+    while (landsAt < 300 && dry.runtime.inspect(Phase) !== "active") {
+      dry.step()
+      landsAt++
+    }
+    expect(landsAt).toBeLessThan(300)
+    const run = start({ challenge: "tutorial", waves: true, toughness: true, keys: doubleTap("up", landsAt - steps(0.3) - 3, { hold: true }) })
+    prepare(run)
+    run.step(landsAt + 3 - 2)
+    expect(run.runtime.inspect(World).step).toBe(tutorialSteps.length)
   })
 
   it("leaves without results, then replays from the first step", () => {

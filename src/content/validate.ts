@@ -807,6 +807,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   const affinities = new Set(["weak", "resists", "immune"])
   for (const [id, enemy] of Object.entries(tuning.enemies)) {
     positive(problems, `enemy ${id}`, { hp: enemy.hp, radius: enemy.radius, hurtboxRadius: enemy.hurtboxRadius, group: enemy.group })
+    if (enemy.perfectDodgeWindow !== null) positive(problems, `enemy ${id}`, { perfectDodgeWindow: enemy.perfectDodgeWindow })
     const traits = Object.entries(enemy.elements)
     for (const [element, affinity] of traits) {
       if (!has(elements, element)) problems.push(`enemy ${id}: unknown element ${element}`)

@@ -45,5 +45,5 @@ export const tutorialSteps: ReadonlyArray<TutorialStep> = [
   { kind: "attack", text: "Attack", hits: 4, dummy: dummy("sparringDummy") },
   { kind: "special", text: "Special skill", dummy: dummy("sparringDummy") },
   { kind: "ultimate", text: "Ultimate", dummy: dummy("sparringDummy") },
-  { kind: "perfectDodge", text: "Dodge as it strikes", times: 1, dummy: dummy("sparringDummy") }
+  { kind: "perfectDodge", text: "Dash on gold", times: 1, dummy: dummy("sparringDummy") }
 ]

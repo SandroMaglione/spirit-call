@@ -20,7 +20,8 @@ import { unmarkedHits } from "./signatures.ts"
  * it tracks, bright once its aim locks), active hitboxes, and spawn
  * warnings. An enemy's warnings show where, never when: nothing fills up
  * counting down to the hit, so its timing is read from its body (and the
- * aim locking, at least the fairness floor before it lands). Shots show no
+ * aim locking, at least the fairness floor before it lands). Practice
+ * partners also mark their perfect-dodge window in gold. Shots show no
  * line: the shot itself is the warning, flying.
  */
 export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
@@ -81,9 +82,12 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const tracking = !aimLocked(spec, "windup", attacker.elapsed)
     // A gust shows as wind: what it does is push. A call for help, as the spawn warnings of what it calls.
     // A turned one's (see `Turned`) in her side's color: it is not coming for her.
-    const color = data.turned.present ? view.turned.glow : spec.kind === "call" ? view.spawnWarning : spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
+    const practiceWindow = tuning.enemies[data.enemy.get().kind].perfectDodgeWindow
+    // The practice partner teaches timing explicitly: gold during its forgiving dodge window.
+    const practiceCue = practiceWindow !== null && (spec.windup - attacker.elapsed) * (data.enemy.get().windup ?? 1) <= practiceWindow
+    const color = practiceCue ? view.telegraphLocked : data.turned.present ? view.turned.glow : spec.kind === "call" ? view.spawnWarning : spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
     // Where, never when: no fill counting down to the hit (its timing is read from its body).
-    drawArea(g, area, 0, tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
+    drawArea(g, area, 0, practiceCue ? { color, fill: 0.3, outline: 1 } : tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
     // A blink: a ring around where it stands, as its mark shows where it will land.
     if (spec.kind === "blink") {
       const at = data.position.get()

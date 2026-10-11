@@ -7,6 +7,7 @@
  * the element it applies (see `features/elements.ts`).
  */
 import type { ReadCell, WriteCell } from "@typeonce/bevy-ts/Query"
+import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { normalizeOr, scale, sub } from "../math/vec.ts"
@@ -112,7 +113,7 @@ export const MoveProjectiles = (() => {
     },
     resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion), mantle: Game.System.readResource(Mantle) },
     events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) }
-  }, ({ queries, resources, events, commands }) => {
+  }, ({ queries, resources, events, commands, lookup }) => {
     const dt = resources.time.get().dt
     /** A shot that bursts where it stops (see `OverdriveEffect`): its blast there. */
     const burst = (projectile: ProjectileValue, at: Vec2): void => {
@@ -121,7 +122,7 @@ export const MoveProjectiles = (() => {
       commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, { area: { kind: "circle", center: at, radius: blast.radius }, faction: projectile.faction, blow: blast.blow, remaining: 0.06, hit: [] }]))
       events.explosion.emit({ at, radius: blast.radius, faction: projectile.faction, kind: "blast", heavy: false, element: blast.blow.element?.id ?? null, skill: blast.skill })
     }
-    const window = resources.tuning.get().perfectDodge.window
+    const tuning = resources.tuning.get()
     const boxes = wallBoxes(queries.walls.each())
 
     grid.clear()
@@ -132,12 +133,15 @@ export const MoveProjectiles = (() => {
       targets.push(target)
     }
     // Bodies that just dashed: a shot through where they stood dodged them, wherever they are now.
-    const dashers = targets.filter((target) => target.dashed !== undefined && target.dashed.since <= window)
+    const dashers = targets.filter((target) => target.dashed !== undefined)
     const barriers = queries.barriers.each().map(({ data }) => data.barrier.get())
     const mantle = resources.mantle.get()
 
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()
+      const source = projectile.blow.source?.attacker
+      const attacker = source === undefined ? undefined : lookup.getHandle(source, DodgeAttackers)
+      const window = dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
       const origin = data.position.get()
       const velocity = data.velocity.get()
       const speed = Math.hypot(velocity.x, velocity.y)

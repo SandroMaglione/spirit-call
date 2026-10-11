@@ -220,7 +220,7 @@ const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, kills: n
     case "practice":
       return `${kills} defeated`
     case "tutorial":
-      return tutorial.step < objective.steps.length ? `Step ${tutorial.step + 1} / ${objective.steps.length}` : "Done"
+      return tutorial.step < objective.steps.length ? `${tutorial.step + 1} / ${objective.steps.length} · ${objective.steps[tutorial.step]!.text}` : "Done"
   }
 }
 

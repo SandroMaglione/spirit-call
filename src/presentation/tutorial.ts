@@ -1,6 +1,6 @@
 /**
  * The tutorial, written on the floor (see `features/tutorial.ts`): the step
- * asked, in large letters lying on the arena's floor where it is to be done
+ * asked, in painted letters lying on the arena's floor where it is to be done
  * (under the circle to walk into, under the dummy to hit), and under it how
  * to do it on this device (a button on touch, a key on a keyboard). A step
  * done chimes, and the next one's words take its place.
@@ -17,16 +17,16 @@ import { Challenge, Controls, Enemy, Flow, Game, Player, Position, RenderHost, S
 
 /** How to do each step, on each kind of device. */
 const how: { readonly [Kind in TutorialStepKind]: { readonly touch: string; readonly desktop: string } } = {
-  move: { touch: "Drag the stick on the left", desktop: "W A S D" },
-  dash: { touch: "Tap the dash button", desktop: "Double-tap a direction" },
-  attack: { touch: "Tap the sword button", desktop: "Click" },
-  special: { touch: "Tap the special button", desktop: "Space" },
-  ultimate: { touch: "Tap the glowing ultimate button", desktop: "Shift" },
-  perfectDodge: { touch: "Walk up to it, and dash just as its blow lands", desktop: "Walk up to it, and double-tap a direction just as its blow lands" }
+  move: { touch: "Left stick", desktop: "W A S D" },
+  dash: { touch: "Dash button", desktop: "Double-tap a direction" },
+  attack: { touch: "Sword button", desktop: "Click" },
+  special: { touch: "Special button", desktop: "Space" },
+  ultimate: { touch: "Ultimate button", desktop: "Shift" },
+  perfectDodge: { touch: "Stand close · Dash button", desktop: "Stand close · Double-tap" }
 }
 
 /** The words' size on the floor (world units), and the canvas they are drawn on (pixels). */
-const size = { width: 300, canvasWidth: 1024, canvasHeight: 296 }
+const size = { width: 250, canvasWidth: 1024, canvasHeight: 400 }
 /** Screen right and screen down, as floor directions. */
 const right = normalizeOr(screenDirectionToWorld(projection, { x: 1, y: 0 }), { x: 1, y: 0 })
 const down = normalizeOr(screenDirectionToWorld(projection, { x: 0, y: 1 }), { x: 0, y: 1 })
@@ -39,10 +39,9 @@ const makeWords = () => {
   const texture = new CanvasTexture(canvas)
   texture.colorSpace = SRGBColorSpace
   texture.minFilter = LinearFilter
-  // The letters follow the floor's projection, but scenery must never hide an instruction.
-  const material = new MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, depthTest: false })
-  // Lying on the floor, read along the screen: stretched along the view a little against the camera's squash, still read as on the floor.
-  const geometry = new PlaneGeometry(size.width, (size.width * size.canvasHeight / size.canvasWidth) / Math.pow(projection.squash, 0.75)).rotateX(-Math.PI / 2)
+  // Paint follows the floor's perspective and is covered by bodies and scenery.
+  const material = new MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, opacity: 0.9 })
+  const geometry = new PlaneGeometry(size.width, size.width * size.canvasHeight / size.canvasWidth).rotateX(-Math.PI / 2)
   const mesh = new Mesh(geometry, material)
   mesh.rotation.y = Math.atan2(-right.y, right.x)
   mesh.renderOrder = 2
@@ -58,20 +57,17 @@ const makeWords = () => {
     context.textBaseline = "middle"
     context.lineJoin = "round"
     /** A line centered at `y`, its font `px` tall at most, smaller when that would not fit across. */
-    const line = (text: string, y: number, px: number, weight: string, fill: string, outline: number) => {
-      const font = (size: number) => `${weight} ${size}px 'Barlow Condensed', 'Avenir Next Condensed', sans-serif`
+    const line = (text: string, y: number, px: number, fill: string) => {
+      const font = (size: number) => `600 ${size}px 'Barlow Condensed', 'Avenir Next Condensed', sans-serif`
       context.font = font(px)
-      const room = canvas.width - outline * 2 - 16
+      const room = canvas.width - 16
       const width = context.measureText(text).width
       if (width > room) context.font = font(Math.floor((px * room) / width))
-      context.lineWidth = outline
-      context.strokeStyle = "rgba(13, 17, 23, 0.85)"
-      context.strokeText(text, canvas.width / 2, y)
       context.fillStyle = fill
       context.fillText(text, canvas.width / 2, y)
     }
-    line(title.toUpperCase(), 100, 136, "italic 800", "#fff3cf", 20)
-    if (hint !== "") line(hint, 230, 64, "700", "#e8eefc", 14)
+    line(title, 120, 150, "#f5dfaa")
+    if (hint !== "") line(hint, 300, 105, "#e3dcc8")
     texture.needsUpdate = true
   }
   return { mesh, draw, dispose: () => { geometry.dispose(); material.dispose(); texture.dispose() } }
@@ -135,7 +131,7 @@ export const ShowTutorial = Game.System("Shooter/ShowTutorial", {
       const spot = tutorialSpot(tuning, step.to)
       marks.strokeCircle(spot.x, spot.y, tutorialSpotRadius, 5, 0xffe08a, 0.55 + 0.4 * pulse)
       marks.strokeCircle(spot.x, spot.y, tutorialSpotRadius * (0.55 + 0.15 * pulse), 3, 0xffe08a, 0.4)
-      place(spot, tutorialSpotRadius + 60)
+      place(spot, tutorialSpotRadius + 80)
       return
     }
     case "dash":

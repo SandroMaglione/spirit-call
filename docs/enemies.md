@@ -24,6 +24,9 @@ elements they attack with, are in `docs/elements.md`.
   to the hit (no filling area, burst ring, or bomb fuse): the timing is
   read from the enemy's body. Shots show no aim line: the shot, flying, is
   the warning (playtest, October 2026).
+  The Sparring Dummy is a teaching exception: its harmless swing has a longer
+  windup and a 0.4 s perfect-dodge window, marked in gold. It does not push
+  the player away, so missed attempts leave her ready to try again.
 - **Pressure comes from enemies working together**, not from unreadable
   attacks: more of them engaging at once, attacks covering each other's
   escape routes, elements that combine. The crowd's rhythm keeps it
