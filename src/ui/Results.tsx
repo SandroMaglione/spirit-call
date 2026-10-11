@@ -15,7 +15,7 @@
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 import type { CSSProperties } from "preact"
-import { earnedResources, owns, sourcesOf } from "../account/account.ts"
+import { earnedResources, encounterOf, owns, sourcesOf } from "../account/account.ts"
 import { AbilityIcon } from "./AbilityIcon.tsx"
 import { describePlay, describeUnlock, resourceName } from "./describe.ts"
 import { elementOf } from "./draft.ts"
@@ -74,6 +74,8 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const title = extra?.kind === "trial" ? `${tuning.characters[extra.character].name} · Trial` : extra !== null ? "Practice" : objective.kind === "endure" ? `Wave ${result.wave}` : result.cleared ? "Victory" : "Defeated"
   const time = `${Math.floor(result.time / 60)}:${String(Math.floor(result.time % 60)).padStart(2, "0")}`
   const starred = play?.kind === "quest" && extra === null ? play : null
+  const enemyLevel = play === null ? null : encounterOf(tuning, play, account).enemyLevel
+  const underleveled = !result.cleared && extra === null && enemyLevel !== null && store.team.value.every((build) => (build.level ?? 1) < enemyLevel)
   return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}${skipped.value ? " is-skipped" : ""}`} onClick={() => { revealed.value = true; skipped.value = true }}>
     {newcomer?.kind === "character" && <div class="results__newcomer" data-element={elementOf(tuning, newcomer.id)}><Model character={newcomer.id} reveal={!revealed.value} /></div>}
     <section class="results__content" style={{ "--loot": `${times.loot}s` }}>
@@ -84,6 +86,7 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
         {earned.perfect !== null && <div class="goal goal--perfect is-earned is-fresh" style={at(times.line)}><Icon name="relic" />Perfect</div>}
       </div>}
       <p class="dim results__step" style={at(times.line)}><span class="results__name">{name}</span> · Wave {result.wave} · {result.kills} defeated · {time}</p>
+      {underleveled && <p class="dim results__step" style={at(times.line)}>Your party is below the enemies' level. Level up your characters in Party, or try again with careful dodges.</p>}
       <div class="results__rule results__step" style={at(times.line)} />
       {extra !== null ? <p class="dim results__step" style={at(times.line)}>{extra.kind === "trial" ? "A trial records nothing." : "Practice records nothing."}</p> : <>
         {earned !== null && <>
