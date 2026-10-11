@@ -68,8 +68,8 @@ export interface BlastEffect extends EffectBase {
 /**
  * A hop straight up and a dive: she rises for `rise` seconds, then dives
  * down ahead of her over `dive` seconds, landing `distance` along where she
- * faces (in the air all the while, see `Airborne`: it strikes nothing on
- * the way). As she lands, a blast of `radius` all around her (out for
+ * faces, over low walls (in the air all the while, see `Airborne`: it
+ * strikes nothing on the way; see `hopLanding`). As she lands, a blast of `radius` all around her (out for
  * `active`) drives what it hits away from her.
  */
 export interface PlungeEffect extends EffectBase {
@@ -150,7 +150,7 @@ export interface NovaEffect extends EffectBase {
  * blow) and pulls them toward its center, closing `pull` of their distance
  * to it (a share, before how much the body is pushed at all). A wind whirl
  * drives what it pulls, so bodies pulled into each other share their
- * states.
+ * states. Used as a skill, the caster may soar on it (see `SoarSpec`).
  */
 export interface VortexEffect extends EffectBase {
   readonly kind: "vortex"
@@ -159,6 +159,21 @@ export interface VortexEffect extends EffectBase {
   readonly seconds: number
   readonly tick: number
   readonly pull: number
+  /** How she rides it up as it goes off, or `null`: she stays on her feet. */
+  readonly soar: SoarSpec | null
+}
+
+/**
+ * Carried up on a whirl as it goes off: she rises (spinning) for `rise`
+ * seconds, hangs in the air `hang` more, then glides down over `glide`
+ * seconds, steered as she runs at `speed`, so she can ride out of its
+ * middle (in the air all the while, see `Airborne`).
+ */
+export interface SoarSpec {
+  readonly rise: number
+  readonly hang: number
+  readonly glide: number
+  readonly speed: number
 }
 
 /**
@@ -532,7 +547,7 @@ export const lift = (spec: Omit<LiftEffect, "kind">): LiftEffect => ({ kind: "li
 export const fault = (spec: Omit<FaultEffect, "kind">): FaultEffect => ({ kind: "fault", ...spec })
 export const splinters = (spec: Omit<SplintersEffect, "kind">): SplintersEffect => ({ kind: "splinters", ...spec })
 export const quake = (spec: Omit<QuakeEffect, "kind">): QuakeEffect => ({ kind: "quake", ...spec })
-export const vortex = (spec: Omit<VortexEffect, "kind">): VortexEffect => ({ kind: "vortex", ...spec })
+export const vortex = (spec: Omit<VortexEffect, "kind" | "soar"> & Partial<Pick<VortexEffect, "soar">>): VortexEffect => ({ kind: "vortex", soar: null, ...spec })
 export const barrage = (spec: Omit<BarrageEffect, "kind">): BarrageEffect => ({ kind: "barrage", ...spec })
 export const totem = (spec: Omit<TotemEffect, "kind">): TotemEffect => ({ kind: "totem", ...spec })
 export const companions = (spec: Omit<CompanionsEffect, "kind">): CompanionsEffect => ({ kind: "companions", ...spec })
@@ -548,7 +563,9 @@ export const skills = {
    * straight up and dives down ahead of her, like a bird, landing with a
    * gust all around her that drives what it catches back (into walls,
    * stunned; into each other, sharing their states) while keeping it within
-   * reach of the next combo. Untouchable while in the air.
+   * reach of the next combo. She flies over low walls (landing beyond one
+   * she would come down on), never over a pillar or out of the arena.
+   * Untouchable while in the air.
    */
   bladeWave: skill({
     name: "Gust",
@@ -592,13 +609,19 @@ export const skills = {
    * everything around her into its center for a few seconds, cutting as it
    * turns. What it drags into each other shares its states, and it takes on
    * the first fire, water, or thunder it touches (see `AbsorbIntoVortices`).
+   * She rides it up, spinning, hangs over it a moment, then glides down
+   * wherever she steers, out of the crowd it gathers. Untouchable while in
+   * the air.
    */
   cyclone: skill({
     name: "Cyclone",
     cooldown: 10,
     energy: 100,
-    invulnerability: 0.5,
-    effect: vortex({ maxRange: 0, radius: 300, seconds: 3.2, tick: 0.35, pull: 0.32, power: 9, element: "wind", knockback: 0, hitStop: 0, heavy: false })
+    invulnerability: 1.3,
+    effect: vortex({
+      maxRange: 0, radius: 300, seconds: 3.2, tick: 0.35, pull: 0.32, power: 9, element: "wind", knockback: 0, hitStop: 0, heavy: false,
+      soar: { rise: 0.35, hang: 0.4, glide: 0.55, speed: 380 }
+    })
   }),
   /**
    * The Gunner's ultimate (id `barrage`, from when it was a volley of fire

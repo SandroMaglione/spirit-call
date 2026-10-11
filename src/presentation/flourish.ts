@@ -8,6 +8,8 @@
  *   release (see `release`); the skill's own look is `signatures.ts`'s.
  * - Gust's hop: wind streaming off her as she dives, and rings, streaks,
  *   and dust where she lands.
+ * - The Cyclone's soar: wind whirling round her as she spins up and hangs,
+ *   then streaming off her as she glides down.
  * - Flare Jump's leap: flames trailing off her as she flies back, sparks
  *   where she lands.
  * - A volley's shells: smoke trailing behind them (where they blast is
@@ -20,9 +22,9 @@ import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment } from "../schema.ts"
+import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment, Velocity } from "../schema.ts"
 import type { ElementId } from "../content/elements.ts"
-import { airborneLift, diving } from "./actors.ts"
+import { airborneLift, diving, soarPhase } from "./actors.ts"
 import type { RenderHostValue } from "./host-types.ts"
 
 const css = (color: number): string => `#${color.toString(16).padStart(6, "0")}`
@@ -133,7 +135,7 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
 export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
   queries: {
     player: Game.Query({
-      selection: { position: Game.Query.read(Position), facing: Game.Query.read(Facing), airborne: Game.Query.optional(Airborne) },
+      selection: { position: Game.Query.read(Position), facing: Game.Query.read(Facing), velocity: Game.Query.read(Velocity), airborne: Game.Query.optional(Airborne) },
       with: [Player]
     }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } })
@@ -166,6 +168,36 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
         for (let index = 0; index < count; index++) {
           const from = { x: body.x + (Math.random() - 0.5) * 14, y: body.y + (Math.random() - 0.5) * 14 }
           fx.mote(from, back.x * 260 + (Math.random() - 0.5) * 40, back.y * 260 - 60 * Math.random(), { color: Math.random() < 0.3 ? view.hitFlash : trail, size: 2.5 + Math.random() * 2.5, life: 0.22, stretch: 6, drag: 4 })
+        }
+      }
+    } else if (airborne.kind === "soar") {
+      const body = screenAt(at, lift * projection.zoom + bodyLift() * 0.5)
+      const soar = soarPhase(airborne)
+      const wind = view.elements.wind
+      if (soar.phase !== "glide") {
+        // Rising and hanging: wind whirling round her, streaks swept up and around, and wisps lifted off the floor below.
+        const count = Math.floor((soar.phase === "rise" ? 320 : 180) * seconds + Math.random())
+        for (let index = 0; index < count; index++) {
+          const angle = Math.random() * Math.PI * 2
+          const reach = 22 + Math.random() * 26
+          const from = { x: body.x + Math.cos(angle) * reach, y: body.y + Math.sin(angle) * reach * 0.45 + 10 }
+          const turn = 320 + Math.random() * 120
+          fx.mote(from, -Math.sin(angle) * turn, Math.cos(angle) * turn * 0.45 - 90, { color: Math.random() < 0.35 ? view.hitFlash : wind, size: 2.5 + Math.random() * 2, life: 0.22, stretch: 5, drag: 3 })
+        }
+        if (Math.random() < seconds * 30) {
+          const floor = screenAt(at)
+          const angle = Math.random() * Math.PI * 2
+          fx.mote({ x: floor.x + Math.cos(angle) * 40, y: floor.y + Math.sin(angle) * 18 }, -Math.sin(angle) * 120, -140 - Math.random() * 80, { color: wind, size: 3, life: 0.45, stretch: 4, drag: 2, alpha: 0.7 })
+        }
+        if (soar.phase === "rise" && Math.random() < seconds * 12) fx.ring(screenAt(at), (40 + 60 * soar.rising) * projection.zoom, wind, 0.25)
+      } else {
+        // Gliding down: wind streaming off her, back along where she glides.
+        const velocity = player.data.velocity.get()
+        const back = normalizeOr(toScreen(projection, { x: -velocity.x, y: -velocity.y }), { x: 0, y: -1 })
+        const count = Math.floor(200 * seconds + Math.random())
+        for (let index = 0; index < count; index++) {
+          const from = { x: body.x + (Math.random() - 0.5) * 18, y: body.y + (Math.random() - 0.5) * 14 }
+          fx.mote(from, back.x * 200 + (Math.random() - 0.5) * 50, back.y * 200 - 30 * Math.random(), { color: Math.random() < 0.3 ? view.hitFlash : wind, size: 2.5 + Math.random() * 2, life: 0.25, stretch: 5, drag: 4 })
         }
       }
     } else if (airborne.kind === "leap") {

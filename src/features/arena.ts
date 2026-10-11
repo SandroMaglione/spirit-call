@@ -7,7 +7,7 @@ import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { ArenaId } from "../content/arena.ts"
 import type { Box } from "../physics/shapes.ts"
 import { boxAround } from "../physics/shapes.ts"
-import { Challenge, Game, Ground, Position, Renderable, RunScope, Tuning, Wall } from "../schema.ts"
+import { Challenge, Game, Ground, LowWall, Position, Renderable, RunScope, Tuning, Wall } from "../schema.ts"
 import type { WallPlacement } from "../schema.ts"
 
 const makeWall = (box: Box, placement: WallPlacement, arena: ArenaId, prop?: number) =>
@@ -15,6 +15,15 @@ const makeWall = (box: Box, placement: WallPlacement, arena: ArenaId, prop?: num
     [Wall, box],
     [Position, { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }],
     [Renderable, { kind: "wall", box, placement, arena, ...(prop === undefined ? {} : { prop }) }]
+  )
+
+/** A low wall: one a hop carries her over (see `LowWall`). */
+const makeLowWall = (box: Box, arena: ArenaId) =>
+  Game.Command.spawn(
+    [Wall, box],
+    [LowWall, {}],
+    [Position, { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }],
+    [Renderable, { kind: "wall", box, placement: "inner", arena }]
   )
 
 /** How thick a low wall is, in world units. */
@@ -85,9 +94,9 @@ export const SpawnArena = Game.System("Shooter/SpawnArena", {
     const box = wall.along === "x"
       ? boxAround(wall.x * width, wall.y * height, half, wallThickness / 2)
       : boxAround(wall.x * width, wall.y * height, wallThickness / 2, half)
-    commands.spawnIn(RunScope, makeWall(box, "inner", id))
+    commands.spawnIn(RunScope, makeLowWall(box, id))
   }
-  for (const box of hazardWalls(tuning, id)) commands.spawnIn(RunScope, makeWall(box, "inner", id))
+  for (const box of hazardWalls(tuning, id)) commands.spawnIn(RunScope, makeLowWall(box, id))
   // Props stand like pillars (and fade like them in front of the player).
   propBoxes(tuning, id).forEach((box, index) => commands.spawnIn(RunScope, makeWall(box, "sorted", id, index)))
   for (const { element, box } of hazardBoxes(tuning, id)) {

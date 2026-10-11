@@ -145,10 +145,12 @@ export const view = {
    * A body in the air (see `Airborne`), in screen pixels at zoom 1: a
    * plunge goes straight up `height`, then dives ahead like a bird, tipped
    * head first by `lean` (radians), wind trailing behind her; a leap arcs
-   * `height` high, shedding its element's sparks. The shadow shrinks to
+   * `height` high, shedding its element's sparks; a soar (see `SoarSpec`)
+   * rises `height`, spinning `turns` times on the way up, bobs `bob` as it
+   * hangs, wind whirling round her, and glides down. The shadow shrinks to
    * `shadow` at the top.
    */
-  airborne: { plunge: { height: 80, lean: 0.75 }, leap: { height: 36 }, shadow: 0.55 },
+  airborne: { plunge: { height: 80, lean: 0.75 }, leap: { height: 36 }, soar: { height: 95, turns: 2, bob: 5 }, shadow: 0.55 },
   grenade: 0xd9fffb,
   /** Peak height of a grenade's arc, in screen pixels. */
   grenadeArc: 70,

@@ -299,6 +299,10 @@ const checkEffect = (problems: Array<string>, where: string, effect: SkillEffect
       positive(problems, where, { radius: effect.radius, seconds: effect.seconds, tick: effect.tick })
       if (!(effect.maxRange >= 0)) problems.push(`${where}: maxRange must not be negative (is ${effect.maxRange})`)
       if (!(effect.pull >= 0 && effect.pull <= 1)) problems.push(`${where}: pull must be a share in [0, 1] (is ${effect.pull})`)
+      if (effect.soar !== null) {
+        positive(problems, `${where} soar`, { rise: effect.soar.rise, glide: effect.soar.glide, speed: effect.soar.speed })
+        if (!(effect.soar.hang >= 0)) problems.push(`${where}: soar hang must not be negative (is ${effect.soar.hang})`)
+      }
       return
     case "totem":
       positive(problems, where, { seconds: effect.seconds, tick: effect.tick, radius: effect.radius })

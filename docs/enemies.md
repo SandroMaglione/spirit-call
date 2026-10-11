@@ -319,7 +319,8 @@ Gale Caster. Elites and champions are immune to the element they carry.
 
 Each challenge is fought in an arena (`content/arena.ts`): its pillars (tall,
 fading in front of the player), low walls (cover that blocks movement and
-shots without hiding anyone), props (what furnishes it, a throne or a
+shots without hiding anyone; a hop through the air, like the Gust, goes over
+them, never over a pillar, a prop, or the arena's edge), props (what furnishes it, a throne or a
 crate: they block like pillars, and stand flush against a wall or leave
 room to pass), and hazards. Hazards are permanent pools laid
 into the floor's tiles, level with it, that affect everyone, enemies

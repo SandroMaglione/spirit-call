@@ -7,7 +7,7 @@
  * arena, of at most four tiles each (see `validateContent`). A challenge
  * names its arena (see `content/challenges.ts`).
  * Pillars and walls block movement and shots; walls are low (cover that
- * never hides the player). Hazards are permanent pools of an element (see
+ * never hides the player, and that a hop goes over, see `LowWall`). Hazards are permanent pools of an element (see
  * `Tuning.hazards`): fire trenches burn whoever walks in, enemies included, and
  * water puts them out for a while; basins of water soak (a soaked body's
  * blows are weaker), and carry

@@ -137,7 +137,7 @@ export const describeEffect = (effect: SkillEffect): string => {
       return `a ${elementWord(effect.element)}burst around you (${effect.power}% ATK) as you leap back from where you face${effect.leaves === null ? "" : `, leaving ${poolNames[effect.leaves.element]} that burns you too`}`
     case "plunge":
       return effect.lands === null
-        ? `a hop straight up and a dive ahead, landing with a ${elementWord(effect.element)}blast all around you that drives enemies back (${effect.power}% ATK)`
+        ? `a hop straight up and a dive ahead, over low walls, landing with a ${elementWord(effect.element)}blast all around you that drives enemies back (${effect.power}% ATK)`
         : `${effect.distance > 0 ? "a leap straight up and a crash down ahead" : "a bounce straight up and a splash down where you stand"}, landing with a ${elementWord(effect.element)}shockwave around you (${effect.power}% ATK)${effect.lands.clearsProjectiles ? " that washes away shots" : ""}${effect.lands.heals === null ? "" : `, ${describeHeals(effect.lands.heals, "it reaches")}`}`
     case "blast":
       return `a ${elementWord(effect.element)}blast ${effect.arcDegrees >= 360 ? "all around you" : "wide in front of you"} that drives enemies far back (${effect.power}% ATK)`
@@ -168,7 +168,7 @@ export const describeEffect = (effect: SkillEffect): string => {
     case "overcharge":
       return `you become ${elementWord(effect.element)}for ${effect.seconds}s, after a burst around you (${effect.power}% ATK): you run ${Math.round((effect.speed - 1) * 100)}% faster, your blows carry its element, your dashes come back within ${effect.dash}s, and every dash strikes everything along its way (${effect.dashStrike.power}% ATK)`
     case "vortex":
-      return `a ${elementWord(effect.element)}whirl${effect.maxRange > 0 ? "" : " at your feet"} that pulls enemies in for ${effect.seconds}s${effect.power > 0 ? ` (${effect.power}% ATK every ${effect.tick}s)` : ", hurting nobody"}`
+      return `a ${elementWord(effect.element)}whirl${effect.maxRange > 0 ? "" : " at your feet"} that pulls enemies in for ${effect.seconds}s${effect.power > 0 ? ` (${effect.power}% ATK every ${effect.tick}s)` : ", hurting nobody"}${effect.soar === null ? "" : "; you ride it up into the air, spinning, then glide down wherever you steer"}`
     case "totem":
       return `a ${elementWord(effect.element)}totem ${effect.offset > 0 ? "ahead of you" : "at your feet"} for ${effect.seconds}s that zaps enemies around it (${effect.power}% ATK${effect.jumps > 0 ? `, jumping ${effect.jumps} times` : ""})${effect.heal > 0 ? `, or heals you ${effect.heal}% of max HP while you stand in its reach hurt` : ""}`
     case "companions": {

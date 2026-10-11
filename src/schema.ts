@@ -41,6 +41,11 @@ export const Velocity = Descriptor.Component<Vec2>()("Shooter/Velocity")
 export const Body = Descriptor.Component<{ readonly radius: number }>()("Shooter/Body")
 /** Static axis-aligned wall. */
 export const Wall = Descriptor.Component<Box>()("Shooter/Wall")
+/**
+ * A low wall (see `content/arena.ts`), not a pillar, a prop, or the arena's
+ * edge: a hop through the air carries her over it (see `Airborne`).
+ */
+export const LowWall = Descriptor.Tag("Shooter/LowWall")
 
 /** The character on the field: the one with a body, that the controls move (see `features/team.ts`). */
 export const Player = Descriptor.Tag("Shooter/Player")
@@ -310,18 +315,29 @@ export const Raising = Descriptor.Component<{ readonly remaining: number; readon
 
 /**
  * In the air, from a skill that takes her off the ground (see
- * `PlungeEffect` and `LeapEffect`): for `remaining` more seconds of
- * `seconds` she cannot run, dash, attack, use a skill, or switch out (a
- * push already under way still carries her); `kind` is the skill's (how
- * she moves through the air is drawn by it). As she lands, `landing` goes
- * off where she is (if she is still on the field: falling loses it).
+ * `PlungeEffect`, `LeapEffect`, and `VortexEffect.soar`): for `remaining`
+ * more seconds of `seconds` she cannot run, dash, attack, use a skill, or
+ * switch out (a push already under way still carries her); `kind` is the
+ * skill's (how she moves through the air is drawn by it). As she lands,
+ * `landing` goes off where she is (if she is still on the field: falling
+ * loses it).
  */
 export const Airborne = Descriptor.Component<{
   readonly remaining: number
   readonly seconds: number
-  readonly kind: "plunge" | "leap"
-  /** For her last `seconds` in the air she flies at `velocity` (a dive); `null` when she does not move on her own. */
-  readonly dive: { readonly seconds: number; readonly velocity: Vec2 } | null
+  readonly kind: "plunge" | "leap" | "soar"
+  /**
+   * For her last `seconds` in the air she flies to `to` (a dive), over low
+   * walls (see `LowWall`); `velocity` is the way she goes (for drawing).
+   * `null` when she does not move on her own.
+   */
+  readonly dive: { readonly seconds: number; readonly velocity: Vec2; readonly to: Vec2 } | null
+  /**
+   * Risen for `rise` seconds and hanging, for her last `seconds` in the air
+   * she glides down, steered as she runs, at `speed` (see `SoarSpec`);
+   * `null` when she does not.
+   */
+  readonly glide: { readonly rise: number; readonly seconds: number; readonly speed: number } | null
   readonly landing: ReadonlyArray<CastValue>
 }>()("Shooter/Airborne")
 
@@ -1346,6 +1362,7 @@ export const Game = Schema.bind(
       Velocity,
       Body,
       Wall,
+      LowWall,
       Player,
       Member,
       Aim,

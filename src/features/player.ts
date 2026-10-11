@@ -111,13 +111,17 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       const attack = data.basicAttack.get()
       const spec = attackOf(tuning, attack.attack)
       const charge = spec.power !== null && charging(spec, attack) ? spec.power.moveSpeedMultiplier : 1
-      const speed = rooted ? 0 : runSpeed * charge * (attack.cooldown > 0 ? attack.slowed : 1)
+      const air = data.airborne.present ? data.airborne.get() : null
+      // Gliding down (see `SoarSpec`), she steers as she runs, at the glide's speed.
+      const gliding = air !== null && air.glide !== null && air.remaining > 0 && air.remaining <= air.glide.seconds + 1e-9
+      const speed = gliding ? air.glide!.speed : rooted ? 0 : runSpeed * charge * (attack.cooldown > 0 ? attack.slowed : 1)
       const target = scale(controls.move, speed)
       const rate = length(controls.move) > 0 ? tuning.player.acceleration : tuning.player.deceleration
-      // In the air, what she was running with stops at once (a leap's push still carries her); diving, she flies ahead.
-      const air = data.airborne.present ? data.airborne.get() : null
+      // In the air, what she was running with stops at once (a leap's push still carries her); diving, she flies
+      // to where she lands, arriving on the last step of the dive (a step at landing is a step on the ground).
       const diving = air !== null && air.dive !== null && air.remaining > 0 && air.remaining <= air.dive.seconds + 1e-9
-      data.velocity.set(air === null ? moveToward(carried, target, rate * dt) : diving ? air.dive!.velocity : { x: 0, y: 0 })
+      const flying = diving ? Math.max(1, Math.ceil(air.remaining / dt - 1e-6)) * dt : 0
+      data.velocity.set(air === null || gliding ? moveToward(carried, target, rate * dt) : diving ? scale(sub(air.dive!.to, position), 1 / flying) : { x: 0, y: 0 })
     }
 
     data.dash.set({ remaining, charges, cooldown, buffered, direction, since, perfect, from })
