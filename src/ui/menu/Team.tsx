@@ -62,7 +62,7 @@ export const Team = ({ store, actions, nav, draft }: {
     <div class="lineup__places">{Array.from({ length: teamSize }, (_, place) => {
       const member = team[place]
       return <section key={place} class={`lineup__place${picking.value && place === focus ? " is-on" : ""}`} data-element={member === undefined ? undefined : elementOf(tuning, member)}>
-        <button type="button" class="lineup__pick" aria-label={member === undefined ? `Place ${place + 1}, empty` : `Place ${place + 1}, ${tuning.characters[member].name}`} aria-pressed={picking.value && place === focus} disabled={place > team.length} onClick={() => { picking.value = !(picking.value && place === focus); draft.value = { ...draft.value, focus: place } }}>
+        <button type="button" class="lineup__pick" aria-label={member === undefined ? `Slot ${place + 1}, empty` : `Slot ${place + 1}, ${tuning.characters[member].name}`} aria-pressed={picking.value && place === focus} disabled={place > team.length} onClick={() => { picking.value = !(picking.value && place === focus); draft.value = { ...draft.value, focus: place } }}>
           <span class="lineup__number">{place + 1}</span>
           {member === undefined ? <span class="lineup__plus"><Icon name="plus" /></span> : <Model character={member} class="lineup__model" />}
           <span class="lineup__ring" />
@@ -80,7 +80,7 @@ export const Team = ({ store, actions, nav, draft }: {
         </>}
       </section>
     })}</div>
-    {picking.value && <Panel class="lineup__picker in-left" title={`Place ${focus + 1}`} detail={team[focus] === undefined ? "Empty" : tuning.characters[team[focus]!].name} note={inUse && team.length === 1 ? "Use another party to remove the last character." : undefined} noteIcon="info" actions={<>
+    {picking.value && <Panel class="lineup__picker in-left" title={`Slot ${focus + 1}`} detail={team[focus] === undefined ? "Empty" : tuning.characters[team[focus]!].name} note={inUse && team.length === 1 ? "Use another party to remove the last character." : undefined} noteIcon="info" actions={<>
       <Pill size="small" tone="dark" disabled={(inUse && team.length === 1) || team[focus] === undefined} onClick={() => keep(removeFromTeam(draft.value, focus))}>Remove</Pill>
       <Pill size="small" onClick={() => (picking.value = false)}>Done</Pill>
     </>}>
