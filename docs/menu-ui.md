@@ -163,7 +163,9 @@ is left, and keep text off it.
   Dummy that never falls and deals no damage. Moving, dashing, attacking,
   the special, the ultimate, and a perfect dodge are asked in order, with
   instructions on the arena floor matching touch or keyboard controls.
-  Completing it shows a win screen that waits for a choice: start chapter
+  The final perfect dodge shows success on the floor through its slow
+  motion and for another 0.8 seconds, then opens a win screen that waits
+  for a choice: start chapter
   one's first quest directly, with the saved party, or go to Home. Skip
   leaves for the menu; Settings' Controls tab can replay it. It pays
   and records nothing. Switching and elemental bursts are left for later.

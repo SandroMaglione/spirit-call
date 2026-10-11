@@ -1269,9 +1269,11 @@ export interface TutorialValue {
   readonly step: number
   readonly count: number
   readonly ready: number
+  /** Seconds to show success after slow motion finishes, before opening results. */
+  readonly celebrate: number
 }
 export const Tutorial = Descriptor.Resource<TutorialValue>()("Shooter/Tutorial")
-export const tutorialStart: TutorialValue = { step: 0, count: 0, ready: -1 }
+export const tutorialStart: TutorialValue = { step: 0, count: 0, ready: -1, celebrate: 0 }
 
 /** Deterministic random state (mulberry32), so runs replay exactly. */
 export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")

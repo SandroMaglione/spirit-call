@@ -9,13 +9,15 @@
 import type { TutorialStep } from "../content/tutorial.ts"
 import { distance } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Action, Cast, Challenge, Dash, Enemy, EnemyLevel, Energy, Game, Hit, Immortal, PendingSpawn, PerfectDodged, Player, Position, RunScope, Skills, Tuning, Tutorial, UltimateCalled } from "../schema.ts"
+import { Action, Cast, Challenge, Dash, Enemy, EnemyLevel, Energy, Game, Hit, Immortal, PendingSpawn, PerfectDodged, Player, Position, RunScope, Skills, SlowMotion, Time, Tuning, Tutorial, UltimateCalled } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { makeEnemy } from "./enemies.ts"
 
 /** How close to a move step's spot counts as there (world units). */
 export const tutorialSpotRadius = 70
+/** A little time to enjoy the final dodge after its slow motion has finished. */
+export const tutorialSuccessSeconds = 0.8
 
 /** A share of the arena (`content/tutorial.ts`'s spots) in world units. */
 export const tutorialSpot = (tuning: TuningValue, spot: { readonly x: number; readonly y: number }): Vec2 => ({ x: spot.x * tuning.arena.width, y: spot.y * tuning.arena.height })
@@ -46,7 +48,9 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
     tuning: Game.System.readResource(Tuning),
     challenge: Game.System.readResource(Challenge),
     level: Game.System.readResource(EnemyLevel),
-    tutorial: Game.System.writeResource(Tutorial)
+    tutorial: Game.System.writeResource(Tutorial),
+    slowMotion: Game.System.readResource(SlowMotion),
+    time: Game.System.readResource(Time)
   },
   events: {
     action: Game.System.readEvent(Action),
@@ -62,7 +66,13 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
   const state = resources.tutorial.get()
   const step = objective.steps[state.step]
   const [player] = queries.player.each()
-  if (step === undefined || player === undefined) return
+  if (step === undefined) {
+    if (state.celebrate > 0 && resources.slowMotion.get().remaining <= 0) {
+      resources.tutorial.set({ ...state, celebrate: Math.max(0, state.celebrate - resources.time.get().dt) })
+    }
+    return
+  }
+  if (player === undefined) return
 
   // A step coming in: the dummy it asks for (the one standing stays, when it is the same), and its skill ready.
   if (state.ready !== state.step) {
@@ -114,5 +124,7 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
   if (done === 0) return
   const count = resources.tutorial.get().count + done
   const current = resources.tutorial.get()
-  resources.tutorial.set(count >= stepGoal(step) ? { ...current, step: current.step + 1, count: 0 } : { ...current, count })
+  resources.tutorial.set(count >= stepGoal(step)
+    ? { ...current, step: current.step + 1, count: 0, celebrate: current.step + 1 >= objective.steps.length ? tutorialSuccessSeconds : 0 }
+    : { ...current, count })
 })

@@ -119,8 +119,8 @@ export const ShowTutorial = Game.System("Shooter/ShowTutorial", {
   /** Where the words lie: centered `below` (world units) under `over` on screen. */
   const place = (over: Vec2, below: number) => words.mesh.position.set(over.x + down.x * below, view.hazards.level + 1, over.y + down.y * below)
   if (step === undefined) {
-    words.draw("Well done!", "On to your first quest")
-    place(at, 120)
+    words.draw("Perfect dodge!", "Well done!")
+    place(state.anchor, 120)
     return
   }
   words.draw(titleOf(step, count), how[step.kind][device])

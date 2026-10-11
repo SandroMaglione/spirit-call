@@ -108,6 +108,8 @@ export const CheckObjective = Game.System("Shooter/CheckObjective", {
   const spec = tuning.challenges[challenge]
   if (!tuning.waves.enabled && spec.objective.kind !== "tutorial") return
   if (!objectiveMet(spec.objective, resources.waves.get(), resources.tutorial.get().step)) return
+  // Let the last perfect dodge and its floor message finish before covering the arena.
+  if (spec.objective.kind === "tutorial" && resources.tutorial.get().celebrate > 0) return
   const ended = { ...run, endedAt: resources.time.get().elapsed }
   resources.run.set(ended)
   resources.result.set(runResultOf(true, challenge, spec, ended, resources.waves.get(), resources.stats.get(), resources.team.get()))

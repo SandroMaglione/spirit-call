@@ -5,9 +5,9 @@ import type { Touch } from "@typeonce/bevy-ts-browser"
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { tutorialSteps } from "../src/content/tutorial.ts"
-import { tutorialSpot } from "../src/features/tutorial.ts"
+import { tutorialSpot, tutorialSuccessSeconds } from "../src/features/tutorial.ts"
 import type { Vec2 } from "../src/math/vec.ts"
-import { AttackPhase, Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, Tutorial } from "../src/schema.ts"
+import { AttackPhase, Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, SlowMotion, Tutorial, tutorialStart } from "../src/schema.ts"
 import { doubleTap, start, steps } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Tutorial", {
@@ -15,11 +15,12 @@ const World = Game.Inspector("Test/Tutorial", {
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), health: Game.Query.read(Health), immortal: Game.Query.optional(Immortal) } }),
     player: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health) }, with: [Player] })
   },
-  resources: { tutorial: Game.System.readResource(Tutorial), result: Game.System.readResource(RunResult) }
+  resources: { tutorial: Game.System.readResource(Tutorial), result: Game.System.readResource(RunResult), slow: Game.System.readResource(SlowMotion) }
 }, ({ queries, resources }) => ({
   step: resources.tutorial.get().step,
   count: resources.tutorial.get().count,
   result: resources.result.get(),
+  slow: resources.slow.get().remaining,
   enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, position: data.position.get(), immortal: data.immortal.present, health: data.health.get().current })),
   player: queries.player.each()[0]?.data.position.get()
 }))
@@ -93,6 +94,9 @@ describe("the tutorial", () => {
     run.step(2)
     expect(world().step).toBe(tutorialSteps.length)
     expect(world().player).toBeDefined()
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Playing")
+    expect(world().result).toBeNull()
+    run.step(steps(tutorialSuccessSeconds))
     expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Cleared")
     expect(world().result).toMatchObject({ cleared: true, challenge: "tutorial" })
     // The clear stays for the player's choice, even after the former automatic exit time.
@@ -114,9 +118,9 @@ describe("the tutorial", () => {
     expect(run.player()).toBeDefined()
   })
 
-  it("finishes from a real dodge of the sparring dummy during its practice window", () => {
+  it.each([defaultTuning.perfectDodge.slowSeconds, 1.2])("lets a real dummy dodge's %s-second slow motion finish before results", (slowSeconds) => {
     const BeginDodge = Game.Schedule(Game.System("Test/BeginTutorialDodge", { resources: { tutorial: Game.System.writeResource(Tutorial) } }, ({ resources }) => {
-      resources.tutorial.set({ step: 5, count: 0, ready: -1 })
+      resources.tutorial.set({ ...tutorialStart, step: 5 })
     }))
     const Phase = Game.Inspector("Test/TutorialDummyPhase", { queries: { enemies: Game.Query({ selection: { phase: Game.Query.read(AttackPhase) } }) } }, ({ queries }) => queries.enemies.each()[0]?.data.phase.get())
     const prepare = (run: ReturnType<typeof start>) => {
@@ -133,10 +137,25 @@ describe("the tutorial", () => {
       landsAt++
     }
     expect(landsAt).toBeLessThan(300)
-    const run = start({ challenge: "tutorial", waves: true, toughness: true, keys: doubleTap("up", landsAt - steps(0.3) - 3, { hold: true }) })
+    const tuning = { ...defaultTuning, perfectDodge: { ...defaultTuning.perfectDodge, slowSeconds } }
+    const run = start({ challenge: "tutorial", tuning, waves: true, toughness: true, keys: doubleTap("up", landsAt - steps(0.3) - 3, { hold: true }) })
     prepare(run)
     run.step(landsAt + 3 - 2)
     expect(run.runtime.inspect(World).step).toBe(tutorialSteps.length)
+    expect(run.runtime.inspect(World).slow).toBeGreaterThan(0)
+    const flow = () => run.runtime.debug.dump().machines["Shooter/Flow"]?.current
+    // Success stays on the floor through the actual slow motion, then a little longer.
+    while (run.runtime.inspect(World).slow > 0) {
+      expect(flow()).toBe("Playing")
+      expect(run.runtime.inspect(World).result).toBeNull()
+      run.step()
+    }
+    run.step(steps(tutorialSuccessSeconds / 2))
+    expect(flow()).toBe("Playing")
+    expect(run.runtime.inspect(World).result).toBeNull()
+    run.step(steps(tutorialSuccessSeconds / 2) + 2)
+    expect(flow()).toBe("Cleared")
+    expect(run.runtime.inspect(World).result).toMatchObject({ cleared: true, challenge: "tutorial" })
   })
 
   it("leaves without results, then replays from the first step", () => {
