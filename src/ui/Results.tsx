@@ -14,7 +14,7 @@
  */
 import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
-import type { JSX } from "preact"
+import type { CSSProperties } from "preact"
 import { earnedResources, owns, sourcesOf } from "../account/account.ts"
 import { AbilityIcon } from "./AbilityIcon.tsx"
 import { describePlay, describeUnlock, resourceName } from "./describe.ts"
@@ -43,7 +43,7 @@ const timeline = (fresh: number) => {
 }
 
 /** A piece of the results, coming in at `at` seconds. */
-const at = (seconds: number): JSX.CSSProperties => ({ "--d": `${seconds}s` })
+const at = (seconds: number): CSSProperties => ({ "--d": `${seconds}s` })
 
 export const Results = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const armed = useSignal(false), shown = useSignal(false), skipped = useSignal(false), revealed = useSignal(false)
