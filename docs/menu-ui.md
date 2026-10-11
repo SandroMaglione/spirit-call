@@ -158,6 +158,10 @@ is left, and keep text off it.
 
 ## Behaviour worth knowing
 
+- **Launch resumes the last account.** Loading stays visible while the
+  account and models open. Settings' Switch account opens the create/select
+  screen; first launch shows it too. A failed read changes nothing, and an
+  account held by another tab stays in the picker with an explanation.
 - **The tutorial** opens before the menu for an account that has not
   completed or skipped it. The Swordsman practices alone with a Sparring
   Dummy that never falls and deals no damage. Moving, dashing, attacking,
@@ -208,7 +212,9 @@ is left, and keep text off it.
   at the panel's foot.
 - **Auditions** are a tab of the challenges: each lends its character, so
   the party strip gives way to her face, and the brief says she is played
-  alone at the tier's level.
+  alone at the tier's level. Try is always available, even before inviting
+  her: the Training Ground lends her alone with her plain kit at the
+  party's level, records nothing, and leaves the saved party alone.
 - **Saved parties**: the party screen's top bar holds three slots (tap an
   empty one to save the party there, a saved one to load it, Save to keep
   the party in the slot last used).
