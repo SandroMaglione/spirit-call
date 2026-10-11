@@ -93,7 +93,7 @@ const script = (steps: number, viewport: ViewportValue) => {
   return { keys, pointer }
 }
 
-const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number) => {
+const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number, scripted: number) => {
   const random = new Random(11)
   const ringAround = (center: { readonly x: number; readonly y: number }) => {
     const angle = random.next() * Math.PI * 2
@@ -140,9 +140,12 @@ const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number) 
     }
   })
 
+  // Only the script's steps count: a frame that runs past its end must not add the steps after it.
   let hits = 0
+  let counted = 0
   const count = Game.System("Perf/Count", { events: { hit: Game.System.readEvent(Hit) } }, ({ events }) => {
-    hits += events.hit.all().length
+    counted += 1
+    if (counted <= scripted) hits += events.hit.all().length
   })
 
   return { populate, keep, count, hits: () => hits }
@@ -158,5 +161,5 @@ export const makePerfScene = (name: PerfSceneName, enemies = 30, steps = 1200, v
     ...(name === "kills" ? {} : { enemies: Object.fromEntries(crowdKinds.map((kind) => [kind, { hp: 1e8 }])) })
   })
   const { keys, pointer } = script(steps, viewport)
-  return { name, enemies, steps, tuning, team, keys, pointer, ...makeSystems(tuning, name, enemies) }
+  return { name, enemies, steps, tuning, team, keys, pointer, ...makeSystems(tuning, name, enemies, steps) }
 }
