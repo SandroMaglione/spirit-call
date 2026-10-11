@@ -229,10 +229,13 @@ const measure = async (cdp: Cdp, base: string, scene: string, rate: number): Pro
     await send("Page.enable")
     await send("Runtime.enable")
     await send("Page.navigate", { url: `${base}/?perf=${scene},${enemies}` })
-    await until("window.__perf?.started === true", 240_000)
-    // A key press unlocks the sound, as a player's first touch does (the scene's input is scripted, so it is not read).
+    // A key press unlocks the sound, as a player's first touch in the menus does (the scene's input is scripted, so it is not read);
+    // the sounds are recorded then, so the fight is measured once they are (as a player's fights come after the menus).
+    await until("window.__game !== undefined", 240_000)
     await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Control", code: "ControlLeft" })
     await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Control", code: "ControlLeft" })
+    await until("window.__perf?.started === true", 240_000)
+    await until("(window.__game.sounds.stats().toRecord ?? 0) === 0", 120_000).catch(() => console.error("  (the sounds were not all recorded in time)"))
     await send("Emulation.setCPUThrottlingRate", { rate })
     await sleep(warmup)
     // Recording: the page's samples from now, a CPU profile, and a trace for long tasks and garbage collection.
