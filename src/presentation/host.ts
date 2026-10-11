@@ -26,6 +26,7 @@ import { makeAssets } from "./render-assets.ts"
 import { dressArena } from "./scenery.ts"
 import type { Dressing } from "./scenery.ts"
 import { Shapes } from "./shapes.ts"
+import { renderQuality } from "./render-quality.ts"
 
 
 const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => {
@@ -134,10 +135,9 @@ export const createBrowserHost = async (
 ): Promise<BrowserHost> => {
   // Every model the looks use, before the arena opens (nodes are made synchronously).
   const models = await looks
-  // Phones have very dense screens: past 2 device pixels per CSS pixel the cost grows faster than the sharpness,
-  // and at 2 or more edges are fine without multisampling (which would cost 4x the pixels again).
-  const renderer = new WebGLRenderer({ antialias: window.devicePixelRatio < 2, powerPreference: "high-performance" })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  const quality = renderQuality(window.devicePixelRatio, window.matchMedia("(pointer: coarse)").matches)
+  const renderer = new WebGLRenderer({ antialias: quality.antialias, powerPreference: "high-performance" })
+  renderer.setPixelRatio(quality.pixelRatio)
   renderer.setClearColor(view.background)
   renderer.autoClear = false
   // A frame is two renders (the scene, then the overlay): count both.

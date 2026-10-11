@@ -74,6 +74,11 @@ the previous section's endpoint and carry any elapsed frame remainder.
 
 ## Budgets
 
+- The arena and menu's 3D previews render at at most 1.5 device pixels per
+  CSS pixel on devices with a coarse primary pointer (phones and tablets),
+  and 2 on other devices (`render-quality.ts`). Going from 2 to 1.5 cuts
+  the canvas pixel count by 44%; this is a rendering budget, not a measured
+  frame-rate gain. The DOM menus and touch layout keep their screen resolution.
 - **Characters** are drawn with their own skeleton and materials.
 - **Things that come in numbers** (enemies, projectiles) must be batched.
   Every current enemy uses one skinned mesh and one vertex-color material.
