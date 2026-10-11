@@ -82,7 +82,9 @@ keeps them, and releasing).
   slowdown, read from the page's raw samples, a CPU profile, and a trace
   (`--label <name>` writes `.data/perf/<name>.json`, `--compare <json>`
   prints the change). `node --import tsx scripts/stress.ts --scene crowd`
-  times the same fight's simulation steps in Node. Run both before and
+  times the same fight's simulation steps in Node (`--systems` adds up the
+  time in each system). Effects, sounds, and shaders have budgets: see
+  `docs/models.md`, "Budgets". Run both before and
   after work on speed; `test/determinism.test.ts` proves the simulation
   still plays exactly the same.
 - `/tools/progress/` on the dev server: a dev-only design aid projecting a
