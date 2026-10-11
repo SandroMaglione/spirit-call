@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Spirit Call</string>
+    <string name="title_activity_main">Spirit Call</string>
+    <string name="package_name">com.sandromaglione.spiritcall</string>
+    <string name="custom_url_scheme">com.sandromaglione.spiritcall</string>
+</resources>

@@ -28,7 +28,7 @@ const layers = [
   },
   // The account's rules are pure (no Effect), so the UI can use them; storing the account (and a playtest build's sending) is the Effect side.
   { name: "account rules", paths: ["src/account/account.ts", "src/account/calls.ts", "src/account/progression.ts", "src/account/convert.ts"], parts: ["content", "simulation", "account rules"], packages: [] },
-  { name: "persistence", paths: ["src/account/", "src/app/"], parts: ["content", "simulation", "account rules", "persistence", "api"], packages: ["effect", "@effect/"] },
+  { name: "persistence", paths: ["src/account/", "src/app/"], parts: ["content", "simulation", "account rules", "persistence", "api"], packages: ["effect", "@effect/", "@capacitor/"] },
   // What a playtest build sends the server: shared by both, so it holds no code of either.
   { name: "api", paths: ["src/api/"], parts: ["content", "api"], packages: ["effect"] },
   // The server only keeps the runs playtest builds send: it knows the API and its database, and nothing of the game.

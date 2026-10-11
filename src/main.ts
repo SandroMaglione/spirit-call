@@ -7,6 +7,7 @@ import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
 import { holdAccount, openAccounts, startApp } from "./app/app.ts"
+import { buzz, hideSplash, onBackButton } from "./app/device.ts"
 import type { Accounts } from "./app/app.ts"
 import { showAccounts } from "./ui/Accounts.tsx"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
@@ -86,7 +87,10 @@ const start = async (mount: HTMLElement) => {
   // Awaited below; a failure before then is reported there, not as unhandled.
   looks.catch(() => undefined)
   const accounts = openAccounts()
-  const picked = quickStart ? await devAccount(accounts) : await showAccounts(mount, accounts, holdAccount, progress)
+  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress)
+  // In the apps, the splash screen gives way to the list of accounts (or a quick start's loading).
+  hideSplash()
+  const picked = await picking
   loaded = picked.loaded
   const shell = await startApp(picked.id, picked.name)
   const account = shell.account
@@ -181,8 +185,8 @@ const start = async (mount: HTMLElement) => {
     wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
       sounds.play(cueSounds[cue])
-      // A short buzz where the phone allows it (not on iOS Safari): longer for what matters more.
-      if (cueBuzz[cue] !== 0) navigator.vibrate?.(cueBuzz[cue])
+      // A short buzz where the phone allows it (in the apps, and browsers but iOS Safari): longer for what matters more.
+      if (cueBuzz[cue] !== 0) buzz(cueBuzz[cue])
     },
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
@@ -265,6 +269,8 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(frame)
   mountUi(mount, uiStore, uiActions)
   loaded()
+  // Android's back button is Escape: it steps back in the menus, closes a dialog, pauses and resumes a run.
+  onBackButton(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true })))
   mount.addEventListener("click", (event) => {
     const button = event.target instanceof Element ? event.target.closest<HTMLButtonElement>(".ui button") : null
     if (button !== null && !button.disabled) sounds.play("uiTap")
@@ -324,6 +330,7 @@ start(mount).catch((error: unknown) => {
   // A failure while starting would otherwise leave a blank page: say so, with what went wrong.
   console.error("The game could not start", error)
   loaded()
+  hideSplash()
   const message = document.createElement("pre")
   message.className = "boot-error"
   message.textContent = `The game could not start.\n\n${error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error)}`
