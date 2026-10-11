@@ -6,7 +6,7 @@
 // preview never touches it.
 //
 // Deploying it applies the migrations it has not had yet (src/server/migrations,
-// additive only); CI does that from main before deploying prod or playtest:
+// additive only); run it locally from main before deploying prod or playtest:
 //
 //   pnpm alchemy deploy --config stacks/database.ts --stage shared
 import { fileURLToPath } from "node:url"

@@ -38,17 +38,13 @@ keeps them, and releasing).
   (`pnpm --dir deploy install`) holding `deploy/alchemy.run.ts`. From
   `deploy/`, `pnpm alchemy deploy` builds and deploys your own stage
   (`live_<user>`, with a database of its own); `pnpm alchemy destroy`
-  removes it. CI (`.github/workflows/deploy.yml`) deploys a `pr-<n>`
-  preview per pull request (a playtest build with its own database), and,
-  only when started by hand from main, `prod` (the release, sending
-  nothing) or `playtest` (the testers' game, sending their runs; it applies
-  the playtest database's migrations, `deploy/stacks/database.ts`, first),
-  building against the published
-  bevy-ts release in package.json `bevyTsRelease`
-  (`scripts/use-published-bevy-ts.ts` does the swap). Its Cloudflare
-  secrets come from `deploy/stacks/github.ts`. Moving to a newer bevy-ts
-  release is by hand too (`.github/workflows/bevy-ts.yml`). See
-  `docs/playtest.md`, "Releasing".
+  removes it. Deployments, balance audits, and native builds run locally;
+  GitHub runs only `pnpm check` (`.github/workflows/check.yml`). For a
+  release, use the published bevy-ts version in package.json
+  `bevyTsRelease` (`scripts/use-published-bevy-ts.ts` does the swap in a
+  clean worktree). Apply the shared database migrations before deploying
+  `prod` or `playtest`. See `docs/local-workflows.md` for the commands and
+  `docs/playtest.md`, "Releasing", for the stage rules.
 - `pnpm effect-source`: puts the source of the Effect release the game
   uses in `.repos/effect` (a single-commit copy of github.com/Effect-TS/effect
   at the installed version's tag, gitignored; rerun after upgrading Effect).

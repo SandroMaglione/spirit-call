@@ -48,11 +48,10 @@ the dark background set in `android/app/src/main/res/values/styles.xml`.
 - From the command line: `cd android && ./gradlew assembleDebug` makes an
   installable APK at `android/app/build/outputs/apk/debug/app-debug.apk`.
 
-CI (`.github/workflows/apps.yml`) builds both on every pull request: the
-Android debug APK, kept as the run's artifact (download it and install it
-on a phone); the Android store build (below), which an emulator installs
-and opens to show it reaches the list of accounts; and an unsigned iOS
-build for the simulator.
+Native builds and device checks run locally, only for the platform needed.
+GitHub runs the general checks and makes no app artifacts. See
+[local-workflows.md](local-workflows.md) for command-line Android and iOS
+builds. Install and open the app on a phone or emulator before release.
 
 Only a debug build may reach the network (the internet permission is in
 `android/app/src/debug/AndroidManifest.xml`): it loads a dev server, or
@@ -69,26 +68,38 @@ Without them the app is a release build and sends nothing.
 Google Play takes an Android App Bundle (`.aab`) signed with the app's
 upload key; with Play App Signing, Google keeps the key the app is finally
 signed with, and a lost upload key can be replaced. The upload key is never
-in the repository: CI reads it from four repository secrets.
+in the repository. Keep the existing key and its passwords in protected
+local storage; use the same key for every upload of this app.
 
-1. Make the upload key once, on your own computer (keep the file and its
-   passwords safe; Java's `keytool` comes with Android Studio):
+1. For a new app only, make the upload key once on your own computer.
+   Keep the file and its passwords safe. Java's `keytool` comes with
+   Android Studio:
    `keytool -genkeypair -v -keystore upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000`
-2. Add the secrets (GitHub, Settings, Secrets and variables, Actions):
-   `UPLOAD_KEYSTORE_BASE64` (the file, as `base64 -i upload.jks` prints it),
-   `UPLOAD_KEYSTORE_PASSWORD`, `UPLOAD_KEY_ALIAS` (`upload`), and
-   `UPLOAD_KEY_PASSWORD` (the same as the keystore's, unless `keytool`
-   asked for another).
-3. Run the Apps workflow by hand from main (Actions, Apps, Run workflow).
-   The run keeps `spirit-call-play-<run>`: the bundle to upload in the Play
-   Console. Its version code is the run's number, so every build is higher
-   than the last, as Google Play requires.
+2. Load `UPLOAD_KEYSTORE`, the absolute path to that file,
+   `UPLOAD_KEYSTORE_PASSWORD`, `UPLOAD_KEY_ALIAS`, and `UPLOAD_KEY_PASSWORD`
+   into your local build environment from protected storage. Do not put
+   passwords in commands, commits, or chat. `android/app/build.gradle`
+   reads these variables; without a key a release build is unsigned.
+3. Build from a clean worktree using the published engine, as described in
+   [local-workflows.md](local-workflows.md), then run `pnpm build` and
+   `pnpm exec cap sync android`.
+4. Check the highest uploaded version code in Play Console and choose a
+   higher `VERSION_CODE`. Version 11 was released on October 11, 2026;
+   the next upload must be at least 12, or higher if another upload has
+   happened since. From `android/`, run:
 
-Without the secrets (a fork, or before they are added) CI signs the store
-build with a throwaway key, so it is still built and tried on the emulator,
-but not kept. `android/app/build.gradle` signs with the key named by
-`UPLOAD_KEYSTORE` (a path), so the same works on a laptop with those four
-variables set and `./gradlew bundleRelease`.
+   ```sh
+   VERSION_CODE=12 VERSION_NAME=0.1.0 ./gradlew bundleRelease assembleRelease
+   ```
+
+5. Install the signed release APK at
+   `android/app/build/outputs/apk/release/app-release.apk`, relative to the
+   worktree root, and verify it starts and plays correctly. Upload
+   `android/app/build/outputs/bundle/release/app-release.aab` to Play
+   Console, review the release, and publish it to Internal testing.
+
+There is no GitHub signing or automatic version counter. Preserve the
+local upload key backup; the former GitHub secrets are not used by checks.
 
 The listing's graphics are in `store/google-play/`: the 512 icon, the
 1024x500 feature graphic, and landscape phone screenshots at 1920x1080. The

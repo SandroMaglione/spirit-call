@@ -8,9 +8,9 @@
 // - Every other stage (a pull request's preview, a laptop's) is a playtest
 //   build with a database of its own, made and destroyed with it, so only the
 //   `playtest` stage's runs are testers'.
-// `pnpm alchemy deploy` (from this folder) builds and deploys a stage; CI
-// deploys `prod` or `playtest` from main when started by hand, and a `pr-<n>`
-// preview for every pull request (.github/workflows/deploy.yml).
+// `pnpm alchemy deploy` (from this folder) builds and deploys a stage locally.
+// Use main for `prod` or `playtest`; previews are created and removed locally
+// too (docs/local-workflows.md). GitHub runs only the general checks.
 //
 // The deploy tooling is its own package so its dependencies stay out of the
 // game's; both are on the same Effect release.
@@ -31,7 +31,7 @@ export default Alchemy.Stack(
   "top-down-team-shooter",
   {
     providers: Layer.mergeAll(Cloudflare.providers(), GitHub.providers()),
-    // Deploy state lives in the Cloudflare account, shared by laptops and CI
+    // Deploy state lives in the Cloudflare account, shared by local checkouts
     state: Cloudflare.state()
   },
   Effect.gen(function* () {
@@ -65,15 +65,14 @@ export default Alchemy.Stack(
       },
       memo: {
         // Locally the bevy-ts packages are linked from the sibling repository,
-        // so their sources decide whether a rebuild is needed too (in CI they
+        // so their sources decide whether a rebuild is needed too (for releases they
         // come from npm and the lockfile covers them)
         include: ["**/*", "../../bevy-ts/packages/*/src/**"],
         lockfile: true
       }
     })
 
-    // Pull requests get a comment with their preview's address, updated on
-    // every push
+    // A local deployment given GitHub's PR context can comment its address
     const github = yield* GitHub.GitHubEnv
     if (github?.pr !== undefined) {
       yield* GitHub.Comment("PreviewComment", {

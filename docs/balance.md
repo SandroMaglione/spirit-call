@@ -813,9 +813,15 @@ remaining HP has a 15-percentage-point tolerance. Review both easier and
 harder changes. An intentional tuning needs a reviewed new baseline.
 Escape-only clears fail independently of the baseline.
 
-CI runs the representative 42-scenario suite at seeds 1337 and 42 against
-`test/balance-baseline.json` before deployment and uploads its JSON report.
-It also checks 20 controlled energy probes across all kits, levels 1 and
+Run the representative 42-scenario audit locally at seeds 1337 and 42
+against `test/balance-baseline.json` before releasing combat or content
+changes. GitHub does not run it or upload its report.
+
+```sh
+pnpm balance --compare test/balance-baseline.json --output /tmp/balance-report.json
+```
+
+The audit also checks 20 controlled energy probes across all kits, levels 1 and
 40, and one and six durable targets. These probes remove displacement and
 self-damaging pools to measure sustained contact without the movement
 planner. Level must not accelerate this cadence. The report includes
@@ -829,10 +835,11 @@ generate and review a replacement baseline with:
 pnpm balance --output test/balance-baseline.json
 ```
 
-Long escape-only runs can end differently on a laptop (linked bevy-ts)
-than in CI (the published release). When the local baseline fails in CI on
-those rows only, record the report CI uploads instead (`gh run download
-<run>` gives `balance-report.json`, for the same tuning hash).
+Long escape-only runs can end differently with linked bevy-ts than with
+the published release. Validate release baselines in a clean worktree
+using the published engine (see [local-workflows.md](local-workflows.md)).
+When only those rows differ, review the report from that worktree, for the
+same tuning hash, before replacing the baseline.
 
 Profiles include basic attacks, skills used whenever available, levels
 matched to the enemy, a slower learner,

@@ -171,12 +171,12 @@ Both take `--since 2d` (or a date), `--tester`, `--device`, `--build`, and
 The game is a finished release (`vision.md`): it changes only when its
 developer decides, and nothing changes it on its own.
 
-- **Prod and playtest deploy by hand**: Actions, "Deploy", run from main,
-  picking the stage (it applies the playtest database's new migrations,
-  then deploys). Merging to main deploys nothing; pull requests still get
-  their previews.
-- **bevy-ts stays at `bevyTsRelease`**; `.github/workflows/bevy-ts.yml`
-  moves it to a newer release only when started by hand.
+- **Prod and playtest deploy locally from main**: apply the playtest
+  database's new migrations, then deploy the chosen stage. See
+  [local-workflows.md](local-workflows.md) for the commands. Merging to
+  main deploys nothing; PR previews are created and removed locally too.
+- **bevy-ts stays at `bevyTsRelease`**; moving it to a newer published
+  version is a deliberate local change, validated and reviewed in a PR.
 - **Dev tools are a dev build's** (`pnpm dev`): the tuning panel and its
   saved numbers, the URL's quick starts and tools, and the monitor are not
   in a built game.
