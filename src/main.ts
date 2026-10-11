@@ -8,7 +8,7 @@ import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
 import { holdAccount, openAccounts, SaveReadFailed, startApp } from "./app/app.ts"
-import { buzz, hideSplash, onBackButton } from "./app/device.ts"
+import { buzz, hideSplash, inApp, leaveApp, onBackButton } from "./app/device.ts"
 import type { Accounts } from "./app/app.ts"
 import { showAccounts } from "./ui/Accounts.tsx"
 import { crashShowing, describeError, showCrash } from "./ui/crash.ts"
@@ -125,8 +125,14 @@ const start = async (mount: HTMLElement) => {
   const looks = loadLooks((share) => (progress.value = share))
   // Awaited below; a failure before then is reported there, not as unhandled.
   looks.catch(() => undefined)
+  // Android's back button is Escape: it steps back in the menus, closes a dialog, pauses and resumes a run, and on the
+  // list of accounts or the home screen asks to leave; over the crash screen it leaves.
+  onBackButton(() => {
+    if (crashShowing()) leaveApp?.()
+    else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }))
+  })
   const accounts = openAccounts()
-  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress)
+  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress, leaveApp)
   // In the apps, the splash screen gives way to the list of accounts (or a quick start's loading).
   hideSplash()
   const picked = await picking
@@ -178,8 +184,10 @@ const start = async (mount: HTMLElement) => {
     sounds.play(error ? "uiError" : "uiSuccess")
     if (!error) feedbackTimer = setTimeout(() => (uiStore.feedback.value = null), 1200)
   }
-  // A change that could not be written to this device still shows; the player is told once, as it happens.
-  shell.onSaveFailed(() => notify("Your progress could not be saved on this device. Check that the browser allows this site to store data.", true, "Not saved"))
+  // A change that could not be written to this device still shows; the player is told once, as it happens (and again only after a save worked).
+  shell.onSaveFailed(() => notify(inApp
+    ? "Your progress could not be saved on this phone. Free up some space on it: the next change saves everything."
+    : "Your progress could not be saved on this device. Check that the browser allows this site to store data.", true, "Not saved"))
   /** Runs an account change: what to say when it is made, or that the rules refused it. */
   const change = (action: () => unknown, message: string | null) => {
     if (action() === undefined) notify("That cannot be done right now.", true, "Not allowed")
@@ -248,6 +256,7 @@ const start = async (mount: HTMLElement) => {
     },
     // Everything is saved as it happens: the page starts over on the list of accounts.
     switchAccount: () => window.location.reload(),
+    leave: leaveApp,
     // Listed by the build beside the game (scripts/licenses.ts); a dev build has none.
     licenses: () => fetch("licenses.json").then((response) => response.json() as Promise<ReadonlyArray<License>>).catch(() => [])
   }
@@ -311,8 +320,6 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(frame)
   mountUi(mount, uiStore, uiActions, crash)
   loaded()
-  // Android's back button is Escape: it steps back in the menus, closes a dialog, pauses and resumes a run.
-  onBackButton(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true })))
   mount.addEventListener("click", (event) => {
     const button = event.target instanceof Element ? event.target.closest<HTMLButtonElement>(".ui button") : null
     if (button !== null && !button.disabled) sounds.play("uiTap")

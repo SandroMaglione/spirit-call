@@ -104,8 +104,10 @@ is held.
 ## When a save fails
 
 A change always shows at once. If writing it fails (storage full or not
-allowed), the player is told once, and play goes on; the next change saves
-the whole account again.
+allowed), the player is told once (in the app's words on a phone, the
+browser's on the web), and play goes on; the next change saves the whole
+account again. Failing saves after the first are not told again until one
+works.
 
 ## When the game fails
 

@@ -38,7 +38,10 @@ export const buzz = (pattern: number | ReadonlyArray<number>): void => {
   })
 }
 
-/** Calls `back` on Android's back button, which then never closes the app by itself. */
+/** Calls `back` on Android's back button, which then never closes the app by itself (see `leaveApp`). */
 export const onBackButton = (back: () => void): void => {
   if (inApp) void App.addListener("backButton", back)
 }
+
+/** Closes the app (Android; a browser's page is closed by the player): `null` where the game cannot close itself. */
+export const leaveApp: (() => void) | null = inApp && Capacitor.getPlatform() === "android" ? () => void App.exitApp().catch(() => {}) : null

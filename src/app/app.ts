@@ -35,7 +35,7 @@ export interface App {
   readonly notes: ReadonlyArray<string>
   /** Calls `listener` with the account after every change. */
   readonly onAccount: (listener: (account: Account) => void) => void
-  /** Calls `listener` when a change could not be saved on this device (it still shows, and the next change saves it with everything else). */
+  /** Calls `listener` when a change could not be saved on this device (it still shows, and the next change saves it with everything else): once, and again only after a save worked. */
   readonly onSaveFailed: (listener: () => void) => void
   /** Once every save asked so far is done (or failed): before the page starts over. */
   readonly flush: () => Promise<void>
@@ -156,12 +156,20 @@ export const startApp = async (id: string, name: string): Promise<App> => {
   const failures: Array<() => void> = []
   /** The saves going on (the store runs them one at a time, in order). */
   const saving = new Set<Promise<void>>()
+  /** Whether the last save failed: the player is told of the first failure only. */
+  let failing = false
   /** Shows `next` and saves it; a failed save is logged and said, and the game goes on. */
   const changed = (next: Account) => {
     account = next
     for (const listener of listeners) listener(next)
     const saved = runtime.runPromise(accounts.save(next).pipe(
-      Effect.tapError((error) => Effect.logWarning("The account could not be saved", error.cause).pipe(Effect.andThen(Effect.sync(() => failures.forEach((failed) => failed()))))),
+      Effect.tap(() => Effect.sync(() => (failing = false))),
+      Effect.tapError((error) =>
+        Effect.logWarning("The account could not be saved", error.cause).pipe(Effect.andThen(Effect.sync(() => {
+          if (!failing) failures.forEach((failed) => failed())
+          failing = true
+        })))
+      ),
       Effect.ignore
     ))
     saving.add(saved)

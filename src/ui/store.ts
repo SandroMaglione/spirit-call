@@ -151,6 +151,8 @@ export interface UiActions {
   readonly setVolume: (volume: number) => void
   /** Leave this account for the list of this device's accounts (what it did is already saved). */
   readonly switchAccount: () => void
+  /** Closes the game (Android's back button on the home screen, once confirmed); `null` where the game cannot close itself. */
+  readonly leave: (() => void) | null
   /** The open-source packages the game contains, with their licenses (none in a dev build, which lists nothing). */
   readonly licenses: () => Promise<ReadonlyArray<License>>
 }

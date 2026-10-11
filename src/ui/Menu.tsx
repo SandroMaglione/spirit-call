@@ -3,9 +3,11 @@
  * (the play selected, the party being set up). Each screen is in `menu/`,
  * built from the kit (`kit/`) and the game's pieces (`menu/parts.tsx`).
  */
+import { useSignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 import { owns, playLock, teamProblems, teamRelicProblems } from "../account/account.ts"
 import { menuElement } from "./Backdrop.tsx"
+import { Confirm } from "./kit/Confirm.tsx"
 import { Character } from "./menu/Character.tsx"
 import { Discoveries } from "./menu/Discoveries.tsx"
 import { Gear } from "./menu/Gear.tsx"
@@ -23,6 +25,8 @@ import type { UiActions, UiStore } from "./store.ts"
 export const Menu = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
   const play = store.menuPlay, draft = store.menuDraft, screens = store.menuScreens
   const screen = screens.value[screens.value.length - 1]!
+  /** Whether "Leave the game?" is asked (Android's back button on the home screen). */
+  const leaving = useSignal(false)
   const leader = draft.value.team.includes(store.menuCharacter.value) ? store.menuCharacter.value : draft.value.team[0]!
   const prepare = (next: Screen) => {
     if (next.kind === "quests") play.value = selectionIn(store.tuning.value, store.account.value, next.tab, play.value)
@@ -53,7 +57,12 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
   // Leaving a screen keeps what was set up on it.
   useEffect(() => save, [screen.kind])
   useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape" && !document.querySelector('[role="dialog"]')) nav.back() }
+    // Back (Escape, or Android's back button) steps back; on the home screen, where the game can close, it asks to leave.
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || document.querySelector('[role="dialog"]')) return
+      if (screens.value.length === 1 && actions.leave !== null) leaving.value = true
+      else nav.back()
+    }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [screens.value.length])
@@ -73,5 +82,10 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       case "settings": return <Settings store={store} actions={actions} nav={nav} />
     }
   }
-  return <div class="menu" data-element={menuElement(store)}>{current()}</div>
+  return <div class="menu" data-element={menuElement(store)}>
+    {current()}
+    {leaving.value && actions.leave !== null && <Confirm title="Leave Spirit Call?" confirm="Leave" close={() => (leaving.value = false)} onConfirm={actions.leave}>
+      Your progress is saved.
+    </Confirm>}
+  </div>
 }

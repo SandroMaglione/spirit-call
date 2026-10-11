@@ -23,7 +23,9 @@ knows it is in an app.
   the list of accounts (`hideSplash`), buzzes are taps of the phone's motor
   through the Haptics plugin (iPhones have no `navigator.vibrate`), and
   Android's back button is Escape (steps back in the menus, closes a
-  dialog, pauses and resumes a run; it never closes the app).
+  dialog, pauses and resumes a run). On the list of accounts and the home
+  screen it asks "Leave Spirit Call?" and closes the app once confirmed
+  (`leaveApp`); over the crash screen it closes the app.
 - Sound that a call or another app interrupted comes back on the next tap.
 
 ## Icons and the splash screen
