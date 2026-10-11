@@ -1,7 +1,8 @@
 /**
  * The way in: the accounts on this device. Pick one to play, make a new
  * one (a name, no password), or delete one. It shows before the game
- * loads, over the backdrop, until an account is picked that no other tab
+ * loads, over the backdrop, when there is none to resume or the player switches.
+ * It stays until an account is picked that no other tab
  * is playing; then the loading screen shows (the models take a while on
  * a phone's network) until the game is up.
  */
@@ -64,16 +65,19 @@ const progressOf = (account: AccountSummary) => {
   }
 }
 
-const AccountPicker = ({ accounts, play, leave }: {
+const AccountPicker = ({ accounts, play, leave, progress, initialList = null, initialProblem = null }: {
   readonly accounts: Accounts
   /** Plays the account: `false` when another tab is playing it. */
   readonly play: (account: Picked) => Promise<boolean>
   /** Closes the game; `null` where it cannot close itself. */
   readonly leave: (() => void) | null
+  readonly progress: ReadonlySignal<number>
+  readonly initialList?: ReadonlyArray<AccountSummary> | "unread" | null
+  readonly initialProblem?: string | null
 }) => {
-  const list = useSignal<ReadonlyArray<AccountSummary> | "unread" | null>(null)
+  const list = useSignal<ReadonlyArray<AccountSummary> | "unread" | null>(initialList)
   const name = useSignal("")
-  const problem = useSignal<string | null>(null)
+  const problem = useSignal<string | null>(initialProblem)
   const busy = useSignal(false)
   const deleting = useSignal<AccountSummary | null>(null)
   /** Whether "Leave the game?" is asked (Android's back button, where the game can close). */
@@ -90,7 +94,7 @@ const AccountPicker = ({ accounts, play, leave }: {
     list.value = (await accounts.list()) ?? "unread"
   }
   useEffect(() => {
-    void refresh()
+    if (initialList === null) void refresh()
   }, [])
   /** Runs one thing at a time, saying what went wrong. */
   const run = async (action: () => Promise<string | null>) => {
@@ -118,7 +122,7 @@ const AccountPicker = ({ accounts, play, leave }: {
   const leaveConfirm = leaving.value && leave !== null && <Confirm title="Leave Spirit Call?" confirm="Leave" close={() => (leaving.value = false)} onConfirm={leave}>
     See you soon.
   </Confirm>
-  if (list.value === null) return null
+  if (list.value === null) return <Loading progress={progress} />
   // The storage failed to read the list: nothing may be made or deleted over what it could not see.
   if (list.value === "unread") {
     return <div class="ui-screen">
@@ -163,9 +167,9 @@ export interface Opened extends Picked {
   readonly loaded: () => void
 }
 
-/** Shows the accounts over `parent` until one is picked and playing it is held (`hold`), then the loading screen (`progress`, 0 to 1) until `loaded`; back asks to `leave` (where the game can close). */
-export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id: string) => Promise<boolean>, progress: ReadonlySignal<number>, leave: (() => void) | null): Promise<Opened> =>
-  new Promise((resolve) => {
+/** Resumes the last account, or shows the picker when empty, held elsewhere, or explicitly switching. Loading stays visible until the game is up. */
+export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id: string) => Promise<boolean>, progress: ReadonlySignal<number>, leave: (() => void) | null, options: { readonly resumeLast?: boolean } = {}): Promise<Opened> =>
+  new Promise((resolve, reject) => {
     const backdrop = document.createElement("div")
     backdrop.className = "ui-backdrop"
     backdrop.innerHTML = `<div class="backdrop"><div class="backdrop__light"></div><div class="backdrop__light"></div><div class="backdrop__pool"></div></div>`
@@ -185,10 +189,21 @@ export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id:
         root.remove()
       }, 400)
     }
-    render(<AccountPicker accounts={accounts} leave={leave} play={async (account) => {
+    const play = async (account: Picked) => {
       if (!(await hold(account.id))) return false
       render(<Loading progress={progress} />, root)
       resolve({ id: account.id, name: account.name, loaded })
       return true
-    }} />, root)
+    }
+    const picker = (initialList: ReadonlyArray<AccountSummary> | "unread" | null = null, initialProblem: string | null = null) =>
+      render(<AccountPicker accounts={accounts} leave={leave} play={play} progress={progress} initialList={initialList} initialProblem={initialProblem} />, root)
+    if (options.resumeLast === false) picker()
+    else {
+      render(<Loading progress={progress} />, root)
+      void accounts.list().then(async (list) => {
+        const last = list?.[0]
+        if (last !== undefined && await play(last)) return
+        picker(list ?? "unread", last === undefined ? null : `${last.name} is open in another tab. Close it there to play here.`)
+      }).catch((error: unknown) => { loaded(); reject(error) })
+    }
   })

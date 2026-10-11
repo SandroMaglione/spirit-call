@@ -129,9 +129,11 @@ const start = async (mount: HTMLElement) => {
   const stressLoad = parseStress(devQuery)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
   const tuning = waveFromQuery(arenaFromQuery(stressLoad !== undefined ? stressTuning() : dev ? loadSavedTuning() : defaultTuning, devQuery), devQuery)
-  // The game opens on this device's accounts: the one picked is played, by one tab at a time.
+  // Resume the last account, unless the player explicitly asked for the picker.
+  const entryUrl = new URL(window.location.href)
+  const choosingAccount = entryUrl.searchParams.has("accounts")
   // A dev quick start (`?play`, below) plays the last played account, or a new one.
-  const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
+  const quickStart = !choosingAccount && (new URLSearchParams(devQuery).has("play") || stressLoad !== undefined)
   // The models load while the account is picked: they are most of the wait on a phone's network.
   const progress = signal(0)
   const looks = loadLooks((share) => (progress.value = share))
@@ -144,10 +146,14 @@ const start = async (mount: HTMLElement) => {
     else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }))
   })
   const accounts = openAccounts()
-  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress, leaveApp)
+  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress, leaveApp, { resumeLast: !choosingAccount })
   // In the apps, the splash screen gives way to the list of accounts (or a quick start's loading).
   hideSplash()
   const picked = await picking
+  if (choosingAccount) {
+    entryUrl.searchParams.delete("accounts")
+    window.history.replaceState(window.history.state, "", entryUrl)
+  }
   loaded = picked.loaded
   const shell = await startApp(picked.id, picked.name)
   flushSaves = shell.flush
@@ -301,13 +307,18 @@ const start = async (mount: HTMLElement) => {
       if (sounds.volume() > 0 && sounds.muted()) uiActions.setMuted(false)
       uiStore.sound.value = { ...uiStore.sound.value, volume: sounds.volume() }
     },
-    // Everything is saved as it happens: the page starts over on the list of accounts.
     setComfort: (change) => {
       uiStore.comfort.value = { ...uiStore.comfort.value, ...change }
       shell.changeSettings(change)
       applyComfort()
     },
-    switchAccount: () => window.location.reload(),
+    // Only an explicit switch opens the picker; wait for pending progress before reloading.
+    switchAccount: () => {
+      const url = new URL(window.location.href)
+      url.searchParams.set("accounts", "")
+      window.history.replaceState(window.history.state, "", url)
+      void restart()
+    },
     leave: leaveApp,
     // Listed by the build beside the game (scripts/licenses.ts); a dev build has none.
     licenses: () => fetch("licenses.json").then((response) => response.json() as Promise<ReadonlyArray<License>>).catch(() => [])

@@ -3,11 +3,12 @@
 The accounts live on the player's device (see [vision.md](vision.md)):
 there is no login, and nothing of them is on a server. A device holds as
 many accounts as the player makes, each a name with its own progress. The
-game opens on the list of them (`src/ui/Accounts.tsx`): pick one to play,
-make one (a name, no password), or delete one. The game then loads the one
-picked, runs every change through the account's rules
+game resumes the last account entered (`src/ui/Accounts.tsx`), showing the
+loading screen until it is ready. With no account yet, pick a name to play.
+Settings, Account, "Switch account" opens the list: pick one, make one
+(a name, no password), or delete one. The game loads the selected account,
+runs every change through the account's rules
 (`src/account/account.ts`), and saves the whole account after each one.
-Settings, Account, "Switch account" goes back to the list.
 
 ## Where things are
 
