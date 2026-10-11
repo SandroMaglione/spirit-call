@@ -59,6 +59,9 @@ export class Shapes {
       side: DoubleSide,
       blending: options.additive === true ? AdditiveBlending : NormalBlending
     })
+    // A flat layer looks the same drawn in one pass: three.js would otherwise draw a see-through double-sided
+    // material twice (its back, then its front), redoing its shader setup before each, every frame.
+    material.forceSinglePass = true
     this.mesh = new Mesh(new BufferGeometry(), material)
     // Its bounds change every frame.
     this.mesh.frustumCulled = false
