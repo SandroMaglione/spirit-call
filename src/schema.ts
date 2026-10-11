@@ -585,6 +585,10 @@ export type ProjectileStyle = "bolt" | "disc" | "wave"
 
 export interface ProjectileValue {
   readonly faction: Faction
+  /** Its actual release point, so rendering can show the muzzle after several fixed steps. */
+  readonly origin?: Vec2
+  /** The weapon it left, kept even if its wielder switches or falls before it is drawn. */
+  readonly weapon?: ClassId
   /** How it looks. */
   readonly style: ProjectileStyle
   readonly radius: number
@@ -607,6 +611,7 @@ export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Proje
  * every hover tick).
  */
 export interface DiscValue {
+  readonly origin?: Vec2
   readonly thrower: Entity.Handle<typeof Root, typeof Position>
   readonly faction: Faction
   readonly radius: number

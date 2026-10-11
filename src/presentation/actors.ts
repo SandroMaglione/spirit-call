@@ -213,10 +213,11 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const overdriven = data.overdriven.present ? data.overdriven.get() : null
       const heat = overdriven === null ? 0 : overdriven.remaining < 1.2 ? (Math.sin(now * 30) > 0 ? 1 : 0.25) : 0.75 + 0.25 * Math.sin(now * 17) * Math.sin(now * 5)
       const surge = charge <= 0 ? 0.6 * Math.max(strobe, heat) : 0
+      const wind = data.member.get().character === "swordsman" && data.airborne.present ? 0.48 : 0
       node.body.paint(
         stateTint(0xffffff, data.state.get().current),
-        flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : surge > 0 ? (overdriven !== null ? view.elements.fire : view.elements.thunder) : view.charge.full,
-        flashing ? 1 : dash.remaining > 0 ? 0.65 : surge > 0 ? surge : glow,
+        flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : surge > 0 ? (overdriven !== null ? view.elements.fire : view.elements.thunder) : wind > 0 ? view.elements.wind : view.charge.full,
+        flashing ? 1 : dash.remaining > 0 ? 0.65 : surge > 0 ? surge : Math.max(wind, glow),
         data.invulnerable.get().remaining > 0 ? 0.55 : 1)
       // Her body says how she is: its halo bright and pulsing while her ultimate is ready, dimming as her health runs low.
       const spirit = view.spirit
@@ -228,7 +229,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const dim = spirit.low + (1 - spirit.low) * Math.min(1, left / spirit.lowHealth)
       const beat = 0.5 + 0.5 * Math.sin((performance.now() / 1000) * spirit.pulseHz * Math.PI * 2)
       // Overcharged or overdriven, the halo blazes, larger, surging with her.
-      node.body.aura?.(overcharged !== null || overdriven !== null ? 1 + 3 * Math.max(strobe, heat) : dim * (ready ? spirit.ready * (1 - spirit.pulse * beat) : 1))
+      node.body.aura?.(overcharged !== null || overdriven !== null ? 1 + 3 * Math.max(strobe, heat) : wind > 0 ? 2.8 : dim * (ready ? spirit.ready * (1 - spirit.pulse * beat) : 1))
       // Her eyes: shut once she has fallen, wide for a moment after a perfect dodge or coming in after a fall.
       const wide = 1 + (spirit.wide - 1) * Math.min(1, feedback.wideEyes / (spirit.wideSeconds * 0.5))
       if (health.current <= 0) node.body.express?.(1, spirit.shut)

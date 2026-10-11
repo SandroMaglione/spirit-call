@@ -6,7 +6,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Enemy, Game, Health, PendingSpawn, Position, Projectile, Stats } from "../src/schema.ts"
-import { gunShot, gunner, start, withGun, hitBy } from "./helpers.ts"
+import { gunShot, gunner, start, withGun, hitBy, placeDummies } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Combat", {
   queries: {
@@ -18,6 +18,7 @@ const World = Game.Inspector("Test/Combat", {
 }, ({ queries, resources }) => ({
   enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current })),
   projectiles: queries.projectiles.each().map(({ data }) => data.position.get()),
+  launches: queries.projectiles.each().map(({ data }) => ({ origin: data.projectile.get().origin, weapon: data.projectile.get().weapon })),
   pending: queries.pending.each().length,
   stats: resources.stats.get()
 }))
@@ -46,6 +47,21 @@ const shootNorth = (tuning: Tuning, frames: number) => start({
 })
 
 describe("projectiles", () => {
+  it("starts in front of the body, and clamps the launch against an intervening wall", () => {
+    const tuning = withGun(defaultTuning, { speed: 1 })
+    const open = shootNorth(tuning, 1)
+    open.step(1)
+    expect(open.runtime.inspect(World).projectiles[0]?.y).toBeCloseTo(center.y - tuning.player.muzzleOffset, 1)
+    open.step(10)
+    expect(open.runtime.inspect(World).launches).toEqual([{ origin: { x: center.x, y: center.y - tuning.player.muzzleOffset }, weapon: "gun" }])
+
+    // A narrow wall fits between the body and its new muzzle. A shot must never start beyond it.
+    const blocked = shootNorth({ ...tuning, arenas: { ...tuning.arenas, courtyard: { ...tuning.arenas.courtyard, pillars: [{ x: 0.5, y: (center.y - 23) / tuning.arena.height, size: 4 }] } } }, 1)
+    blocked.step(2)
+    expect(blocked.runtime.inspect(World).projectiles).toEqual([])
+    expect(blocked.runtime.inspect(World).enemies.every((enemy) => enemy.health === tuning.enemies.dummy.hp)).toBe(true)
+  })
+
   it("hit targets at any speed: a shot covering 10x the arena per step still lands", () => {
     const tuning = withGun(defaultTuning, instant)
     const run = shootNorth(tuning, 1)
@@ -54,6 +70,15 @@ describe("projectiles", () => {
     const target = world.enemies.find((enemy) => Math.abs(enemy.position.x - dummy.x) < 1)
     expect(target?.health).toBe(tuning.enemies.dummy.hp - hitBy("gunner", gunShot.power))
     expect(world.projectiles).toEqual([])
+  })
+
+  it("does not skip a point-blank target between the body and the muzzle", () => {
+    const tuning = withGun({ ...defaultTuning, enemies: { ...defaultTuning.enemies, dummy: { ...defaultTuning.enemies.dummy, radius: 4, hurtboxRadius: 4 } } }, { speed: 1000 })
+    const run = shootNorth(tuning, 1)
+    // A small target fits entirely between the body and the new launch point.
+    run.runtime.tick(placeDummies([{ x: 0, y: -12 }], tuning))
+    run.step(3)
+    expect(run.runtime.inspect(World).enemies[0]?.health).toBe(tuning.enemies.dummy.hp - hitBy("gunner", gunShot.power))
   })
 
   it("stop at walls: a pillar between the player and a target absorbs the shot", () => {

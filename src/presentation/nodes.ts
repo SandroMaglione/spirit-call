@@ -56,10 +56,22 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
     const trail = new Instance(assets.flares)
     bolt.add(core.object, halo.object, streak.object, trail.object)
     root.add(shadow.object, orb.object, bolt)
-    return { kind: "projectile" as const, root, orb, shadow, bolt, core, halo, streak, trail, style, radius }
+    return { kind: "projectile" as const, root, orb, shadow, bolt, core, halo, streak, trail, style, radius, look: null, travelled: 0, last: null, launched: false }
   })()
   node.style = style
   node.radius = radius
+  node.look = null
+  node.travelled = 0
+  node.last = null
+  node.launched = false
+  node.orb.object.rotation.set(0, 0, 0)
+  node.bolt.rotation.set(0, 0, 0)
+  node.bolt.position.set(0, 0, 0)
+  node.core.object.rotation.set(0, 0, 0)
+  node.core.object.scale.setScalar(0)
+  node.halo.object.scale.setScalar(0)
+  node.streak.object.scale.setScalar(0)
+  node.trail.object.scale.setScalar(0)
   const orb = node.orb
   const color = projectileColor(faction, style, element)
   orb.color.setHex(color)
@@ -94,17 +106,18 @@ const projectileNode = (assets: RenderAssets, pool: Array<ProjectileNode>, facti
 }
 
 /**
- * Stretches a bolt's tracer behind it to `length` world units (at least
- * `minStreak` radii): a bright, thin streak and a wider, fainter trail
- * reaching a little further.
+ * Stretches a bright streak and soft trail behind a shot, up to `length`
+ * world units, without reaching behind its launch point.
  */
 export const placeTracer = (node: ProjectileNode, length: number): void => {
   const spec = view.bolt
-  const streak = Math.max(spec.minStreak * node.radius, Math.min(spec.maxStreak * node.radius, length))
-  node.streak.object.scale.set(streak / 2, node.radius * spec.streak, node.radius * spec.streak)
+  // A new shot has no history behind its muzzle. Grow its trail only as it travels.
+  const streak = Math.min(node.travelled, spec.maxStreak * node.radius, length)
+  const thin = node.style === "disc" ? 0.18 : node.look === "round" ? 0.22 : node.look === "spark" ? 0.32 : spec.streak
+  node.streak.object.scale.set(streak / 2, node.radius * thin, node.radius * thin)
   node.streak.object.position.x = -streak / 2
-  node.trail.object.scale.set(streak * 0.65, node.radius * spec.trail, node.radius * spec.trail)
-  node.trail.object.position.x = -streak * 0.65
+  node.trail.object.scale.set(streak / 2, node.radius * thin * 2.2, node.radius * thin * 2.2)
+  node.trail.object.position.x = -streak / 2
 }
 
 /** A totem: a slim stone pylon tinted by its element, a glowing orb on top, and a blob shadow. */
@@ -307,7 +320,7 @@ export const instancesOf = (node: RenderNode): ReadonlyArray<Instance> => {
     case "enemy":
       return [node.shadow, ...node.body.instances]
     case "projectile":
-      return node.style === "disc" ? [node.shadow, node.orb] : [node.shadow, node.orb, node.core, node.halo, node.streak, node.trail]
+      return node.style === "wave" ? [node.shadow, node.orb] : [node.shadow, node.orb, node.core, node.halo, node.streak, node.trail]
     case "wall":
       return node.instances
     case "totem":

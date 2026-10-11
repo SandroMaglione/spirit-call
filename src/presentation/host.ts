@@ -8,6 +8,7 @@ import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
 import { DropTrail } from "./drop-trail.ts"
 import { Stones } from "./stones.ts"
+import { CombatLight } from "./combat-light.ts"
 import { Fx } from "./fx.ts"
 import { Haze } from "./haze.ts"
 import { trackPartyTaps } from "./party-taps.ts"
@@ -261,6 +262,7 @@ export const createBrowserHost = async (
     haze,
     drops: new DropTrail(scene),
     stones: new Stones(scene),
+    combatLight: new CombatLight(scene),
     trails: new SlashTrails(trails),
     reticle,
     edges,
@@ -325,6 +327,7 @@ export const createBrowserHost = async (
       host.feedback.tutorial.words?.dispose()
       host.drops.dispose()
       host.stones.dispose()
+      host.combatLight.dispose()
       assets.dispose()
       dressing?.dressing.dispose()
       for (const source of models.values()) disposeModel(source)

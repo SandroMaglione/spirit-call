@@ -213,12 +213,16 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     g.fillCircle(ground.x, ground.y, 7, view.shadow, 0.35)
     const screen = toScreen(projection, ground)
     const height = 4 * view.grenadeArc * flight * (1 - flight) * projection.zoom
-    overlay.fillCircle(screen.x, screen.y - height - 6, 6, spec.element === null ? view.grenade : view.elements[spec.element], 1)
-    if (flight >= 1) overlay.strokeCircle(screen.x, screen.y - 6, 6, 2, color, 0.5 + 0.5 * Math.sin(elapsed * 40))
+    // Player shells are faceted 3D bodies; enemy bombs keep their danger color.
+    if (lobbed.faction !== "player") {
+      overlay.fillCircle(screen.x, screen.y - height - 6, 6, spec.element === null ? view.grenade : view.elements[spec.element], 1)
+      if (flight >= 1) overlay.strokeCircle(screen.x, screen.y - 6, 6, 2, color, 0.5 + 0.5 * Math.sin(elapsed * 40))
+    }
   }
   // Whirls: their reach, with arms spiraling in toward the center (fading as they run out).
   for (const { data } of queries.vortices.each()) {
     const vortex = data.vortex.get()
+    if (vortex.blow.source?.label?.kind === "skill" && vortex.blow.source.label.skill === "cyclone") continue
     const { center, effect } = vortex
     const color = effect.element === null ? view.playerArea : view.elements[effect.element]
     const fade = Math.min(1, vortex.remaining / 0.3)

@@ -59,7 +59,7 @@ export const defaultTuning = {
      */
     movementGrace: 0.08,
     /** Shots leave this far in front of the player's center. */
-    muzzleOffset: 12
+    muzzleOffset: 28
   },
 
   /** Switching between the team's characters (see features/team.ts). */

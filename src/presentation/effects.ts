@@ -13,7 +13,7 @@ import { toScreen, toScreenAt } from "../math/iso.ts"
 import { lerp, normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
 import { arenaOf } from "../features/arena.ts"
-import { Action, Body, Broke, Camera, Cast, Challenge, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Guard, Guarded, Heal, Hit, Impact, Knockback, Player, Position, PrevPosition, Raising, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
+import { Action, Body, Broke, Camera, Cast, Challenge, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Guard, Guarded, Heal, Hit, Impact, Knockback, Member, Player, Position, PrevPosition, Raising, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"
 import { makeBody } from "./bodies.ts"
 import type { RenderHostValue } from "./host-types.ts"
@@ -31,6 +31,7 @@ const screenDirection = (direction: Vec2): Vec2 => normalizeOr(toScreen(projecti
  * punch for heavy blows; see `view.impact`).
  */
 export const SpawnFx = Game.System("Shooter/SpawnFx", {
+  queries: { player: Game.Query({ selection: { member: Game.Query.read(Member) }, with: [Player] }) },
   events: {
     action: Game.System.readEvent(Action),
     hit: Game.System.readEvent(Hit),
@@ -47,7 +48,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   },
   resources: { tuning: Game.System.readResource(Tuning) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
-}, ({ events, resources, services }) => {
+}, ({ queries, events, resources, services }) => {
   const tuning = resources.tuning.get()
   const fx = services.host.fx
   const feedback = services.host.feedback
@@ -121,7 +122,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   }
   for (const action of events.action.all()) {
     // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
-    if (action.kind === "attack" && isMelee(action.move) && action.move.shape !== "slam") {
+    if (action.kind === "attack" && isMelee(action.move) && action.move.shape !== "slam" && queries.player.each()[0]?.data.member.get().character !== "swordsman") {
       services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)
     }
   }
@@ -216,7 +217,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
   // A blast (the Gust): streaks of its element rushing out across its fan.
   for (const cast of events.cast.all()) {
     const effect = cast.effect
-    if (effect.kind !== "blast") continue
+    if (effect.kind !== "blast" || cast.skill === "bladeWave") continue
     const at = toScreen(projection, cast.from)
     const color = effect.element === null ? view.playerArea : view.elements[effect.element]
     const half = (effect.arcDegrees * Math.PI) / 360
@@ -606,6 +607,7 @@ export const UpdateFx = Game.System("Shooter/UpdateFx", {
   services.host.fx.update(seconds)
   services.host.drops.update(seconds)
   services.host.stones.update(seconds)
+  services.host.combatLight.finish()
   const [player] = queries.player.each()
   services.host.trails.update(seconds, player === undefined ? undefined : lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha))
 })

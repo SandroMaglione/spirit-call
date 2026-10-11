@@ -64,7 +64,7 @@ import type { Shapes } from "./shapes.ts"
 export const ownLook: ReadonlySet<SkillId> = new Set<SkillId>(["flareJump", "barrage", "tidalWave", "tide", "brace", "floodgate", "thunderclap", "sparkStep", "stormFlurry", "kindle", "wildfire", "faultLine", "landslide"])
 
 /** Skills whose hits are seen in their own look alone: the flat shape of what they strike is not drawn too (see `presentation/telegraphs.ts`). */
-export const unmarkedHits: ReadonlySet<SkillId> = new Set<SkillId>(["sparkStep", "stormFlurry", "faultLine", "landslide"])
+export const unmarkedHits: ReadonlySet<SkillId> = new Set<SkillId>(["bladeWave", "sparkStep", "stormFlurry", "faultLine", "landslide"])
 
 const water = view.elements.water
 const foam = 0xe8f6ff
