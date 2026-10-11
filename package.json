@@ -21,9 +21,16 @@
     "db": "node --import tsx --import ./scripts/assets.ts scripts/db.ts",
     "balance": "node --import tsx --import ./scripts/assets.ts scripts/balance.ts",
     "shot": "node --import tsx --import ./scripts/assets.ts scripts/screenshot.ts",
-    "effect-source": "node scripts/effect-source.ts"
+    "effect-source": "node scripts/effect-source.ts",
+    "app": "vite build && cap sync",
+    "app:android": "pnpm app && cap open android",
+    "app:ios": "pnpm app && cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/ios": "8.5.3",
+    "@capacitor/preferences": "8.0.1",
     "@effect/platform-browser": "4.0.1",
     "@effect/sql-d1": "4.0.1",
     "@fontsource/alegreya-sans": "^5.3.0",
@@ -37,6 +44,7 @@
     "three": "0.186.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.5.3",
     "@effect/sql-sqlite-node": "4.0.1",
     "@typeonce/bevy-ts-devtools": "link:../../bevy-ts/packages/devtools",
     "@types/node": "25.5.0",
