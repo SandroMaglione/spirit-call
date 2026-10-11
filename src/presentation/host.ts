@@ -284,6 +284,17 @@ export const createBrowserHost = async (
         y: size.height / 2 + (at.y - center.y) * scale + cameraView.offset.y
       }
     },
+    warm: async (extras) => {
+      for (const extra of extras) scene.add(extra)
+      scene.updateMatrixWorld()
+      try {
+        await renderer.compileAsync(scene, camera)
+        await renderer.compileAsync(overlayScene, overlayCamera)
+        await haze.warm(renderer)
+      } finally {
+        for (const extra of extras) scene.remove(extra)
+      }
+    },
     render: () => {
       placeCamera(camera, projection, { width: size.width, height: size.height, ...cameraView })
       // The overlay follows the same view: projected point p shows at center + (p - center's projection) × scale + offset.

@@ -114,6 +114,23 @@ export class Haze {
     this.scene.add(mesh)
   }
 
+  /** Compiles its shader and makes its copy of the frame at the screen's size, before a fight needs them. */
+  async warm(renderer: WebGLRenderer): Promise<void> {
+    renderer.initTexture(this.frameTexture(renderer))
+    this.material.uniforms.frame!.value = this.texture
+    await renderer.compileAsync(this.scene, this.camera)
+  }
+
+  /** The copy of the frame, made again when the drawing buffer's size changes. */
+  private frameTexture(renderer: WebGLRenderer): FramebufferTexture {
+    const buffer = renderer.getDrawingBufferSize(this.buffer)
+    if (this.texture === null || this.texture.image.width !== buffer.x || this.texture.image.height !== buffer.y) {
+      this.texture?.dispose()
+      this.texture = new FramebufferTexture(buffer.x, buffer.y)
+    }
+    return this.texture
+  }
+
   /** Heat this frame (sources last one frame: add them every frame they show). */
   add(source: HazeSource): void {
     if (source.strength > 0 && source.radius > 0) this.sources.push(source)
@@ -130,12 +147,9 @@ export class Haze {
     const sources = this.sources.sort((a, b) => b.strength - a.strength).slice(0, most)
     this.sources.length = 0
     const dpr = renderer.getPixelRatio()
-    const buffer = renderer.getDrawingBufferSize(this.buffer)
-    if (this.texture === null || this.texture.image.width !== buffer.x || this.texture.image.height !== buffer.y) {
-      this.texture?.dispose()
-      this.texture = new FramebufferTexture(buffer.x, buffer.y)
-    }
-    renderer.copyFramebufferToTexture(this.texture)
+    const texture = this.frameTexture(renderer)
+    const buffer = this.buffer
+    renderer.copyFramebufferToTexture(texture)
     const uniforms = this.material.uniforms
     const shapes = uniforms.shapes!.value as Array<Vector4>
     const looks = uniforms.looks!.value as Array<Vector4>
@@ -155,7 +169,7 @@ export class Haze {
       shapes[index]!.set(center.x * dpr, buffer.y - center.y * dpr, Math.max(1, across * dpr), Math.max(1, tall * dpr))
       looks[index]!.set(source.inner, rise * dpr, source.strength, 1)
     })
-    uniforms.frame!.value = this.texture
+    uniforms.frame!.value = texture
     uniforms.size!.value.set(buffer.x, buffer.y)
     uniforms.dpr!.value = dpr
     uniforms.time!.value = (performance.now() - this.start) / 1000

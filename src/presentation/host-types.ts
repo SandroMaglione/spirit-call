@@ -308,6 +308,12 @@ export interface RenderHostValue {
   readonly fx: Fx
   /** Heat haze bending the scene (see `Haze`): sources added each frame. */
   readonly haze: Haze
+  /**
+   * Compiles every shader the scenes can show (with `extras` added for the
+   * while, out of the camera's sight) and readies the haze, so nothing
+   * compiles in the middle of a fight (see `WarmUpFights`).
+   */
+  warm(extras: ReadonlyArray<Object3D>): Promise<void>
   /** Drops shed by moving spirits, in the 3D scene (hidden behind bodies). */
   readonly drops: DropTrail
   /** Rock's stone (plates, an Earthrise's spikes, chunks), in the 3D scene. */
