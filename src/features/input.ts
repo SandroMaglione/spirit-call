@@ -4,6 +4,7 @@
  * into world-space intent (`Controls`) that gameplay systems read.
  */
 import { InputCapture } from "@typeonce/bevy-ts-browser"
+import { length, normalizeOr, scale, zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { directions, teamKeys, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PartyTap, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
@@ -13,8 +14,6 @@ import { bySlot } from "../content/skills.ts"
 import type { SkillEffect, SkillSlot } from "../content/skills.ts"
 import { projection, viewZoom } from "../config/view.ts"
 import { screenDirectionToWorld, toWorld } from "../math/iso.ts"
-import { length, normalizeOr, scale, zero } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import {
   Aim,
   Camera,

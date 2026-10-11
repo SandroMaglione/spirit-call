@@ -15,11 +15,10 @@
  * immune body takes the damage but not the state, and no burst takes hold
  * of it.
  */
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { elementOf, elements } from "../content/elements.ts"
 import type { Affinity, StateId } from "../content/elements.ts"
-import { normalizeOr, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import {
   Arc,
   blow,
@@ -250,7 +249,7 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
       target.data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
     }
     const away = (target: (typeof bodies)[number]) =>
-      target.entity.id === burst.target ? burst.direction : normalizeOr(sub(target.data.position.get(), at), burst.direction)
+      target.entity.id === burst.target ? burst.direction : normalizeOr(subtract(target.data.position.get(), at), burst.direction)
     switch (state.id) {
       case "burning": {
         const left = burnDps(tuning, state.atk) * Math.max(0, state.remaining)
@@ -326,7 +325,7 @@ export const ArcCharges = Game.System("Shooter/ArcCharges", {
     events.damage.emit({
       target: Game.Entity.handle(next.entity.id, Health),
       faction: arc.by,
-      direction: normalizeOr(sub(there, arc.at), { x: 0, y: 0 }),
+      direction: normalizeOr(subtract(there, arc.at), { x: 0, y: 0 }),
       blow: blow({ damage: arc.damage, knockback: 0, charges: false, element: { id: "thunder", atk: arc.atk }, arc: true })
     })
     events.zap.emit({ path: [arc.at, there], heal: false })

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { elements } from "../src/content/elements.ts"
@@ -6,7 +7,6 @@ import type { ElementId, StateId } from "../src/content/elements.ts"
 import { afflict, affinityDamage, burnDps, stateDamage } from "../src/features/elements.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, blow, Damage, Disarmed, ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Knockback, Player, Poise, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
 import { center, cursorAt, grenadeSkill, gunner, withGrenade, placeDummies, start, steps, withWindCut } from "./helpers.ts"

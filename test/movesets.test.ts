@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import * as Random from "@typeonce/bevy-ts-math/Random"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { AttackSpec } from "../src/content/enemies.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { pickAttack } from "../src/features/moveset.ts"
-import { Random } from "../src/math/rng.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Position, RunScope } from "../src/schema.ts"
 import { center, ClearEnemies, start, steps } from "./helpers.ts"
 
@@ -70,7 +70,7 @@ describe("enemy movesets", () => {
 
   it("pick among the attacks that can start by weight, from the seeded random numbers", () => {
     const attacks = [{ ...swipe, weight: 3 }, { ...swipe, id: "other", weight: 1 }]
-    const random = new Random(7)
+    const random = Random.make(7)
     const picks = Array.from({ length: 400 }, () => pickAttack(attacks, [0, 1], random))
     const heavy = picks.filter((pick) => pick === 0).length / picks.length
     expect(heavy).toBeGreaterThan(0.65)

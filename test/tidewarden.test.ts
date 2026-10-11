@@ -6,10 +6,10 @@
  * chain snaps, striking it and leaving it stunned (never a champion).
  */
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Health, Hurtbox, Player, Position, RunScope, Stunned, Turned } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { center, ClearEnemies, cursorAt, start, steps } from "./helpers.ts"

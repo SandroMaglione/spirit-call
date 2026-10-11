@@ -8,8 +8,7 @@
  * is hurt and close to it. Each leaves once its throws have dealt its
  * share, or when its time is up.
  */
-import { normalizeOr, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { Body, Cast, Companion, Game, Heal, Health, Hurtbox, Invulnerable, Member, Player, Position, PrevPosition, Renderable, RunScope, Time, Velocity, Zap } from "../schema.ts"
 import { makeDisc } from "./discs.ts"
 import { castBlow } from "./skills.ts"
@@ -87,7 +86,7 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
     // Walking after her, never faster than `follow`, easing to a stop a little way off her.
     let facing = companion.facing
     if (field !== undefined) {
-      const away = sub(field.data.position.get(), at)
+      const away = subtract(field.data.position.get(), at)
       const distance = Math.hypot(away.x, away.y)
       const speed = Math.min(effect.follow, Math.max(0, distance - keep.distance) * 4)
       const direction = normalizeOr(away, facing)
@@ -114,7 +113,7 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
       }
       if (target !== undefined) {
         const where = target.data.position.get()
-        const toward = normalizeOr(sub(where, at), facing)
+        const toward = normalizeOr(subtract(where, at), facing)
         commands.spawnIn(RunScope, makeDisc(at, {
           thrower: Game.Entity.handle(entity.id, Position),
           faction: companion.faction,

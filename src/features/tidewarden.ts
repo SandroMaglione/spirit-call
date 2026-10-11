@@ -11,8 +11,8 @@
  * it), its attacks strike for her side (`UpdateAttacks`), and it and its old
  * side go for each other (`SteerEnemies`). Then it goes back.
  */
+import { normalizeOr, subtract } from "@typeonce/bevy-ts-math/Vec2"
 import { elements } from "../content/elements.ts"
-import { normalizeOr, sub } from "../math/vec.ts"
 import { Cast, Damage, Disarmed, Dome, ElementAffinities, ElementState, Enemy, Game, Health, Hitbox, Hurtbox, Invulnerable, Player, Position, Reaction, RunScope, Time, Stunned, Tuning, Turned, Zap } from "../schema.ts"
 import { afflict } from "./elements.ts"
 import { castBlow } from "./skills.ts"
@@ -59,7 +59,7 @@ export const CastTidewarden = Game.System("Shooter/CastTidewarden", {
     if (chosen === undefined) continue
     const at = chosen.data.position.get()
     // The lash: its blow lands first, while it is still of the other side.
-    events.damage.emit({ target: Game.Entity.handle(chosen.entity.id, Health), faction: cast.faction, direction: normalizeOr(sub(at, cast.from), { x: 1, y: 0 }), blow: castBlow(cast, effect) })
+    events.damage.emit({ target: Game.Entity.handle(chosen.entity.id, Health), faction: cast.faction, direction: normalizeOr(subtract(at, cast.from), { x: 1, y: 0 }), blow: castBlow(cast, effect) })
     events.zap.emit({ path: [cast.from, at], heal: false, skill: cast.skill })
     const snap = castBlow(cast, { ...effect, power: effect.snap.power, knockback: effect.snap.knockback, hitStop: 0.12, heavy: true })
     commands.insert(chosen.entity.id, [Turned, { faction: cast.faction, effect, remaining: effect.seconds, snap: { ...snap, charges: false, energyAction: undefined }, skill: cast.skill }])
@@ -151,7 +151,7 @@ export const UpdateTurned = Game.System("Shooter/UpdateTurned", {
     data.hurtbox.update((hurtbox) => ({ ...hurtbox, faction: "enemy" }))
     const at = data.position.get()
     const from = field === undefined ? at : field.data.position.get()
-    events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: turned.faction, direction: normalizeOr(sub(at, from), { x: 1, y: 0 }), blow: turned.snap })
+    events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: turned.faction, direction: normalizeOr(subtract(at, from), { x: 1, y: 0 }), blow: turned.snap })
     data.stunned.update(({ remaining: stun }) => ({ remaining: Math.max(stun, turned.effect.snap.stun) }))
     // The snap, seen as the skill's: from the one on the field to it.
     events.zap.emit({ path: [from, at], heal: false, skill: turned.skill })

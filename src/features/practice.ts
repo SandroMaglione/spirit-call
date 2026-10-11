@@ -11,10 +11,10 @@
  * holds a spot of its own when asked (see `Tuning.champions`). It goes on
  * until the team falls.
  */
+import * as Random from "@typeonce/bevy-ts-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EliteElement } from "../content/challenges.ts"
 import type { EnemyKind } from "../content/enemies.ts"
-import { Random } from "../math/rng.ts"
 import { Challenge, Game, PendingSpawn, Player, Position, Practice, PracticeField, PracticeUnit, Rng, RunScope, Time, Tuning } from "../schema.ts"
 import { makePendingSpawn } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -86,7 +86,7 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
   // More picks than fit: a spot that empties takes the next pick in turn (the champion's keeps its kind).
   const turns = new Set(spots.filter((spot) => spot.champion !== true).map((spot) => spot.kind)).size < picks.length
   const dt = resources.time.get().dt
-  const random = new Random(resources.rng.get().state)
+  const random = Random.make(resources.rng.get().state)
   const player = queries.player.each()[0]?.data.position.get()
   const boxes = wallBoxes(queries.walls.each())
   const { elites, elements = eliteElements, shields = false } = resources.practice.get()
@@ -102,7 +102,7 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
     if (wait > 0) return { ...spot, wait }
     const front = random.next() * Math.PI * 2
     const champion = spot.champion === true
-    const elite = champion || (elites && elements.length > 0 && random.next() < eliteShare) ? random.pick(elements.length > 0 ? elements : eliteElements) : null
+    const elite = champion || (elites && elements.length > 0 && random.next() < eliteShare) ? random.pick(elements.length > 0 ? elements : eliteElements) ?? null : null
     const at = pickSpawnPoint(tuning, spot.kind, player, boxes, random, front)
     const shield = shields && random.next() < shieldShare
     commands.spawnIn(RunScope, makePendingSpawn(spot.kind, at, tuning.waves.spawnWarning, elite, slot, champion, shield))

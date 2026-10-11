@@ -5,9 +5,9 @@
  * shipped skill raises one now, but the rule stands).
  */
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { makeProjectile } from "../src/features/combat.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { barrierMeets } from "../src/features/barriers.ts"

@@ -8,11 +8,11 @@
  * The pyre stays where she cast it, burning what is inside again and again;
  * a share of what it deals heals the one on the field, up to a cap each time.
  */
+import { normalizeOr, subtract } from "@typeonce/bevy-ts-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { elements } from "../content/elements.ts"
 import type { Affinity, ElementId } from "../content/elements.ts"
 import type { SkillEffect } from "../content/skills.ts"
-import { normalizeOr, sub } from "../math/vec.ts"
 import type { ActiveState } from "../schema.ts"
 import { Cast, Damage, ElementAffinities, EmberRing, ElementState, Enemy, Game, Heal, Health, Hit, Hitbox, Hurtbox, Invulnerable, Player, Position, Pyre, Reaction, RunScope, Time, Tuning } from "../schema.ts"
 import { afflict, stateSeconds } from "./elements.ts"
@@ -119,7 +119,7 @@ export const UpdateEmberRings = Game.System("Shooter/UpdateEmberRings", {
           if (before === null) events.reaction.emit({ at, kind: "apply", state: long.id, faction: ring.faction })
         }
       }
-      events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: ring.faction, direction: normalizeOr(sub(at, center), { x: 1, y: 0 }), blow: ring.blow })
+      events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: ring.faction, direction: normalizeOr(subtract(at, center), { x: 1, y: 0 }), blow: ring.blow })
     }
     data.ring.set({ ...ring, remaining: ring.remaining - dt, struck })
   }
@@ -158,7 +158,7 @@ export const UpdatePyres = Game.System("Shooter/UpdatePyres", {
         if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
         const at = body.data.position.get()
         if (Math.hypot(at.x - center.x, at.y - center.y) > pyre.effect.radius + hurtbox.radius) continue
-        events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: pyre.faction, direction: normalizeOr(sub(at, center), { x: 1, y: 0 }), blow: pyre.tick })
+        events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: pyre.faction, direction: normalizeOr(subtract(at, center), { x: 1, y: 0 }), blow: pyre.tick })
       }
     }
     data.pyre.set({ ...pyre, remaining, next })

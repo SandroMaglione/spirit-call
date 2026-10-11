@@ -7,11 +7,11 @@
  * at once, they burst out all around her. Directions, distances, and fuses
  * are drawn from the seeded `Rng`.
  */
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import * as Random from "@typeonce/bevy-ts-math/Random"
 import { lob } from "../content/skills.ts"
 import type { SkillId, SplintersEffect } from "../content/skills.ts"
 import { isMelee } from "../content/attacks.ts"
-import { Random } from "../math/rng.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Action, Cast, Explosion, Game, Lobbed, Member, Player, Position, Rng, RunScope, Splintering, Time } from "../schema.ts"
 import type { Blow, Faction, LobbedValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"
@@ -19,7 +19,7 @@ import { castBlow } from "./skills.ts"
 const Wielders = Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Member] })
 
 /** `effect.count` splinters thrown out from `from`, every way (see `SplintersEffect`). */
-const splintersFrom = (random: Random, from: Vec2, faction: Faction, effect: SplintersEffect, blow: Blow, skill: SkillId | null): ReadonlyArray<LobbedValue> => {
+const splintersFrom = (random: Random.Random, from: Vec2, faction: Faction, effect: SplintersEffect, blow: Blow, skill: SkillId | null): ReadonlyArray<LobbedValue> => {
   const { power, element, knockback, hitStop, heavy, radius, flight } = effect
   return Array.from({ length: effect.count }, (_, index): LobbedValue => {
     // Spread evenly around, each turned a little at random, so they never bunch up.
@@ -44,7 +44,7 @@ export const CastSplinters = Game.System("Shooter/CastSplinters", {
   resources: { rng: Game.System.writeResource(Rng) },
   events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
 }, ({ resources, events, lookup, commands }) => {
-  let random: Random | undefined
+  let random: Random.Random | undefined
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "splinters") continue
@@ -54,7 +54,7 @@ export const CastSplinters = Game.System("Shooter/CastSplinters", {
       if (wielder.ok) commands.insert(wielder.value.entity.id, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
       continue
     }
-    random ??= new Random(resources.rng.get().state)
+    random ??= Random.make(resources.rng.get().state)
     for (const splinter of splintersFrom(random, cast.from, cast.faction, effect, blow, cast.skill)) commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, splinter]))
     events.explosion.emit({ at: cast.from, radius: effect.near, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
   }
@@ -78,7 +78,7 @@ export const ThrowSplinters = Game.System("Shooter/ThrowSplinters", {
   events: { action: Game.System.readEvent(Action), explosion: Game.System.readEvent(Explosion) }
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  let random: Random | undefined
+  let random: Random.Random | undefined
   for (const { entity, data } of queries.throwers.each()) {
     const splintering = data.splintering.get()
     const remaining = splintering.remaining - dt
@@ -96,7 +96,7 @@ export const ThrowSplinters = Game.System("Shooter/ThrowSplinters", {
       landed.push({ x: action.at.x + action.direction.x * action.move.reach, y: action.at.y + action.direction.y * action.move.reach })
     }
     if (landed.length === 0) continue
-    random ??= new Random(resources.rng.get().state)
+    random ??= Random.make(resources.rng.get().state)
     for (const at of landed) {
       for (const splinter of splintersFrom(random, at, "player", splintering.effect, splintering.blow, splintering.skill)) commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, splinter]))
     }

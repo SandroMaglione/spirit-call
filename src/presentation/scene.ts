@@ -3,10 +3,10 @@
  * positions, and pillars fading in front of the player.
  */
 import { RenderSync } from "@typeonce/bevy-ts-render"
+import { lerp } from "@typeonce/bevy-ts-math/Vec2"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { engine } from "../config/tuning.ts"
 import { depthOf, screenHeight, toScreen, worldHeight } from "../math/iso.ts"
-import { lerp } from "../math/vec.ts"
 import { arenaOf, hazardBoxes } from "../features/arena.ts"
 import { Camera, Challenge, Disc, Game, Lobbed, Player, Position, PrevPosition, Projectile, RenderClock, RenderHost, RenderNodes, Renderable, SlowMotion, Tuning, Velocity, Wall } from "../schema.ts"
 import { createNode, placeTracer, projectileColor } from "./nodes.ts"

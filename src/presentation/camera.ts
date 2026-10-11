@@ -7,10 +7,10 @@
  * Axes: the simulation's floor (x, y) is Three's (x, z), and up is +y.
  */
 import { OrthographicCamera, Vector3 } from "three"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { elevation } from "../math/iso.ts"
 import type { Projection } from "../math/iso.ts"
-import type { Vec2 } from "../math/vec.ts"
 
 /** How far the camera stands back from what it looks at; only needs to clear the tallest thing in the arena. */
 const distance = 2000

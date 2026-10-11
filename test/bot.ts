@@ -18,6 +18,9 @@
  */
 import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 import type { Touch } from "@typeonce/bevy-ts-browser"
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { moveCircle } from "@typeonce/bevy-ts-math/Collide2"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import type { PartyTaps, TouchButton } from "../src/config/input.ts"
 import { keyBindings, touchButtons } from "../src/config/input.ts"
@@ -36,11 +39,8 @@ import type { AttackMove } from "../src/content/attacks.ts"
 import type { SkillEffect } from "../src/content/skills.ts"
 import { aspectFor, dashOf, traitsIn } from "../src/features/build.ts"
 import { toScreen } from "../src/math/iso.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
 import type { Area } from "../src/physics/areas.ts"
-import { moveCircle } from "../src/physics/collide.ts"
-import type { Box } from "../src/physics/shapes.ts"
 import {
   Attacker,
   AttackPhase,
@@ -110,7 +110,7 @@ export interface Battlefield {
   } | undefined
   readonly enemies: ReadonlyArray<{ readonly id: number; readonly at: Vec2 }>
   readonly threats: ReadonlyArray<Threat>
-  readonly walls: ReadonlyArray<Box>
+  readonly walls: ReadonlyArray<Box2>
 }
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180

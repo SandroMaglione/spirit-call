@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { nextAlive } from "../src/features/team.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, SlowMotion, Stats, TeamSwitch, BasicAttack } from "../src/schema.ts"
 import type { ActiveState, BuildValue } from "../src/schema.ts"
 import { ReadFlow, cursorAt, doubleTap, placeDummies, start, steps, plainAttack } from "./helpers.ts"

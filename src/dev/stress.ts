@@ -3,11 +3,11 @@
  * random directions, topped up every step. Used by `scripts/stress.ts`
  * (headless timing) and by the browser with `?stress=enemies,projectiles`.
  */
+import * as Random from "@typeonce/bevy-ts-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { tuningWith } from "../config/tuning.ts"
 import { makeProjectile } from "../features/combat.ts"
 import { makeEnemy } from "../features/enemies.ts"
-import { Random } from "../math/rng.ts"
 import { blow, Game, Invulnerable, Player, Projectile, RunScope } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
 
@@ -30,7 +30,7 @@ export const parseStress = (search: string): StressLoad | undefined => {
 }
 
 export const makeStress = (tuning: TuningValue, load: StressLoad) => {
-  const random = new Random(7)
+  const random = Random.make(7)
   const kinds = Object.keys(tuning.enemies) as Array<EnemyKind>
   const inArena = () => ({ x: random.range(80, tuning.arena.width - 80), y: random.range(80, tuning.arena.height - 80) })
 

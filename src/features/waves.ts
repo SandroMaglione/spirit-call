@@ -14,13 +14,12 @@
  * counts toward clearing a wave, but the plan is complete only once every
  * champion has fallen too.
  */
+import { overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import * as Random from "@typeonce/bevy-ts-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { champion, elite, entryChampion, entryElite, entryKind, entryShield, shielded } from "../content/challenges.ts"
 import type { WaveEntry, WavePlan } from "../content/challenges.ts"
-import { Random } from "../math/rng.ts"
-import type { Vec2 } from "../math/vec.ts"
-import { circleOverlapsBox } from "../physics/collide.ts"
-import type { Box } from "../physics/shapes.ts"
 import { Challenge, Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Twist, Waves } from "../schema.ts"
 import type { EnemyKind, TwistValue, WavesValue } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
@@ -38,7 +37,7 @@ const eliteChance = (tuning: TuningValue, number: number): number => {
 }
 
 /** The entries of wave `number` (from 1) of `plan`; call only when it `hasWave`. */
-export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number, random: Random, championStanding = false): Array<WaveEntry> => {
+export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number, random: Random.Random, championStanding = false): Array<WaveEntry> => {
   const scripted = plan.scripted[number - 1]
   if (scripted !== undefined || plan.endless === null) return [...(scripted ?? [])]
   // Only what the main line has introduced by then (see `EndlessWaves`).
@@ -51,14 +50,14 @@ export const composeWave = (tuning: TuningValue, plan: WavePlan, number: number,
   const every = plan.endless.championEvery
   const leaders = kinds.filter((kind) => tuning.champions.movesets[kind] !== undefined && tuning.enemies[kind].behavior.kind !== "kite")
   if (every !== null && number % every === 0 && !championStanding && leaders.length > 0 && elites.length > 0) {
-    wave.push(champion(random.pick(leaders), random.pick(elites)))
+    wave.push(champion(random.pick(leaders)!, random.pick(elites)!))
     budget = Math.floor(budget / 2)
   }
   for (;;) {
     const affordable = kinds.filter((kind) => tuning.enemies[kind].cost <= budget)
     if (affordable.length === 0) break
-    const kind = random.pick(affordable)
-    wave.push(chance > 0 && random.next() < chance ? elite(kind, random.pick(elites)) : kind)
+    const kind = random.pick(affordable)!
+    wave.push(chance > 0 && random.next() < chance ? elite(kind, random.pick(elites)!) : kind)
     budget -= tuning.enemies[kind].cost
   }
   return wave
@@ -88,12 +87,12 @@ const ranged = (tuning: TuningValue, kind: EnemyKind): boolean => tuning.enemies
  * `Tuning.waves.placement`), clear of walls and inside the arena; failing
  * that, anywhere far enough from her.
  */
-export const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec2 | undefined, boxes: ReadonlyArray<Box>, random: Random, front = 0): Vec2 => {
+export const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec2 | undefined, boxes: ReadonlyArray<Box2>, random: Random.Random, front = 0): Vec2 => {
   const margin = 60
   const clearance = tuning.enemies[kind].radius + 12
   const placement = tuning.waves.placement
   const inside = (at: Vec2) => at.x >= margin && at.y >= margin && at.x <= tuning.arena.width - margin && at.y <= tuning.arena.height - margin
-  const clear = (at: Vec2) => !boxes.some((box) => circleOverlapsBox(at, clearance, box))
+  const clear = (at: Vec2) => !boxes.some((box) => overlapsCircle(box, at, clearance))
   if (player !== undefined) {
     const far = ranged(tuning, kind)
     const band = far ? placement.ranged : placement.melee
@@ -121,7 +120,7 @@ export const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec
  * A wave's front: toward the side of the arena with the most room from
  * the player (so its ranged enemies fit), give or take a little.
  */
-const pickFront = (tuning: TuningValue, player: Vec2 | undefined, random: Random): number => {
+const pickFront = (tuning: TuningValue, player: Vec2 | undefined, random: Random.Random): number => {
   if (player === undefined) return random.range(0, Math.PI * 2)
   const room = (angle: number) => {
     const dx = Math.cos(angle)
@@ -170,7 +169,7 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
   const plan = spec.waves
   const dt = resources.time.get().dt
   const waves = resources.waves.get()
-  const random = new Random(resources.rng.get().state)
+  const random = Random.make(resources.rng.get().state)
   let { number, phase, timer, front, size, carried } = waves
   let queue = [...waves.queue]
   const player = queries.player.each()[0]?.data.position.get()

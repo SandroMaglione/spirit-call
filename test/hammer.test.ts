@@ -4,10 +4,10 @@
  * burst a moment later; the Rockburst bursts them out all around her.
  */
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Health, Player, Stunned } from "../src/schema.ts"
 import { cursorAt, placeDummies, start, steps } from "./helpers.ts"
 

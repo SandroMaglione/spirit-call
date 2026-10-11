@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest"
+import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { skillSlots } from "../src/content/skills.ts"
 import { actionButtons, drawnShare, partyLayout, stickRest, touchButtons, touchLayout } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
-import { normalizeOr } from "../src/math/vec.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import type { LobMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { Controls, Enemy, Energy, Game, Lobbed, Player, Position, Projectile, RunScope, Velocity } from "../src/schema.ts"

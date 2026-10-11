@@ -8,10 +8,9 @@
  *   takes rises with her, a little whirl under each, and stays up, bobbing,
  *   after she comes down; then drops, dust thrown up where it lands.
  */
+import { lerp, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { projection, view } from "../config/view.ts"
 import { toScreen, worldHeight } from "../math/iso.ts"
-import { lerp } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Cast, Game, Impact, Lifted, Mantle, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes } from "../schema.ts"
 
 const wind = view.elements.wind

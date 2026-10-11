@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "../src/dev/commands.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ClearEnemies, grenadeSkill, gunShot, gunner, plainEnemies, playerLoss, start, swordsman, hitBy } from "./helpers.ts"

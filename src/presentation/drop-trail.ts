@@ -9,8 +9,8 @@
  */
 import { AdditiveBlending, Color, IcosahedronGeometry, InstancedMesh, Matrix4, MeshBasicMaterial, Quaternion, RingGeometry, Vector3 } from "three"
 import type { Object3D } from "three"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
-import type { Vec2 } from "../math/vec.ts"
 
 /** How a shed particle moves: a drop falls (and may ripple), an ember rises, a wisp curls. */
 export type TrailKind = "drop" | "ember" | "wisp"

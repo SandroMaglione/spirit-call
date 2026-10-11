@@ -4,9 +4,9 @@
  * taking an enemy blow whole and shattering around whoever wears it.
  */
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { blow, Damage, ElementState, Enemy, Energy, Game, Guard, Health, Invulnerable, Knockback, Player, Poise, Position } from "../src/schema.ts"
 import { center, cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"

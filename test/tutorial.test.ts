@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 
 import type { Touch } from "@typeonce/bevy-ts-browser"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { tutorialSteps } from "../src/content/tutorial.ts"
 import { tutorialSpot, tutorialSuccessSeconds } from "../src/features/tutorial.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { UiRequest, AttackPhase, Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, SlowMotion, Tutorial, tutorialStart } from "../src/schema.ts"
 import { doubleTap, start, steps } from "./helpers.ts"
 

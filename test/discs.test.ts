@@ -1,9 +1,9 @@
 import type { Pointer } from "@typeonce/bevy-ts-browser"
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { DiscMove } from "../src/content/attacks.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Disc, Enemy, Game, Health } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
 import { cursorAt, placeDummies, start, steps, plainAttack } from "./helpers.ts"

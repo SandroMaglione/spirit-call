@@ -1,10 +1,9 @@
 /**
  * Moving bodies with swept collision against walls.
  */
-import { add, normalizeOr, scale, sub, zero } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import { circleOverlapsBox, moveCircle, sweepCircleBoxes } from "../physics/collide.ts"
-import type { Box } from "../physics/shapes.ts"
+import { overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { moveCircle, sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
+import { add, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
@@ -27,11 +26,11 @@ export const RememberPositions = Game.System("Shooter/RememberPositions", {
 
 export const Walls = Game.Query({ selection: { wall: Game.Query.read(Wall), low: Game.Query.optional(LowWall) } })
 
-export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box } } }>): Array<Box> =>
+export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box2 } } }>): Array<Box2> =>
   walls.map((match) => match.data.wall.get())
 
 /** The walls a hop does not carry her over: pillars, props, and the arena's edge (not its low walls, see `LowWall`). */
-export const tallWallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box }; readonly low: { readonly present: boolean } } }>): Array<Box> =>
+export const tallWallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box2 }; readonly low: { readonly present: boolean } } }>): Array<Box2> =>
   walls.filter((match) => !match.data.low.present).map((match) => match.data.wall.get())
 
 /** How far past a low wall a hop may carry her to land clear of it, beyond its reach. */
@@ -44,10 +43,10 @@ const hopOvershoot = 120
  * coming down on one, she lands just beyond it (a little further than her
  * reach), or, if something tall stands there, just short of it.
  */
-export const hopLanding = (from: Vec2, direction: Vec2, reach: number, radius: number, tall: ReadonlyArray<Box>, low: ReadonlyArray<Box>): Vec2 => {
+export const hopLanding = (from: Vec2, direction: Vec2, reach: number, radius: number, tall: ReadonlyArray<Box2>, low: ReadonlyArray<Box2>): Vec2 => {
   if (reach <= 0) return from
   const way = normalizeOr(direction, { x: 1, y: 0 })
-  const clear = (at: Vec2) => !low.some((box) => circleOverlapsBox(at, radius, box)) && !tall.some((box) => circleOverlapsBox(at, radius, box))
+  const clear = (at: Vec2) => !low.some((box) => overlapsCircle(box, at, radius)) && !tall.some((box) => overlapsCircle(box, at, radius))
   // As far as the tall walls let her (stopping a hair short of one, as moving does).
   const span = Math.max(0, reach * (sweepCircleBoxes(from, scale(way, reach), radius, tall)?.time ?? 1) - 0.01)
   const aimed = add(from, scale(way, span))
@@ -56,11 +55,11 @@ export const hopLanding = (from: Vec2, direction: Vec2, reach: number, radius: n
   for (let past = 1; past <= hopOvershoot; past += 1) {
     const beyond = add(aimed, scale(way, past))
     if (!clear(beyond)) continue
-    if (sweepCircleBoxes(from, sub(beyond, from), radius, tall) === undefined) return beyond
+    if (sweepCircleBoxes(from, subtract(beyond, from), radius, tall) === undefined) return beyond
     break
   }
   // ...else short of it, where she meets the first wall in her way.
-  const meets = sweepCircleBoxes(from, sub(aimed, from), radius, [...tall, ...low])
+  const meets = sweepCircleBoxes(from, subtract(aimed, from), radius, [...tall, ...low])
   return meets === undefined ? from : add(from, scale(way, Math.max(0, span * meets.time - 0.01)))
 }
 

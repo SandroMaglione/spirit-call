@@ -11,10 +11,9 @@
  */
 import type { EntityId } from "@typeonce/bevy-ts/Entity"
 import type { Query } from "@typeonce/bevy-ts/Query"
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { normalizeOr, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import {
   Cast,
   Damage,
@@ -129,7 +128,7 @@ const strike = (
   for (const body of path) {
     damageTo(emit, body, {
       faction: struck.faction,
-      direction: normalizeOr(sub(body.at, previous), { x: 0, y: 0 }),
+      direction: normalizeOr(subtract(body.at, previous), { x: 0, y: 0 }),
       blow: struck.blow
     })
     previous = body.at
@@ -210,7 +209,7 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
         strike(tuning, events, at, body, bodies, { faction: totem.faction, blow: totem.blow, jumps: 0 })
         const pushed = queries.pushed.get(body.entity)
         if (pushed.ok) {
-          const out = normalizeOr(sub(body.at, at), { x: 1, y: 0 })
+          const out = normalizeOr(subtract(body.at, at), { x: 1, y: 0 })
           const push = effect.repel * knockbackTaken(tuning, pushed.value.data.enemy.present ? pushed.value.data.enemy.get().kind : undefined, pushed.value.data.enemy.present && pushed.value.data.enemy.get().champion)
           pushed.value.data.knockback.update((current) => ({ x: current.x + out.x * push, y: current.y + out.y * push }))
         }

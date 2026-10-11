@@ -9,9 +9,9 @@
  * it in its state as it goes off.
  */
 import type { WriteCell } from "@typeonce/bevy-ts/Query"
+import { normalizeOr, subtract } from "@typeonce/bevy-ts-math/Vec2"
 
 import type { SkillEffect, MarkSpec, StateHeal } from "../content/skills.ts"
-import { normalizeOr, sub } from "../math/vec.ts"
 import { blow, Cast, Damage, ElementState, Enemy, Game, Heal, Health, Hit, Hurtbox, Marked, Member, Mending, Player, Position, Time, Tuning } from "../schema.ts"
 import { burnDps } from "./elements.ts"
 
@@ -115,7 +115,7 @@ export const HealFromStates = Game.System("Shooter/HealFromStates", {
       const rest = state.id === "burning" ? burnDps(tuning, state.atk) * Math.max(0, state.remaining) : 0
       if (rest <= 0) continue
       const at = data.position.get()
-      events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: cast.faction, direction: normalizeOr(sub(at, cast.from), cast.direction), blow: blow({ damage: rest, knockback: 0, heavy: true }) })
+      events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: cast.faction, direction: normalizeOr(subtract(at, cast.from), cast.direction), blow: blow({ damage: rest, knockback: 0, heavy: true }) })
     }
     healTeam(queries.members.each(), stateHealPercent(heals, held.length), (amount) => events.heal.emit({ at: cast.from, amount }))
   }

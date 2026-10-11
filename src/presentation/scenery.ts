@@ -4,10 +4,10 @@
  * arena (see `SyncArena`); tiles and props are drawn in batches.
  */
 import { Group, Mesh, MeshLambertMaterial, PlaneGeometry } from "three"
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
 
 import { Instance } from "./batch.ts"
 import type { RenderAssets } from "./host-types.ts"
-import type { Box } from "../physics/shapes.ts"
 import type { ArenaLook } from "./looks.ts"
 import { footprintOf, groundOffsetOf, variantAt } from "./nodes.ts"
 import type { Shapes } from "./shapes.ts"
@@ -26,7 +26,7 @@ const makeFloor = (
   width: number,
   height: number,
   cells: number,
-  holes: ReadonlyArray<Box>,
+  holes: ReadonlyArray<Box2>,
   grid: Shapes,
   instances: Array<Instance>
 ): { readonly object: Group; readonly base: FloorBase } => {
@@ -107,7 +107,7 @@ export interface Dressing {
  * tiles across and down, no tiles over `holes` (the hazards laid into the
  * floor); the grid, if any, drawn into `grid`.
  */
-export const dressArena = (assets: RenderAssets, look: ArenaLook, arena: { readonly width: number; readonly height: number; readonly cells: number }, holes: ReadonlyArray<Box>, grid: Shapes): Dressing => {
+export const dressArena = (assets: RenderAssets, look: ArenaLook, arena: { readonly width: number; readonly height: number; readonly cells: number }, holes: ReadonlyArray<Box2>, grid: Shapes): Dressing => {
   const instances: Array<Instance> = []
   grid.clear()
   const floor = makeFloor(assets, look, arena.width, arena.height, arena.cells, holes, grid, instances)

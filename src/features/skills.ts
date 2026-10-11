@@ -19,11 +19,10 @@
  * that takes her off the ground (a plunge, a leap) keeps her in the air for
  * a moment (`Airborne`), acting on landing (`LandAirborne`).
  */
+import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
+import { add, clampLength, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
-import { add, clampLength, normalizeOr, rotate, scale, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import { sweepCircleBoxes } from "../physics/collide.ts"
 import {
   Challenge,
   Aim,
@@ -131,7 +130,7 @@ export const skillAim = (effect: SkillEffect): SkillAim => {
 
 /** Where an effect aimed at a point (a lob, a whirl, a volley) from `from` toward `at` goes: `at`, clamped to its range. */
 export const lobTarget = (effect: { readonly maxRange: number }, from: Vec2, at: Vec2): Vec2 => {
-  const offset = clampLength(sub(at, from), effect.maxRange)
+  const offset = clampLength(subtract(at, from), effect.maxRange)
   return { x: from.x + offset.x, y: from.y + offset.y }
 }
 
@@ -222,7 +221,7 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
       energy -= spec.energy
       if (spec.invulnerability > 0) data.invulnerable.update((current) => ({ remaining: Math.max(current.remaining, spec.invulnerability) }))
       const facing = skillAim(spec.effect).kind === "facing"
-      const direction = facing ? data.facing.get().direction : normalizeOr(sub(input.at, from), data.aim.get())
+      const direction = facing ? data.facing.get().direction : normalizeOr(subtract(input.at, from), data.aim.get())
       const cast: CastValue = {
         caster: Game.Entity.handle(entity.id, Position),
         faction: "player",
@@ -415,7 +414,7 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
       remaining: seconds,
       seconds,
       kind: "plunge",
-      dive: dive > 0 ? { seconds: dive, velocity: scale(sub(to, cast.from), 1 / dive), to } : null,
+      dive: dive > 0 ? { seconds: dive, velocity: scale(subtract(to, cast.from), 1 / dive), to } : null,
       glide: null,
       landing: [{ ...cast, effect: landing }]
     }])
@@ -572,7 +571,7 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
         const at = target.data.position.get()
         const distance = Math.hypot(center.x - at.x, center.y - at.y)
         if (distance > effect.radius + hurtbox.radius) continue
-        const direction = normalizeOr(sub(center, at), { x: 0, y: 0 })
+        const direction = normalizeOr(subtract(center, at), { x: 0, y: 0 })
         const enemy = target.data.enemy.present ? target.data.enemy.get().kind : undefined
         const push = effect.pull * distance * decay * knockbackTaken(tuning, enemy, target.data.enemy.present && target.data.enemy.get().champion)
         target.data.knockback.update((current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))

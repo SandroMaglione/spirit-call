@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { entryKind } from "../src/content/challenges.ts"
 import type { Wave } from "../src/content/challenges.ts"
@@ -6,7 +7,6 @@ import type { Wave } from "../src/content/challenges.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { enemyStats, makeEnemy } from "../src/features/enemies.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { UiRequest, Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ReadFlow, doubleTap, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"

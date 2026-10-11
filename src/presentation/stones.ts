@@ -9,9 +9,9 @@
  */
 import { Color, ConeGeometry, Euler, IcosahedronGeometry, InstancedMesh, Matrix4, MeshStandardMaterial, OctahedronGeometry, Quaternion, Vector3 } from "three"
 import type { BufferAttribute, BufferGeometry, Object3D } from "three"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { view } from "../config/view.ts"
-import type { Vec2 } from "../math/vec.ts"
 
 /** A spike of an Earthrise: where it stands, how tall and wide, its tilt and turn, and its life (rising, standing, sinking). */
 interface Spike {

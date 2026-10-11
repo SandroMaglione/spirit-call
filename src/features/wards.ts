@@ -8,9 +8,8 @@
  * reaches for an ally again after its cooldown. Wards run at the enemies'
  * pace, and stand still in a hit-stop.
  */
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { normalizeOr, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { areaTouchesCircle } from "../physics/areas.ts"
 import { Enemy, Game, Health, Hit, HitStop, Hurtbox, Player, Poise, Position, SlowMotion, Stunned, Time, Tuning, Ward } from "../schema.ts"
 import type { WardValue } from "../schema.ts"
@@ -23,7 +22,7 @@ const slack = 1.25
 export const crossesTether = (from: Vec2, to: Vec2, at: Vec2, radius: number): boolean => {
   const length = Math.hypot(to.x - from.x, to.y - from.y)
   if (length <= 0) return false
-  return areaTouchesCircle({ kind: "lane", origin: from, direction: normalizeOr(sub(to, from), { x: 1, y: 0 }), length, halfWidth: 2 }, at, radius)
+  return areaTouchesCircle({ kind: "lane", origin: from, direction: normalizeOr(subtract(to, from), { x: 1, y: 0 }), length, halfWidth: 2 }, at, radius)
 }
 
 /** The ids of the enemies warded now (tethers fully formed), and the share of damage each takes. */

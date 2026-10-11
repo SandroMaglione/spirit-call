@@ -4,11 +4,11 @@
  * the arena's look). See `looks.ts` for what each one looks like.
  */
 import { BoxGeometry, CylinderGeometry, Group, IcosahedronGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial } from "three"
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { projection, view } from "../config/view.ts"
 import { depthOf, toScreenAt, worldHeight } from "../math/iso.ts"
-import type { Box } from "../physics/shapes.ts"
-import type { Vec2 } from "../math/vec.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { EnemyKind, Faction, ProjectileStyle, RenderableValue } from "../schema.ts"
@@ -166,7 +166,7 @@ export const variantAt = (count: number, at: { readonly x: number; readonly y: n
   ((Math.imul(Math.round(at.x), 73856093) ^ Math.imul(Math.round(at.y), 19349663)) >>> 0) % count
 
 /** A wall or pillar standing on the floor, dressed by `look` at the arena's scale. */
-const wallNode = (assets: RenderAssets, look: WallLook, scale: number, box: Box, front: boolean): WallNode => {
+const wallNode = (assets: RenderAssets, look: WallLook, scale: number, box: Box2, front: boolean): WallNode => {
   const width = box.maxX - box.minX
   const depth = box.maxY - box.minY
   const center = { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }

@@ -15,9 +15,9 @@
  * goes off like a skill. The queue waits out a hit-stop, so an effect set off
  * by a kill is not lost to the freeze the kill starts.
  */
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { StateId } from "../content/elements.ts"
 import type { HitCondition, MoveFilter, Passive, Trigger } from "../content/passives.ts"
-import type { Vec2 } from "../math/vec.ts"
 import {
   Action,
   Aim,

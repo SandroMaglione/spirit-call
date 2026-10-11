@@ -9,13 +9,12 @@
  * raises its rocks down a line toward the aim; a quake (see `QuakeEffect`)
  * slams around the caster, each slam a rock under her, wider than the last.
  */
+import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
+import { normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { earthrise } from "../content/skills.ts"
 import type { EarthriseEffect, FaultEffect, QuakeEffect } from "../content/skills.ts"
-import { normalizeOr, rotate, scale, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Cast, Damage, Elite, Enemy, Explosion, Game, Health, Hurtbox, Invulnerable, Poise, Position, Rock, RunScope, Stunned, Time, Tuning } from "../schema.ts"
 import type { Faction } from "../schema.ts"
-import { sweepCircleBoxes } from "../physics/collide.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { poiseOf } from "./poise.ts"
 import { castBlow } from "./skills.ts"
@@ -146,7 +145,7 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
       events.damage.emit({
         target: Game.Entity.handle(body.entity.id, Health),
         faction: rock.faction,
-        direction: normalizeOr(sub(there, at), { x: 0, y: 1 }),
+        direction: normalizeOr(subtract(there, at), { x: 0, y: 1 }),
         blow: rock.blow
       })
     }

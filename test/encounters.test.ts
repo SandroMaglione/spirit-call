@@ -4,6 +4,7 @@
  * their hazards.
  */
 import { describe, expect, it } from "vitest"
+import * as Random from "@typeonce/bevy-ts-math/Random"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { hazardBoxes } from "../src/features/arena.ts"
@@ -11,7 +12,6 @@ import { keepOut, readPlayer } from "../src/features/behaviors.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import { pickSpawnPoint, reinforceAfter } from "../src/features/waves.ts"
-import { Random } from "../src/math/rng.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
 import { center, ClearEnemies, cursorAt, start, plainAttack, plainEnemies } from "./helpers.ts"
 
@@ -50,7 +50,7 @@ describe("where enemies come in", () => {
   const off = (angle: number, front: number) => Math.abs(Math.atan2(Math.sin(angle - front), Math.cos(angle - front)))
 
   it("brings enemies that keep their distance in far, along the wave's front", () => {
-    const random = new Random(7)
+    const random = Random.make(7)
     for (let index = 0; index < 20; index++) {
       const at = pickSpawnPoint(defaultTuning, "shooter", player, [], random, 0.5)
       const distance = Math.hypot(at.x - player.x, at.y - player.y)
@@ -61,7 +61,7 @@ describe("where enemies come in", () => {
   })
 
   it("brings the others in closer, from the flanks and behind", () => {
-    const random = new Random(11)
+    const random = Random.make(11)
     for (let index = 0; index < 20; index++) {
       const at = pickSpawnPoint(defaultTuning, "chaser", player, [], random, 0.5)
       const distance = Math.hypot(at.x - player.x, at.y - player.y)

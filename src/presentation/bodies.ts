@@ -5,10 +5,10 @@
  */
 import { Mesh, MeshLambertMaterial } from "three"
 import type { Object3D } from "three"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { projection } from "../config/view.ts"
 import { elevation } from "../math/iso.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Instance } from "./batch.ts"
 import { mixColor } from "./draw.ts"
 import type { RenderAssets } from "./host-types.ts"

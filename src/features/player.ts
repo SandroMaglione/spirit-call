@@ -2,7 +2,7 @@
  * The controlled character (the team member on the field, see
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
-import { clampLength, length, moveToward, normalizeOr, scale, sub } from "../math/vec.ts"
+import { clampLength, length, moveToward, normalizeOr, scale, subtract } from "@typeonce/bevy-ts-math/Vec2"
 import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, Facing, Game, Invulnerable, Member, Overcharged, Passives, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { charging } from "./basic-attack.ts"
 import { attackOf, dashOf, traitsIn } from "./build.ts"
@@ -60,7 +60,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     const surge = data.overcharged.present ? data.overcharged.get().effect : null
     const recharge = surge === null ? own.cooldown : Math.min(own.cooldown, surge.dash)
     const position = data.position.get()
-    const aim = normalizeOr(sub(controls.aimPoint, position), data.aim.get())
+    const aim = normalizeOr(subtract(controls.aimPoint, position), data.aim.get())
     data.aim.set(aim)
     const facing = data.facing.get()
     const hold = Math.max(0, facing.hold - dt)
@@ -121,7 +121,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       // to where she lands, arriving on the last step of the dive (a step at landing is a step on the ground).
       const diving = air !== null && air.dive !== null && air.remaining > 0 && air.remaining <= air.dive.seconds + 1e-9
       const flying = diving ? Math.max(1, Math.ceil(air.remaining / dt - 1e-6)) * dt : 0
-      data.velocity.set(air === null || gliding ? moveToward(carried, target, rate * dt) : diving ? scale(sub(air.dive!.to, position), 1 / flying) : { x: 0, y: 0 })
+      data.velocity.set(air === null || gliding ? moveToward(carried, target, rate * dt) : diving ? scale(subtract(air.dive!.to, position), 1 / flying) : { x: 0, y: 0 })
     }
 
     data.dash.set({ remaining, charges, cooldown, buffered, direction, since, perfect, from })

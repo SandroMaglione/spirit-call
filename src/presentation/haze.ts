@@ -7,8 +7,8 @@
  */
 import { BufferAttribute, BufferGeometry, FramebufferTexture, Mesh, OrthographicCamera, Scene, ShaderMaterial, Vector2, Vector4 } from "three"
 import type { WebGLRenderer } from "three"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
-import type { Vec2 } from "../math/vec.ts"
 
 /** The most sources bent at once (more are dropped, the faintest first). */
 const most = 8

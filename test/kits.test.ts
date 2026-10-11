@@ -5,11 +5,11 @@
  * Thunderclap that holds what it strikes.
  */
 import { describe, expect, it } from "vitest"
+import { normalizeOr } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
-import { normalizeOr } from "../src/math/vec.ts"
 import { Airborne, ElementState, Enemy, Energy, Game, Ground, Health, Player, Poise, Position, Stunned } from "../src/schema.ts"
 import { center, cursorAt, gunner, placeDummies, start, steps, tidecaller } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"

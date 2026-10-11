@@ -36,15 +36,14 @@
  * free, past the crowd's windups; then the phase's attacks join the others,
  * with shorter rests. Such a champion never waits for the crowd's windups.
  */
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
+import { clampLength, normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import * as Random from "@typeonce/bevy-ts-math/Random"
 import { followUpsOf } from "../content/enemies.ts"
 import type { AttackSpec } from "../content/enemies.ts"
-import { Random } from "../math/rng.ts"
-import { clampLength, normalizeOr, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import type { Area } from "../physics/areas.ts"
 import { areaTouchesCircle, pushDirection, shiftArea } from "../physics/areas.ts"
-import { sweepCircleBoxes } from "../physics/collide.ts"
-import type { Box } from "../physics/shapes.ts"
 import {
   Aim,
   Attacker,
@@ -97,8 +96,8 @@ import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180
 
 /** The area an attack from `origin` at `target` covers. Beams stop at the first wall. */
-export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: ReadonlyArray<Box> = []): Area => {
-  const direction = normalizeOr(sub(target, origin), { x: 1, y: 0 })
+export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: ReadonlyArray<Box2> = []): Area => {
+  const direction = normalizeOr(subtract(target, origin), { x: 1, y: 0 })
   switch (spec.kind) {
     case "charge":
       return { kind: "lane", origin, direction, length: spec.speed * spec.active, halfWidth: spec.width / 2 }
@@ -116,7 +115,7 @@ export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: Rea
     case "slam":
     case "lob":
     case "blink": {
-      const offset = clampLength(sub(target, origin), spec.maxReach)
+      const offset = clampLength(subtract(target, origin), spec.maxReach)
       return { kind: "circle", center: { x: origin.x + offset.x, y: origin.y + offset.y }, radius: spec.radius }
     }
     case "volley":
@@ -183,7 +182,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   // those keeping their distance keep their rhythm.
   const openToRush = player !== undefined && target !== undefined &&
     readPlayer(tuning, { at: target, aim: player.data.aim.get(), attack: player.data.basicAttack.get(), dashes: player.data.dash.get().charges }).opening
-  const random = new Random(resources.rng.get().state)
+  const random = Random.make(resources.rng.get().state)
 
   // Champions' phases, by their health (see `ChampionMoveset`): the one each is in, and the last it opened.
   const rampages = new Map<number, { readonly phase: number; readonly was: number; opened: number; pressure: number }>()
@@ -323,7 +322,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
           ? aimArea(spec, position, { x: position.x + area.direction.x, y: position.y + area.direction.y }, boxes)
           : { ...area, origin: position }
       } else if (spec.kind === "slam" && area.kind === "circle") {
-        const offset = clampLength(sub(area.center, position), spec.maxReach)
+        const offset = clampLength(subtract(area.center, position), spec.maxReach)
         area = { ...area, center: { x: position.x + offset.x, y: position.y + offset.y } }
       } else if (spec.kind === "wave" && area.kind === "circle") {
         area = { ...area, center: position }

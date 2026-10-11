@@ -13,9 +13,8 @@
  *
  * And what a champion reads beyond the player: how hard it is pressed.
  */
-import type { Vec2 } from "../math/vec.ts"
-import { circleOverlapsBox } from "../physics/collide.ts"
-import type { Box } from "../physics/shapes.ts"
+import { overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { AttackReleased, Elite, Enemy, Game, Health, Hit, Hitbox, Rampage, RunScope, Time, Tuning } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { makeGround } from "./ground.ts"
@@ -48,13 +47,13 @@ export const ReleaseShockwaves = Game.System("Shooter/ReleaseShockwaves", {
  * it, each pulled in toward it until it is clear of walls and inside the
  * arena (at its side, at worst).
  */
-export const callPoints = (at: Vec2, radius: number, count: number, clearance: number, bounds: { readonly width: number; readonly height: number }, boxes: ReadonlyArray<Box>): ReadonlyArray<Vec2> =>
+export const callPoints = (at: Vec2, radius: number, count: number, clearance: number, bounds: { readonly width: number; readonly height: number }, boxes: ReadonlyArray<Box2>): ReadonlyArray<Vec2> =>
   Array.from({ length: count }, (_, index) => {
     const angle = (index / Math.max(1, count)) * Math.PI * 2 + Math.PI / 4
     for (const reach of [radius, radius * 0.66, radius * 0.33]) {
       const point = { x: at.x + Math.cos(angle) * reach, y: at.y + Math.sin(angle) * reach }
       const inside = point.x >= clearance && point.y >= clearance && point.x <= bounds.width - clearance && point.y <= bounds.height - clearance
-      if (inside && !boxes.some((box) => circleOverlapsBox(point, clearance, box))) return point
+      if (inside && !boxes.some((box) => overlapsCircle(box, point, clearance))) return point
     }
     return at
   })

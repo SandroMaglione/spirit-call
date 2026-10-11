@@ -6,15 +6,14 @@
  * and thrown back every tick (`UpdateBarriers`): off a wall to the side
  * they came from, out of a ring.
  */
-import { normalizeOr, scale, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { Barrier, Cast, Damage, Game, Health, Hitbox, Hurtbox, Invulnerable, Position, RunScope, Time } from "../schema.ts"
 import type { BarrierValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"
 
 /** How far `at` is from the segment `from`–`to`. */
 const toSegment = (at: Vec2, from: Vec2, to: Vec2): number => {
-  const along = sub(to, from)
+  const along = subtract(to, from)
   const length = along.x * along.x + along.y * along.y
   const t = length <= 0 ? 0 : Math.max(0, Math.min(1, ((at.x - from.x) * along.x + (at.y - from.y) * along.y) / length))
   return Math.hypot(at.x - (from.x + along.x * t), at.y - (from.y + along.y * t))
@@ -98,7 +97,7 @@ export const UpdateBarriers = Game.System("Shooter/UpdateBarriers", {
         const at = body.data.position.get()
         if (barrierGap(shape, at) > hurtbox.radius + barrier.effect.thickness / 2) continue
         const direction = shape.kind === "ring"
-          ? normalizeOr(sub(at, shape.center), { x: 1, y: 0 })
+          ? normalizeOr(subtract(at, shape.center), { x: 1, y: 0 })
           : (() => {
             const across = normalizeOr({ x: -(shape.to.y - shape.from.y), y: shape.to.x - shape.from.x }, { x: 1, y: 0 })
             const side = (at.x - shape.from.x) * across.x + (at.y - shape.from.y) * across.y

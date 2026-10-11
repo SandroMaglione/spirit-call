@@ -6,13 +6,12 @@
  * done chimes, and the next one's words take its place.
  */
 import { CanvasTexture, LinearFilter, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace } from "three"
+import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { projection, view } from "../config/view.ts"
 import type { TutorialStep, TutorialStepKind } from "../content/tutorial.ts"
 import { stepGoal, tutorialSpot, tutorialSpotRadius } from "../features/tutorial.ts"
 import { screenDirectionToWorld } from "../math/iso.ts"
-import { normalizeOr } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Challenge, Controls, Enemy, Flow, Game, Player, Position, RenderHost, Sounds, Tuning, Tutorial } from "../schema.ts"
 
 /** How to do each step, on each kind of device. */

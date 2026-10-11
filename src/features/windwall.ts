@@ -13,8 +13,7 @@
  *   off, and untouchable: shots pass under it, blows miss it), then falls,
  *   and the fall is its blow.
  */
-import type { Vec2 } from "../math/vec.ts"
-import { normalizeOr, sub } from "../math/vec.ts"
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { Cast, Damage, Disarmed, Enemy, Game, Health, Hurtbox, Invulnerable, Lifted, Mantle, noMantle, Player, Position, Stunned, Time } from "../schema.ts"
 import type { Blow, Faction, MantleValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"
@@ -82,7 +81,7 @@ export const KeepMantle = Game.System("Shooter/KeepMantle", {
     if (mantle.blow !== null && mantle.effect.power > 0) for (const body of queries.bodies.each()) {
       if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
       const where = body.data.position.get()
-      const away = sub(where, at)
+      const away = subtract(where, at)
       if (Math.hypot(away.x, away.y) > mantle.effect.radius + body.data.hurtbox.get().radius) continue
       events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: "player", direction: normalizeOr(away, { x: 1, y: 0 }), blow: mantle.blow })
     }

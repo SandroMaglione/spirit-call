@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
+import { distance, normalizeOr } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
-import { distance, normalizeOr } from "../src/math/vec.ts"
 import { Facing, Game, Player } from "../src/schema.ts"
 import { doubleTap, start } from "./helpers.ts"
 

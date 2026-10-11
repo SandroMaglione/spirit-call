@@ -1,13 +1,13 @@
 import type { BufferGeometry, Group, Mesh, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import type { ActionButton, SafeArea } from "../config/input.ts"
 import type { StateId } from "../content/elements.ts"
 import type { ArenaId } from "../content/arena.ts"
 import type { CharacterId } from "../content/characters.ts"
-import type { Box } from "../physics/shapes.ts"
 import type { ProjectileStyle } from "../schema.ts"
 import type { SkillSlot } from "../content/skills.ts"
-import type { Vec2 } from "../math/vec.ts"
 
 import type { Batch, Instance } from "./batch.ts"
 import type { ActorBody } from "./bodies.ts"
@@ -328,7 +328,7 @@ export interface RenderHostValue {
   /** Characters who just fell, until they are gone (see `PlayFalls`). */
   readonly fallen: Array<Fallen>
   /** Lays out the floor (none over `holes`, the hazards laid into it) and scenery of arena `id` (see `SyncArena`); nothing to do when it is already shown. */
-  showArena(id: ArenaId, holes: ReadonlyArray<Box>): void
+  showArena(id: ArenaId, holes: ReadonlyArray<Box2>): void
   /** A point `height` world units above the floor point `world`, in canvas pixels, as the camera shows it this frame. */
   toCanvas(world: Vec2, height: number): Vec2
   /** Draws the frame. */

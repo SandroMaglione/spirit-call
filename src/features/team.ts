@@ -13,10 +13,10 @@
  * is dropped. Her cooldowns run on (`TickBench`), and she gains a share of
  * the energy the one on the field earns (`ApplyDamage`).
  */
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { teamSize } from "../content/characters.ts"
 import type { CharacterId } from "../content/characters.ts"
 import { bySlot } from "../content/skills.ts"
-import type { Vec2 } from "../math/vec.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import {
   Action,
