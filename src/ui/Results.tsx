@@ -26,6 +26,7 @@ import { Pill, RoundButton } from "./kit/controls.tsx"
 import { Bar } from "./kit/panel.tsx"
 import { aspectOf } from "../content/aspects.ts"
 import { cosmeticOf } from "../content/cosmetics.ts"
+import type { CurrencyId } from "../content/currencies.ts"
 import type { MaterialId } from "../content/materials.ts"
 import { relicOf } from "../content/relics.ts"
 import { describeCount, describeGoal, meets } from "../content/stars.ts"
@@ -83,7 +84,6 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
       {/* Each star is a goal on top of the clear: which this run met (the ones new to the account land one by one), and what it counted; one line, so the rest keeps its room. */}
       {starred !== null && earned !== null && result.cleared && <div class="results__goals">
         {tuning.quests[starred.quest].stars.map((goal, index) => <div key={index} class={`goal${meets(goal, result.cleared, result.tally) ? " is-earned" : ""}${earned.stars.includes(index) ? " is-fresh" : ""}`} style={at(times.star(index))}><Icon name="star" />{describeGoal(goal)}<span class="results__count">{describeCount(goal, result.tally)}</span></div>)}
-        {earned.perfect !== null && <div class="goal goal--perfect is-earned is-fresh" style={at(times.line)}><Icon name="relic" />Perfect</div>}
       </div>}
       <p class="dim results__step" style={at(times.line)}><span class="results__name">{name}</span> · Wave {result.wave} · {result.kills} defeated · {time}</p>
       {underleveled && <p class="dim results__step" style={at(times.line)}>Your party is below the enemies' level. Level up your characters in Party, or try again with careful dodges.</p>}
@@ -92,11 +92,12 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
         {earned !== null && <>
           <CardRow class="results__loot" label="Rewards">
             {earnedResources(tuning, earned).map(({ id, total, fromChests }) => {
-              const currency = id === "gold"
+              // A currency (gold, an invitation) draws its own icon; the rest are materials.
+              const currency = Object.hasOwn(tuning.currencies, id)
               // Part of it from a chest: the chest in the corner, and it glows as a chest's gift does.
               return <Card key={id} fresh={fromChests > 0} corner={fromChests > 0 ? "chest" : undefined}
                 tint={currency ? undefined : tuning.materials[id as MaterialId].element ?? undefined}
-                art={currency ? <Icon name="gold" /> : <MaterialIcon store={store} material={id as MaterialId} />}
+                art={currency ? <Icon name={id as CurrencyId} /> : <MaterialIcon store={store} material={id as MaterialId} />}
                 foot={`+${total.toLocaleString("en-US")}`} label={`${total} ${resourceName(tuning, id)}${fromChests > 0 ? `, ${fromChests} from a chest` : ""}`} />
             })}
             {earned.granted.map((unlock) => unlock.kind === "character"
