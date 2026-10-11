@@ -227,8 +227,6 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const fade = Math.min(1, vortex.remaining / 0.3)
     g.fillCircle(center.x, center.y, effect.radius, color, 0.1 * fade)
     g.strokeCircle(center.x, center.y, effect.radius, 3, color, 0.6 * fade)
-    // Cyclone keeps its reach on the floor; its currents wrap the spirit in 3D.
-    if (vortex.blow.source?.label?.kind === "skill" && vortex.blow.source.label.skill === "cyclone") continue
     const turn = -now * view.vortex.turnsPerSecond * Math.PI * 2
     for (let arm = 0; arm < view.vortex.arms; arm++) {
       for (let ring = 1; ring <= 3; ring++) {

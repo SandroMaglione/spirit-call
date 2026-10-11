@@ -121,8 +121,9 @@ shot has travelled so it cannot extend behind its launch point. Pooled
 nodes reset their launch and trail state between uses.
 
 Swordsman's Gust and Cyclone light her model and wrap it in depth-tested
-wind ribbons, with a 3D funnel over the Cyclone's pull. Flat slash marks
-and the old wind overlay are omitted for her. `CombatLight` shares one
+wind ribbons, with a 3D funnel over the Cyclone's pull. Its range and
+spiraling currents remain visible on the floor. Flat slash marks and the
+old airborne wind overlay are omitted for her. `CombatLight` shares one
 bounded instance batch for launches, shells and wind; it owns no damage
 or movement. The floor remains visible between its currents.
 
