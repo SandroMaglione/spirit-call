@@ -1,7 +1,7 @@
 import { experienceFor, experienceTo } from "../src/account/progression.ts"
 import { describe, expect, it } from "vitest"
 
-import { buildOf, characterLevel, clearPay, createAccount, discovered, earn, earnedResources, entryTeam, owns, encounterOf, groupStars, playLock, questLock, recordRun, runPay, saveTeam, select, teamOf, spend, train, trainingCost, unlock, withSources, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold, levelsUnder, underLevelWarning, lentFor, openAudition } from "../src/account/account.ts"
+import { buildOf, characterLevel, clearPay, createAccount, discovered, earn, earnedResources, entryTeam, owns, encounterOf, groupStars, playLock, questLock, recordRun, runPay, saveTeam, select, setTeam, teamOf, spend, train, trainingCost, unlock, withSources, withEarnedChests, ascend, ascensionCost, chestRewards, levelCap, materialPay, questLevel, questRewards, roundGold, levelsUnder, underLevelWarning, lentFor, openAudition } from "../src/account/account.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { eliteElementOf, rankGates } from "../src/content/ranks.ts"
 import type { Account, Earned, Play } from "../src/account/account.ts"
@@ -176,6 +176,34 @@ describe("account rules", () => {
     expect(select(defaultTuning, fresh(), ["swordsman"], quest("holdTheLine"))).toEqual({ ok: false, refusal: { kind: "locked", play: quest("holdTheLine"), lock: { kind: "after", quest: "packLeader" } } })
     const selected = select(defaultTuning, fresh(), ["swordsman"], quest("firstBlood"))
     expect(selected.ok && selected.value.selection).toEqual({ team: ["swordsman"], aspects: {}, relics: {}, play: quest("firstBlood") })
+  })
+
+  it("keeps party edits in the active slot without changing other saved parties", () => {
+    const account = unlock(defaultTuning, fresh(), { kind: "character", id: "gunner" }, 2000)
+    const initial = setTeam(defaultTuning, account, ["swordsman"], {}, {}, 1)
+    if (!initial.ok) throw new Error("party not saved")
+    const second = setTeam(defaultTuning, initial.value, ["gunner", "swordsman"], {}, {}, 2)
+    if (!second.ok) throw new Error("party not selected")
+    const edited = setTeam(defaultTuning, second.value, ["swordsman", "gunner"], {}, {})
+    if (!edited.ok) throw new Error("party not edited")
+    expect(edited.value.activeTeamSlot).toBe(2)
+    expect(edited.value.selection.team).toEqual(["swordsman", "gunner"])
+    expect(edited.value.saved[2]?.team).toEqual(edited.value.selection.team)
+    expect(edited.value.saved[1]).toEqual(initial.value.saved[1])
+    const removed = setTeam(defaultTuning, edited.value, ["gunner"], {}, {})
+    expect(removed.ok && removed.value.saved[2]?.team).toEqual(["gunner"])
+    const empty = saveTeam(defaultTuning, edited.value, 2, null)
+    expect(empty.ok && empty.value.activeTeamSlot).toBeNull()
+  })
+
+  it("keeps an unslotted party unslotted and refuses invalid edits without changing a saved party", () => {
+    const account = fresh()
+    const unslotted = setTeam(defaultTuning, account, ["swordsman"], {}, {})
+    expect(unslotted.ok && unslotted.value.activeTeamSlot).toBeNull()
+    expect(unslotted.ok && unslotted.value.saved).toEqual({})
+    expect(setTeam(defaultTuning, account, ["gunner"], {}, {}, 1)).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
+    expect(setTeam(defaultTuning, account, ["swordsman"], {}, {}, 4)).toEqual({ ok: false, refusal: { kind: "badSlot", slot: 4 } })
+    expect(account.saved).toEqual({})
   })
 
   it("selects a team of one to three, each once, in order", () => {

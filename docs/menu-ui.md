@@ -174,9 +174,10 @@ is left, and keep text off it.
   leaves for the menu; Settings' Controls tab can replay it. It pays
   and records nothing. Switching and elemental bursts are left for later.
 - **The party is kept as it is set up.** There is no confirm: the menu
-  saves it when a screen is left (and when an aspect or a relic is
-  equipped), if it follows the rules; entering a run saves it too. Only a
-  failure is shown.
+  saves it immediately when a character is changed, swapped, added, or
+  removed, and when an aspect or relic is equipped. The current party and
+  its active saved slot are kept together in one account change, if they
+  follow the rules. Only a failure is shown.
 - **Her gear has a screen of its own** (`menu/Gear.tsx`), since there
   will be many aspects, relics, and looks, each with its own explanation:
   tabs Aspect, Relics, Looks; the cards on the left (relics under her four
@@ -216,8 +217,11 @@ is left, and keep text off it.
   her: the Training Ground lends her alone with her plain kit at the
   party's level, records nothing, and leaves the saved party alone.
 - **Saved parties**: the party screen's top bar holds three slots (tap an
-  empty one to save the party there, a saved one to load it, Save to keep
-  the party in the slot last used).
+  empty one to save the party there, a saved one to load it). The selected
+  slot is highlighted and named beside Party, or "No slot" when none is
+  selected. Edits save to the active slot immediately, with no Save button.
+  The slot survives leaving the screen, a run, and restarting the game.
+  The party strip on Home and before a challenge also names the active slot.
 - **The top bar's tabs never move**: the bar is three columns with equal
   sides, so its middle stays centered whatever stands at its ends (a
   wallet shown on one tab and not another), and a tab is as wide as its

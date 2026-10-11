@@ -77,7 +77,7 @@ export const layer = (tuning: Tuning, starter: StarterSet, id: string) =>
       // One save at a time, in the order asked: a slower store (a phone's) never lets an older account land last.
       const queue = yield* Semaphore.make(1)
       const save = (account: Account) =>
-        queue.withPermits(1)(write(store, accountKey(id), LatestAccountJson, { version: 2, account: toRecord(account) })).pipe(
+        queue.withPermits(1)(write(store, accountKey(id), LatestAccountJson, { version: 3, account: toRecord(account) })).pipe(
           Effect.mapError((cause) => new AccountSaveError({ cause }))
         )
       // What loading repaired or migrated is saved at once (only ever after a read that worked).

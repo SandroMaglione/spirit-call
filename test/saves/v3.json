@@ -1,0 +1,61 @@
+{
+  "version": 3,
+  "account": {
+    "id": "0f8e7d6c-5b4a-4321-8765-1234567890ab",
+    "createdAt": 1790000000000,
+    "totals": {
+      "runs": 1,
+      "clears": 1,
+      "kills": 40,
+      "secondsPlayed": 120
+    },
+    "wallet": {
+      "gold": 263,
+      "windEssence": 6
+    },
+    "owned": {
+      "characters": {
+        "swordsman": {
+          "unlockedAt": 1790000000000,
+          "experience": 97,
+          "ascension": 0
+        }
+      },
+      "aspects": {},
+      "relics": {},
+      "cosmetics": {}
+    },
+    "quests": {
+      "firstBlood": {
+        "1": {
+          "attempts": 1,
+          "clears": 1,
+          "firstClearedAt": 1790000100000,
+          "stars": [
+            0,
+            2
+          ]
+        }
+      }
+    },
+    "hardcore": {},
+    "discoveries": {},
+    "chests": {},
+    "selection": {
+      "team": [
+        "swordsman"
+      ],
+      "aspects": {},
+      "relics": {},
+      "play": {
+        "kind": "quest",
+        "quest": "firstBlood"
+      }
+    },
+    "worn": {},
+    "saved": {},
+    "activeTeamSlot": null,
+    "auditions": {},
+    "tutorialDoneAt": 1790000000000
+  }
+}

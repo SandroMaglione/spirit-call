@@ -237,13 +237,17 @@ const start = async (mount: HTMLElement) => {
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
     // Kept as it is set up: nothing to tell the player unless it fails.
-    saveTeam: (team, aspects, relics) => {
-      const selected = shell.select(team, uiStore.account.peek().selection.play, aspects, relics)
+    saveTeam: (team, aspects, relics, slot) => {
+      const selected = shell.setTeam(team, aspects, relics, slot)
       if (!selected.ok) notify("Your party could not be saved.", true)
+      return selected.ok
     },
     enter: (team, aspects, play, relics) => {
       // The account's rules decide whether it can be entered.
-      const selected = shell.select(team, play, aspects, relics)
+      // Starting with the lobby's chosen spirit must not reorder the saved party.
+      const draft = uiStore.menuDraft.peek()
+      const kept = team.length === draft.team.length && draft.team.every((member) => team.includes(member)) ? draft.team : team
+      const selected = shell.select(kept, play, aspects, relics)
       if (!selected.ok) { notify("This challenge is locked or your party cannot enter it.", true, "Cannot enter"); return }
       playing = play
       recording = true
@@ -270,7 +274,6 @@ const start = async (mount: HTMLElement) => {
       })
     },
     openAudition: (character) => change(() => shell.openAudition(character), `${tuning.characters[character].name}'s audition is open`),
-    saveTeamTo: (slot, saved) => change(() => shell.saveTeam(slot, saved), saved === null ? null : "Team saved"),
     wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
       sounds.play(cueSounds[cue])

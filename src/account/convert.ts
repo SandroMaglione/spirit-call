@@ -61,6 +61,7 @@ export interface AccountRecord {
   readonly tutorialDoneAt: number | null
   /** Teams saved to load in a tap, by slot: members in order, each one's aspect, and each one's relics by slot. */
   readonly saved: Readonly<Record<string, { readonly team: ReadonlyArray<string>; readonly aspects: Readonly<Record<string, string>>; readonly relics: Readonly<Record<string, Readonly<Record<string, string>>>> }>>
+  readonly activeTeamSlot: number | null
 }
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -143,6 +144,7 @@ export const fromRecord = (
     selection: starterSelection,
     worn: {},
     saved: {},
+    activeTeamSlot: null,
     auditions: keep<CharacterId, { readonly slot: number; readonly openedAt: number }>(tuning.characters, stored.auditions, "audition", dropped),
     tutorialDoneAt: stored.tutorialDoneAt
   }
@@ -218,6 +220,10 @@ export const fromRecord = (
     if (kept.ok) account = kept.value
     else dropped.push("a saved team")
   }
+  // A repaired or missing slot must never be presented as the active party.
+  const active = stored.activeTeamSlot
+  if (active !== null && account.saved[active] !== undefined) account = { ...account, activeTeamSlot: active }
+  else if (active !== null) dropped.push("the selected party slot")
   return { account, dropped, granted: rewarded.granted }
 }
 
@@ -244,6 +250,7 @@ export const toRecord = (account: Account): AccountRecord => ({
   selection: account.selection,
   worn: account.worn,
   saved: account.saved,
+  activeTeamSlot: account.activeTeamSlot,
   auditions: account.auditions,
   tutorialDoneAt: account.tutorialDoneAt
 })

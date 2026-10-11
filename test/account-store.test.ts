@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect"
 import * as KeyValueStore from "effect/persistence/KeyValueStore"
 import { describe, expect, it } from "vitest"
 
-import { train } from "../src/account/account.ts"
+import { setTeam, train, unlock } from "../src/account/account.ts"
 import { AccountReadError, AccountStore, accountKey, layer as accountLayer } from "../src/account/account-store.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -39,17 +39,17 @@ describe("account store", () => {
     expect(store.notes).toEqual([])
     expect(Object.keys(store.account.owned.characters)).toEqual([...newAccount.characters])
     expect(store.account.id).toBe(id)
-    expect(saved).toMatchObject({ version: 2, account: { id, tutorialDoneAt: null } })
+    expect(saved).toMatchObject({ version: 3, account: { id, tutorialDoneAt: null, activeTeamSlot: null } })
   })
 
   it("loads every version of the save ever shipped", async () => {
-    for (const { store, saved } of await Promise.all([1, 2].map((version) => onDevice({ [key]: fixture(version) })))) {
+    for (const { store, saved } of await Promise.all([1, 2, 3].map((version) => onDevice({ [key]: fixture(version) })))) {
       expect(store.account.id).toBe("0f8e7d6c-5b4a-4321-8765-1234567890ab")
       expect(store.account.totals.runs).toBe(1)
       expect(store.account.wallet.windEssence).toBe(6)
       // It played before the tutorial came: it does not open on it.
       expect(store.account.tutorialDoneAt).toBe(store.account.createdAt)
-      expect(saved.version).toBe(2)
+      expect(saved.version).toBe(3)
     }
   })
 
@@ -69,6 +69,32 @@ describe("account store", () => {
     })
     const again = await onDevice({ [key]: JSON.stringify(changed.saved) })
     expect(again.store.account).toEqual(changed.used)
+  })
+
+  it("loads the edited party and its selected slot after a restart", async () => {
+    const changed = await onDevice({ [key]: fixture(2) }, (store) => {
+      const owned = unlock(defaultTuning, store.account, { kind: "character", id: "gunner" }, 2000)
+      const selected = setTeam(defaultTuning, owned, ["swordsman", "gunner"], {}, {}, 2)
+      if (!selected.ok) throw new Error("party not selected")
+      const edited = setTeam(defaultTuning, selected.value, ["gunner"], {}, {})
+      if (!edited.ok) throw new Error("party not edited")
+      return store.save(edited.value).pipe(Effect.as(edited.value))
+    })
+    const again = await onDevice({ [key]: JSON.stringify(changed.saved) })
+    expect(again.store.account).toEqual(changed.used)
+    expect(again.store.account.activeTeamSlot).toBe(2)
+    expect(again.store.account.selection.team).toEqual(["gunner"])
+    expect(again.store.account.saved[2]?.team).toEqual(["gunner"])
+  })
+
+  it("migrates old saves without guessing an active slot and clears a removed slot", async () => {
+    const old = await onDevice({ [key]: fixture(2) })
+    expect(old.store.account.activeTeamSlot).toBeNull()
+    const missing = JSON.parse(fixture(3))
+    missing.account.activeTeamSlot = 2
+    const repaired = await onDevice({ [key]: JSON.stringify(missing) })
+    expect(repaired.store.account.activeTeamSlot).toBeNull()
+    expect(repaired.store.notes.join(" ")).toContain("selected party slot")
   })
 
   it("sets a save it cannot read aside, and starts a new account with a notice", async () => {

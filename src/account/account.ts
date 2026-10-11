@@ -166,6 +166,8 @@ export interface Account {
   readonly worn: Worn
   /** Teams saved to load in a tap, by slot (1 to `savedTeamSlots`). */
   readonly saved: { readonly [slot: number]: SavedTeam }
+  /** The saved party being edited; `null`: the current party has no saved slot. */
+  readonly activeTeamSlot: number | null
   /** The auditions opened with an invitation, by character (see `openAudition`). */
   readonly auditions: { readonly [Id in CharacterId]?: OpenedAudition }
   /** When the tutorial was finished or skipped (epoch milliseconds); `null`: not yet, so the game opens on it. */
@@ -304,6 +306,7 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     selection: { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } },
     worn: {},
     saved: {},
+    activeTeamSlot: null,
     auditions: {},
     tutorialDoneAt: null
   }
@@ -759,7 +762,7 @@ export const saveTeam = (tuning: Tuning, account: Account, slot: number, saved: 
   if (!(Number.isInteger(slot) && slot >= 1 && slot <= savedTeamSlots)) return refuse({ kind: "badSlot", slot })
   if (saved === null) {
     const { [slot]: _gone, ...rest } = account.saved
-    return { ok: true, value: { ...account, saved: rest } }
+    return { ok: true, value: { ...account, saved: rest, activeTeamSlot: account.activeTeamSlot === slot ? null : account.activeTeamSlot } }
   }
   const { team, aspects, relics } = saved
   if (!validTeam(team)) return refuse({ kind: "badTeam", team })
@@ -774,6 +777,14 @@ export const saveTeam = (tuning: Tuning, account: Account, slot: number, saved: 
   const keptRelics: { [Id in CharacterId]?: { readonly [Slot in RelicSlot]?: RelicId } } = {}
   for (const character of team) if (relics[character] !== undefined && Object.keys(relics[character]).length > 0) keptRelics[character] = relics[character]
   return { ok: true, value: { ...account, saved: { ...account.saved, [slot]: { team, aspects: kept, relics: keptRelics } } } }
+}
+
+/** Keeps a party edit and its active saved slot together, in one account change. */
+export const setTeam = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics, slot: number | null = account.activeTeamSlot): Checked<Account> => {
+  const selected = select(tuning, account, team, account.selection.play, aspects, relics)
+  if (!selected.ok) return selected
+  const next = { ...selected.value, activeTeamSlot: slot }
+  return slot === null ? { ok: true, value: next } : saveTeam(tuning, next, slot, next.selection)
 }
 
 /** `account` with `character` wearing `cosmetic` as her look of `kind` (`null`: her own look), if it owns both, and the look is of that kind and for her. */

@@ -9,7 +9,7 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
+import type { Account, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { Tuning } from "../config/tuning.ts"
@@ -138,16 +138,14 @@ export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
-  /** Save `team` and the aspects and relics equipped in it (refused when they break the rules, see `teamProblems`, `teamRelicProblems`). */
-  readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics) => void
+  /** Save the party and its active slot together; false when the rules refuse it. An omitted slot keeps the current one. */
+  readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics, slot?: number | null) => boolean
   /** Enter the arena with `team` (in order, with `aspects` and `relics` equipped; the saved relics when not given) to play `play`. */
   readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play, relics?: TeamRelics) => void
   /** Enter an Extra with `team`, `aspects`, and `relics` (the saved ones when not given): nothing it does is recorded on the account. */
   readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra, relics?: TeamRelics) => void
   /** Open `character`'s audition with an invitation (saved at once). */
   readonly openAudition: (character: CharacterId) => void
-  /** Save a team in `slot` to load in a tap, or empty the slot (`null`; saved at once). */
-  readonly saveTeamTo: (slot: number, saved: SavedTeam | null) => void
   /** Put a look of `kind` on `character` (`null`: her own look; saved at once). */
   readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => void
   /** Take an owned character to its next level with gold (saved at once). */

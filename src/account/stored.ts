@@ -95,10 +95,16 @@ const AccountRecordV1 = Schema.Struct({
   saved: ById(Schema.Struct({ team: Schema.Array(Schema.String), aspects: ById(Schema.String), relics: Relics }))
 })
 
-/** The account as stored (`AccountRecord`): its shape, with every content id a plain string. Since version 2: when the tutorial was done. */
-export const AccountRecordSchema = Schema.Struct({
+/** Version 2 adds when the tutorial was done. */
+const AccountRecordV2 = Schema.Struct({
   ...AccountRecordV1.fields,
   tutorialDoneAt: Schema.NullOr(Schema.Number)
+})
+
+/** The current account record, including the active saved party slot. */
+export const AccountRecordSchema = Schema.Struct({
+  ...AccountRecordV2.fields,
+  activeTeamSlot: Schema.NullOr(Schema.Number)
 })
 
 // The Schema describes exactly the record `convert.ts` reads and writes, both ways.
@@ -115,11 +121,17 @@ export const StoredAccountV1 = Schema.Struct({
 /** Version 2: and when the tutorial was done. */
 export const StoredAccountV2 = Schema.Struct({
   version: Schema.Literal(2),
+  account: AccountRecordV2
+})
+
+/** Version 3 remembers the saved party being edited. */
+export const StoredAccountV3 = Schema.Struct({
+  version: Schema.Literal(3),
   account: AccountRecordSchema
 })
 
-export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2])
-export const StoredAccountLatest = StoredAccountV2
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2, StoredAccountV3])
+export const StoredAccountLatest = StoredAccountV3
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 /** Brings a saved account of any version to the latest, one version at a time. */
@@ -129,6 +141,8 @@ export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccount
     case 1:
       return migrateAccount({ version: 2, account: { ...stored.account, tutorialDoneAt: stored.account.totals.runs > 0 ? stored.account.createdAt : null } })
     case 2:
+      return migrateAccount({ version: 3, account: { ...stored.account, activeTeamSlot: null } })
+    case 3:
       return stored
   }
 }

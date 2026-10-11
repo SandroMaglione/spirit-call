@@ -94,6 +94,14 @@ is no undoing an update, so:
 - **Content changes need no migration** of their own: `fromRecord` repairs
   them. A renamed content id is the exception (see `AGENTS.md`).
 
+## Saved parties
+
+The save's third version remembers the active saved-party slot. A party
+edit saves the current selection and that slot together; the other slots
+stay as they were. Versions 1 and 2 migrate with no active slot, since they
+never kept which one was selected. An invalid or removed slot loads with
+none selected.
+
 ## The tutorial
 
 The save's second version remembers when the tutorial was completed or
