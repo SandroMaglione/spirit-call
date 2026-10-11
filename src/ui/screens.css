@@ -458,3 +458,4 @@
 .accounts__new { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
 .accounts__new > .pill { min-width: 96px; justify-content: center; padding: 0 20px; }
 .accounts__problem { color: var(--red); font-size: 14px; font-weight: 700; }
+.accounts__loading { position: absolute; left: 50%; top: 50%; translate: -50% -50%; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: .04em; animation: fade .3s backwards; }

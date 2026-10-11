@@ -2,7 +2,8 @@
  * The way in: the accounts on this device. Pick one to play, make a new
  * one (a name, no password), or delete one. It shows before the game
  * loads, over the backdrop, until an account is picked that no other tab
- * is playing; then it goes and the game starts with that account.
+ * is playing; then it says the game is loading (the models take a while
+ * on a phone's network) until the game is up.
  */
 import { render } from "preact"
 import { useSignal } from "@preact/signals"
@@ -122,8 +123,13 @@ const AccountPicker = ({ accounts, play }: {
   </div>
 }
 
-/** Shows the accounts over `parent` until one is picked and playing it is held (`hold`): the account picked. */
-export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id: string) => Promise<boolean>): Promise<Picked> =>
+/** The account picked, and how to take the loading view away once the game is up. */
+export interface Opened extends Picked {
+  readonly loaded: () => void
+}
+
+/** Shows the accounts over `parent` until one is picked and playing it is held (`hold`), then a loading view until `loaded`. */
+export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id: string) => Promise<boolean>): Promise<Opened> =>
   new Promise((resolve) => {
     const backdrop = document.createElement("div")
     backdrop.className = "ui-backdrop"
@@ -132,12 +138,15 @@ export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id:
     root.className = "ui"
     parent.append(backdrop, root)
     fitToScreen([backdrop, root])
-    render(<AccountPicker accounts={accounts} play={async (account) => {
-      if (!(await hold(account.id))) return false
+    const loaded = () => {
       render(null, root)
       backdrop.remove()
       root.remove()
-      resolve(account)
+    }
+    render(<AccountPicker accounts={accounts} play={async (account) => {
+      if (!(await hold(account.id))) return false
+      render(<div class="ui-screen"><p class="accounts__loading" role="status">Loading…</p></div>, root)
+      resolve({ id: account.id, name: account.name, loaded })
       return true
     }} />, root)
   })
