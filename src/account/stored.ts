@@ -26,15 +26,29 @@ export const StoredSettingsV2 = Schema.Struct({
   volume: Schema.Number
 })
 
-export const StoredSettings = Schema.Union([StoredSettingsV1, StoredSettingsV2])
-export const StoredSettingsLatest = StoredSettingsV2
+/** Version 3: and comfort: buzzes, how much the screen shakes, reduced motion, and the aim assist on touch. */
+export const StoredSettingsV3 = Schema.Struct({
+  version: Schema.Literal(3),
+  muted: Schema.Boolean,
+  volume: Schema.Number,
+  haptics: Schema.Boolean,
+  shake: Schema.Literals(["full", "reduced", "off"]),
+  reducedMotion: Schema.Boolean,
+  aimAssist: Schema.Boolean
+})
+
+export const StoredSettings = Schema.Union([StoredSettingsV1, StoredSettingsV2, StoredSettingsV3])
+export const StoredSettingsLatest = StoredSettingsV3
 export type StoredSettingsLatest = typeof StoredSettingsLatest.Type
 
-export const migrateSettings = (stored: typeof StoredSettings.Type): StoredSettingsLatest => {
+/** Brings saved settings to the latest version; what a version adds starts as it would on a new device (`reducedMotion`: as the device asks). */
+export const migrateSettings = (stored: typeof StoredSettings.Type, device: { readonly reducedMotion: boolean }): StoredSettingsLatest => {
   switch (stored.version) {
     case 1:
-      return { version: 2, muted: stored.muted, volume: 1 }
+      return migrateSettings({ version: 2, muted: stored.muted, volume: 1 }, device)
     case 2:
+      return { version: 3, muted: stored.muted, volume: stored.volume, haptics: true, shake: "full", reducedMotion: device.reducedMotion, aimAssist: true }
+    case 3:
       return stored
   }
 }

@@ -1,4 +1,5 @@
 import { effect, signal } from "@preact/signals"
+import { Result } from "@typeonce/bevy-ts"
 import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchLayout } from "./config/input.ts"
@@ -6,10 +7,11 @@ import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
-import { holdAccount, openAccounts, startApp } from "./app/app.ts"
-import { buzz, hideSplash, onBackButton } from "./app/device.ts"
+import { holdAccount, openAccounts, SaveReadFailed, startApp } from "./app/app.ts"
+import { buzz, hideSplash, inApp, leaveApp, onBackButton } from "./app/device.ts"
 import type { Accounts } from "./app/app.ts"
 import { showAccounts } from "./ui/Accounts.tsx"
+import { crashShowing, describeError, showCrash } from "./ui/crash.ts"
 import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
 import { mountUi } from "./ui/mount.tsx"
@@ -28,6 +30,7 @@ import { createMenuInputHost } from "./presentation/menu-input.ts"
 import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
+import { initialControls } from "./features/input.ts"
 import {
   FrameContext,
   Game,
@@ -63,7 +66,7 @@ const devQuery = dev ? window.location.search : ""
 /** A dev quick start's account: the last played, or a new one. */
 const devAccount = async (accounts: Accounts) => {
   const loaded = () => undefined
-  const last = (await accounts.list())[0]
+  const last = (await accounts.list())?.[0]
   if (last !== undefined) return { id: last.id, name: last.name, loaded }
   const made = await accounts.create("Dev")
   if (!made.ok) throw new Error(made.problem)
@@ -73,7 +76,54 @@ const devAccount = async (accounts: Accounts) => {
 /** Takes the loading view away: once the game is up, or failed to start (its error shows instead). */
 let loaded: () => void = () => undefined
 
+/** Every save asked so far, done: once the account is loaded. */
+let flushSaves: () => Promise<void> = () => Promise.resolve()
+/** Stops the game where it is (the loop, the sound, the input): once it runs. */
+let halt: () => void = () => undefined
+/** Whether the game got as far as running. */
+let running = false
+
+/** Starts the page over, once what was being saved is saved (a few seconds at most). */
+const restart = async () => {
+  await Promise.race([flushSaves().catch(() => undefined), new Promise((done) => setTimeout(done, 3000))])
+  window.location.reload()
+}
+
+/**
+ * A failure that stops the game (in the loop, drawing the UI, or starting):
+ * the game stops where it is, and the crash screen says so, with a way to
+ * start again. Nothing is written: the account stays as it was last saved,
+ * and a run going on is not counted.
+ */
+const crash = (error: unknown) => {
+  if (crashShowing()) return
+  console.error("The game stopped", error)
+  try {
+    halt()
+  } catch (stopping) {
+    console.error("The game could not be stopped", stopping)
+  }
+  loaded()
+  hideSplash()
+  const detail = describeError(error, SHOOTER_BUILD)
+  showCrash(document.body, error instanceof SaveReadFailed
+    ? { title: "Your save could not be read", message: "This device's storage did not answer just now. Nothing was changed: try again.", action: "Try again", onAction: restart, detail }
+    : running
+    ? { title: "Something went wrong", message: "The game stopped. Your progress is saved; a run going on when it stopped does not count.", action: "Restart", onAction: restart, detail }
+    : { title: "The game could not start", message: "Something went wrong while starting. Your progress is as it was last saved.", action: "Try again", onAction: restart, detail })
+}
+
+/** Whether the page moves less (the menus' animations, zoom punches): the CSS and the showcase read it. */
+const setMotion = (reduced: boolean) => {
+  document.documentElement.dataset["motion"] = reduced ? "reduced" : "full"
+}
+
+/** How much the screen shakes, by setting. */
+const shakeScale = { full: 1, reduced: 0.4, off: 0 } as const
+
 const start = async (mount: HTMLElement) => {
+  // Until the settings load, as the phone asks.
+  setMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(devQuery)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
@@ -86,13 +136,20 @@ const start = async (mount: HTMLElement) => {
   const looks = loadLooks((share) => (progress.value = share))
   // Awaited below; a failure before then is reported there, not as unhandled.
   looks.catch(() => undefined)
+  // Android's back button is Escape: it steps back in the menus, closes a dialog, pauses and resumes a run, and on the
+  // list of accounts or the home screen asks to leave; over the crash screen it leaves.
+  onBackButton(() => {
+    if (crashShowing()) leaveApp?.()
+    else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }))
+  })
   const accounts = openAccounts()
-  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress)
+  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress, leaveApp)
   // In the apps, the splash screen gives way to the list of accounts (or a quick start's loading).
   hideSplash()
   const picked = await picking
   loaded = picked.loaded
   const shell = await startApp(picked.id, picked.name)
+  flushSaves = shell.flush
   const account = shell.account
   // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
@@ -110,7 +167,13 @@ const start = async (mount: HTMLElement) => {
   let recording = true
   const uiRequests = emptyUiRequests()
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
-  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: shell.settings })
+  // The game is for phones: in the apps, and on a touch screen, the controls start as touch (the pad shows from the
+  // first fight); a key or a mouse button switches to the keyboard's, and a touch back.
+  const touchScreen = inApp || window.matchMedia("(pointer: coarse)").matches || new URLSearchParams(window.location.search).has("touch")
+  const device = touchScreen ? "touch" : "desktop"
+  const { muted, volume, ...comfort } = shell.settings
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: { muted, volume }, comfort, device })
+  setMotion(comfort.reducedMotion)
   // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
   wearLooks(account.worn)
   shell.onAccount((next) => {
@@ -138,8 +201,10 @@ const start = async (mount: HTMLElement) => {
     sounds.play(error ? "uiError" : "uiSuccess")
     if (!error) feedbackTimer = setTimeout(() => (uiStore.feedback.value = null), 1200)
   }
-  // A change that could not be written to this device still shows; the player is told once, as it happens.
-  shell.onSaveFailed(() => notify("Your progress could not be saved on this device. Check that the browser allows this site to store data.", true, "Not saved"))
+  // A change that could not be written to this device still shows; the player is told once, as it happens (and again only after a save worked).
+  shell.onSaveFailed(() => notify(inApp
+    ? "Your progress could not be saved on this phone. Free up some space on it: the next change saves everything."
+    : "Your progress could not be saved on this device. Check that the browser allows this site to store data.", true, "Not saved"))
   /** Runs an account change: what to say when it is made, or that the rules refused it. */
   const change = (action: () => unknown, message: string | null) => {
     if (action() === undefined) notify("That cannot be done right now.", true, "Not allowed")
@@ -185,8 +250,8 @@ const start = async (mount: HTMLElement) => {
     wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
       sounds.play(cueSounds[cue])
-      // A short buzz where the phone allows it (in the apps, and browsers but iOS Safari): longer for what matters more.
-      if (cueBuzz[cue] !== 0) buzz(cueBuzz[cue])
+      // A short buzz where the phone allows it (in the apps, and browsers but iOS Safari) and the player wants it: longer for what matters more.
+      if (cueBuzz[cue] !== 0 && uiStore.comfort.peek().haptics) buzz(cueBuzz[cue])
     },
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
@@ -196,18 +261,24 @@ const start = async (mount: HTMLElement) => {
     resume: () => uiRequests.pending.push({ kind: "resume" }),
     setMuted: (muted) => {
       sounds.setMuted(muted)
-      shell.setMuted(muted)
+      shell.changeSettings({ muted })
       uiStore.sound.value = { ...uiStore.sound.value, muted }
     },
     setVolume: (volume) => {
       sounds.setVolume(volume)
-      shell.setVolume(sounds.volume())
+      shell.changeSettings({ volume: sounds.volume() })
       // Turning the volume up turns the sound on.
       if (sounds.volume() > 0 && sounds.muted()) uiActions.setMuted(false)
       uiStore.sound.value = { ...uiStore.sound.value, volume: sounds.volume() }
     },
     // Everything is saved as it happens: the page starts over on the list of accounts.
+    setComfort: (change) => {
+      uiStore.comfort.value = { ...uiStore.comfort.value, ...change }
+      shell.changeSettings(change)
+      applyComfort()
+    },
     switchAccount: () => window.location.reload(),
+    leave: leaveApp,
     // Listed by the build beside the game (scripts/licenses.ts); a dev build has none.
     licenses: () => fetch("licenses.json").then((response) => response.json() as Promise<ReadonlyArray<License>>).catch(() => [])
   }
@@ -261,7 +332,11 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(UiRequests, uiRequests),
       Game.Runtime.service(UiStoreService, uiStore)
     ),
-    resources: { ...initialResources(tuning, frameContext.viewport, team, challenge, enemyLevel), ...(practice === undefined ? {} : { Practice: practice }) },
+    resources: {
+      ...initialResources(tuning, frameContext.viewport, team, challenge, enemyLevel),
+      Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }, device),
+      ...(practice === undefined ? {} : { Practice: practice })
+    },
     machines: initialMachines(flow),
     // The debug handle costs nothing until a trace listener is attached.
     debug: true
@@ -269,10 +344,17 @@ const start = async (mount: HTMLElement) => {
   runtime.tick(setup)
   runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
-  mountUi(mount, uiStore, uiActions)
+  /** Applies the comfort settings: the camera's shake and zoom, the page's motion, and the aim assist in the arena. */
+  function applyComfort() {
+    const comfort = uiStore.comfort.peek()
+    browser.host.comfort.shake = shakeScale[comfort.shake]
+    browser.host.comfort.reducedMotion = comfort.reducedMotion
+    setMotion(comfort.reducedMotion)
+    uiRequests.pending.push({ kind: "controlOptions", options: { aimAssist: comfort.aimAssist } })
+  }
+  applyComfort()
+  mountUi(mount, uiStore, uiActions, crash)
   loaded()
-  // Android's back button is Escape: it steps back in the menus, closes a dialog, pauses and resumes a run.
-  onBackButton(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true })))
   mount.addEventListener("click", (event) => {
     const button = event.target instanceof Element ? event.target.closest<HTMLButtonElement>(".ui button") : null
     if (button !== null && !button.disabled) sounds.play("uiTap")
@@ -301,40 +383,51 @@ const start = async (mount: HTMLElement) => {
     maxStepsPerFrame: engine.maxStepsPerFrame,
     update: () => {
       const started = performance.now()
-      const result = runtime.tick(step)
+      // A step that throws stops the loop as a failed one does (see `onFailure`).
+      let result: ReturnType<typeof runtime.tick>
+      try {
+        result = runtime.tick(step)
+      } catch (error) {
+        return Result.failure(error)
+      }
       simMs += performance.now() - started
       return result
     },
-    render: ({ alpha, elapsedSeconds, fixedSteps }) => {
-      clock.alpha = alpha
-      // While paused, what is drawn stands still with the world (animations, effects, the camera's shake).
-      clock.frameSeconds = uiStore.paused.value ? 0 : elapsedSeconds
-      stats.steps = fixedSteps
-      if (elapsedSeconds > 0) stats.fps += (1 / elapsedSeconds - stats.fps) * 0.05
-      stats.simMs += (simMs - stats.simMs) * 0.05
-      simMs = 0
-      const started = performance.now()
-      runtime.tick(frame)
-      browser.host.render()
-      showcase.render(elapsedSeconds)
-      stats.drawMs += (performance.now() - started - stats.drawMs) * 0.05
+    render: (frameTiming) => {
+      try {
+        draw(frameTiming)
+      } catch (error) {
+        crash(error)
+      }
     },
-    onFailure: (failure) => {
-      console.error("Game loop stopped", failure)
-    }
+    onFailure: (failure) => crash(failure.kind === "UpdateFailure" ? failure.error : new Error(`The game loop stopped: ${failure.kind}`))
   })
   if (!loop.ok) throw new Error(`Invalid loop option: ${loop.error.field}`)
+  halt = () => {
+    loop.value.stop()
+    input.cancel()
+    sounds.setMuted(true)
+  }
+  running = true
+
+  /** Draws one frame (`alpha` of the way to the next step). */
+  function draw({ alpha, elapsedSeconds, fixedSteps }: FixedLoop.Frame) {
+    clock.alpha = alpha
+    // While paused, what is drawn stands still with the world (animations, effects, the camera's shake).
+    clock.frameSeconds = uiStore.paused.value ? 0 : elapsedSeconds
+    stats.steps = fixedSteps
+    if (elapsedSeconds > 0) stats.fps += (1 / elapsedSeconds - stats.fps) * 0.05
+    stats.simMs += (simMs - stats.simMs) * 0.05
+    simMs = 0
+    const started = performance.now()
+    runtime.tick(frame)
+    browser.host.render()
+    showcase.render(elapsedSeconds)
+    stats.drawMs += (performance.now() - started - stats.drawMs) * 0.05
+  }
 }
 
 const mount = document.querySelector<HTMLElement>("#game")
 if (mount === null) throw new Error("Missing #game element")
-start(mount).catch((error: unknown) => {
-  // A failure while starting would otherwise leave a blank page: say so, with what went wrong.
-  console.error("The game could not start", error)
-  loaded()
-  hideSplash()
-  const message = document.createElement("pre")
-  message.className = "boot-error"
-  message.textContent = `The game could not start.\n\n${error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error)}`
-  mount.append(message)
-})
+// A failure while starting would otherwise leave a blank page.
+start(mount).catch(crash)

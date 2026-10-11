@@ -71,6 +71,7 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
       <div class="tuning__actions">
         <button data-copy>Copy JSON</button>
         <button data-reset>Reset</button>
+        <button data-crash title="Fail the next step, to see the crash screen">Crash</button>
       </div>
     </header>
     <section class="tuning__spawn">
@@ -80,6 +81,7 @@ export const createTuningPanel = (mount: HTMLElement, initial: Tuning, queue: De
     <div class="tuning__body" data-body></div>
   `
   const body = root.querySelector<HTMLElement>("[data-body]")!
+  root.querySelector("[data-crash]")!.addEventListener("click", () => (queue.crash = true))
 
   // One button per enemy type, plus clear; waves.enabled below toggles waves for a quiet sandbox.
   const spawnButtons = root.querySelector<HTMLElement>("[data-spawn]")!

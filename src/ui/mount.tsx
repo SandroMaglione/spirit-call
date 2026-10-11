@@ -8,7 +8,8 @@
  * Two layers, both scaled to the screen as one piece (see `kit/scale.ts`):
  * the backdrop, then the UI. The menu's models draw between them.
  */
-import { render } from "preact"
+import { Component, render } from "preact"
+import type { ComponentChildren } from "preact"
 
 import { Backdrop } from "./Backdrop.tsx"
 import { Entrance } from "./Entrance.tsx"
@@ -41,14 +42,26 @@ const App = ({ store, actions }: { readonly store: UiStore; readonly actions: Ui
     : <div class="pulse" aria-hidden="true" />)}
 </>
 
-/** Renders the UI into its layers over `parent`. */
-export const mountUi = (parent: HTMLElement, store: UiStore, actions: UiActions): void => {
+/** Hands a failure while drawing the UI to `failed` (the crash screen), leaving nothing half drawn. */
+class Failsafe extends Component<{ readonly failed: (error: unknown) => void; readonly children: ComponentChildren }, { readonly broken: boolean }> {
+  override state = { broken: false }
+  override componentDidCatch(error: unknown) {
+    this.setState({ broken: true })
+    this.props.failed(error)
+  }
+  override render() {
+    return this.state.broken ? null : this.props.children
+  }
+}
+
+/** Renders the UI into its layers over `parent`; a failure drawing it goes to `failed`. */
+export const mountUi = (parent: HTMLElement, store: UiStore, actions: UiActions, failed: (error: unknown) => void): void => {
   const backdrop = document.createElement("div")
   backdrop.className = "ui-backdrop"
   const root = document.createElement("div")
   root.className = "ui"
   parent.append(backdrop, root)
   fitToScreen([backdrop, root])
-  render(<Backdrop store={store} />, backdrop)
-  render(<App store={store} actions={actions} />, root)
+  render(<Failsafe failed={failed}><Backdrop store={store} /></Failsafe>, backdrop)
+  render(<Failsafe failed={failed}><App store={store} actions={actions} /></Failsafe>, root)
 }

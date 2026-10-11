@@ -38,7 +38,8 @@ import {
   TouchState,
   Tuning,
   Viewport,
-  BasicAttack
+  BasicAttack,
+  ControlOptions
 } from "../schema.ts"
 import type { ControlsValue, SkillControl, SkillsValue } from "../schema.ts"
 import { skillAim } from "./skills.ts"
@@ -98,7 +99,8 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     viewport: Game.System.readResource(Viewport),
     controls: Game.System.writeResource(Controls),
     tuning: Game.System.readResource(Tuning),
-    time: Game.System.readResource(Time)
+    time: Game.System.readResource(Time),
+    options: Game.System.readResource(ControlOptions)
   }
 }, ({ queries, resources }) => {
   const keys = resources.keys.get()
@@ -115,7 +117,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     const state = player === undefined
       ? undefined
       : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get(), attack: attackOf(resources.tuning.get(), player.data.basicAttack.get().attack) }
-    resources.controls.set(party(resolveTouch(touch, previous, state, enemies, resources.tuning.get())))
+    resources.controls.set(party(resolveTouch(touch, previous, state, enemies, resources.tuning.get(), resources.options.get().aimAssist)))
     return
   }
   const camera = resources.camera.get()
@@ -263,7 +265,9 @@ const resolveTouch = (
   previous: ControlsValue,
   player: { readonly position: Vec2; readonly aim: Vec2; readonly skills: SkillsValue; readonly attack: BasicAttackSpec } | undefined,
   enemies: ReadonlyArray<AssistCandidate>,
-  tuning: TuningValue
+  tuning: TuningValue,
+  /** Whether the player wants the assist (the device's settings); the tuning can turn it off for everyone. */
+  aimAssist: boolean
 ): ControlsValue => {
   // Without a player (game over) there is nothing to aim from: keep the aim and press nothing.
   if (player === undefined) {
@@ -276,7 +280,7 @@ const resolveTouch = (
   const { attack } = touch.buttons
   const heading = moving ? normalizeOr(move, player.aim) : player.aim
   // The pick is shown by a ring at all times, so what the ring marks is what a tap hits.
-  const target = assistTargetOf(origin, heading, enemies, previous.assistTarget, player.attack, tuning)
+  const target = aimAssist ? assistTargetOf(origin, heading, enemies, previous.assistTarget, player.attack, tuning) : undefined
   // The player faces where the stick moves; an attack (a tap, or a charge held and released) turns toward the assist's pick, and aims at it.
   const engaged = (attack.pressed || attack.held || attack.released) && target !== undefined
   const toTarget = target === undefined ? zero : { x: target.position.x - origin.x, y: target.position.y - origin.y }
@@ -334,9 +338,13 @@ const touchSkill = (touch: TouchSnapshot, slot: SkillSlot, effect: SkillEffect, 
   }
 }
 
-/** `aimPoint` starts at the player spawn, so nothing is aimed at before the mouse moves. */
-export const initialControls = (aimPoint: Vec2): ControlsValue => ({
-  device: "desktop",
+/**
+ * `aimPoint` starts at the player spawn, so nothing is aimed at before the
+ * mouse moves. `device` is what the controls start as (the browser picks
+ * touch on a phone, see `main.ts`); using the other switches to it.
+ */
+export const initialControls = (aimPoint: Vec2, device: ControlsValue["device"] = "desktop"): ControlsValue => ({
+  device,
   move: zero,
   aimPoint,
   skills: idleSkills(aimPoint),

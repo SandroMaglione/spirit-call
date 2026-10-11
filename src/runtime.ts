@@ -43,6 +43,7 @@ export const initialResources = (
   TouchState: Touch.idle(touchButtons),
   PartyState: [],
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
+  ControlOptions: { aimAssist: true },
   Viewport: viewport,
   Stats: { kills: 0, shots: 0, reactions: [], tally: noTally },
   RunLog: emptyRunLog,

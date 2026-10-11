@@ -231,7 +231,8 @@ export const createShowcase = (parent: HTMLElement, models: ReadonlyMap<ModelId,
   // Keep each character's idle running when the UI changes places.
   const live = new Map<string, Shown>()
   const reveals = new WeakMap<HTMLElement, number>()
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
+  // Reduced motion (the player's setting, see `main.ts`) shows a new spirit at once.
+  const reducedMotion = { get matches() { return document.documentElement.dataset["motion"] === "reduced" } }
   const liveFor = (place: HTMLElement): Shown | null => {
     const character = place.dataset["model"] as CharacterId | undefined
     if (character === undefined || !(character in characterLooks)) return null

@@ -242,6 +242,14 @@ describe("touch controls", () => {
     for (const slot of skillSlots) expect(layout.buttons[slot].aimRadius, slot).toBeGreaterThan(0)
   })
 
+  it("starts as touch on a phone, before anything is touched, until a key is used", () => {
+    const run = start({ device: "touch", keys: [{ frame: 10, press: ["up"] }] })
+    run.step(6)
+    expect(run.runtime.inspect(World).device).toBe("touch")
+    run.step(6)
+    expect(run.runtime.inspect(World).device).toBe("desktop")
+  })
+
   it("switches back to keyboard and mouse as soon as they are used", () => {
     const run = start({ touch: [{ frame: 0, stick: { x: 1, y: 0 } }, { frame: 5, stick: null }], keys: [{ frame: 10, press: ["up"] }] })
     run.step(6)

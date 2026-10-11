@@ -277,6 +277,5 @@ button.card:active { transform: translateY(0) scale(.96); }
 .in-left { animation: from-left .28s cubic-bezier(.2, .8, .2, 1) backwards; }
 .in-right { animation: from-right .28s cubic-bezier(.2, .8, .2, 1) .05s backwards; }
 .in-below { animation: from-below .28s cubic-bezier(.2, .8, .2, 1) .12s backwards; }
-@media (prefers-reduced-motion: reduce) {
-  .ui *, .ui *::before, .ui *::after, .ui-backdrop * { animation: none !important; transition: none !important; }
-}
+/* Reduced motion: the player's setting (it starts as the phone asks), set on the page by main.ts. */
+[data-motion="reduced"] .ui *, [data-motion="reduced"] .ui *::before, [data-motion="reduced"] .ui *::after, [data-motion="reduced"] .ui-backdrop *, [data-motion="reduced"] .hud__moment::before { animation: none !important; transition: none !important; }

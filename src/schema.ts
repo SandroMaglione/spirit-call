@@ -1253,6 +1253,12 @@ export const HitStop = Descriptor.Resource<{ readonly remaining: number }>()("Sh
  */
 export const Paused = Descriptor.Resource<{ readonly paused: boolean }>()("Shooter/Paused")
 
+/** The player's own choices about the controls (the device's settings): whether a tap's attack is aimed for them on touch. */
+export interface ControlOptionsValue {
+  readonly aimAssist: boolean
+}
+export const ControlOptions = Descriptor.Resource<ControlOptionsValue>()("Shooter/ControlOptions")
+
 /** Deterministic random state (mulberry32), so runs replay exactly. */
 export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
 
@@ -1456,6 +1462,7 @@ export const Game = Schema.bind(
       SlowMotion,
       DodgeChain,
       Paused,
+      ControlOptions,
       Practice,
       PracticeField
     },

@@ -25,17 +25,19 @@ export interface Picked {
   readonly name: string
 }
 
-/** An account in the list, and how far it got: never played, a save that cannot be read, or its numbers. */
+/** An account in the list, and how far it got: never played, a save that cannot be read, one not read just now, or its numbers. */
 export interface AccountSummary extends Picked {
   readonly progress:
     | { readonly kind: "new" }
     | { readonly kind: "unreadable" }
+    | { readonly kind: "unknown" }
     | { readonly kind: "played"; readonly characters: number; readonly secondsPlayed: number }
 }
 
 /** What the picker can ask of this device's accounts: plain functions (the shell's `openAccounts`). */
 export interface Accounts {
-  readonly list: () => Promise<ReadonlyArray<AccountSummary>>
+  /** `null` when this device's storage failed to read them (nothing was changed). */
+  readonly list: () => Promise<ReadonlyArray<AccountSummary> | null>
   /** The account made, or why it could not be, in words. */
   readonly create: (name: string) => Promise<({ readonly ok: true } & Picked) | { readonly ok: false; readonly problem: string }>
   /** Whether it was deleted. */
@@ -55,23 +57,37 @@ const progressOf = (account: AccountSummary) => {
       return "New"
     case "unreadable":
       return "Cannot be read"
+    case "unknown":
+      return "Not read just now"
     case "played":
       return `${account.progress.characters} ${account.progress.characters === 1 ? "character" : "characters"} · ${playedFor(account.progress.secondsPlayed)}`
   }
 }
 
-const AccountPicker = ({ accounts, play }: {
+const AccountPicker = ({ accounts, play, leave }: {
   readonly accounts: Accounts
   /** Plays the account: `false` when another tab is playing it. */
   readonly play: (account: Picked) => Promise<boolean>
+  /** Closes the game; `null` where it cannot close itself. */
+  readonly leave: (() => void) | null
 }) => {
-  const list = useSignal<ReadonlyArray<AccountSummary> | null>(null)
+  const list = useSignal<ReadonlyArray<AccountSummary> | "unread" | null>(null)
   const name = useSignal("")
   const problem = useSignal<string | null>(null)
   const busy = useSignal(false)
   const deleting = useSignal<AccountSummary | null>(null)
+  /** Whether "Leave the game?" is asked (Android's back button, where the game can close). */
+  const leaving = useSignal(false)
+  useEffect(() => {
+    if (leave === null) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !document.querySelector('[role="dialog"]')) leaving.value = true
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
   const refresh = async () => {
-    list.value = await accounts.list()
+    list.value = (await accounts.list()) ?? "unread"
   }
   useEffect(() => {
     void refresh()
@@ -99,7 +115,23 @@ const AccountPicker = ({ accounts, play }: {
       await refresh()
       return removed ? null : `${account.name} could not be deleted.`
     })
+  const leaveConfirm = leaving.value && leave !== null && <Confirm title="Leave Spirit Call?" confirm="Leave" close={() => (leaving.value = false)} onConfirm={leave}>
+    See you soon.
+  </Confirm>
   if (list.value === null) return null
+  // The storage failed to read the list: nothing may be made or deleted over what it could not see.
+  if (list.value === "unread") {
+    return <div class="ui-screen">
+      <Panel class="accounts in-below" title="Your accounts">
+        <p class="accounts__problem" role="alert">The accounts on this device could not be read just now. Nothing was changed.</p>
+        <button type="button" class="pill" disabled={busy.value} onClick={() => void run(async () => {
+          await refresh()
+          return null
+        })}><span class="pill__label">Try again</span></button>
+      </Panel>
+      {leaveConfirm}
+    </div>
+  }
   const none = list.value.length === 0
   return <div class="ui-screen">
     <Panel class="accounts in-below" title={none ? "Name your account" : "Choose an account"}>
@@ -122,6 +154,7 @@ const AccountPicker = ({ accounts, play }: {
     {deleting.value !== null && <Confirm title={`Delete ${deleting.value.name}?`} confirm="Delete" close={() => (deleting.value = null)} onConfirm={() => void remove(deleting.value!)}>
       All of this account's progress on this device is gone for good.
     </Confirm>}
+    {leaveConfirm}
   </div>
 }
 
@@ -130,8 +163,8 @@ export interface Opened extends Picked {
   readonly loaded: () => void
 }
 
-/** Shows the accounts over `parent` until one is picked and playing it is held (`hold`), then the loading screen (`progress`, 0 to 1) until `loaded`. */
-export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id: string) => Promise<boolean>, progress: ReadonlySignal<number>): Promise<Opened> =>
+/** Shows the accounts over `parent` until one is picked and playing it is held (`hold`), then the loading screen (`progress`, 0 to 1) until `loaded`; back asks to `leave` (where the game can close). */
+export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id: string) => Promise<boolean>, progress: ReadonlySignal<number>, leave: (() => void) | null): Promise<Opened> =>
   new Promise((resolve) => {
     const backdrop = document.createElement("div")
     backdrop.className = "ui-backdrop"
@@ -152,7 +185,7 @@ export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id:
         root.remove()
       }, 400)
     }
-    render(<AccountPicker accounts={accounts} play={async (account) => {
+    render(<AccountPicker accounts={accounts} leave={leave} play={async (account) => {
       if (!(await hold(account.id))) return false
       render(<Loading progress={progress} />, root)
       resolve({ id: account.id, name: account.name, loaded })

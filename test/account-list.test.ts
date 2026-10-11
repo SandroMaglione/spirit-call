@@ -4,8 +4,9 @@ import * as Effect from "effect/Effect"
 import * as KeyValueStore from "effect/persistence/KeyValueStore"
 import { describe, expect, it } from "vitest"
 
-import { AccountList, layer as listLayer, listKey, singleAccountKey } from "../src/account/account-list.ts"
+import { AccountList, AccountListReadError, layer as listLayer, listKey, singleAccountKey } from "../src/account/account-list.ts"
 import { accountKey } from "../src/account/account-store.ts"
+import { flakyStorage } from "./flaky-storage.ts"
 
 const fixture = readFileSync(new URL("saves/v1.json", import.meta.url), "utf8")
 
@@ -78,5 +79,24 @@ describe("the accounts on a device", () => {
     expect(await Effect.runPromise(kv.get(singleAccountKey))).toBeUndefined()
     expect(await Effect.runPromise(kv.get(accountKey("id-1")))).toBe(fixture)
     expect(JSON.parse((await Effect.runPromise(kv.get(listKey)))!)).toMatchObject({ version: 1, accounts: [{ id: "id-1" }] })
+  })
+
+  it("makes and deletes nothing when the storage fails to read the list, and says so", async () => {
+    const saved = JSON.stringify({ version: 1, accounts: [{ id: "a", name: "Robin", createdAt: 1, playedAt: 1 }] })
+    const device = flakyStorage({ [listKey]: saved, [accountKey("a")]: fixture }, { failsRead: (key) => key === listKey })
+    const tried = await Effect.runPromise(Effect.gen(function*() {
+      const list = yield* AccountList
+      return {
+        list: yield* list.list.pipe(Effect.flip),
+        create: yield* list.create("Sam").pipe(Effect.flip),
+        remove: yield* list.remove("a").pipe(Effect.flip)
+      }
+    }).pipe(Effect.provide(listLayer(() => "new")), Effect.provideService(KeyValueStore.KeyValueStore, device.store)))
+    expect(tried.list).toBeInstanceOf(AccountListReadError)
+    expect(tried.create).toBeInstanceOf(AccountListReadError)
+    expect(tried.remove).toBeInstanceOf(AccountListReadError)
+    expect(device.writes).toEqual([])
+    expect(device.held.get(listKey)).toBe(saved)
+    expect(device.held.get(accountKey("a"))).toBe(fixture)
   })
 })

@@ -15,7 +15,7 @@ import { ascend, encounterOf, openAudition, recordRun, saveTeam, select, train, 
 import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
 import { AccountList, layer as accountListLayer } from "../account/account-list.ts"
 import type { AccountSummary } from "../account/account-list.ts"
-import { AccountStore, layer as accountLayer } from "../account/account-store.ts"
+import { AccountReadError, AccountStore, layer as accountLayer } from "../account/account-store.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
 import { defaultTuning } from "../config/tuning.ts"
@@ -35,8 +35,10 @@ export interface App {
   readonly notes: ReadonlyArray<string>
   /** Calls `listener` with the account after every change. */
   readonly onAccount: (listener: (account: Account) => void) => void
-  /** Calls `listener` when a change could not be saved on this device (it still shows, and the next change saves it with everything else). */
+  /** Calls `listener` when a change could not be saved on this device (it still shows, and the next change saves it with everything else): once, and again only after a save worked. */
   readonly onSaveFailed: (listener: () => void) => void
+  /** Once every save asked so far is done (or failed): before the page starts over. */
+  readonly flush: () => Promise<void>
   /** Takes a character to its next level with gold: the account after it, or `undefined` when refused (without enough, or at the maximum). */
   readonly train: (character: CharacterId) => Account | undefined
   /** Takes a character past the ascension step she stands at (refused without the gold or the material). */
@@ -51,19 +53,31 @@ export interface App {
   readonly saveTeam: (slot: number, team: SavedTeam | null) => Account | undefined
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, played by `team` (as it entered the arena), and its log: what it earned. A playtest build also sends it. */
   readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue, team: ReadonlyArray<BuildValue>) => Earned
-  /** Saves the sound settings (the sound board applies them itself). */
-  readonly setMuted: (muted: boolean) => void
-  readonly setVolume: (volume: number) => void
+  /** Saves a change to this device's settings (what each one changes applies it itself: the sound board, the camera, the arena). */
+  readonly changeSettings: (change: Partial<Settings>) => void
 }
 
 /** The accounts on this device, to pick one to play, make one, or delete one. */
 export interface Accounts {
-  /** Every account, the last played first. */
-  readonly list: () => Promise<ReadonlyArray<AccountSummary>>
+  /** Every account, the last played first; `null` when this device's storage failed to read them (nothing changed; trying again may work). */
+  readonly list: () => Promise<ReadonlyArray<AccountSummary> | null>
   /** Makes an account: its id, or why the name cannot be given (or that it could not be saved), in words. */
   readonly create: (name: string) => Promise<{ readonly ok: true; readonly id: string; readonly name: string } | { readonly ok: false; readonly problem: string }>
   /** Deletes an account and its progress, for good: whether it was. */
   readonly remove: (id: string) => Promise<boolean>
+}
+
+const unreadList = "The accounts on this device could not be read just now, so nothing was changed. Try again."
+
+/**
+ * The account's save could not be read just now (the device's storage
+ * failed): nothing was changed, and starting again may work.
+ */
+export class SaveReadFailed extends Error {
+  constructor() {
+    super("The save could not be read")
+    this.name = "SaveReadFailed"
+  }
 }
 
 /** The accounts on this device, over its storage. */
@@ -73,12 +87,17 @@ export const openAccounts = (): Accounts => {
     return yield* AccountList
   })
   return {
-    list: () => runtime.runPromise(list.pipe(Effect.flatMap((accounts) => accounts.list))),
+    list: () =>
+      runtime.runPromise(list.pipe(
+        Effect.flatMap((accounts) => accounts.list),
+        Effect.catchTag("AccountListReadError", () => Effect.logWarning("The accounts could not be read").pipe(Effect.as(null)))
+      )),
     create: (name) =>
       runtime.runPromise(list.pipe(
         Effect.flatMap((accounts) => accounts.create(name)),
         Effect.map((entry) => ({ ok: true as const, id: entry.id, name: entry.name })),
         Effect.catchTag("AccountNameError", (error) => Effect.succeed({ ok: false as const, problem: error.problem })),
+        Effect.catchTag("AccountListReadError", () => Effect.succeed({ ok: false as const, problem: unreadList })),
         Effect.catchTag("AccountListSaveError", (error) =>
           Effect.logWarning("The account could not be made", error.cause).pipe(Effect.as({ ok: false as const, problem: "The account could not be saved on this device." })))
       )),
@@ -86,7 +105,8 @@ export const openAccounts = (): Accounts => {
       runtime.runPromise(list.pipe(
         Effect.flatMap((accounts) => accounts.remove(id)),
         Effect.as(true),
-        Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account could not be deleted", error.cause).pipe(Effect.as(false)))
+        Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account could not be deleted", error.cause).pipe(Effect.as(false))),
+        Effect.catchTag("AccountListReadError", () => Effect.logWarning("The accounts could not be read").pipe(Effect.as(false)))
       ))
   }
 }
@@ -118,23 +138,43 @@ export const holdAccount = (id: string): Promise<boolean> =>
 export const startApp = async (id: string, name: string): Promise<App> => {
   const tuning = defaultTuning
   const playtest = SHOOTER_PLAYTEST === null ? Playtest.off : (await import("./playtest-send.ts")).layer(SHOOTER_PLAYTEST)
-  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer, accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
+  // Reduced motion starts as the phone asks for it.
+  const device = { reducedMotion: typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches }
+  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer(device), accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
   const { settings, accounts, sender } = await runtime.runPromise(Effect.gen(function*() {
     // The list shows the last played first.
-    yield* (yield* AccountList).played(id).pipe(Effect.catchTag("AccountListSaveError", (error) => Effect.logWarning("The account list could not be saved", error.cause)))
+    yield* (yield* AccountList).played(id).pipe(Effect.catchTags({
+      AccountListSaveError: (error) => Effect.logWarning("The account list could not be saved", error.cause),
+      AccountListReadError: () => Effect.logWarning("The account list could not be read")
+    }))
     return { settings: yield* SettingsStore, accounts: yield* AccountStore, sender: yield* Playtest }
-  }))
+  })).catch((error: unknown) => {
+    // A save the storage failed to read is left as it is: the game says so, and starting again may work.
+    throw error instanceof AccountReadError ? new SaveReadFailed() : error
+  })
   let account = accounts.account
   const listeners: Array<(account: Account) => void> = []
   const failures: Array<() => void> = []
+  /** The saves going on (the store runs them one at a time, in order). */
+  const saving = new Set<Promise<void>>()
+  /** Whether the last save failed: the player is told of the first failure only. */
+  let failing = false
   /** Shows `next` and saves it; a failed save is logged and said, and the game goes on. */
   const changed = (next: Account) => {
     account = next
     for (const listener of listeners) listener(next)
-    runtime.runFork(accounts.save(next).pipe(
-      Effect.tapError((error) => Effect.logWarning("The account could not be saved", error.cause).pipe(Effect.andThen(Effect.sync(() => failures.forEach((failed) => failed()))))),
+    const saved = runtime.runPromise(accounts.save(next).pipe(
+      Effect.tap(() => Effect.sync(() => (failing = false))),
+      Effect.tapError((error) =>
+        Effect.logWarning("The account could not be saved", error.cause).pipe(Effect.andThen(Effect.sync(() => {
+          if (!failing) failures.forEach((failed) => failed())
+          failing = true
+        })))
+      ),
       Effect.ignore
     ))
+    saving.add(saved)
+    void saved.finally(() => saving.delete(saved))
     return next
   }
   /** Runs a rule on the account: the account after it, saved, or `undefined` when the rule refused. */
@@ -154,6 +194,7 @@ export const startApp = async (id: string, name: string): Promise<App> => {
     onSaveFailed: (listener) => {
       failures.push(listener)
     },
+    flush: () => Promise.all(saving).then(() => undefined),
     train: (character) => apply(train(tuning, account, character)),
     ascend: (character) => apply(ascend(tuning, account, character)),
     select: (team, play, aspects, relics) => {
@@ -173,7 +214,6 @@ export const startApp = async (id: string, name: string): Promise<App> => {
       runtime.runFork(sender.recordRun(reportOf({ id: randomId(), at, build: SHOOTER_BUILD, play, enemyLevel, team, result, log, earned: recorded.earned }), name))
       return recorded.earned
     },
-    setMuted: (muted) => saveSettings((current) => ({ ...current, muted })),
-    setVolume: (volume) => saveSettings((current) => ({ ...current, volume }))
+    changeSettings: (change) => saveSettings((current) => ({ ...current, ...change }))
   }
 }
