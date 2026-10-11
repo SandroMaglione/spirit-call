@@ -16,6 +16,7 @@ owned, auditions, and the game's pace;
 `docs/roster.md`: who the characters are (element, class, role), and how
 support is set up;
 `docs/saves.md`: the account saved on the device, and its versions;
+`docs/mobile.md`: the Android and iOS apps (Capacitor);
 `docs/playtest.md`: playtest builds, the runs they send, the server that
 keeps them, and releasing).
 
@@ -30,6 +31,9 @@ keeps them, and releasing).
   to the dev server's own `/api`, over a local SQLite file
   (`.data/playtest.sqlite`, see `docs/playtest.md`).
 - `pnpm check`: typecheck, lint, and tests. Run it before every commit.
+- `pnpm app`: builds the game into the Android and iOS apps (Capacitor;
+  `pnpm app:android` and `pnpm app:ios` then open Android Studio or Xcode).
+  See `docs/mobile.md`.
 - Deploying (Cloudflare, with Alchemy): `deploy/` is its own package
   (`pnpm --dir deploy install`) holding `deploy/alchemy.run.ts`. From
   `deploy/`, `pnpm alchemy deploy` builds and deploys your own stage
