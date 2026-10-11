@@ -24,7 +24,7 @@ import { tuningWith } from "../config/tuning.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { makeEnemy } from "../features/enemies.ts"
 import { Random } from "../math/rng.ts"
-import { Enemy, Game, Health, Player, Position, PrevPosition, RunScope } from "../schema.ts"
+import { Enemy, Game, Health, Hit, Player, Position, PrevPosition, RunScope } from "../schema.ts"
 import type { BuildValue, EnemyKind, ViewportValue } from "../schema.ts"
 
 export const perfSceneNames = ["crowd", "crowd-fire", "kills"] as const
@@ -56,6 +56,9 @@ export interface PerfScene {
   readonly populate: ReturnType<typeof makeSystems>["populate"]
   /** Each fixed step after the simulation: pulls stragglers back, and (in `kills`) tops the crowd up. */
   readonly keep: ReturnType<typeof makeSystems>["keep"]
+  /** Counts the hits dealt (it only reads events), and how many so far. */
+  readonly count: ReturnType<typeof makeSystems>["count"]
+  readonly hits: () => number
 }
 
 /** `?perf=crowd,30` in the URL: the scene and its number of enemies. */
@@ -137,7 +140,12 @@ const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number) 
     }
   })
 
-  return { populate, keep }
+  let hits = 0
+  const count = Game.System("Perf/Count", { events: { hit: Game.System.readEvent(Hit) } }, ({ events }) => {
+    hits += events.hit.all().length
+  })
+
+  return { populate, keep, count, hits: () => hits }
 }
 
 /** The scene `name` with `enemies` enemies, scripted for `steps` fixed steps on a `viewport` (the browser's, or 1280×720 headless). */

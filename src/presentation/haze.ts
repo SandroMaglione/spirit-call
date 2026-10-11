@@ -88,6 +88,8 @@ export class Haze {
   private texture: FramebufferTexture | null = null
   private readonly buffer = new Vector2()
   private readonly start = performance.now()
+  /** Whether the last frame was bent (for `?perf`'s samples). */
+  applied = false
 
   constructor() {
     const geometry = new BufferGeometry()
@@ -123,6 +125,7 @@ export class Haze {
    * forgets them.
    */
   apply(renderer: WebGLRenderer, toCanvas: (world: Vec2, height: number) => Vec2): void {
+    this.applied = this.sources.length > 0
     if (this.sources.length === 0) return
     const sources = this.sources.sort((a, b) => b.strength - a.strength).slice(0, most)
     this.sources.length = 0

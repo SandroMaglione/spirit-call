@@ -111,7 +111,8 @@ export const botProbe = (probe: ReturnType<typeof makeProbe>): BotProbe => ({ sy
 /**
  * Plays a performance scene headless, as the browser does: the scene's
  * crowd after setup, then each fixed step the simulation, the scene's
- * upkeep, and the team's energy kept full. `onStep` runs after every step.
+ * upkeep, the team's energy kept full, and its count of hits. `onStep`
+ * runs after every step.
  */
 export const playPerfScene = (scene: PerfScene, onStep: (runtime: ReturnType<typeof createSimulation>["runtime"], step: number) => void = () => undefined, extra?: ProbeSystem) => {
   const sim = createSimulation({
@@ -123,8 +124,8 @@ export const playPerfScene = (scene: PerfScene, onStep: (runtime: ReturnType<typ
   sim.runtime.tick(sim.setup)
   sim.runtime.tick(Game.Schedule(scene.populate, Game.Schedule.applyDeferred()))
   const step = extra === undefined
-    ? Game.Schedule(sim.fixedUpdate, scene.keep, KeepCharged, Game.Schedule.applyDeferred())
-    : Game.Schedule(sim.fixedUpdate, scene.keep, KeepCharged, Game.Schedule.applyDeferred(), extra)
+    ? Game.Schedule(sim.fixedUpdate, scene.keep, KeepCharged, Game.Schedule.applyDeferred(), scene.count)
+    : Game.Schedule(sim.fixedUpdate, scene.keep, KeepCharged, Game.Schedule.applyDeferred(), scene.count, extra)
   for (let index = 0; index < scene.steps; index++) {
     sim.runtime.tick(step)
     onStep(sim.runtime, index)

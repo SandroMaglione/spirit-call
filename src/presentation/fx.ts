@@ -361,6 +361,11 @@ export class Fx {
     return this.particles.length + this.numbers.length + this.rings.length + this.flashes.length + this.animations.length
   }
 
+  /** How many particles and floating numbers are alive (for `?perf`'s samples). */
+  get counts(): { readonly particles: number; readonly numbers: number } {
+    return { particles: this.particles.length, numbers: this.numbers.length }
+  }
+
   private emit(at: Vec2, vx: number, vy: number, options: ParticleOptions): void {
     const particle = this.freeParticles.pop() ?? { x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 1, size: 1, color: 0, gravity: 0, drag: 0, stretch: 1, alpha: 1 }
     particle.x = at.x

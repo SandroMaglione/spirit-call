@@ -90,6 +90,15 @@ export interface SoundBoard {
   /** The player's volume, 0..1 (1 by default), over every sound. */
   readonly volume: () => number
   setVolume(volume: number): void
+  /** What has played so far (for `?perf`'s samples). */
+  readonly stats: () => SoundStats
+}
+
+/** Counts for measuring: plays started and audio nodes made since the board began, and plays still sounding. */
+export interface SoundStats {
+  readonly started: number
+  readonly nodes: number
+  readonly live: number
 }
 
 /** The loudest a single sound plays, before the master volume. */
@@ -505,6 +514,31 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
   let muted = options.muted ?? false
   let volume = clampVolume(options.volume ?? 1)
   const last = new Map<SoundName, number>()
+  // Measuring only: plays started, nodes made, and when each play still sounding ends.
+  const counted = { started: 0, nodes: 0, end: 0 }
+  const ends: Array<number> = []
+
+  /** Counts the nodes made on `context`, and how long the play being built sounds (its sources' latest stop). */
+  const countNodes = (context: AudioContext) => {
+    const makers = ["createGain", "createOscillator", "createBiquadFilter", "createBufferSource", "createWaveShaper", "createStereoPanner"] as const
+    for (const name of makers) {
+      const make = (context[name] as () => AudioNode).bind(context)
+      Object.assign(context, {
+        [name]: () => {
+          counted.nodes += 1
+          const node = make() as AudioNode & { stop?: (when?: number) => void }
+          const stop = node.stop
+          if (typeof stop === "function") {
+            node.stop = (when?: number) => {
+              counted.end = Math.max(counted.end, when ?? 0)
+              stop.call(node, when)
+            }
+          }
+          return node
+        }
+      })
+    }
+  }
 
   const ensure = (): Mixer | undefined => {
     if (mixer !== undefined) return mixer
@@ -530,6 +564,7 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
     const samples = noise.getChannelData(0)
     for (let index = 0; index < samples.length; index++) samples[index] = Math.random() * 2 - 1
     mixer = { context, bus, front: master, reverb: convolver, noise, distortion: distortionCurve() }
+    countNodes(context)
     return mixer
   }
 
@@ -569,6 +604,7 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
       pan.connect(send).connect(mixer.reverb)
       if (mix.heavy === true) duck(mixer.bus, now)
 
+      counted.end = now
       build({
         context,
         out: input,
@@ -578,6 +614,17 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
         pitch: (options.pitch ?? 1) * (0.96 + Math.random() * 0.08),
         volume: options.volume ?? 1
       })
+      counted.started += 1
+      ends.push(counted.end)
+    },
+    stats: () => {
+      const now = mixer?.context.currentTime ?? 0
+      for (let index = ends.length - 1; index >= 0; index--) {
+        if (ends[index]! > now) continue
+        ends[index] = ends[ends.length - 1]!
+        ends.pop()
+      }
+      return { started: counted.started, nodes: counted.nodes, live: ends.length }
     },
     muted: () => muted,
     setMuted(next) {
