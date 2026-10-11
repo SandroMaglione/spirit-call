@@ -1,0 +1,19 @@
+html, body { margin: 0; background: #04182b; }
+.graphic { --wind: #78e6c7; --rock: #c5a282; --thunder: #d5a4fa; --water: #81d9ff; --fire: #ffad63;
+  position: relative; width: 1024px; height: 500px; overflow: hidden; font-family: "Alegreya Sans", sans-serif;
+  background: radial-gradient(ellipse 70% 80% at 50% 62%, #154a72 0%, #0b3456 45%, #072845 75%, #051d33 100%); }
+[data-element="wind"] { --glow: var(--wind); }
+[data-element="rock"] { --glow: var(--rock); }
+[data-element="thunder"] { --glow: var(--thunder); }
+[data-element="water"] { --glow: var(--water); }
+[data-element="fire"] { --glow: var(--fire); }
+.graphic__aura { position: absolute; width: 300px; height: 300px; translate: -50% -50%; border-radius: 50%; opacity: .32;
+  background: radial-gradient(closest-side, var(--glow), transparent); }
+.graphic__ring { position: absolute; left: 512px; top: 360px; width: 940px; height: 150px; translate: -50% -50%; border-radius: 50%;
+  border: 2px solid rgba(142, 240, 200, .28); box-shadow: 0 0 30px rgba(142, 240, 200, .18), inset 0 0 30px rgba(142, 240, 200, .12); }
+.graphic__title { position: absolute; left: 0; right: 0; top: 26px; margin: 0; text-align: center; font-size: 62px; font-weight: 800;
+  letter-spacing: 1px; color: #f3ead8; text-shadow: 0 3px 18px #00122a, 0 0 28px rgba(142, 240, 200, .35); }
+.graphic__spirit { position: absolute; translate: -50% -50%; object-fit: contain; filter: drop-shadow(0 10px 14px rgba(0, 10, 25, .55)); }
+.graphic__emblem { position: absolute; translate: -50% -50%; width: 46px; height: 46px; font-size: 46px; filter: drop-shadow(0 0 12px var(--glow)); }
+.graphic__mote { position: absolute; border-radius: 50%; background: #e8fff2; box-shadow: 0 0 8px #8ef0c8; opacity: .7; }
+.menu-icon { display: block; width: 1em; height: 1em; }

@@ -2,6 +2,7 @@ import { execSync } from "node:child_process"
 import { fileURLToPath } from "node:url"
 import { defineConfig } from "vitest/config"
 
+import { licenses } from "./scripts/licenses.ts"
 import { devPlaytestKey, devServer } from "./src/server/dev.ts"
 
 // The bevy-ts packages are linked from the sibling repository and consumed as
@@ -38,8 +39,9 @@ export default defineConfig(({ command, mode }) => {
       SHOOTER_BUILD: JSON.stringify(command === "serve" ? "dev" : commit()),
       SHOOTER_PLAYTEST: JSON.stringify(playtest)
     },
-    // `/api` answered by the playtest server over a local database (see src/server/dev.ts).
-    plugins: [devServer()],
+    // `/api` answered by the playtest server over a local database (see src/server/dev.ts);
+    // and the licenses of the packages a build contains (scripts/licenses.ts).
+    plugins: [devServer(), licenses()],
     server: {
       fs: { allow: [".", bevyTs] },
       // The local database and Effect's source (see AGENTS.md) are not part of the game.

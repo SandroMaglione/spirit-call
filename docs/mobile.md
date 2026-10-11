@@ -50,11 +50,54 @@ the dark background set in `android/app/src/main/res/values/styles.xml`.
 
 CI (`.github/workflows/apps.yml`) builds both on every pull request: the
 Android debug APK, kept as the run's artifact (download it and install it
-on a phone), and an unsigned iOS build for the simulator.
+on a phone); the Android store build (below), which an emulator installs
+and opens to show it reaches the list of accounts; and an unsigned iOS
+build for the simulator.
+
+Only a debug build may reach the network (the internet permission is in
+`android/app/src/debug/AndroidManifest.xml`): it loads a dev server, or
+sends a playtest app's runs. The store build asks for no permissions at
+all, since the game runs from the files in the app and sends nothing.
 
 A playtest app is a playtest build like any other (see `docs/playtest.md`):
 build with `PLAYTEST_KEY` and `PLAYTEST_URL` (the playtest server's address)
 set. The server accepts runs from the apps' origins (`src/server/http.ts`).
 Without them the app is a release build and sends nothing.
 
-Signing and the store listings come later (see the mobile plan).
+## Releasing on Google Play
+
+Google Play takes an Android App Bundle (`.aab`) signed with the app's
+upload key; with Play App Signing, Google keeps the key the app is finally
+signed with, and a lost upload key can be replaced. The upload key is never
+in the repository: CI reads it from four repository secrets.
+
+1. Make the upload key once, on your own computer (keep the file and its
+   passwords safe; Java's `keytool` comes with Android Studio):
+   `keytool -genkeypair -v -keystore upload.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000`
+2. Add the secrets (GitHub, Settings, Secrets and variables, Actions):
+   `UPLOAD_KEYSTORE_BASE64` (the file, as `base64 -i upload.jks` prints it),
+   `UPLOAD_KEYSTORE_PASSWORD`, `UPLOAD_KEY_ALIAS` (`upload`), and
+   `UPLOAD_KEY_PASSWORD` (the same as the keystore's, unless `keytool`
+   asked for another).
+3. Run the Apps workflow by hand from main (Actions, Apps, Run workflow).
+   The run keeps `spirit-call-play-<run>`: the bundle to upload in the Play
+   Console. Its version code is the run's number, so every build is higher
+   than the last, as Google Play requires.
+
+Without the secrets (a fork, or before they are added) CI signs the store
+build with a throwaway key, so it is still built and tried on the emulator,
+but not kept. `android/app/build.gradle` signs with the key named by
+`UPLOAD_KEYSTORE` (a path), so the same works on a laptop with those four
+variables set and `./gradlew bundleRelease`.
+
+The listing's graphics are in `store/google-play/`: the 512 icon, the
+1024x500 feature graphic, and landscape phone screenshots at 1920x1080. The
+feature graphic is a dev-only page, `/tools/store/` on the dev server
+(`tools/store/`): the five element spirits (cut out of
+`art/spirits/<element>/renders/hero.png` into `tools/store/spirits/`) over
+the menu's element emblems, screenshotted at 1024x500. The screenshots are
+the game itself on a 960x540 screen at twice its pixels, the fights from a
+dev build (`?play&touch&team=...&challenge=...&wave=3&charged`, the
+on-screen controls in use, the ultimates set off from their button). Settings, About, lists the open-source packages
+the game contains with their licenses (`scripts/licenses.ts` writes them
+into the build as `licenses.json`).

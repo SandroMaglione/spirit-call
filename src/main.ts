@@ -14,7 +14,7 @@ import { emptyUiRequests, UiRequests } from "./features/menu.ts"
 
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
-import type { UiActions } from "./ui/store.ts"
+import type { License, UiActions } from "./ui/store.ts"
 import { withValidAspects, withValidRelics } from "./features/build.ts"
 import { buildOf, encounterOf, entryTeam, teamLevel, teamOf, validAspects, validRelics } from "./account/account.ts"
 import { wearLooks } from "./presentation/looks.ts"
@@ -207,7 +207,9 @@ const start = async (mount: HTMLElement) => {
       uiStore.sound.value = { ...uiStore.sound.value, volume: sounds.volume() }
     },
     // Everything is saved as it happens: the page starts over on the list of accounts.
-    switchAccount: () => window.location.reload()
+    switchAccount: () => window.location.reload(),
+    // Listed by the build beside the game (scripts/licenses.ts); a dev build has none.
+    licenses: () => fetch("licenses.json").then((response) => response.json() as Promise<ReadonlyArray<License>>).catch(() => [])
   }
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
   const devCommands = emptyDevCommands()
