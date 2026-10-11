@@ -8,6 +8,7 @@ import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
 import { DropTrail } from "./drop-trail.ts"
 import { Stones } from "./stones.ts"
+import { CombatLight } from "./combat-light.ts"
 import { Fx } from "./fx.ts"
 import { Haze } from "./haze.ts"
 import { trackPartyTaps } from "./party-taps.ts"
@@ -261,6 +262,7 @@ export const createBrowserHost = async (
     haze,
     drops: new DropTrail(scene),
     stones: new Stones(scene),
+    combatLight: new CombatLight(scene),
     trails: new SlashTrails(trails),
     reticle,
     edges,
@@ -272,7 +274,7 @@ export const createBrowserHost = async (
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
     fallen: [],
     comfort: { shake: 1, reducedMotion: false },
-    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, moment: 0, protection: 0, entrance: Infinity, wideEyes: 0, stepIn: null, sway: { x: 0, y: 0, vx: 0, vy: 0, last: null }, recoil: new Map(), stateClock: { id: null, full: 0 }, hover: null, squish: null, meter: { recent: [] } },
+    feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, tutorial: { words: null, step: -1, anchor: { x: 0, y: 0 } }, moment: 0, protection: 0, entrance: Infinity, wideEyes: 0, stepIn: null, sway: { x: 0, y: 0, vx: 0, vy: 0, last: null }, recoil: new Map(), stateClock: { id: null, full: 0 }, hover: null, squish: null, meter: { recent: [] } },
     toCanvas: (world, height) => {
       const center = toScreen(projection, cameraView.center)
       const at = toScreenAt(projection, world, height)
@@ -322,8 +324,10 @@ export const createBrowserHost = async (
       for (const layer of [grid, ...layers]) layer.dispose()
       fx.dispose()
       haze.dispose()
+      host.feedback.tutorial.words?.dispose()
       host.drops.dispose()
       host.stones.dispose()
+      host.combatLight.dispose()
       assets.dispose()
       dressing?.dressing.dispose()
       for (const source of models.values()) disposeModel(source)

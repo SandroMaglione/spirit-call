@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect"
 import * as KeyValueStore from "effect/persistence/KeyValueStore"
 import { describe, expect, it } from "vitest"
 
-import { train } from "../src/account/account.ts"
+import { editTeamSlot, setTeam, train, unlock } from "../src/account/account.ts"
 import { AccountReadError, AccountStore, accountKey, layer as accountLayer } from "../src/account/account-store.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -39,15 +39,25 @@ describe("account store", () => {
     expect(store.notes).toEqual([])
     expect(Object.keys(store.account.owned.characters)).toEqual([...newAccount.characters])
     expect(store.account.id).toBe(id)
-    expect(saved).toMatchObject({ version: 1, account: { id } })
+    expect(saved).toMatchObject({ version: 3, account: { id, tutorialDoneAt: null, activeTeamSlot: 1, saved: { 1: { team: ["swordsman"] } } } })
   })
 
   it("loads every version of the save ever shipped", async () => {
-    const { store, saved } = await onDevice({ [key]: fixture(1) })
-    expect(store.account.id).toBe("0f8e7d6c-5b4a-4321-8765-1234567890ab")
-    expect(store.account.totals.runs).toBe(1)
-    expect(store.account.wallet.windEssence).toBe(6)
-    expect(saved.version).toBe(1)
+    for (const { store, saved } of await Promise.all([1, 2, 3].map((version) => onDevice({ [key]: fixture(version) })))) {
+      expect(store.account.id).toBe("0f8e7d6c-5b4a-4321-8765-1234567890ab")
+      expect(store.account.totals.runs).toBe(1)
+      expect(store.account.wallet.windEssence).toBe(6)
+      // It played before the tutorial came: it does not open on it.
+      expect(store.account.tutorialDoneAt).toBe(store.account.createdAt)
+      expect(saved.version).toBe(3)
+    }
+  })
+
+  it("opens a first-version account never played on the tutorial", async () => {
+    const unplayed = JSON.parse(fixture(1))
+    unplayed.account.totals = { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 }
+    const { store } = await onDevice({ [key]: JSON.stringify(unplayed) })
+    expect(store.account.tutorialDoneAt).toBeNull()
   })
 
   it("saves every change whole, and loads it back as it was", async () => {
@@ -59,6 +69,62 @@ describe("account store", () => {
     })
     const again = await onDevice({ [key]: JSON.stringify(changed.saved) })
     expect(again.store.account).toEqual(changed.used)
+  })
+
+  it("loads the edited party and its selected slot after a restart", async () => {
+    const changed = await onDevice({ [key]: fixture(2) }, (store) => {
+      const owned = unlock(defaultTuning, store.account, { kind: "character", id: "gunner" }, 2000)
+      const selected = setTeam(defaultTuning, owned, ["swordsman", "gunner"], {}, {}, 2)
+      if (!selected.ok) throw new Error("party not selected")
+      const edited = setTeam(defaultTuning, selected.value, ["gunner"], {}, {})
+      if (!edited.ok) throw new Error("party not edited")
+      return store.save(edited.value).pipe(Effect.as(edited.value))
+    })
+    const again = await onDevice({ [key]: JSON.stringify(changed.saved) })
+    expect(again.store.account).toEqual(changed.used)
+    expect(again.store.account.activeTeamSlot).toBe(2)
+    expect(again.store.account.selection.team).toEqual(["gunner"])
+    expect(again.store.account.saved[2]?.team).toEqual(["gunner"])
+  })
+
+  it("keeps an unused slot's edits and emptiness through a restart without changing the party in use", async () => {
+    const changed = await onDevice({}, (store) => {
+      const owned = unlock(defaultTuning, store.account, { kind: "character", id: "gunner" }, 2000)
+      const edited = editTeamSlot(defaultTuning, owned, 2, { team: ["gunner"], aspects: {}, relics: {} })
+      if (!edited.ok) throw new Error("slot not edited")
+      return store.save(edited.value).pipe(Effect.as(edited.value))
+    })
+    const again = await onDevice({ [key]: JSON.stringify(changed.saved) })
+    expect(again.store.account).toEqual(changed.used)
+    expect(again.store.account.activeTeamSlot).toBe(1)
+    expect(again.store.account.selection.team).toEqual(["swordsman"])
+    const cleared = await onDevice({ [key]: JSON.stringify(changed.saved) }, (store) => {
+      const edited = editTeamSlot(defaultTuning, store.account, 2, { team: [], aspects: {}, relics: {} })
+      if (!edited.ok) throw new Error("slot not cleared")
+      return store.save(edited.value)
+    })
+    const empty = await onDevice({ [key]: JSON.stringify(cleared.saved) })
+    expect(empty.store.account.saved[2]).toBeUndefined()
+    expect(empty.store.account.activeTeamSlot).toBe(1)
+  })
+
+  it("puts an older account with no saved parties in Slot 1 and repairs a removed slot", async () => {
+    const old = await onDevice({ [key]: fixture(2) })
+    expect(old.store.account.activeTeamSlot).toBe(1)
+    expect(old.store.account.saved[1]?.team).toEqual(old.store.account.selection.team)
+    const missing = JSON.parse(fixture(3))
+    missing.account.activeTeamSlot = 2
+    const repaired = await onDevice({ [key]: JSON.stringify(missing) })
+    expect(repaired.store.account.activeTeamSlot).toBe(1)
+    expect(repaired.store.notes.join(" ")).toContain("selected party slot")
+  })
+
+  it("preserves existing saved parties when an older account has no selected slot", async () => {
+    const saved = JSON.parse(fixture(3))
+    saved.account.saved = { 2: { team: ["swordsman"], aspects: {}, relics: {} } }
+    const { store } = await onDevice({ [key]: JSON.stringify(saved) })
+    expect(store.account.activeTeamSlot).toBeNull()
+    expect(store.account.saved).toEqual(saved.account.saved)
   })
 
   it("sets a save it cannot read aside, and starts a new account with a notice", async () => {

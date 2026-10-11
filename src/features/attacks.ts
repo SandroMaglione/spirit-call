@@ -92,6 +92,7 @@ import { aimPoint, answering, behaviorOf, canStart, movesetOf, pickAttack, readF
 import type { Moving } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { enemyPace, paceOf } from "./time.ts"
+import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 const toRadians = (degrees: number): number => (degrees * Math.PI) / 180
 
@@ -455,10 +456,13 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
 }, ({ queries, resources, events, commands, lookup }) => {
   const dt = resources.time.get().dt
   const slow = resources.slowMotion.get()
-  const window = resources.tuning.get().perfectDodge.window
+  const tuning = resources.tuning.get()
   const targets = queries.targets.each()
   for (const { entity, data } of queries.hitboxes.each()) {
     let hitbox = data.hitbox.get()
+    const sourceAttacker = hitbox.blow.source?.attacker
+    const dodgedEnemy = sourceAttacker === undefined ? undefined : lookup.getHandle(sourceAttacker, DodgeAttackers)
+    const window = dodgeWindowOf(tuning, dodgedEnemy?.ok === true ? dodgedEnemy.value.data.enemy.get() : undefined)
     // Not down yet (a hammer's windup): it strikes nothing meanwhile, and goes off as it comes down.
     if (hitbox.delay !== undefined && hitbox.delay > 0) {
       const delay = hitbox.delay - dt * paceOf(slow, hitbox.faction)

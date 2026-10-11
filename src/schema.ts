@@ -585,6 +585,10 @@ export type ProjectileStyle = "bolt" | "disc" | "wave"
 
 export interface ProjectileValue {
   readonly faction: Faction
+  /** Its actual release point, so rendering can show the muzzle after several fixed steps. */
+  readonly origin?: Vec2
+  /** The weapon it left, kept even if its wielder switches or falls before it is drawn. */
+  readonly weapon?: ClassId
   /** How it looks. */
   readonly style: ProjectileStyle
   readonly radius: number
@@ -607,6 +611,7 @@ export const Projectile = Descriptor.Component<ProjectileValue>()("Shooter/Proje
  * every hover tick).
  */
 export interface DiscValue {
+  readonly origin?: Vec2
   readonly thrower: Entity.Handle<typeof Root, typeof Position>
   readonly faction: Faction
   readonly radius: number
@@ -831,6 +836,8 @@ export type UiRequest =
   | { readonly kind: "pause" }
   /** From the in-game menu: back to the run. */
   | { readonly kind: "resume" }
+  /** From the tutorial, done or skipped: return to the menu without recording a run. */
+  | { readonly kind: "leave" }
   /** From the settings, anywhere: the player's choices about the controls. */
   | { readonly kind: "controlOptions"; readonly options: ControlOptionsValue }
 
@@ -1283,6 +1290,22 @@ export interface ControlOptionsValue {
 }
 export const ControlOptions = Descriptor.Resource<ControlOptionsValue>()("Shooter/ControlOptions")
 
+/**
+ * The tutorial's progress (see the `tutorial` objective): the step asked
+ * (its index; the steps' count once all are done), how far into it
+ * (`count`: dashes, hits, perfect dodges), and the step set up last (its
+ * dummy stood up, its skill readied; -1 before the first).
+ */
+export interface TutorialValue {
+  readonly step: number
+  readonly count: number
+  readonly ready: number
+  /** Seconds to show success after slow motion finishes, before opening results. */
+  readonly celebrate: number
+}
+export const Tutorial = Descriptor.Resource<TutorialValue>()("Shooter/Tutorial")
+export const tutorialStart: TutorialValue = { step: 0, count: 0, ready: -1, celebrate: 0 }
+
 /** Deterministic random state (mulberry32), so runs replay exactly. */
 export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
 
@@ -1486,6 +1509,7 @@ export const Game = Schema.bind(
       DodgeChain,
       Paused,
       ControlOptions,
+      Tutorial,
       Practice,
       PracticeField
     },

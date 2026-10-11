@@ -312,6 +312,8 @@ export interface EnemySpec {
   readonly group: number
   /** Delay before a destroyed enemy comes back (training dummies; 0: it does not). */
   readonly respawnDelay: number
+  /** Practice timing in seconds; null uses the normal perfect-dodge window. */
+  readonly perfectDodgeWindow: number | null
 }
 
 /**
@@ -344,8 +346,8 @@ const kite = (spec: { minDistance: number; maxDistance: number; strafeSeconds: n
 const skirmish = (spec: { stopDistance: number; orbit: number; retreatSeconds: number; engageSeconds: number; strafeSeconds: number }): Behavior =>
   ({ kind: "skirmish", ...spec })
 /** An enemy; it wards no one, does not burst, and wears no armor unless it says so. */
-const enemy = (spec: Omit<EnemySpec, "ward" | "burst" | "armor"> & Partial<Pick<EnemySpec, "ward" | "burst" | "armor">>): EnemySpec =>
-  ({ ward: null, burst: null, armor: null, ...spec })
+const enemy = (spec: Omit<EnemySpec, "ward" | "burst" | "armor" | "perfectDodgeWindow"> & Partial<Pick<EnemySpec, "ward" | "burst" | "armor" | "perfectDodgeWindow">>): EnemySpec =>
+  ({ ward: null, burst: null, armor: null, perfectDodgeWindow: null, ...spec })
 
 /** The attacks `spec` may be followed by (see `followUp`), by id. */
 export const followUpsOf = (spec: AttackSpec): ReadonlyArray<string> =>
@@ -390,8 +392,9 @@ export const enemies = {
     behavior: idle(),
     group: 1,
     attacks: [
-      melee("swing", { triggerRange: 170, reach: 160, arcDegrees: 120, windup: 1, aimLock: 0.45, active: 0.1, recovery: 0.6, cooldown: 1.8, power: 0, knockback: 120 })
+      melee("swing", { triggerRange: 170, reach: 160, arcDegrees: 120, windup: 1.6, aimLock: 0.7, active: 0.1, recovery: 0.6, cooldown: 1.8, power: 0, knockback: 0 })
     ],
+    perfectDodgeWindow: 0.4,
     respawnDelay: 0
   }),
   /** The Training Ground's heavy dummy: it breaks, for practicing the break and the combo after it. */

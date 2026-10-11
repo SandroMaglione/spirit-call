@@ -61,6 +61,12 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
       case "resume":
         resources.paused.set({ paused: false })
         break
+      case "leave":
+        if (flow === "Playing" && resources.tuning.get().challenges[resources.challenge.get()].objective.kind === "tutorial") {
+          resources.paused.set({ paused: false })
+          nextMachines.flow.set("Menu")
+        }
+        break
       case "controlOptions":
         resources.controlOptions.set(request.options)
         break

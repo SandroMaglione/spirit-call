@@ -1,4 +1,4 @@
-import type { BufferGeometry, Group, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
+import type { BufferGeometry, Group, Mesh, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
 
 import type { ActionButton, SafeArea } from "../config/input.ts"
 import type { StateId } from "../content/elements.ts"
@@ -13,6 +13,7 @@ import type { Batch, Instance } from "./batch.ts"
 import type { ActorBody } from "./bodies.ts"
 import type { DropTrail } from "./drop-trail.ts"
 import type { Stones } from "./stones.ts"
+import type { CombatLight, ShotLook } from "./combat-light.ts"
 import type { Drops } from "./looks.ts"
 import type { ModelId, ModelSource } from "./models.ts"
 import type { Fx } from "./fx.ts"
@@ -54,6 +55,10 @@ export type ProjectileNode = {
   /** What it is drawn as now (pooled nodes change), and its collision radius. */
   style: ProjectileStyle
   radius: number
+  look: ShotLook | null
+  travelled: number
+  last: Vec2 | null
+  launched: boolean
 }
 
 /** A wall or pillar. `depth` and `bounds` (its outline on screen, in projected coordinates) let pillars fade in front of the player. */
@@ -114,6 +119,8 @@ export interface RenderAssets {
   readonly projectileShadows: Batch
   /** Low-poly balls of radius 1 (bolts). */
   readonly orbs: Batch
+  /** Pointed eight-face Staff sparks, sharing one batch. */
+  readonly sparks: Batch
   /** Thin low-poly pucks of radius 1 (thrown discs). */
   readonly pucks: Batch
   /** See-through balls of radius 1 (bolts' halos and trails). */
@@ -212,6 +219,8 @@ export interface FeedbackState {
   kick: { x: number; y: number }
   /** Zoom punch, 0..1, decaying (heavy blows). */
   punch: number
+  /** The tutorial's words on the floor (see `ShowTutorial`): made when first shown, the step they show, and where she stood as it came. */
+  tutorial: { words: { readonly mesh: Mesh; readonly draw: (title: string, hint: string) => void; readonly dispose: () => void } | null; step: number; anchor: Vec2 }
   /** How far an ultimate's moment has pushed the camera in, 0..1 (see `ShowUltimateMoments`). */
   moment: number
   /** Seconds left of the protection of a character who came in after a fall (shown around her feet). */
@@ -303,6 +312,7 @@ export interface RenderHostValue {
   readonly drops: DropTrail
   /** Rock's stone (plates, an Earthrise's spikes, chunks), in the 3D scene. */
   readonly stones: Stones
+  readonly combatLight: CombatLight
   readonly trails: SlashTrails
   readonly reticle: Shapes
   readonly edges: Shapes

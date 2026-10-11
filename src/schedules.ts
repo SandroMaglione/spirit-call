@@ -43,6 +43,7 @@ import { CheckObjective } from "./features/challenges.ts"
 import { RecordRunLog } from "./features/run-log.ts"
 import { ClearRun, DetectGameOver, PauseWithKey, QueueRestart, RecordReactions, RecordTally, ResetRun, TrackRun } from "./features/flow.ts"
 import { ApplyUiRequests } from "./features/menu.ts"
+import { RunTutorial } from "./features/tutorial.ts"
 import { CaptureKeys, CaptureParty, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
@@ -216,6 +217,8 @@ const runOutcome = Game.Schedule.when(
   // The step's hits, perfect dodges, and breaks, counted for stars before a result is made; and the run's log.
   RecordTally,
   RecordRunLog,
+  // The tutorial's step, counted from what the step did (see `features/tutorial.ts`).
+  RunTutorial,
   Game.Schedule.when(whileRunIsLive, DetectGameOver),
   SwitchCharacter,
   CheckObjective,

@@ -7,6 +7,7 @@
  * the element it applies (see `features/elements.ts`).
  */
 import type { ReadCell, WriteCell } from "@typeonce/bevy-ts/Query"
+import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { normalizeOr, scale, sub } from "../math/vec.ts"
@@ -86,7 +87,7 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
     [Position, at],
     [PrevPosition, at],
     [Velocity, velocity],
-    [Projectile, projectile],
+    [Projectile, { ...projectile, origin: at }],
     [Renderable, { kind: "projectile", faction: projectile.faction, style: projectile.style, radius: projectile.radius, element: projectile.blow.element?.id ?? null }]
   )
 
@@ -108,7 +109,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
     },
     resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion), mantle: Game.System.readResource(Mantle) },
     events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) }
-  }, ({ queries, resources, events, commands, local }) => {
+  }, ({ queries, resources, events, commands, lookup, local }) => {
     const { grid, targets, nearby } = local
     const dt = resources.time.get().dt
     /** A shot that bursts where it stops (see `OverdriveEffect`): its blast there. */
@@ -118,7 +119,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, { area: { kind: "circle", center: at, radius: blast.radius }, faction: projectile.faction, blow: blast.blow, remaining: 0.06, hit: [] }]))
       events.explosion.emit({ at, radius: blast.radius, faction: projectile.faction, kind: "blast", heavy: false, element: blast.blow.element?.id ?? null, skill: blast.skill })
     }
-    const window = resources.tuning.get().perfectDodge.window
+    const tuning = resources.tuning.get()
     const boxes = wallBoxes(queries.walls.each())
 
     grid.clear()
@@ -129,12 +130,15 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       targets.push(target)
     }
     // Bodies that just dashed: a shot through where they stood dodged them, wherever they are now.
-    const dashers = targets.filter((target) => target.dashed !== undefined && target.dashed.since <= window)
+    const dashers = targets.filter((target) => target.dashed !== undefined)
     const barriers = queries.barriers.each().map(({ data }) => data.barrier.get())
     const mantle = resources.mantle.get()
 
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()
+      const source = projectile.blow.source?.attacker
+      const attacker = source === undefined ? undefined : lookup.getHandle(source, DodgeAttackers)
+      const window = dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
       const origin = data.position.get()
       const velocity = data.velocity.get()
       const speed = Math.hypot(velocity.x, velocity.y)
@@ -337,8 +341,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const dealer = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, Leveled)
     return dealer?.ok === true ? dealer.value.data.member.get().level : fielded
   }
-  // In the Training Ground the team cannot fall (only the fire hurts, and never to the end).
-  const training = tuning.waves.enabled && tuning.challenges[resources.challenge.get()].objective.kind === "training"
+  // In the Training Ground (and the tutorial) the team cannot fall (only the fire hurts, and never to the end).
+  const objectiveKind = tuning.challenges[resources.challenge.get()].objective.kind
+  const training = tuning.waves.enabled && (objectiveKind === "training" || objectiveKind === "tutorial")
   // Enemies a warder's tether holds take only a share (see `features/wards.ts`).
   const warded = wardedTaken(tuning, queries.wards.each().map(({ data }) => ({ kind: data.enemy.get().kind, ward: data.ward.get() })))
   const dead = new Set<number>()

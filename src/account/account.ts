@@ -128,7 +128,7 @@ export const rankOf = (play: Extract<Play, { kind: "quest" }>): number => play.r
 export const samePlay = (a: Play, b: Play): boolean =>
   a.kind === "quest" ? b.kind === "quest" && a.quest === b.quest && rankOf(a) === rankOf(b) : b.kind === "tier" && a.track === b.track && a.tier === b.tier
 
-/** A team saved to load in a tap: its members in order, and the aspects and relics equipped in it. */
+/** A saved party: its members in order, and the aspects and relics equipped in it. */
 export interface SavedTeam {
   readonly team: ReadonlyArray<CharacterId>
   readonly aspects: TeamAspects
@@ -141,7 +141,7 @@ export interface OpenedAudition {
   readonly openedAt: number
 }
 
-/** How many teams can be saved besides the one set up. */
+/** How many saved party slots the account keeps. */
 export const savedTeamSlots = 3
 
 export interface Account {
@@ -164,10 +164,14 @@ export interface Account {
   readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly relics: TeamRelics; readonly play: Play }
   /** The looks each character wears. */
   readonly worn: Worn
-  /** Teams saved to load in a tap, by slot (1 to `savedTeamSlots`). */
+  /** Saved parties by slot (1 to `savedTeamSlots`); an absent slot is empty. */
   readonly saved: { readonly [slot: number]: SavedTeam }
+  /** The saved party in use; `null`: the current party has no saved slot. */
+  readonly activeTeamSlot: number | null
   /** The auditions opened with an invitation, by character (see `openAudition`). */
   readonly auditions: { readonly [Id in CharacterId]?: OpenedAudition }
+  /** When the tutorial was finished or skipped (epoch milliseconds); `null`: not yet, so the game opens on it. */
+  readonly tutorialDoneAt: number | null
 }
 
 /** Something that can be owned. */
@@ -289,6 +293,7 @@ export const everything = (tuning: Tuning): ReadonlyArray<Item> => [
 export const accountNameLimit = 20
 
 export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, now: number): Account => {
+  const party: SavedTeam = { team: [starter.selection.character], aspects: {}, relics: {} }
   const empty: Account = {
     id,
     createdAt: now,
@@ -299,10 +304,12 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     hardcore: {},
     discoveries: {},
     chests: {},
-    selection: { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } },
+    selection: { ...party, play: { kind: "quest", quest: starter.selection.quest } },
     worn: {},
-    saved: {},
-    auditions: {}
+    saved: { 1: party },
+    activeTeamSlot: 1,
+    auditions: {},
+    tutorialDoneAt: null
   }
   const items: Array<Item> = [
     ...starter.aspects.map((id) => ({ kind: "aspect" as const, id })),
@@ -310,6 +317,10 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
   ]
   return items.reduce((account, item) => unlock(tuning, account, item, now), empty)
 }
+
+/** The tutorial finished or skipped at `now`: the game no longer opens on it (it stays in the settings). */
+export const finishTutorial = (account: Account, now: number): Account =>
+  account.tutorialDoneAt === null ? { ...account, tutorialDoneAt: now } : account
 
 /** `character`'s level in `account`, from its experience (level 1 when not owned). */
 export const characterLevel = (tuning: Tuning, account: Account, character: CharacterId): LevelProgress =>
@@ -752,7 +763,7 @@ export const saveTeam = (tuning: Tuning, account: Account, slot: number, saved: 
   if (!(Number.isInteger(slot) && slot >= 1 && slot <= savedTeamSlots)) return refuse({ kind: "badSlot", slot })
   if (saved === null) {
     const { [slot]: _gone, ...rest } = account.saved
-    return { ok: true, value: { ...account, saved: rest } }
+    return { ok: true, value: { ...account, saved: rest, activeTeamSlot: account.activeTeamSlot === slot ? null : account.activeTeamSlot } }
   }
   const { team, aspects, relics } = saved
   if (!validTeam(team)) return refuse({ kind: "badTeam", team })
@@ -767,6 +778,20 @@ export const saveTeam = (tuning: Tuning, account: Account, slot: number, saved: 
   const keptRelics: { [Id in CharacterId]?: { readonly [Slot in RelicSlot]?: RelicId } } = {}
   for (const character of team) if (relics[character] !== undefined && Object.keys(relics[character]).length > 0) keptRelics[character] = relics[character]
   return { ok: true, value: { ...account, saved: { ...account.saved, [slot]: { team, aspects: kept, relics: keptRelics } } } }
+}
+
+/** Keeps a party edit and its active saved slot together, in one account change. */
+export const setTeam = (tuning: Tuning, account: Account, team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics, slot: number | null = account.activeTeamSlot): Checked<Account> => {
+  const selected = select(tuning, account, team, account.selection.play, aspects, relics)
+  if (!selected.ok) return selected
+  const next = { ...selected.value, activeTeamSlot: slot }
+  return slot === null ? { ok: true, value: next } : saveTeam(tuning, next, slot, next.selection)
+}
+
+/** Edits a saved party without using it. Edits to the party in use apply at once; it must keep one member. */
+export const editTeamSlot = (tuning: Tuning, account: Account, slot: number, saved: SavedTeam): Checked<Account> => {
+  if (slot === account.activeTeamSlot) return setTeam(tuning, account, saved.team, saved.aspects, saved.relics, slot)
+  return saveTeam(tuning, account, slot, saved.team.length === 0 ? null : saved)
 }
 
 /** `account` with `character` wearing `cosmetic` as her look of `kind` (`null`: her own look), if it owns both, and the look is of that kind and for her. */

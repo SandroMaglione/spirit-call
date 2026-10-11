@@ -14,6 +14,8 @@
 import type { ArenaId } from "./arena.ts"
 import type { ElementId } from "./elements.ts"
 import type { EnemyKind } from "./enemies.ts"
+import { tutorialSteps } from "./tutorial.ts"
+import type { TutorialStep } from "./tutorial.ts"
 
 export type Objective =
   /** Defeat every wave (the plan must end: no endless waves). */
@@ -41,6 +43,13 @@ export type Objective =
    * Nothing is recorded.
    */
   | { readonly kind: "practice"; readonly most: number; readonly fewest: number; readonly respawn: number }
+  /**
+   * The tutorial (see `content/tutorial.ts`): no waves, `steps` asked one at
+   * a time, with dummies that never fall; the team cannot fall either. It
+   * never ends on its own: the app takes the player to the menu once the
+   * last step is done, or when it is skipped. Nothing is recorded.
+   */
+  | { readonly kind: "tutorial"; readonly steps: ReadonlyArray<TutorialStep> }
 
 /** The elements an elite enemy can carry (see `Tuning.elites`): wind and rock leave nothing behind, so they make no elites. */
 export type EliteElement = Exclude<ElementId, "wind" | "rock">
@@ -801,6 +810,14 @@ export const challenges = {
       ]
     },
     arena: "trainingGround",
+    waves: { scripted: [], endless: null }
+  }),
+  /** The tutorial: what a new account opens on (and the settings replay), one thing at a time on an open floor. */
+  tutorial: challenge({
+    name: "Tutorial",
+    description: "Move, dash, attack, use your skills, and dodge at the last moment.",
+    objective: { kind: "tutorial", steps: tutorialSteps },
+    arena: "courtyard",
     waves: { scripted: [], endless: null }
   }),
   /** Enemy Practice (an Extra): the enemies picked, all together and coming back as they fall, until the team falls. */

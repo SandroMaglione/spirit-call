@@ -9,7 +9,7 @@ import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/bevy-ts"
 
-import type { Account, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
+import type { Account, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { Tuning } from "../config/tuning.ts"
@@ -20,9 +20,10 @@ import type { BuildValue, FlowState, PracticeValue, RunLogValue, RunResultValue 
 import type { Screen } from "./menu/screens.ts"
 import type { TeamDraft } from "./draft.ts"
 
-/** An Extra to play (nothing recorded): the Training Ground, Enemy Practice with its picks, or a character's trial (the Training Ground with her alone, owned or not: trying her before her audition). */
+/** An Extra to play (nothing recorded): the Training Ground, Enemy Practice with its picks, a character's trial (the Training Ground with her alone, owned or not: trying her before her audition), or the tutorial. */
 export type Extra =
   | { readonly kind: "training" }
+  | { readonly kind: "tutorial" }
   | { readonly kind: "practice"; readonly picks: PracticeValue }
   | { readonly kind: "trial"; readonly character: CharacterId }
 
@@ -39,6 +40,9 @@ export interface UiStore {
   /** The spirit on the lobby stage; selecting one never reorders party slots. */
   readonly menuCharacter: Signal<CharacterId>
   readonly menuDraft: Signal<TeamDraft>
+  /** The saved slot being browsed, independent of the party in use. */
+  readonly menuPartySlot: Signal<number>
+  readonly menuPartyDraft: Signal<TeamDraft>
   readonly menuScreens: Signal<ReadonlyArray<Screen>>
   readonly flow: Signal<FlowState>
   /** Whether the run going on is paused (its in-game menu open). */
@@ -68,6 +72,8 @@ export interface UiStore {
   readonly sound: Signal<Sound>
   /** This device's comfort settings. */
   readonly comfort: Signal<Comfort>
+  /** Whether the tutorial being played has had its last step done. */
+  readonly tutorialDone: Signal<boolean>
   /** The Extra being played, or last played; `null` for a quest or tier (or a dev quick start). */
   readonly extra: Signal<Extra | null>
   /** Enemy Practice's picks, kept while the app is open. */
@@ -108,6 +114,8 @@ export const createUiStore = (initial: {
   menuPlay: signal(initial.account.selection.play),
   menuCharacter: signal(initial.account.selection.team[0]!),
   menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects, relics: initial.account.selection.relics }),
+  menuPartySlot: signal(initial.account.activeTeamSlot ?? 1),
+  menuPartyDraft: signal({ ...(initial.account.saved[initial.account.activeTeamSlot ?? 1] ?? { team: [], aspects: {}, relics: {} }), focus: 0 }),
   menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),
   paused: signal(false),
@@ -124,6 +132,7 @@ export const createUiStore = (initial: {
   notices: signal(initial.notices),
   sound: signal(initial.sound),
   comfort: signal(initial.comfort),
+  tutorialDone: signal(false),
   extra: signal(null),
   practicePicks: signal({ kinds: [], elites: false }),
   menuOpens: signal(null),
@@ -132,18 +141,25 @@ export const createUiStore = (initial: {
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
+/** Party inspection and its character/gear pages use the browsed slot; gameplay pages use the active party. */
+export const editingParty = (store: UiStore): boolean => {
+  const screens = store.menuScreens.value
+  const at = screens.findLastIndex((screen) => screen.kind === "team")
+  return at >= 0 && screens.slice(at + 1).every((screen) => screen.kind === "character" || screen.kind === "gear")
+}
+export const menuDraftFor = (store: UiStore): Signal<TeamDraft> => editingParty(store) ? store.menuPartyDraft : store.menuDraft
+
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
-  /** Save `team` and the aspects and relics equipped in it (refused when they break the rules, see `teamProblems`, `teamRelicProblems`). */
-  readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics) => void
+  /** Save the party and its active slot together; false when the rules refuse it. An omitted slot keeps the current one. */
+  readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics, slot?: number | null) => boolean
+  readonly editTeamSlot: (slot: number, team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics) => boolean
   /** Enter the arena with `team` (in order, with `aspects` and `relics` equipped; the saved relics when not given) to play `play`. */
   readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play, relics?: TeamRelics) => void
   /** Enter an Extra with `team`, `aspects`, and `relics` (the saved ones when not given): nothing it does is recorded on the account. */
   readonly enterExtra: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, extra: Extra, relics?: TeamRelics) => void
   /** Open `character`'s audition with an invitation (saved at once). */
   readonly openAudition: (character: CharacterId) => void
-  /** Save a team in `slot` to load in a tap, or empty the slot (`null`; saved at once). */
-  readonly saveTeamTo: (slot: number, saved: SavedTeam | null) => void
   /** Put a look of `kind` on `character` (`null`: her own look; saved at once). */
   readonly wear: (character: CharacterId, kind: CosmeticKind, cosmetic: CosmeticId | null) => void
   /** Take an owned character to its next level with gold (saved at once). */
@@ -163,6 +179,10 @@ export interface UiActions {
   /** Sound on or off, and how loud (0..1); saved on this device. */
   readonly setMuted: (muted: boolean) => void
   readonly setVolume: (volume: number) => void
+  /** Plays the tutorial again (from the settings). */
+  readonly playTutorial: () => void
+  /** Leaves the tutorial for the menu: it counts as done. */
+  readonly skipTutorial: () => void
   /** Changes this device's comfort settings (saved, and applied at once). */
   readonly setComfort: (change: Partial<Comfort>) => void
   /** Leave this account for the list of this device's accounts (what it did is already saved). */

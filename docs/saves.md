@@ -3,11 +3,12 @@
 The accounts live on the player's device (see [vision.md](vision.md)):
 there is no login, and nothing of them is on a server. A device holds as
 many accounts as the player makes, each a name with its own progress. The
-game opens on the list of them (`src/ui/Accounts.tsx`): pick one to play,
-make one (a name, no password), or delete one. The game then loads the one
-picked, runs every change through the account's rules
+game resumes the last account entered (`src/ui/Accounts.tsx`), showing the
+loading screen until it is ready. With no account yet, pick a name to play.
+Settings, Account, "Switch account" opens the list: pick one, make one
+(a name, no password), or delete one. The game loads the selected account,
+runs every change through the account's rules
 (`src/account/account.ts`), and saves the whole account after each one.
-Settings, Account, "Switch account" goes back to the list.
 
 ## Where things are
 
@@ -92,6 +93,26 @@ is no undoing an update, so:
   `migrateAccount`, the latest pointed at it, and its fixture.
 - **Content changes need no migration** of their own: `fromRecord` repairs
   them. A renamed content id is the exception (see `AGENTS.md`).
+
+## Saved parties
+
+The save's third version remembers the active saved-party slot. A party
+edit to that party saves the current selection and slot together. Edits to
+another slot save only that slot; Use party switches the current selection
+and active slot together, and refuses an empty party. A cleared unused
+slot is absent from the saved parties. Versions 1 and 2 migrate with no
+active slot, since they never kept which one was selected. New accounts
+keep the starter party in Slot 1. An older account with no saved parties keeps its current party in
+Slot 1 too. Existing saved parties are never replaced by this default;
+an invalid selected slot is cleared when other saved parties remain.
+
+## The tutorial
+
+The save's second version remembers when the tutorial was completed or
+skipped, per account. Until then, opening the account starts the tutorial
+again from its first step. Saves from version 1 that already recorded a
+run are marked done; an account never played starts the tutorial. Playing
+it again from Settings changes no rewards, run totals, or party selection.
 
 ## One tab per account
 

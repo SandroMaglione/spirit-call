@@ -5,7 +5,7 @@
  */
 import { batch } from "@preact/signals"
 
-import { Challenge, Controls, Flow, Game, Paused, RunLog, RunResult, Team, Tuning } from "../schema.ts"
+import { Challenge, Controls, Flow, Game, Paused, RunLog, RunResult, Team, Tuning, Tutorial } from "../schema.ts"
 import { UiStoreService } from "./store.ts"
 
 export const SyncUi = Game.System("Shooter/SyncUi", {
@@ -16,7 +16,8 @@ export const SyncUi = Game.System("Shooter/SyncUi", {
     controls: Game.System.readResource(Controls),
     result: Game.System.readResource(RunResult),
     log: Game.System.readResource(RunLog),
-    paused: Game.System.readResource(Paused)
+    paused: Game.System.readResource(Paused),
+    tutorial: Game.System.readResource(Tutorial)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { store: Game.System.service(UiStoreService) }
@@ -31,6 +32,8 @@ export const SyncUi = Game.System("Shooter/SyncUi", {
     store.team.value = resources.team.get()
     store.challenge.value = resources.challenge.get()
     store.result.value = resources.result.get()
+    const objective = resources.tuning.get().challenges[resources.challenge.get()].objective
+    store.tutorialDone.value = objective.kind === "tutorial" && resources.tutorial.get().step >= objective.steps.length
     // The log goes with the result, once the run ended (not every frame of it).
     if (resources.result.get() !== null) store.runLog.value = resources.log.get()
   })

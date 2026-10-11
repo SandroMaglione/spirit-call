@@ -3,7 +3,7 @@
  * projectiles, shadows, and pieces of scenery by model), capsule geometry,
  * and the loaded models.
  */
-import { CapsuleGeometry, CircleGeometry, Color, CylinderGeometry, IcosahedronGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial } from "three"
+import { AdditiveBlending, CapsuleGeometry, CircleGeometry, Color, CylinderGeometry, IcosahedronGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial, OctahedronGeometry } from "three"
 import type { BufferGeometry, Group, Material } from "three"
 
 import { view } from "../config/view.ts"
@@ -21,13 +21,14 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
   const disc = new CircleGeometry(1, 20).rotateX(-Math.PI / 2)
   const orb = new IcosahedronGeometry(1, 0)
   const puck = new CylinderGeometry(1, 1, 0.3, 8)
+  const spark = new OctahedronGeometry(1, 0)
   const shadow = new MeshBasicMaterial({ color: view.shadow, transparent: true, opacity: 0.35, depthWrite: false })
   const projectileShadow = new MeshBasicMaterial({ color: view.shadow, transparent: true, opacity: 0.3, depthWrite: false })
   // Unlit: projectiles glow in their color whichever way they face.
   const glow = new MeshBasicMaterial()
   // See-through glows (halos, trails), rounder than the orbs.
   const round = new IcosahedronGeometry(1, 1)
-  const flare = new MeshBasicMaterial({ transparent: true, opacity: view.bolt.glowOpacity, depthWrite: false })
+  const flare = new MeshBasicMaterial({ transparent: true, opacity: view.bolt.glowOpacity, blending: AdditiveBlending, depthWrite: false })
   // Instances bring their own colors; flat shading keeps the low-poly facets.
   const flesh = new MeshLambertMaterial({ flatShading: true })
   const fixed = [
@@ -35,7 +36,8 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
     new Batch(parent, disc, projectileShadow, { order: floorLayers.shadows.order }),
     new Batch(parent, orb, glow),
     new Batch(parent, puck, glow),
-    new Batch(parent, round, flare)
+    new Batch(parent, round, flare),
+    new Batch(parent, spark, glow)
   ] as const
   const bodyGeometry = (radius: number, height: number): BufferGeometry => {
     const key = `${radius.toFixed(2)}:${height.toFixed(2)}`
@@ -96,6 +98,7 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
     orbs: fixed[2],
     pucks: fixed[3],
     flares: fixed[4],
+    sparks: fixed[5],
     bodyGeometry,
     bodies(radius, height) {
       const key = `${radius.toFixed(2)}:${height.toFixed(2)}`
@@ -116,7 +119,7 @@ export const makeAssets = (parent: Group, models: ReadonlyMap<ModelId, ModelSour
       for (const geometry of baked) geometry.dispose()
       for (const material of tinted) material.dispose()
       for (const geometry of geometries.values()) geometry.dispose()
-      for (const resource of [disc, orb, round, puck, shadow, projectileShadow, glow, flare, flesh]) resource.dispose()
+      for (const resource of [disc, orb, round, puck, spark, shadow, projectileShadow, glow, flare, flesh]) resource.dispose()
       for (const { batch, atlas } of animated.values()) { batch.dispose(); atlas.dispose() }
     }
   }

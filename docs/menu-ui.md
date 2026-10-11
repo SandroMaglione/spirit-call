@@ -158,10 +158,27 @@ is left, and keep text off it.
 
 ## Behaviour worth knowing
 
-- **The party is kept as it is set up.** There is no confirm: the menu
-  saves it when a screen is left (and when an aspect or a relic is
-  equipped), if it follows the rules; entering a run saves it too. Only a
-  failure is shown.
+- **Launch resumes the last account.** Loading stays visible while the
+  account and models open. Settings' Switch account opens the create/select
+  screen; first launch shows it too. A failed read changes nothing, and an
+  account held by another tab stays in the picker with an explanation.
+- **The tutorial** opens before the menu for an account that has not
+  completed or skipped it. The Swordsman practices alone with a Sparring
+  Dummy that never falls and deals no damage. Moving, dashing, attacking,
+  the special, the ultimate, and a perfect dodge are asked in order, with
+  instructions on the arena floor matching touch or keyboard controls.
+  The final perfect dodge shows success on the floor through its slow
+  motion and for another 0.8 seconds, then opens a win screen that waits
+  for a choice: start chapter
+  one's first quest directly, with the saved party, or go to Home. Skip
+  leaves for the menu; Settings' Controls tab can replay it. It pays
+  and records nothing. Switching and elemental bursts are left for later.
+- **Party edits are kept as they are made.** The menu
+  saves it immediately when a character is changed, swapped, added, or
+  removed, and when an aspect or relic is equipped. The current party and
+  its active saved slot are kept together in one account change. Editing
+  another slot changes only that slot; Use party explicitly puts it in use.
+  Only a failure is shown.
 - **Her gear has a screen of its own** (`menu/Gear.tsx`), since there
   will be many aspects, relics, and looks, each with its own explanation:
   tabs Aspect, Relics, Looks; the cards on the left (relics under her four
@@ -190,23 +207,40 @@ is left, and keep text off it.
 - **The collection** (`menu/Collection.tsx`, from the home) shows
   everything to own, shelf by shelf (characters, aspects, relics, looks),
   owned or locked, each saying where it comes from (and a relic each of its
-  tiers), with Go there to open that card in the challenges. Its last tab
-  is the **inventory** (`menu/Inventory.tsx`: what the wallet holds, where
-  each comes from, and what it is for at the panel's foot). The home's top
+  tiers), with Go there to open that card in the challenges. The home's top
   shows how much of the collection is owned.
+- **Inventory** (`menu/Inventory.tsx`) is the last destination in Home's
+  list: what the wallet holds, where each comes from, and what it is for
+  at the panel's foot.
 - **Auditions** are a tab of the challenges: each lends its character, so
   the party strip gives way to her face, and the brief says she is played
-  alone at the tier's level.
-- **Saved parties**: the party screen's top bar holds three slots (tap an
-  empty one to save the party there, a saved one to load it, Save to keep
-  the party in the slot last used).
+  alone at the tier's level. Try is always available, even before inviting
+  her: the Training Ground lends her alone with her plain kit at the
+  party's level, records nothing, and leaves the saved party alone.
+- **Saved parties**: the party screen's top bar holds three slots. Tapping
+  one browses its own contents, including a fully empty slot. The browsed
+  slot is highlighted and named beside Party; a check marks the slot in use.
+  Use party switches to the browsed slot and is disabled for an empty one.
+  Character and gear edits save immediately, with no Save button. The party
+  in use must retain one member: use another party before removing its last
+  character. An unused party may be cleared completely.
+  Saved edits and the party in use survive restarting the game.
+  The starter party occupies Slot 1. Home's portraits have no slot caption.
+  The party screen has no Play button; its three places use the full height
+  below the top bar. Playing starts from Home or a challenge.
+  In a dev build, `?partyTest&touch` opens Party with a separate test account:
+  every character owned, the Swordsman alone in Slot 1, and edits kept on
+  later visits. It uses the normal loading screen and leaves other accounts
+  alone.
 - **The top bar's tabs never move**: the bar is three columns with equal
   sides, so its middle stays centered whatever stands at its ends (a
   wallet shown on one tab and not another), and a tab is as wide as its
   label in bold.
 - **The party's roster opens beside a place** when it is tapped (a panel of
   cards that scrolls, since the roster will grow), over the left of the
-  screen; a tap on a card puts her there and closes it.
+  screen; a tap on a card puts her there and closes it. Remove and Done
+  stay in a solid footer inside the panel, below its scrolling cards and
+  any explanation. Done is cream; they never overlap the character's gear.
 - **Leading**: a tap on a party face on the home leads the next run with
   her, without changing the party's order.
 - **Locked things stay visible** and say where they come from, from the

@@ -1,7 +1,7 @@
 /**
  * The collection (see docs/collection.md): everything the game has to own,
- * on shelves (characters, aspects, relics, looks) with what the wallet
- * holds beside them. Each card shows whether it is owned; the one picked is
+ * on shelves (characters, aspects, relics, looks). Each card shows whether
+ * it is owned; the one picked is
  * explained on the right with where it comes from (one card each: a quest's
  * first or perfect clear, an audition, a hardcore tier), and Go there opens
  * that card in the challenges. Nothing here is bought or drawn.
@@ -32,7 +32,6 @@ import { tabOf } from "../navigation.ts"
 import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiStore } from "../store.ts"
 import { slotNames } from "./Gear.tsx"
-import { InventoryShelf } from "./Inventory.tsx"
 import { CharacterCard, describeSource, ids } from "./parts.tsx"
 import type { CollectionTab, Nav } from "./screens.ts"
 
@@ -86,7 +85,6 @@ const CharacterShelf = ({ store, nav }: { readonly store: UiStore; readonly nav:
     <div class="collection__stage collection__stage--wide"><ModelStage key={picked.value} character={picked.value} /></div>
     <Tag store={store} item={{ kind: "character", id: picked.value }} name={spec.name} element={spec.element}
       icons={<><Icon name={spec.element} /><AbilityIcon kind={spec.class} /></>} />
-    <div class="collection__details"><Pill tone="dark" size="small" icon="character" onClick={() => nav.go({ kind: "character", character: picked.value, tab: "overview" })}>Details</Pill></div>
     <GoThere store={store} nav={nav} item={{ kind: "character", id: picked.value }} />
   </>
 }
@@ -166,13 +164,12 @@ export const Collection = ({ store, nav, tab }: { readonly store: UiStore; reado
   return <Screen name="collection" element={tab === "characters" ? elementOf(tuning, first) : undefined}>
     <TopBar icon="collection" title="Collection" detail={`${owned} / ${all.length}`} close={nav.back}>
       <TopTabs label="Collection" current={tab} onChange={(id) => nav.replace({ kind: "collection", tab: id })} tabs={[
-        { id: "characters", label: "Characters" }, { id: "aspects", label: "Aspects" }, { id: "relics", label: "Relics" }, { id: "looks", label: "Looks" }, { id: "inventory", label: "Inventory" }
+        { id: "characters", label: "Characters" }, { id: "aspects", label: "Aspects" }, { id: "relics", label: "Relics" }, { id: "looks", label: "Looks" }
       ]} />
     </TopBar>
     {tab === "characters" ? <CharacterShelf store={store} nav={nav} />
       : tab === "aspects" ? <AspectShelf store={store} nav={nav} />
       : tab === "relics" ? <RelicShelf store={store} nav={nav} />
-      : tab === "looks" ? <LookShelf store={store} nav={nav} />
-      : <InventoryShelf store={store} />}
+      : <LookShelf store={store} nav={nav} />}
   </Screen>
 }

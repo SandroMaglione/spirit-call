@@ -7,7 +7,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { Batch, Instance } from "../src/presentation/batch.ts"
 import type { ProjectileNode } from "../src/presentation/host-types.ts"
 import type { ModelId, ModelSource } from "../src/presentation/models.ts"
-import { createNode, disposeNode, instancesOf } from "../src/presentation/nodes.ts"
+import { createNode, disposeNode, instancesOf, placeTracer } from "../src/presentation/nodes.ts"
 import { makeAssets } from "../src/presentation/render-assets.ts"
 import { arenaLooks, characterLooks, enemyLooks, modelsInLooks } from "../src/presentation/looks.ts"
 import { closeLoop, models } from "../src/presentation/models.ts"
@@ -135,10 +135,34 @@ describe("render nodes", () => {
     const bolt = createNode({ kind: "projectile", faction: "enemy", style: "bolt", element: null, radius: 5 }, assets, pool)
     if (bolt.kind !== "projectile") throw new Error("expected a projectile")
     expect(bolt.orb.batch).toBe(assets.orbs)
+    bolt.look = "round"
+    bolt.travelled = 200
+    bolt.last = { x: 5, y: 5 }
+    bolt.launched = true
+    placeTracer(bolt, 100)
     pool.push(bolt)
     const disc = createNode({ kind: "projectile", faction: "player", style: "disc", element: null, radius: 13 }, assets, pool)
     expect(disc).toBe(bolt)
     expect(bolt.orb.batch).toBe(assets.pucks)
+    expect(bolt.look).toBeNull()
+    expect(bolt.last).toBeNull()
+    expect(bolt.launched).toBe(false)
+    expect(bolt.travelled).toBe(0)
+    expect(bolt.streak.object.scale.x).toBe(0)
+    expect(bolt.core.object.scale.x).toBe(0)
+  })
+
+  it("never draws a new tracer behind its launch point", () => {
+    const { assets, pool } = setup()
+    const bolt = createNode({ kind: "projectile", faction: "player", style: "bolt", element: null, radius: 6 }, assets, pool)
+    if (bolt.kind !== "projectile") throw new Error("expected a projectile")
+    placeTracer(bolt, 100)
+    expect(bolt.streak.object.scale.x).toBe(0)
+    bolt.travelled = 8
+    placeTracer(bolt, 100)
+    // Both ellipsoids extend exactly back to the muzzle, even with a requested 100-unit streak.
+    expect(bolt.streak.object.position.x - bolt.streak.object.scale.x).toBe(-8)
+    expect(bolt.trail.object.position.x - bolt.trail.object.scale.x).toBe(-8)
   })
 
   it("stand a pillar on a pillar's box, fitted to it, and fade it", () => {

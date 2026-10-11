@@ -57,8 +57,11 @@ export interface AccountRecord {
   readonly worn: Readonly<Record<string, Readonly<Record<string, string>>>>
   /** The auditions opened, by character: their place (1 the first) and when. */
   readonly auditions: Readonly<Record<string, { readonly slot: number; readonly openedAt: number }>>
+  /** When the tutorial was finished or skipped; `null`: not yet. */
+  readonly tutorialDoneAt: number | null
   /** Teams saved to load in a tap, by slot: members in order, each one's aspect, and each one's relics by slot. */
   readonly saved: Readonly<Record<string, { readonly team: ReadonlyArray<string>; readonly aspects: Readonly<Record<string, string>>; readonly relics: Readonly<Record<string, Readonly<Record<string, string>>>> }>>
+  readonly activeTeamSlot: number | null
 }
 
 const known = <Id extends string>(ids: Record<Id, unknown>, value: string): value is Id => Object.hasOwn(ids, value)
@@ -141,7 +144,9 @@ export const fromRecord = (
     selection: starterSelection,
     worn: {},
     saved: {},
-    auditions: keep<CharacterId, { readonly slot: number; readonly openedAt: number }>(tuning.characters, stored.auditions, "audition", dropped)
+    activeTeamSlot: null,
+    auditions: keep<CharacterId, { readonly slot: number; readonly openedAt: number }>(tuning.characters, stored.auditions, "audition", dropped),
+    tutorialDoneAt: stored.tutorialDoneAt
   }
 
   // A character never stands below a step her level is already past (levels trained before ascension, or steps moved since).
@@ -215,6 +220,16 @@ export const fromRecord = (
     if (kept.ok) account = kept.value
     else dropped.push("a saved team")
   }
+  // A repaired or missing slot must never be presented as the active party.
+  const active = stored.activeTeamSlot
+  if (active !== null && account.saved[active] !== undefined) account = { ...account, activeTeamSlot: active }
+  else if (active !== null) dropped.push("the selected party slot")
+  // Before saved parties, the current party had no slot. Keep it in the
+  // first one when none exist, without replacing a player's saved party.
+  if (Object.keys(account.saved).length === 0) {
+    const { team, aspects, relics } = account.selection
+    account = { ...account, saved: { 1: { team, aspects, relics } }, activeTeamSlot: 1 }
+  }
   return { account, dropped, granted: rewarded.granted }
 }
 
@@ -241,5 +256,7 @@ export const toRecord = (account: Account): AccountRecord => ({
   selection: account.selection,
   worn: account.worn,
   saved: account.saved,
-  auditions: account.auditions
+  activeTeamSlot: account.activeTeamSlot,
+  auditions: account.auditions,
+  tutorialDoneAt: account.tutorialDoneAt
 })

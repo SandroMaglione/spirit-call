@@ -22,7 +22,7 @@ import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { normalizeOr } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment, Velocity } from "../schema.ts"
+import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Member, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment, Velocity } from "../schema.ts"
 import type { ElementId } from "../content/elements.ts"
 import { airborneLift, diving, soarPhase } from "./actors.ts"
 import type { RenderHostValue } from "./host-types.ts"
@@ -118,6 +118,13 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
   // It goes off: a flash on her, rings out across the floor, streaks, a deep blast, and a shake.
   for (const cast of events.cast.all()) {
     if (cast.called !== true) continue
+    if (cast.skill === "cyclone") {
+      // Its light stays on the spirit and in the 3D wind funnel.
+      feedback.shake = Math.max(feedback.shake, spec.shake)
+      feedback.punch = Math.max(feedback.punch, 1.2)
+      services.sounds.play("ultimateRelease")
+      continue
+    }
     const element = cast.effect.element
     const color = element === null ? view.ultimate : view.elements[element]
     const at = screenAt(cast.from)
@@ -135,7 +142,7 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
 export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
   queries: {
     player: Game.Query({
-      selection: { position: Game.Query.read(Position), facing: Game.Query.read(Facing), velocity: Game.Query.read(Velocity), airborne: Game.Query.optional(Airborne) },
+      selection: { position: Game.Query.read(Position), member: Game.Query.read(Member), facing: Game.Query.read(Facing), velocity: Game.Query.read(Velocity), airborne: Game.Query.optional(Airborne) },
       with: [Player]
     }),
     lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } })
@@ -147,7 +154,8 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
   const fx = host.fx
   const seconds = services.clock.frameSeconds
   const [player] = queries.player.each()
-  if (player !== undefined && player.data.airborne.present) {
+  // Swordsman's wind wraps her in the 3D scene (ShowSwordsmanWind).
+  if (player !== undefined && player.data.member.get().character !== "swordsman" && player.data.airborne.present) {
     const airborne = player.data.airborne.get()
     const at = player.data.position.get()
     const lift = airborneLift(airborne)
@@ -211,7 +219,7 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
   }
   // What lands: Gust's blast, as rings of wind, streaks thrown out all around, and dust.
   for (const cast of events.cast.all()) {
-    if (cast.landing !== true || cast.effect.kind !== "blast") continue
+    if (cast.landing !== true || cast.effect.kind !== "blast" || cast.skill === "bladeWave") continue
     const at = screenAt(cast.from)
     const color = cast.effect.element === null ? view.playerArea : view.elements[cast.effect.element]
     fx.ring(at, cast.effect.radius * projection.zoom, color, 0.4)

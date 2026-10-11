@@ -421,6 +421,7 @@ export const Quests = ({ store, actions, nav, tab, play, leader, enter }: {
   const chest = useSignal<ChestRef | null>(null)
   const tuning = store.tuning.value, selected = play.value
   const lock = playLock(tuning, store.account.value, selected)
+  const lent = lentFor(tuning, selected, store.account.value)
   // An audition waiting for its invitation: who it is for.
   const inviting = lock?.kind === "invite" ? lock.character : null
   const key = selected.kind === "quest" ? `${selected.quest}-${rankOf(selected)}` : `${selected.track}-${selected.tier}`
@@ -435,9 +436,10 @@ export const Quests = ({ store, actions, nav, tab, play, leader, enter }: {
     {shownChest !== null ? <ChestBrief key={`${shownChest.group}-${shownChest.index}`} store={store} chest={shownChest} open={(quest) => { play.value = quest; chest.value = null }} /> : <Brief key={key} store={store} nav={nav} play={play} />}
     <Actions>
       {/* An audition is played alone, by the character it lends: her face instead of the party. */}
-      {lentFor(tuning, selected) === null
+      {lent === null
         ? <PartyStrip store={store} team={store.menuDraft.value.team} leader={leader} size={34} pick={() => nav.go({ kind: "team" })} edit={() => nav.go({ kind: "team" })} />
-        : <Face of={{ character: lentFor(tuning, selected)!.character }} tint={elementOf(tuning, lentFor(tuning, selected)!.character)} size={38} selected />}
+        : <Face of={{ character: lent.character }} tint={elementOf(tuning, lent.character)} size={38} selected />}
+      {lent !== null && <Pill icon="practice" tone="dark" size="small" onClick={() => actions.enterExtra(store.menuDraft.value.team, store.menuDraft.value.aspects, { kind: "trial", character: lent.character }, store.menuDraft.value.relics)}>Try</Pill>}
       {/* An audition not opened yet is opened here, with an invitation: the player's choice of who auditions next. */}
       {inviting !== null
         ? <Pill icon="invitations" disabled={(store.account.value.wallet.invitations ?? 0) < 1} onClick={() => actions.openAudition(inviting)}>

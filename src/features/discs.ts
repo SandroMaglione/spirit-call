@@ -20,7 +20,7 @@ export const makeDisc = (at: Vec2, disc: DiscValue) =>
   Game.Command.spawn(
     [Position, at],
     [PrevPosition, at],
-    [Disc, disc],
+    [Disc, { ...disc, origin: at }],
     [Renderable, { kind: "projectile", faction: disc.faction, style: "disc", radius: disc.radius, element: null }]
   )
 

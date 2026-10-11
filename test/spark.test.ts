@@ -245,6 +245,29 @@ describe("a perfect dodge", () => {
     expect(run.runtime.inspect(Dodger).dash.perfect).toBe(true)
   })
 
+  it("allows an earlier practice dodge while keeping normal enemies' timing", () => {
+    const early = steps(0.3)
+    const normal = dodging(early)
+    normal.step(landsAt + 3)
+    expect(normal.runtime.inspect(Dodger).dash.perfect).toBe(false)
+
+    // The same swipe and input, with only the practice partner's timing changed.
+    const practice = tuningWith({ enemies: { dummy: { poise: 0.5, attacks: [swipe], perfectDodgeWindow: defaultTuning.enemies.sparringDummy.perfectDodgeWindow } } })
+    const run = start({ tuning: practice, keys: doubleTap("up", landsAt - early - 3, { hold: true }) })
+    run.runtime.tick(placeDummies([{ x: 80, y: 0 }], practice))
+    run.step(landsAt + 3)
+    expect(run.runtime.inspect(Dodger).dash.perfect).toBe(true)
+    expect(run.runtime.inspect(Dodger).health).toBe(hp)
+  })
+
+  it("still rejects a practice dash taken before its wider window", () => {
+    const practice = tuningWith({ enemies: { dummy: { attacks: [swipe], perfectDodgeWindow: defaultTuning.enemies.sparringDummy.perfectDodgeWindow } } })
+    const run = start({ tuning: practice, keys: doubleTap("up", landsAt - steps(0.55) - 3, { hold: true }) })
+    run.runtime.tick(placeDummies([{ x: 80, y: 0 }], practice))
+    run.step(landsAt + 3)
+    expect(run.runtime.inspect(Dodger).dash.perfect).toBe(false)
+  })
+
   it("slows only the enemies: their windup crawls while she runs at full speed", () => {
     const run = start({ tuning, keys: [{ frame: 0, press: ["left"] }] })
     run.runtime.tick(placeDummies([{ x: 80, y: 0 }], tuning))

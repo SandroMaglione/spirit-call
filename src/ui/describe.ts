@@ -37,6 +37,8 @@ export const describeObjective = (objective: Objective, waves: number): string =
       return "Practice on dummies that never fall; leave from the menu"
     case "practice":
       return "The enemies you pick, coming back as they fall, until you fall"
+    case "tutorial":
+      return "One thing at a time, written on the floor"
   }
 }
 

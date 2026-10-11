@@ -30,7 +30,9 @@ import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
 import { initialControls } from "./features/input.ts"
-import { UiRequest,
+import { newAccount } from "./content/account.ts"
+import {
+  UiRequest,
   FrameContext,
   Game,
   KeyboardInput,
@@ -127,9 +129,11 @@ const start = async (mount: HTMLElement) => {
   const stressLoad = parseStress(devQuery)
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
   const tuning = waveFromQuery(arenaFromQuery(stressLoad !== undefined ? stressTuning() : dev ? loadSavedTuning() : defaultTuning, devQuery), devQuery)
-  // The game opens on this device's accounts: the one picked is played, by one tab at a time.
+  // Resume the last account, unless the player explicitly asked for the picker.
+  const entryUrl = new URL(window.location.href)
+  const choosingAccount = entryUrl.searchParams.has("accounts")
   // A dev quick start (`?play`, below) plays the last played account, or a new one.
-  const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
+  const quickStart = !choosingAccount && (new URLSearchParams(devQuery).has("play") || stressLoad !== undefined)
   // The models load while the account is picked: they are most of the wait on a phone's network.
   const progress = signal(0)
   const looks = loadLooks((share) => (progress.value = share))
@@ -142,28 +146,40 @@ const start = async (mount: HTMLElement) => {
     else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }))
   })
   const accounts = openAccounts()
-  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, accounts, holdAccount, progress, leaveApp)
+  const partyTest = dev && !choosingAccount && new URLSearchParams(devQuery).has("partyTest")
+  const pickAccounts = partyTest ? (await import("./app/party-test.ts")).partyTestAccounts(accounts) : accounts
+  const picking = quickStart ? devAccount(accounts) : showAccounts(mount, pickAccounts, holdAccount, progress, leaveApp, { resumeLast: !choosingAccount })
   // In the apps, the splash screen gives way to the list of accounts (or a quick start's loading).
   hideSplash()
   const picked = await picking
+  if (choosingAccount) {
+    entryUrl.searchParams.delete("accounts")
+    window.history.replaceState(window.history.state, "", entryUrl)
+  }
   loaded = picked.loaded
   const shell = await startApp(picked.id, picked.name)
   flushSaves = shell.flush
   const account = shell.account
-  // The game opens on the menu. `?play` skips it (a dev quick start that ignores what the account owns),
+  /** The tutorial's team: the starter's character alone, as the account has her, with nothing equipped. */
+  const tutorialTeam = () => teamOf(tuning, uiStore.account.peek(), [newAccount.selection.character], {}, {})
+  // The game opens on the menu; an account that has not done the tutorial opens on it (see `features/tutorial.ts`).
+  // `?play` skips both (a dev quick start that ignores what the account owns),
   // entering with the account's selection or the URL's `?team=gunner,swordsman&aspect=…&challenge=swarm` (see dev/build.ts).
-  const flow = quickStart ? "Playing" : "Menu"
+  const tutorialFirst = !quickStart && account.tutorialDoneAt === null
+  const flow = quickStart || tutorialFirst ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
   // A quick start may name aspects and relics the account does not own (a dev tool), but never one twice, or one that does not fit.
-  const team = withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, devQuery, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
+  const team = tutorialFirst
+    ? teamOf(tuning, account, [newAccount.selection.character], {}, {})
+    : withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, devQuery, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
   const selected = encounterOf(tuning, account.selection.play, account)
-  const challenge = quickStart ? challengeFromQuery(tuning, devQuery, selected.challenge) : selected.challenge
-  const enemyLevel = quickStart ? enemyLevelFromQuery(devQuery, selected.enemyLevel) : selected.enemyLevel
+  const challenge = tutorialFirst ? "tutorial" : quickStart ? challengeFromQuery(tuning, devQuery, selected.challenge) : selected.challenge
+  const enemyLevel = tutorialFirst ? 1 : quickStart ? enemyLevelFromQuery(devQuery, selected.enemyLevel) : selected.enemyLevel
   const practice = quickStart && challenge === "practice" ? practiceFromQuery(tuning, devQuery) : undefined
   /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
   let playing: Play | null = null
-  /** Whether the run going on is recorded on the account: not an Extra's (training, practice). */
-  let recording = true
+  /** Whether the run going on is recorded on the account: not an Extra's (training, practice, the tutorial). */
+  let recording = !tutorialFirst
   const sounds = createSoundBoard(window, { muted: shell.settings.muted, volume: shell.settings.volume })
   // The game is for phones: in the apps, and on a touch screen, the controls start as touch (the pad shows from the
   // first fight); a key or a mouse button switches to the keyboard's, and a touch back.
@@ -171,11 +187,15 @@ const start = async (mount: HTMLElement) => {
   const device = touchScreen ? "touch" : "desktop"
   const { muted, volume, ...comfort } = shell.settings
   const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: { muted, volume }, comfort, device })
+  if (partyTest) uiStore.menuScreens.value = [{ kind: "home" }, { kind: "team" }]
   setMotion(comfort.reducedMotion)
+  if (tutorialFirst) uiStore.extra.value = { kind: "tutorial" }
   // The looks each character wears are drawn in the arena and the menu (the presentation keeps them, see `wearLooks`).
   wearLooks(account.worn)
   shell.onAccount((next) => {
     uiStore.account.value = next
+    uiStore.menuDraft.value = { team: next.selection.team, aspects: next.selection.aspects, relics: next.selection.relics, focus: uiStore.menuDraft.peek().focus }
+    uiStore.menuPartyDraft.value = { ...(next.saved[uiStore.menuPartySlot.peek()] ?? { team: [], aspects: {}, relics: {} }), focus: uiStore.menuPartyDraft.peek().focus }
     wearLooks(next.worn)
   })
   // Every run that ends is reported to the account once, as its result appears (the arena records it, see `RunResult`):
@@ -191,6 +211,16 @@ const start = async (mount: HTMLElement) => {
     reported = result
     if (!recording) return
     uiStore.earned.value = shell.recordRun(playing, result, uiStore.runLog.peek(), uiStore.team.peek())
+  })
+  /** Takes the player from the tutorial (done or skipped) to the menu; it counts as done. */
+  const leaveTutorial = () => {
+    shell.finishTutorial()
+    runtime.send(UiRequest, { kind: "leave" })
+  }
+  // Completion is saved at once; the win screen stays until the player chooses where to go.
+  effect(() => {
+    const done = uiStore.tutorialDone.value && uiStore.extra.value?.kind === "tutorial"
+    if (done) shell.finishTutorial()
   })
   let feedbackTimer: ReturnType<typeof setTimeout> | undefined
   const notify = (message: string, error = false, title?: string) => {
@@ -211,13 +241,22 @@ const start = async (mount: HTMLElement) => {
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
     // Kept as it is set up: nothing to tell the player unless it fails.
-    saveTeam: (team, aspects, relics) => {
-      const selected = shell.select(team, uiStore.account.peek().selection.play, aspects, relics)
+    saveTeam: (team, aspects, relics, slot) => {
+      const selected = shell.setTeam(team, aspects, relics, slot)
       if (!selected.ok) notify("Your party could not be saved.", true)
+      return selected.ok
+    },
+    editTeamSlot: (slot, team, aspects, relics) => {
+      const edited = shell.editTeamSlot(slot, { team, aspects, relics })
+      if (!edited.ok) notify("Your party could not be saved.", true)
+      return edited.ok
     },
     enter: (team, aspects, play, relics) => {
       // The account's rules decide whether it can be entered.
-      const selected = shell.select(team, play, aspects, relics)
+      // Starting with the lobby's chosen spirit must not reorder the saved party.
+      const draft = uiStore.menuDraft.peek()
+      const kept = team.length === draft.team.length && draft.team.every((member) => team.includes(member)) ? draft.team : team
+      const selected = shell.select(kept, play, aspects, relics)
       if (!selected.ok) { notify("This challenge is locked or your party cannot enter it.", true, "Cannot enter"); return }
       playing = play
       recording = true
@@ -244,7 +283,6 @@ const start = async (mount: HTMLElement) => {
       })
     },
     openAudition: (character) => change(() => shell.openAudition(character), `${tuning.characters[character].name}'s audition is open`),
-    saveTeamTo: (slot, saved) => change(() => shell.saveTeam(slot, saved), saved === null ? null : "Team saved"),
     wear: (character, kind, cosmetic) => change(() => shell.wear(character, kind, cosmetic), null),
     cue: (cue) => {
       sounds.play(cueSounds[cue])
@@ -254,7 +292,19 @@ const start = async (mount: HTMLElement) => {
     train: (character) => change(() => shell.train(character), `${tuning.characters[character].name} leveled up`),
     ascend: (character) => change(() => shell.ascend(character), `${tuning.characters[character].name} ascended`),
     retry: () => runtime.send(UiRequest, { kind: "retry" }),
-    menu: () => runtime.send(UiRequest, { kind: "menu" }),
+    menu: () => {
+      // Leaving the tutorial from the in-game menu skips it.
+      if (uiStore.extra.peek()?.kind === "tutorial") shell.finishTutorial()
+      runtime.send(UiRequest, { kind: "menu" })
+    },
+    playTutorial: () => {
+      playing = null
+      recording = false
+      uiStore.play.value = null
+      uiStore.extra.value = { kind: "tutorial" }
+      runtime.send(UiRequest, { kind: "start", team: tutorialTeam(), challenge: "tutorial", enemyLevel: 1 })
+    },
+    skipTutorial: () => leaveTutorial(),
     pause: () => runtime.send(UiRequest, { kind: "pause" }),
     resume: () => runtime.send(UiRequest, { kind: "resume" }),
     setMuted: (muted) => {
@@ -269,13 +319,18 @@ const start = async (mount: HTMLElement) => {
       if (sounds.volume() > 0 && sounds.muted()) uiActions.setMuted(false)
       uiStore.sound.value = { ...uiStore.sound.value, volume: sounds.volume() }
     },
-    // Everything is saved as it happens: the page starts over on the list of accounts.
     setComfort: (change) => {
       uiStore.comfort.value = { ...uiStore.comfort.value, ...change }
       shell.changeSettings(change)
       applyComfort()
     },
-    switchAccount: () => window.location.reload(),
+    // Only an explicit switch opens the picker; wait for pending progress before reloading.
+    switchAccount: () => {
+      const url = new URL(window.location.href)
+      url.searchParams.set("accounts", "")
+      window.history.replaceState(window.history.state, "", url)
+      void restart()
+    },
     leave: leaveApp,
     // Listed by the build beside the game (scripts/licenses.ts); a dev build has none.
     licenses: () => fetch("licenses.json").then((response) => response.json() as Promise<ReadonlyArray<License>>).catch(() => [])
@@ -285,7 +340,7 @@ const start = async (mount: HTMLElement) => {
   const browser = await createBrowserHost(mount, tuning.arena, looks)
   const { canvas, size } = browser.host
   // Native Enter/Space activation and sliders must keep working in menus.
-  const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek())
+  const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek() && !(uiStore.extra.peek()?.kind === "tutorial" && uiStore.tutorialDone.peek()))
   const keyboard = Keyboard.actions(input.host, keyBindings, { preventDefault: false })
   const pointer = Pointer.track(canvas, input.host)
   // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.

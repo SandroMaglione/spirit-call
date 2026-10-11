@@ -6,7 +6,7 @@
  * hundredth of the UI's width.
  */
 .menu, .pause, .results { position: absolute; inset: 0; }
-.party-strip { display: flex; align-items: center; gap: 8px; }
+.party-strip { position: relative; display: flex; align-items: center; gap: 8px; }
 .enemies { display: flex; gap: 8px; padding: 3px; margin: -3px; }
 .enemies__one { display: grid; gap: 2px; justify-items: center; flex: none; }
 .amounts__unlocks { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; }
@@ -102,8 +102,7 @@
 .home__next { position: absolute; right: var(--right); bottom: var(--bottom); width: 340px; z-index: 3; display: grid; gap: 7px; justify-items: end; text-align: right; text-shadow: 0 1px 4px #0009; }
 .home__next h2 { font-size: 24px; font-weight: 800; line-height: 1; }
 .home__play { display: flex; align-items: center; gap: 10px; }
-.home__play .pill[data-size="small"] { height: 36px; padding-left: 4px; }
-.home__play .pill[data-size="small"] .pill__dot { width: 28px; height: 28px; font-size: 15px; }
+.home__play .pill[data-tone="dark"] { min-width: 0; font-size: 17px; padding-right: 24px; gap: 14px; }
 .home__foes { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; position: relative; margin-bottom: 14px; }
 .home__foes::after { content: ""; position: absolute; inset: -8px; }
 .home__foes .face { background: rgba(14, 18, 30, .6); box-shadow: inset 0 0 0 1px var(--line); }
@@ -232,7 +231,7 @@
 .collection__price { display: inline-flex; align-items: center; gap: 3px; }
 .collection__price .menu-icon { font-size: 14px; }
 .collection__empty { padding: 10px 4px; font-size: 13px; }
-/* A model shelf: the model large over the right, a short tag at its top, Details at its foot. */
+/* A model shelf: the model large over the right, a short tag at its top. */
 .collection__stage--wide { right: var(--right) !important; }
 .collection__tag { position: absolute; right: var(--right); top: 66px; z-index: 3; display: grid; justify-items: end; gap: 5px; text-align: right; text-shadow: 0 1px 4px #000a; }
 .collection__tag b { font-size: 26px; font-weight: 800; line-height: 1.05; }
@@ -246,15 +245,16 @@
 
 /* ---------- party ---------- */
 .lineup__saved { display: flex; align-items: center; gap: 6px; }
-.lineup__slot { display: inline-flex; align-items: center; gap: 3px; height: 34px; padding: 0 9px; border-radius: 17px; background: rgba(22, 28, 44, .7); box-shadow: inset 0 0 0 1px var(--line); color: inherit; font: inherit; }
-.lineup__slot[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--gold-hi); }
+.lineup__slot { position: relative; display: inline-flex; align-items: center; gap: 3px; height: 34px; padding: 0 9px; border-radius: 17px; background: rgba(22, 28, 44, .7); box-shadow: inset 0 0 0 1px var(--line); color: inherit; font: inherit; }
+.lineup__slot::after { content: ""; position: absolute; inset: -5px 0; }
+.lineup__slot[aria-pressed="true"] { background: var(--cream); color: var(--ink); box-shadow: inset 0 0 0 2px var(--gold-hi); }
 .lineup__slot b { font-size: 13px; margin-right: 3px; }
 .lineup__slot .menu-icon { font-size: 14px; opacity: .7; }
-.lineup__places { position: absolute; inset: 52px var(--right) 88px var(--left); display: grid; grid-template-columns: repeat(3, 1fr); z-index: 2; }
+.lineup__places { position: absolute; inset: 72px var(--right) 32px var(--left); display: grid; grid-template-columns: repeat(3, 1fr); z-index: 2; }
 .lineup__place { position: relative; display: grid; justify-items: center; align-content: end; gap: 3px; text-shadow: 0 1px 4px #0009; }
 .lineup__pick { position: absolute; inset: -12px 0 52px; }
 .ui .lineup__pick:active { transform: none; }
-.lineup__model { position: absolute; inset: 14px 0 0; }
+.lineup__model { position: absolute; inset: 24px 20px 8px; }
 .lineup__number { position: absolute; left: 50%; top: 14px; translate: -50% 0; font-size: 12px; font-weight: 800; letter-spacing: .1em; color: rgba(255, 255, 255, .5); }
 .lineup__place.is-on .lineup__number { color: var(--gold-hi); }
 .lineup__place.is-on .lineup__number::before, .lineup__place.is-on .lineup__number::after { content: "◆"; font-size: 8px; margin: 0 5px; vertical-align: 1px; }
@@ -271,9 +271,8 @@
 .lineup__relic { font-size: 14px; display: block; }
 .lineup__relic[data-empty] { opacity: .3; filter: grayscale(1); }
 /* The roster opens at the left, over the places. */
-.lineup__picker { position: absolute; left: var(--left); top: 60px; bottom: 62px; width: 294px; z-index: 4; }
+.lineup__picker { position: absolute; left: var(--left); top: 60px; bottom: var(--bottom); width: 294px; z-index: 4; }
 .lineup__picker .cards { padding: 3px; }
-.lineup__picker-actions { position: absolute; left: var(--left); bottom: var(--bottom); z-index: 3; display: flex; gap: 8px; }
 
 /* ---------- challenges ---------- */
 .quests__list { --list: clamp(200px, 31cqw, 262px); position: absolute; left: var(--left); top: 62px; bottom: 0; width: var(--list); z-index: 3; display: grid; grid-template-columns: minmax(0, 1fr); gap: 5px; align-content: start; padding-bottom: 28px; mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); }
@@ -403,6 +402,8 @@
 .pause__sound { position: absolute; left: 330px; right: var(--right); max-width: 400px; top: 96px; }
 
 /* ---------- entering the arena (see Entrance.tsx) ---------- */
+/* Over the tutorial: Skip, top right, clear of the HUD's menu button (top left) and the step (top center). */
+.tutorial-bar { position: absolute; top: var(--top); right: var(--right); z-index: 5; }
 .entrance { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; pointer-events: none; background: radial-gradient(ellipse at center, rgba(14, 17, 28, .82), #070910 75%); animation: entrance-out .35s ease-in .55s forwards; }
 .entrance__card { display: grid; justify-items: center; gap: 10px; animation: entrance-card .9s ease-out both; }
 .entrance__card b { font-size: 30px; font-weight: 800; font-style: italic; letter-spacing: .04em; text-transform: uppercase; color: var(--gold-hi); text-shadow: 0 0 18px rgba(255, 220, 140, .4); }
@@ -417,6 +418,7 @@
 .results__content h1 { font-size: 46px; font-weight: 800; letter-spacing: .06em; line-height: 1; text-transform: uppercase; color: var(--cream); }
 .results.is-cleared .results__content h1 { color: var(--gold-hi); text-shadow: 0 0 24px rgba(255, 231, 173, .5); }
 .results__name { color: var(--text); font-weight: 700; }
+.tutorial-complete .results__content { gap: 16px; }
 /* What a chest gave: its card carries the chest in a gold badge. */
 .results__loot .card.is-new .card__corner { left: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; background: var(--gold-hi); color: var(--ink); filter: none; box-shadow: 0 1px 3px #0008; }
 /* The goals on one line: the screen's height is the cards' and the buttons'. */
@@ -471,9 +473,10 @@
 .loading__stone { position: relative; isolation: isolate; width: 52px; height: 52px; font-size: 52px; }
 .loading__stone > div { position: absolute; inset: 0; }
 .loading__dim { opacity: .28; filter: grayscale(1) brightness(.75); }
-.loading__lit { transition: clip-path .5s ease-out; filter: drop-shadow(0 0 0 transparent); }
+.loading__lit { transition: clip-path .5s ease-out; }
+.loading__lit .emblem-icon { overflow: visible; }
 .loading__stone[data-filling] { animation: stone-bob 1.6s ease-in-out infinite; }
-.loading__stone[data-full] .loading__lit { animation: stone-lit .7s ease-out both; }
+.loading__stone[data-full] .loading__lit .emblem-icon { animation: stone-lit .7s ease-out both; }
 .loading__stone::after { content: ""; position: absolute; left: 50%; top: 50%; width: 90px; height: 90px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 55%, transparent), transparent); opacity: 0; z-index: -1; }
 .loading__stone[data-full]::after { animation: stone-flash .9s ease-out; }
 .loading__tip { margin: 0; max-width: 460px; min-height: 2.6em; text-align: center; color: var(--dim); font-size: 15px; line-height: 1.35; animation: fade .6s backwards; }

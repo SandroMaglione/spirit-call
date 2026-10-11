@@ -807,6 +807,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
   const affinities = new Set(["weak", "resists", "immune"])
   for (const [id, enemy] of Object.entries(tuning.enemies)) {
     positive(problems, `enemy ${id}`, { hp: enemy.hp, radius: enemy.radius, hurtboxRadius: enemy.hurtboxRadius, group: enemy.group })
+    if (enemy.perfectDodgeWindow !== null) positive(problems, `enemy ${id}`, { perfectDodgeWindow: enemy.perfectDodgeWindow })
     const traits = Object.entries(enemy.elements)
     for (const [element, affinity] of traits) {
       if (!has(elements, element)) problems.push(`enemy ${id}: unknown element ${element}`)
@@ -883,6 +884,23 @@ export const validateContent = (tuning: Tuning): Array<string> => {
       positive(problems, where, { most: challenge.objective.most, fewest: challenge.objective.fewest })
       if (!(challenge.objective.fewest <= challenge.objective.most)) problems.push(`${where}: fewest must not be above most`)
       if (!(challenge.objective.respawn >= 0)) problems.push(`${where}: respawn must not be negative`)
+    } else if (challenge.objective.kind === "tutorial") {
+      if (endless !== null || scripted.length > 0) problems.push(`${where}: the tutorial has no waves, only its steps`)
+      if (challenge.objective.steps.length === 0) problems.push(`${where}: the tutorial needs a step`)
+      const inside = (spot: { readonly x: number; readonly y: number }) => spot.x > 0 && spot.x < 1 && spot.y > 0 && spot.y < 1
+      for (const step of challenge.objective.steps) {
+        if (step.text.trim() === "") problems.push(`${where}: a ${step.kind} step says nothing`)
+        if (step.kind === "move" && !inside(step.to)) problems.push(`${where}: a move step must lead inside the arena`)
+        if ((step.kind === "dash" || step.kind === "perfectDodge") && !(Number.isInteger(step.times) && step.times >= 1)) problems.push(`${where}: a ${step.kind} step asks a whole number of times from 1`)
+        if (step.kind === "attack" && !(Number.isInteger(step.hits) && step.hits >= 1)) problems.push(`${where}: an attack step asks a whole number of hits from 1`)
+        if ("dummy" in step) {
+          if (!has(tuning.enemies, step.dummy.kind)) problems.push(`${where}: unknown dummy ${step.dummy.kind}`)
+          else if (tuning.enemies[step.dummy.kind].cost > 0) problems.push(`${where}: ${step.dummy.kind} is no dummy (it comes in waves)`)
+          if (![step.dummy.offset.x, step.dummy.offset.y].every((value) => Number.isFinite(value) && Math.abs(value) <= 1)) problems.push(`${where}: a dummy's offset must be finite and within one arena length`)
+        }
+        // The perfect dodge needs a blow to dodge.
+        if (step.kind === "perfectDodge" && has(tuning.enemies, step.dummy.kind) && tuning.enemies[step.dummy.kind].attacks.length === 0) problems.push(`${where}: the perfect dodge needs a dummy that strikes`)
+      }
     } else {
       if (endless !== null || scripted.length > 0) problems.push(`${where}: training has no waves, only its dummies`)
       for (const dummy of challenge.objective.dummies) {

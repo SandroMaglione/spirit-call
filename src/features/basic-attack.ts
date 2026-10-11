@@ -22,7 +22,7 @@ import type { AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../con
 import type { Shockwave } from "../content/classes.ts"
 import { scale } from "../math/vec.ts"
 import type { Vec2 } from "../math/vec.ts"
-import { sweepCircleBoxes } from "../physics/collide.ts"
+import { sweepCircleBoxes, sweepCircleCircle } from "../physics/collide.ts"
 import type { Box } from "../physics/shapes.ts"
 import { Action, Aim, Airborne, Arrival,
   Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Overcharged, Overdriven, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
@@ -127,11 +127,13 @@ const lungeDistance = (
   return distance
 }
 
-/** Where shots leave: in front of the player, or against a wall in between. */
-const muzzleOf = (tuning: TuningValue, position: Vec2, aim: Vec2, radius: number, boxes: ReadonlyArray<Box>): Vec2 => {
+/** Where shots leave: in front, clamped so no wall or point-blank target is skipped. */
+const muzzleOf = (tuning: TuningValue, position: Vec2, aim: Vec2, radius: number, boxes: ReadonlyArray<Box>, targets: ReadonlyArray<{ readonly at: Vec2; readonly radius: number }>): Vec2 => {
   const reach = scale(aim, tuning.player.muzzleOffset)
   const blocked = sweepCircleBoxes(position, reach, radius, boxes)
-  return { x: position.x + reach.x * (blocked?.time ?? 1), y: position.y + reach.y * (blocked?.time ?? 1) }
+  let until = blocked?.time ?? 1
+  for (const target of targets) until = Math.min(until, sweepCircleCircle(position, reach, radius, target.at, target.radius) ?? 1)
+  return { x: position.x + reach.x * until, y: position.y + reach.y * until }
 }
 
 export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
@@ -239,8 +241,11 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         // Her aspect's elemental moment: these blows carry her element.
         element: surge !== null ? { id: surge, atk } : spec.infuse !== null && moveMatches(spec.infuse, context) ? { id: element, atk } : null
       })
+      const muzzleAt = (radius: number) => muzzleOf(tuning, position, aim, radius, wallBoxes(queries.walls.each()), queries.enemies.each()
+        .filter(({ data }) => data.hurtbox.get().faction === "enemy")
+        .map(({ data }) => ({ at: data.position.get(), radius: data.hurtbox.get().radius })))
       if (move.shape === "shot") {
-        const muzzle = muzzleOf(tuning, position, aim, move.radius, wallBoxes(queries.walls.each()))
+        const muzzle = muzzleAt(move.radius)
         const base = Math.atan2(aim.y, aim.x)
         const spread = (move.spreadDegrees * Math.PI) / 180
         for (let index = 0; index < move.count; index++) {
@@ -248,6 +253,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
           commands.spawnIn(RunScope, makeProjectile(muzzle, { x: Math.cos(angle) * move.speed, y: Math.sin(angle) * move.speed }, {
             faction: "player",
             style: "bolt",
+            weapon: data.basicAttack.get().attack.class,
             radius: move.radius,
             blow: struck,
             range: move.range,
@@ -257,7 +263,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
           }))
         }
       } else if (move.shape === "disc") {
-        const muzzle = muzzleOf(tuning, position, aim, move.radius, wallBoxes(queries.walls.each()))
+        const muzzle = muzzleAt(move.radius)
         const base = Math.atan2(aim.y, aim.x)
         const spread = (move.spreadDegrees * Math.PI) / 180
         for (let index = 0; index < move.count; index++) {

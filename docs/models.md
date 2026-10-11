@@ -106,6 +106,27 @@ Use `?stress=300,2000,mixed` to exercise all fifteen animated kinds in the live
 arena (invulnerable test actors). The original `?stress=300,2000` still uses
 stationary training dummies.
 
+## Combat light
+
+Gun rounds are narrow hot darts with a short muzzle jet; Staff sparks are
+faceted diamonds with a conjuring ring, and its slower charged attack is a
+larger orb. Discs spin low with a thin wake; grenades are chunky 3D shells
+with a lit fuse and an arcing trail. Element-carrying shots keep that
+element's colour. The existing flight speeds remain the gameplay's.
+
+Shots retain their exact release point and weapon for rendering, even
+after several fixed steps or a character switch. The muzzle is in front
+of the body, clamped against walls and close targets, and a tracer grows only as far as the
+shot has travelled so it cannot extend behind its launch point. Pooled
+nodes reset their launch and trail state between uses.
+
+Swordsman's Gust and Cyclone light her model and wrap it in depth-tested
+wind ribbons, with a 3D funnel over the Cyclone's pull. Its range and
+spiraling currents remain visible on the floor. Flat slash marks and the
+old airborne wind overlay are omitted for her. `CombatLight` shares one
+bounded instance batch for launches, shells and wind; it owns no damage
+or movement. The floor remains visible between its currents.
+
 ## Arena
 
 The simulation's walls (`content/arena.ts`, the arena's edges) decide what
