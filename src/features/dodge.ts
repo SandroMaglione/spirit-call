@@ -45,7 +45,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
   for (const { entity, data } of queries.player.each()) {
     const dash = data.dash.get()
     if (dash.perfect || dash.since > rules.window) continue
-    const dodged = dodges.find((dodge) => dodge.target === entity.id.value)
+    const dodged = dodges.find((dodge) => dodge.target === Game.Entity.handle(entity.id, Health))
     if (dodged === undefined) continue
     // Dashes back (whole charges; all of them back stops the wait for the next).
     const traits = traitsIn(data.passives)

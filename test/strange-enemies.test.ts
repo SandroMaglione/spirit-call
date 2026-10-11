@@ -22,7 +22,7 @@ const World = Game.Inspector("Test/StrangeEnemies", {
   player: queries.player.each()[0]!.data.health.get().current,
   playerAt: queries.player.each()[0]!.data.position.get(),
   enemies: queries.enemies.each().map(({ entity, data }) => ({
-    id: entity.id.value,
+    id: entity.id,
     kind: data.enemy.get().kind,
     at: data.position.get(),
     health: data.health.get().current,
@@ -48,7 +48,7 @@ const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly offse
       events: { damage: Game.System.writeEvent(Damage) }
     }, ({ queries, events }) => {
       for (const { entity } of queries.enemies.each()) {
-        if (entity.id.value === id) events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "player", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0 }) })
+        if (entity.id === id) events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "player", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0 }) })
       }
     })
     run.runtime.tick(Game.Schedule(Strike))

@@ -66,7 +66,7 @@ export const UpdateWards = Game.System("Shooter/UpdateWards", {
   const struck = new Set(events.hit.all().filter((hit) => !hit.periodic).map((hit) => hit.entity))
   const [player] = queries.player.each()
   const her = player === undefined ? undefined : { at: player.data.position.get(), radius: player.data.hurtbox.get().radius }
-  const allies = queries.allies.each().map(({ entity, data }) => ({ entity, id: entity.id.value, at: data.position.get(), kind: data.enemy.get().kind }))
+  const allies = queries.allies.each().map(({ entity, data }) => ({ entity, id: entity.id, at: data.position.get(), kind: data.enemy.get().kind }))
   const taken = new Set(queries.warders.each().flatMap(({ data }) => (data.ward.get().ally === null ? [] : [data.ward.get().ally!.id])))
 
   for (const { entity, data } of queries.warders.each()) {
@@ -78,7 +78,7 @@ export const UpdateWards = Game.System("Shooter/UpdateWards", {
     if (ward.ally !== null) {
       const ally = allies.find((candidate) => candidate.id === ward.ally!.id)
       const cut = ally === undefined ||
-        struck.has(entity.id.value) ||
+        struck.has(Game.Entity.handle(entity.id, Health)) ||
         data.stunned.get().remaining > 0 ||
         data.poise.get().broken > 0 ||
         Math.hypot(ally.at.x - at.x, ally.at.y - at.y) > spec.range * slack ||
@@ -97,7 +97,7 @@ export const UpdateWards = Game.System("Shooter/UpdateWards", {
       continue
     }
     // The ally nearest her within its range: the one she is fighting. Never itself, nor one warded already.
-    const reach = allies.filter((ally) => ally.id !== entity.id.value && !taken.has(ally.id) && Math.hypot(ally.at.x - at.x, ally.at.y - at.y) <= spec.range)
+    const reach = allies.filter((ally) => ally.id !== entity.id && !taken.has(ally.id) && Math.hypot(ally.at.x - at.x, ally.at.y - at.y) <= spec.range)
     const chosen = reach.reduce<(typeof reach)[number] | undefined>((best, ally) => {
       const away = (candidate: { readonly at: Vec2 }) => Math.hypot(candidate.at.x - her.at.x, candidate.at.y - her.at.y)
       return best === undefined || away(ally) < away(best) ? ally : best

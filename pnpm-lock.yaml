@@ -53,9 +53,9 @@ importers:
       '@typeonce/bevy-ts-browser':
         specifier: link:../../bevy-ts/packages/browser
         version: link:../../bevy-ts/packages/browser
-      '@typeonce/bevy-ts-pixi':
-        specifier: link:../../bevy-ts/packages/pixi
-        version: link:../../bevy-ts/packages/pixi
+      '@typeonce/bevy-ts-render':
+        specifier: link:../../bevy-ts/packages/render
+        version: link:../../bevy-ts/packages/render
       effect:
         specifier: 4.0.2
         version: 4.0.2

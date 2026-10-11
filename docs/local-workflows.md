@@ -20,6 +20,15 @@ baseline. Test gameplay and UI in a browser and on a phone before release.
 
 ## Build against the published engine
 
+A companion PR may set `bevyTsSource` in `package.json` to a full bevy-ts
+commit SHA while its APIs are unpublished. The same swap script then
+fetches that exact commit into `.repos/bevy-ts-preview/<sha>`, installs and
+builds its packages, and links this worktree to them for CI and preview
+builds. It verifies the checked-out SHA and never changes the sibling
+bevy-ts repository. Day-to-day links still point at the sibling checkout.
+After the engine release is published, remove `bevyTsSource`, update
+`bevyTsRelease`, and run the published-engine checks below.
+
 Day-to-day development links the sibling bevy-ts checkout. For a release,
 use a separate clean worktree, so local engine changes cannot enter it:
 

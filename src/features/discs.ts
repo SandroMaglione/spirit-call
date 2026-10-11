@@ -44,7 +44,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
   const boxes = wallBoxes(queries.walls.each())
   const targets = queries.targets.each().map(({ entity, data }) => targetOf(entity.id, data))
   // Who is in a state (any one, whoever set it): a disc hitting one turns toward the next (see `DiscMove.bounces`).
-  const marked = new Set(queries.states.each().filter(({ data }) => data.state.get().current !== null).map(({ entity }) => entity.id.value))
+  const marked = new Set<number>(queries.states.each().filter(({ data }) => data.state.get().current !== null).map(({ entity }) => Game.Entity.handle(entity.id, Health)))
   const bounceRange = resources.tuning.get().discBounce.range
 
   for (const { entity, data } of queries.discs.each()) {

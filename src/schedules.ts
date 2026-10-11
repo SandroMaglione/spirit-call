@@ -3,12 +3,11 @@
  * they run headless in tests and debug scripts (see `simulation.ts`).
  * Rendering has its own schedule in `presentation/schedule.ts`.
  *
- * Gameplay runs in a `Game.Schedule.when(whilePlaying, ...)` group, so the
- * world freezes on the game-over screen, while paused (the in-game menu),
- * and during hit-stop (the `frozen` check); input capture pauses with hit-stop (`whileRunning`), so presses
- * made meanwhile are kept. Game-over detection is gated on the flow and the
- * pause only (`whileRunIsLive`), so it never misses the team's last fall to
- * a hit-stop that the same hit started.
+ * Mode gates discard stale messages across a game-over or restart. Pause
+ * gates hold gameplay messages during the in-game menu and hit-stop. Input
+ * capture waits out hit-stop, so presses made meanwhile stay in the device.
+ * Event-only outcome observers run during hit-stop, before game-over makes
+ * the result, so it includes the final hit and its reactions.
  * Restarting enters `Playing` again, which runs `restart`.
  */
 import { SpawnArena } from "./features/arena.ts"
@@ -53,7 +52,7 @@ import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, Cas
 import { AdvanceTime } from "./features/time.ts"
 import { UseBasicAttack, FeedDash } from "./features/basic-attack.ts"
 import { DirectWaves } from "./features/waves.ts"
-import { Flow, Game, whilePlaying, whileRunIsLive, whileRunning } from "./schema.ts"
+import { Flow, frozen, Game, paused, whileRunIsLive, whileRunning } from "./schema.ts"
 
 /** Spawns what a run starts with. */
 const startRun = Game.Schedule(
@@ -100,7 +99,8 @@ const input = Game.Schedule.when(
  * next step.
  */
 const gameplay = Game.Schedule.when(
-  whilePlaying,
+  [Game.Condition.inState(Flow, "Playing")],
+  Game.Schedule.pauseWhen([Game.Condition.not(paused), Game.Condition.not(frozen)],
   TrackRun,
   TickCombatTimers,
   TickBench,
@@ -184,7 +184,7 @@ const gameplay = Game.Schedule.when(
   MendInTraining,
   ProcessPendingSpawns,
   DirectWaves,
-  KeepPracticeField
+  KeepPracticeField)
 )
 
 /**
@@ -196,7 +196,8 @@ const gameplay = Game.Schedule.when(
  * set off (from every Hit event).
  */
 const runOutcome = Game.Schedule.when(
-  whileRunIsLive,
+  [Game.Condition.inState(Flow, "Playing")],
+  Game.Schedule.pauseWhen([Game.Condition.not(paused)],
   RecordReactions,
   // A dash at the last moment (its rewards fill the attacker's break bar), then the
   // blows and reactions of the step fill break bars.
@@ -215,10 +216,10 @@ const runOutcome = Game.Schedule.when(
   // The step's hits, perfect dodges, and breaks, counted for stars before a result is made; and the run's log.
   RecordTally,
   RecordRunLog,
-  DetectGameOver,
+  Game.Schedule.when(whileRunIsLive, DetectGameOver),
   SwitchCharacter,
   CheckObjective,
-  TriggerPassives
+  TriggerPassives)
 )
 
 /** One fixed simulation step. */
@@ -226,7 +227,8 @@ export const fixedUpdate = Game.Schedule(
   AdvanceTime,
   TickHitStop,
   // An ultimate whose moment ended goes off, for this step's casting systems (see `UltimateMoment`).
-  Game.Schedule.when(whileRunIsLive, ReleaseUltimates),
+  Game.Schedule.when([Game.Condition.inState(Flow, "Playing")],
+    Game.Schedule.pauseWhen([Game.Condition.not(paused)], ReleaseUltimates)),
   CaptureViewport,
   input,
   RememberPositions,

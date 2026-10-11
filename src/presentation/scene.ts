@@ -2,7 +2,7 @@
  * The scene: render nodes for renderables, the camera, interpolated actor
  * positions, and pillars fading in front of the player.
  */
-import { RenderSync } from "@typeonce/bevy-ts-pixi"
+import { RenderSync } from "@typeonce/bevy-ts-render"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { depthOf, screenHeight, toScreen } from "../math/iso.ts"
 import { lerp } from "../math/vec.ts"
@@ -106,7 +106,7 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
     if (speed > 0) node.bolt.rotation.y = Math.atan2(-velocity.y, velocity.x)
     placeTracer(node, speed * view.bolt.streakSeconds)
     const thunder = data.projectile.get().blow.element?.id === "thunder"
-    const flicker = thunder ? 0.8 + Math.random() * 0.5 : 1 + 0.1 * Math.sin(now * 38 + entity.id.value)
+    const flicker = thunder ? 0.8 + Math.random() * 0.5 : 1 + 0.1 * Math.sin(now * 38 + entity.id)
     node.halo.object.scale.setScalar(node.radius * view.bolt.halo * flicker)
     node.core.object.rotation.set(now * 9, now * 13, 0)
   }

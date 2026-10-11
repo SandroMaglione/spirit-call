@@ -55,7 +55,7 @@ const World = Game.Inspector("Test/Elements", {
   return {
     pools: queries.pools.each().map(({ data }) => data.ground.get()),
     enemies: queries.enemies.each().map(({ entity, data }) => ({
-      id: entity.id.value,
+      id: entity.id,
       position: data.position.get(),
       health: data.health.get().current,
       state: data.state.get().current,

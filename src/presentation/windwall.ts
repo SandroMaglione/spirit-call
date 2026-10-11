@@ -135,14 +135,14 @@ export const ShowWindwall = Game.System("Shooter/ShowWindwall", {
   for (const { entity, data } of queries.lifted.each()) {
     const lift = data.lifted.get()
     const where = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
-    shown.add(entity.id.value)
-    liftedSeen.set(entity.id.value, { entity: entity.id, at: where })
+    shown.add(entity.id)
+    liftedSeen.set(entity.id, { entity: entity.id, at: where })
     const height = liftHeight(lift.seconds - lift.remaining, lift.seconds, lift.rise, now)
     const node = services.nodes.get(entity.id)
     if (node?.kind === "enemy") node.pivot.position.y = worldHeight(projection, height)
     // A little whirl under it, holding it up.
     const under = at(where, height * 0.45)
-    const spin = now * 7 + entity.id.value
+    const spin = now * 7 + entity.id
     for (let arc = 0; arc < 3; arc++) {
       const a = spin + (arc / 3) * Math.PI * 2
       const r = z(16)

@@ -7,7 +7,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { MeleeMove } from "../src/content/attacks.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import { Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, BasicAttack } from "../src/schema.ts"
+import { UiRequest, Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, BasicAttack } from "../src/schema.ts"
 import { start, windCut, withWindCut, plainAttack, plainEnemies, hitBy } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -105,7 +105,7 @@ describe("attack assist (touch)", () => {
   it("can be turned off by the player (the device's settings): the slash keeps the facing", () => {
     // Set before the tap (requests apply after the step's input).
     const off = arena([at(40, 90)], 1, { touch: [{ frame: 1, press: ["attack"] }, { frame: 2, release: ["attack"] }] })
-    off.requests.pending.push({ kind: "controlOptions", options: { aimAssist: false } })
+    off.runtime.send(UiRequest, { kind: "controlOptions", options: { aimAssist: false } })
     off.step(1)
     const facing = off.player().aim
     off.step(3)

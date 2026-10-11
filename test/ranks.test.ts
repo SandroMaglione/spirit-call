@@ -4,7 +4,7 @@ import { defaultTuning } from "../src/config/tuning.ts"
 import { champion, elite, shielded } from "../src/content/challenges.ts"
 import { rankGates, rankLevel, rankTwist } from "../src/content/ranks.ts"
 import { withTwist } from "../src/features/waves.ts"
-import { Elite, Enemy, Game, PendingSpawn, Shield, Waves } from "../src/schema.ts"
+import { UiRequest, Elite, Enemy, Game, PendingSpawn, Shield, Waves } from "../src/schema.ts"
 import { start, steps } from "./helpers.ts"
 
 const Field = Game.Inspector("Test/RankField", {
@@ -53,7 +53,7 @@ describe("ranks", () => {
 
   it("enter the arena with the rank's twist: the first wave's leader shielded, the second's an elite too", () => {
     const run = start({ flow: "Menu", waves: true })
-    run.requests.pending.push({ kind: "start", team: [{ character: "swordsman" }], challenge: "firstBlood", enemyLevel: 25, twist: rankTwist(defaultTuning, "firstBlood", 3) })
+    run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "firstBlood", enemyLevel: 25, twist: rankTwist(defaultTuning, "firstBlood", 3) })
     const field = () => run.runtime.inspect(Field)
     for (let step = 0; step < steps(10) && !(field().wave === 1 && field().pending === 0 && field().enemies.length > 0); step++) run.step()
     expect(field().enemies.filter((enemy) => enemy.shield)).toHaveLength(1)

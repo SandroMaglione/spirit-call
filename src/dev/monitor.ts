@@ -5,7 +5,7 @@
  */
 import type { Schema } from "@typeonce/bevy-ts/Schema"
 import { Monitor } from "@typeonce/bevy-ts-devtools"
-import type { NodeRegistry } from "@typeonce/bevy-ts-pixi"
+import type { NodeRegistry } from "@typeonce/bevy-ts-render"
 
 import type { RenderHostValue, RenderNode } from "../presentation/host-types.ts"
 
@@ -41,7 +41,7 @@ export const attachMonitor = <S extends Schema.Any, Root>(
       return best
     },
     locate: (entity) => {
-      const node = nodes.get({ value: entity })
+      const node = nodes.get(entity)
       return node === undefined || node.kind === "wall" ? undefined : screenOf(node)
     }
   })
