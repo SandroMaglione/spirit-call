@@ -14,10 +14,10 @@ import { circleOverlapsBox } from "./collide.ts"
 import type { Box } from "./shapes.ts"
 
 const diagonal = Math.SQRT2
-const neighbors: ReadonlyArray<readonly [number, number, number]> = [
-  [1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1],
-  [1, 1, diagonal], [1, -1, diagonal], [-1, 1, diagonal], [-1, -1, diagonal]
-]
+/** A cell's eight neighbors, in this order: each one's step across (`dx`), down (`dy`), and its cost. Flat, so a search over thousands of cells allocates nothing. */
+const dx = [1, -1, 0, 0, 1, 1, -1, -1] as const
+const dy = [0, 0, 1, -1, 1, -1, 1, -1] as const
+const cost = [1, 1, 1, 1, diagonal, diagonal, diagonal, diagonal] as const
 
 /** A number that changes whenever the walls do (their count or any edge). */
 const wallsKey = (boxes: ReadonlyArray<Box>, clearance: number): number => {
@@ -36,9 +36,10 @@ export class FlowField {
   private distance = new Float64Array(0)
   private key = Number.NaN
   private goal = -1
-  // The search's queue: a binary heap of cells (`heap`) by their distance when queued (`keys`).
+  // The search's queue: a binary heap of cells (`heap`) by their distance when queued (`keys`), and the distance of the cell last popped.
   private heap: Array<number> = []
   private keys: Array<number> = []
+  private popped = 0
 
   constructor(cellSize: number) {
     this.cellSize = cellSize
@@ -102,15 +103,16 @@ export class FlowField {
     this.distance[start] = 0
     this.push(start, 0)
     while (this.heap.length > 0) {
-      const [cell, queued] = this.pop()
+      const cell = this.pop()
+      const queued = this.popped
       const here = this.distance[cell]!
       if (queued > here) continue
       const column = cell % this.columns
       const row = (cell - column) / this.columns
-      for (const [dx, dy, cost] of neighbors) {
-        if (!this.open(column, row, dx, dy)) continue
-        const next = (row + dy) * this.columns + column + dx
-        const through = here + cost
+      for (let index = 0; index < 8; index++) {
+        if (!this.open(column, row, dx[index]!, dy[index]!)) continue
+        const next = (row + dy[index]!) * this.columns + column + dx[index]!
+        const through = here + cost[index]!
         if (through >= this.distance[next]!) continue
         this.distance[next] = through
         this.push(next, through)
@@ -125,15 +127,16 @@ export class FlowField {
     const column = cell % this.columns
     const row = (cell - column) / this.columns
     let best = this.distance[cell]!
-    let target: Vec2 | undefined
-    for (const [dx, dy] of neighbors) {
-      if (!this.open(column, row, dx, dy)) continue
-      const next = (row + dy) * this.columns + column + dx
+    let nearest = -1
+    for (let index = 0; index < 8; index++) {
+      if (!this.open(column, row, dx[index]!, dy[index]!)) continue
+      const next = (row + dy[index]!) * this.columns + column + dx[index]!
       if (this.distance[next]! >= best) continue
       best = this.distance[next]!
-      target = { x: this.originX + (column + dx + 0.5) * this.cellSize, y: this.originY + (row + dy + 0.5) * this.cellSize }
+      nearest = index
     }
-    if (target === undefined) return undefined
+    if (nearest === -1) return undefined
+    const target = { x: this.originX + (column + dx[nearest]! + 0.5) * this.cellSize, y: this.originY + (row + dy[nearest]! + 0.5) * this.cellSize }
     const length = Math.hypot(target.x - at.x, target.y - at.y)
     return length > 1e-6 ? { x: (target.x - at.x) / length, y: (target.y - at.y) / length } : undefined
   }
@@ -156,11 +159,12 @@ export class FlowField {
     keys[index] = key
   }
 
-  /** The queued cell with the shortest distance, and that distance. */
-  private pop(): readonly [number, number] {
+  /** The queued cell with the shortest distance (that distance left in `popped`). */
+  private pop(): number {
     const cells = this.heap
     const keys = this.keys
-    const top = [cells[0]!, keys[0]!] as const
+    const top = cells[0]!
+    this.popped = keys[0]!
     const cell = cells.pop()!
     const key = keys.pop()!
     if (cells.length === 0) return top
