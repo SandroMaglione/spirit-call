@@ -151,4 +151,14 @@ export interface UiActions {
   readonly setVolume: (volume: number) => void
   /** Leave this account for the list of this device's accounts (what it did is already saved). */
   readonly switchAccount: () => void
+  /** The open-source packages the game contains, with their licenses (none in a dev build, which lists nothing). */
+  readonly licenses: () => Promise<ReadonlyArray<License>>
+}
+
+/** An open-source package the game contains (see scripts/licenses.ts): its license's name, and its notice when it has one. */
+export interface License {
+  readonly name: string
+  readonly version: string
+  readonly license: string
+  readonly text: string
 }

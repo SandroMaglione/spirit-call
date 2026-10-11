@@ -392,6 +392,10 @@
 .settings__content { position: absolute; left: 230px; right: var(--right); top: 70px; z-index: 3; }
 .settings__rows { display: grid; gap: 4px; }
 .settings__rows output { width: 40px; text-align: right; }
+.settings__content:has(.settings__about) { bottom: 22px; }
+.settings__about { max-height: 100%; }
+.settings__license { display: grid; gap: 4px; }
+.settings__notice { margin: 0; padding: 8px 10px; border-radius: 6px; background: rgba(0, 0, 0, .25); font: 11px/1.4 ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--dim); }
 .pause__column { position: absolute; left: 0; top: 0; bottom: 0; width: 340px; padding: 26px 24px 0 var(--left); background: linear-gradient(90deg, rgba(14, 18, 30, .92), rgba(14, 18, 30, 0)); display: grid; align-content: start; gap: 4px; text-shadow: 0 1px 3px #0008; }
 .pause__column h1 { font-size: 26px; font-weight: 800; }
 .pause__column > .dim { font-weight: 700; max-width: 250px; }
