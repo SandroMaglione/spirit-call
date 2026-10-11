@@ -293,6 +293,7 @@ export const everything = (tuning: Tuning): ReadonlyArray<Item> => [
 export const accountNameLimit = 20
 
 export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, now: number): Account => {
+  const party: SavedTeam = { team: [starter.selection.character], aspects: {}, relics: {} }
   const empty: Account = {
     id,
     createdAt: now,
@@ -303,10 +304,10 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     hardcore: {},
     discoveries: {},
     chests: {},
-    selection: { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } },
+    selection: { ...party, play: { kind: "quest", quest: starter.selection.quest } },
     worn: {},
-    saved: {},
-    activeTeamSlot: null,
+    saved: { 1: party },
+    activeTeamSlot: 1,
     auditions: {},
     tutorialDoneAt: null
   }

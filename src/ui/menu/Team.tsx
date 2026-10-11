@@ -9,8 +9,7 @@
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { characterLevel, owns, playLock, savedTeamSlots, slotOpen } from "../../account/account.ts"
-import type { Play } from "../../account/account.ts"
+import { characterLevel, owns, savedTeamSlots, slotOpen } from "../../account/account.ts"
 import { aspectOf } from "../../content/aspects.ts"
 import { relicOf, relicSlots } from "../../content/relics.ts"
 import { RelicIcon } from "../RelicIcon.tsx"
@@ -24,13 +23,13 @@ import { Face, Model } from "../kit/art.tsx"
 import { Cards } from "../kit/Card.tsx"
 import { Pill } from "../kit/controls.tsx"
 import { Panel } from "../kit/panel.tsx"
-import { Actions, Screen, TopBar } from "../kit/shell.tsx"
+import { Screen, TopBar } from "../kit/shell.tsx"
 import type { UiActions, UiStore } from "../store.ts"
 import { CharacterCard, ids } from "./parts.tsx"
 import type { Nav } from "./screens.ts"
 
-export const Team = ({ store, actions, nav, draft, play, enter }: {
-  readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly draft: Signal<TeamDraft>; readonly play: Play; readonly enter: () => void
+export const Team = ({ store, actions, nav, draft }: {
+  readonly store: UiStore; readonly actions: UiActions; readonly nav: Nav; readonly draft: Signal<TeamDraft>
 }) => {
   const picking = useSignal(false)
   const tuning = store.tuning.value, account = store.account.value, { team, focus, aspects, relics } = draft.value
@@ -94,6 +93,5 @@ export const Team = ({ store, actions, nav, draft, play, enter }: {
         <Pill size="small" tone="dark" onClick={() => (picking.value = false)}>Done</Pill>
       </div>
     </>}
-    <Actions><Pill icon="play" disabled={playLock(tuning, account, play) !== null} onClick={enter}>Play</Pill></Actions>
   </Screen>
 }

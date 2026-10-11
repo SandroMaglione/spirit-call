@@ -164,9 +164,8 @@ export const Amounts = ({ store, rewards, preview, compact = false }: { readonly
 export const PartyStrip = ({ store, team, leader, pick, edit, size = 38 }: {
   readonly store: UiStore; readonly team: ReadonlyArray<CharacterId>; readonly leader: CharacterId; readonly pick: (character: CharacterId) => void; readonly edit: () => void; readonly size?: number
 }) => {
-  const tuning = store.tuning.value, slot = store.account.value.activeTeamSlot
+  const tuning = store.tuning.value
   return <div class="party-strip">
-    <small class="party-strip__slot">{slot === null ? "No slot" : `Slot ${slot}`}</small>
     {team.map((member) => <button type="button" class="face-button" key={member} aria-label={tuning.characters[member].name} aria-pressed={member === leader} onClick={() => pick(member)}><Face of={{ character: member }} tint={elementOf(tuning, member)} selected={member === leader} size={member === leader ? size + 4 : size} /></button>)}
     <RoundButton icon="swap" tone="dark" label="Change party" onClick={edit} />
   </div>

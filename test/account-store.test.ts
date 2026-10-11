@@ -39,7 +39,7 @@ describe("account store", () => {
     expect(store.notes).toEqual([])
     expect(Object.keys(store.account.owned.characters)).toEqual([...newAccount.characters])
     expect(store.account.id).toBe(id)
-    expect(saved).toMatchObject({ version: 3, account: { id, tutorialDoneAt: null, activeTeamSlot: null } })
+    expect(saved).toMatchObject({ version: 3, account: { id, tutorialDoneAt: null, activeTeamSlot: 1, saved: { 1: { team: ["swordsman"] } } } })
   })
 
   it("loads every version of the save ever shipped", async () => {
@@ -87,14 +87,23 @@ describe("account store", () => {
     expect(again.store.account.saved[2]?.team).toEqual(["gunner"])
   })
 
-  it("migrates old saves without guessing an active slot and clears a removed slot", async () => {
+  it("puts an older account with no saved parties in Slot 1 and repairs a removed slot", async () => {
     const old = await onDevice({ [key]: fixture(2) })
-    expect(old.store.account.activeTeamSlot).toBeNull()
+    expect(old.store.account.activeTeamSlot).toBe(1)
+    expect(old.store.account.saved[1]?.team).toEqual(old.store.account.selection.team)
     const missing = JSON.parse(fixture(3))
     missing.account.activeTeamSlot = 2
     const repaired = await onDevice({ [key]: JSON.stringify(missing) })
-    expect(repaired.store.account.activeTeamSlot).toBeNull()
+    expect(repaired.store.account.activeTeamSlot).toBe(1)
     expect(repaired.store.notes.join(" ")).toContain("selected party slot")
+  })
+
+  it("preserves existing saved parties when an older account has no selected slot", async () => {
+    const saved = JSON.parse(fixture(3))
+    saved.account.saved = { 2: { team: ["swordsman"], aspects: {}, relics: {} } }
+    const { store } = await onDevice({ [key]: JSON.stringify(saved) })
+    expect(store.account.activeTeamSlot).toBeNull()
+    expect(store.account.saved).toEqual(saved.account.saved)
   })
 
   it("sets a save it cannot read aside, and starts a new account with a notice", async () => {

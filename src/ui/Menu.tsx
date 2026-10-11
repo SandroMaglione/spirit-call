@@ -74,7 +74,7 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
         return <Home store={store} nav={nav} leader={leader} play={playable} enter={() => actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, playable, draft.value.relics)} />
       }
       case "quests": return <Quests store={store} actions={actions} nav={nav} tab={screen.tab} play={play} leader={leader} enter={enter} />
-      case "team": return <Team store={store} actions={actions} nav={nav} draft={draft} play={play.value} enter={() => actions.enter(draft.value.team, draft.value.aspects, play.value, draft.value.relics)} />
+      case "team": return <Team store={store} actions={actions} nav={nav} draft={draft} />
       case "character": return <Character store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} />
       case "gear": return <Gear store={store} actions={actions} nav={nav} character={screen.character} tab={screen.tab} focus={screen.focus} save={save} />
       case "collection": return <Collection store={store} nav={nav} tab={screen.tab} />

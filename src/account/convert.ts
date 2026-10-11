@@ -224,6 +224,12 @@ export const fromRecord = (
   const active = stored.activeTeamSlot
   if (active !== null && account.saved[active] !== undefined) account = { ...account, activeTeamSlot: active }
   else if (active !== null) dropped.push("the selected party slot")
+  // Before saved parties, the current party had no slot. Keep it in the
+  // first one when none exist, without replacing a player's saved party.
+  if (Object.keys(account.saved).length === 0) {
+    const { team, aspects, relics } = account.selection
+    account = { ...account, saved: { 1: { team, aspects, relics } }, activeTeamSlot: 1 }
+  }
   return { account, dropped, granted: rewarded.granted }
 }
 

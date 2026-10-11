@@ -99,8 +99,10 @@ is no undoing an update, so:
 The save's third version remembers the active saved-party slot. A party
 edit saves the current selection and that slot together; the other slots
 stay as they were. Versions 1 and 2 migrate with no active slot, since they
-never kept which one was selected. An invalid or removed slot loads with
-none selected.
+never kept which one was selected. New accounts keep the starter party in
+Slot 1. An older account with no saved parties keeps its current party in
+Slot 1 too. Existing saved parties are never replaced by this default;
+an invalid selected slot is cleared when other saved parties remain.
 
 ## The tutorial
 

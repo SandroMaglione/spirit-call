@@ -163,11 +163,11 @@ describe("account rules", () => {
   it("saves up to three teams to load in a tap, each keeping the rules", () => {
     const team = { team: ["swordsman" as const], aspects: {}, relics: {} }
     const saved = saveTeam(defaultTuning, fresh(), 2, team)
-    expect(saved.ok && saved.value.saved).toEqual({ 2: team })
+    expect(saved.ok && saved.value.saved).toEqual({ 1: team, 2: team })
     expect(saveTeam(defaultTuning, fresh(), 4, team)).toEqual({ ok: false, refusal: { kind: "badSlot", slot: 4 } })
     expect(saveTeam(defaultTuning, fresh(), 1, { ...team, team: ["gunner"] })).toEqual({ ok: false, refusal: { kind: "notOwned", item: { kind: "character", id: "gunner" } } })
     const emptied = saved.ok ? saveTeam(defaultTuning, saved.value, 2, null) : saved
-    expect(emptied.ok && emptied.value.saved).toEqual({})
+    expect(emptied.ok && emptied.value.saved).toEqual({ 1: team })
   })
 
   it("selects only a team of owned characters and an open quest", () => {
@@ -197,7 +197,7 @@ describe("account rules", () => {
   })
 
   it("keeps an unslotted party unslotted and refuses invalid edits without changing a saved party", () => {
-    const account = fresh()
+    const account = { ...fresh(), saved: {}, activeTeamSlot: null }
     const unslotted = setTeam(defaultTuning, account, ["swordsman"], {}, {})
     expect(unslotted.ok && unslotted.value.activeTeamSlot).toBeNull()
     expect(unslotted.ok && unslotted.value.saved).toEqual({})
