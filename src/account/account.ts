@@ -128,7 +128,7 @@ export const rankOf = (play: Extract<Play, { kind: "quest" }>): number => play.r
 export const samePlay = (a: Play, b: Play): boolean =>
   a.kind === "quest" ? b.kind === "quest" && a.quest === b.quest && rankOf(a) === rankOf(b) : b.kind === "tier" && a.track === b.track && a.tier === b.tier
 
-/** A team saved to load in a tap: its members in order, and the aspects and relics equipped in it. */
+/** A saved party: its members in order, and the aspects and relics equipped in it. */
 export interface SavedTeam {
   readonly team: ReadonlyArray<CharacterId>
   readonly aspects: TeamAspects
@@ -141,7 +141,7 @@ export interface OpenedAudition {
   readonly openedAt: number
 }
 
-/** How many teams can be saved besides the one set up. */
+/** How many saved party slots the account keeps. */
 export const savedTeamSlots = 3
 
 export interface Account {
@@ -164,9 +164,9 @@ export interface Account {
   readonly selection: { readonly team: ReadonlyArray<CharacterId>; readonly aspects: TeamAspects; readonly relics: TeamRelics; readonly play: Play }
   /** The looks each character wears. */
   readonly worn: Worn
-  /** Teams saved to load in a tap, by slot (1 to `savedTeamSlots`). */
+  /** Saved parties by slot (1 to `savedTeamSlots`); an absent slot is empty. */
   readonly saved: { readonly [slot: number]: SavedTeam }
-  /** The saved party being edited; `null`: the current party has no saved slot. */
+  /** The saved party in use; `null`: the current party has no saved slot. */
   readonly activeTeamSlot: number | null
   /** The auditions opened with an invitation, by character (see `openAudition`). */
   readonly auditions: { readonly [Id in CharacterId]?: OpenedAudition }
@@ -786,6 +786,12 @@ export const setTeam = (tuning: Tuning, account: Account, team: ReadonlyArray<Ch
   if (!selected.ok) return selected
   const next = { ...selected.value, activeTeamSlot: slot }
   return slot === null ? { ok: true, value: next } : saveTeam(tuning, next, slot, next.selection)
+}
+
+/** Edits a saved party without using it. Edits to the party in use apply at once; it must keep one member. */
+export const editTeamSlot = (tuning: Tuning, account: Account, slot: number, saved: SavedTeam): Checked<Account> => {
+  if (slot === account.activeTeamSlot) return setTeam(tuning, account, saved.team, saved.aspects, saved.relics, slot)
+  return saveTeam(tuning, account, slot, saved.team.length === 0 ? null : saved)
 }
 
 /** `account` with `character` wearing `cosmetic` as her look of `kind` (`null`: her own look), if it owns both, and the look is of that kind and for her. */

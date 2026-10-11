@@ -195,6 +195,8 @@ const start = async (mount: HTMLElement) => {
   wearLooks(account.worn)
   shell.onAccount((next) => {
     uiStore.account.value = next
+    uiStore.menuDraft.value = { team: next.selection.team, aspects: next.selection.aspects, relics: next.selection.relics, focus: uiStore.menuDraft.peek().focus }
+    uiStore.menuPartyDraft.value = { ...(next.saved[uiStore.menuPartySlot.peek()] ?? { team: [], aspects: {}, relics: {} }), focus: uiStore.menuPartyDraft.peek().focus }
     wearLooks(next.worn)
   })
   // Every run that ends is reported to the account once, as its result appears (the arena records it, see `RunResult`):
@@ -244,6 +246,11 @@ const start = async (mount: HTMLElement) => {
       const selected = shell.setTeam(team, aspects, relics, slot)
       if (!selected.ok) notify("Your party could not be saved.", true)
       return selected.ok
+    },
+    editTeamSlot: (slot, team, aspects, relics) => {
+      const edited = shell.editTeamSlot(slot, { team, aspects, relics })
+      if (!edited.ok) notify("Your party could not be saved.", true)
+      return edited.ok
     },
     enter: (team, aspects, play, relics) => {
       // The account's rules decide whether it can be entered.

@@ -36,6 +36,7 @@ import { Actions, Screen, TopBar, TopTabs } from "../kit/shell.tsx"
 import { tabOf } from "../navigation.ts"
 import { LookIcon, RelicIcon, TierMarks } from "../RelicIcon.tsx"
 import type { UiActions, UiStore } from "../store.ts"
+import { menuDraftFor } from "../store.ts"
 import { ids, describeSource, lookSource } from "./parts.tsx"
 import type { GearFocus, GearTab, Nav } from "./screens.ts"
 
@@ -52,7 +53,7 @@ const kindNames: { readonly [Kind in CosmeticKind]: string } = { tint: "Tint", t
 
 /** Her class's aspects: the plain one, then the others, owned or not. Equipping is for a party member. */
 const Aspects = ({ store, character, save }: { readonly store: UiStore; readonly character: CharacterId; readonly save: () => void }) => {
-  const tuning = store.tuning.value, account = store.account.value, draft = store.menuDraft
+  const tuning = store.tuning.value, account = store.account.value, draft = menuDraftFor(store)
   const spec = tuning.characters[character], classSpec = tuning.classes[spec.class]
   const equipped = draft.value.aspects[character] ?? null
   const picked = useSignal<AspectId | null>(equipped)
@@ -100,7 +101,7 @@ const unlockAt = (store: UiStore, relic: RelicId): { readonly play: Play; readon
 
 /** Her relic slots, then the relics of the slot picked, the one picked explained with its three tiers. */
 const Relics = ({ store, nav, character, first, save }: { readonly store: UiStore; readonly nav: Nav; readonly character: CharacterId; readonly first: RelicSlot; readonly save: () => void }) => {
-  const tuning = store.tuning.value, account = store.account.value, draft = store.menuDraft
+  const tuning = store.tuning.value, account = store.account.value, draft = menuDraftFor(store)
   const equippedIn = (slot: RelicSlot) => draft.value.relics[character]?.[slot] ?? null
   const slot = useSignal<RelicSlot>(first)
   const options = relicsFor(tuning, character, slot.value)
@@ -219,14 +220,14 @@ export const Gear = ({ store, actions, nav, character, tab, focus, save }: {
   const tuning = store.tuning.value
   const element = elementOf(tuning, character)
   // Opens on the slot tapped, else the first empty one a relic could fill, else Strike.
-  const slot: RelicSlot = focus !== undefined && (relicSlots as ReadonlyArray<string>).includes(focus) ? focus as RelicSlot : emptyRelicSlots(tuning, store.account.value, store.menuDraft.value, character)[0] ?? "strike"
+  const slot: RelicSlot = focus !== undefined && (relicSlots as ReadonlyArray<string>).includes(focus) ? focus as RelicSlot : emptyRelicSlots(tuning, store.account.value, menuDraftFor(store).value, character)[0] ?? "strike"
   const kind: CosmeticKind = focus === "trail" ? "trail" : "tint"
   const go = (next: GearTab) => {
     nav.replace({ kind: "gear", character, tab: next })
   }
   return <Screen name="gear" element={element}>
     <TopBar icon={element} lead={tuning.characters[character].name} title="Gear" close={nav.back}>
-      <TopTabs label="Gear" current={tab} onChange={go} tabs={[{ id: "aspect", label: "Aspect" }, { id: "relics", label: "Relics", badge: emptyRelicSlots(tuning, store.account.value, store.menuDraft.value, character).length > 0 }, { id: "looks", label: "Looks" }]} />
+      <TopTabs label="Gear" current={tab} onChange={go} tabs={[{ id: "aspect", label: "Aspect" }, { id: "relics", label: "Relics", badge: emptyRelicSlots(tuning, store.account.value, menuDraftFor(store).value, character).length > 0 }, { id: "looks", label: "Looks" }]} />
     </TopBar>
     {tab === "aspect" ? <Aspects store={store} character={character} save={save} />
       : tab === "relics" ? <Relics store={store} nav={nav} character={character} first={slot} save={save} />

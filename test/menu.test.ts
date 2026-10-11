@@ -149,9 +149,9 @@ describe("menu helpers", () => {
     expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 0, aspects: {}, relics: {} }, "gunner")).toEqual({ team: ["gunner", "swordsman"], focus: 0, aspects: {}, relics: {} })
     // Picking one already in the team for the empty slot just goes to her.
     expect(placeInTeam({ team: ["swordsman", "gunner"], focus: 2, aspects: {}, relics: {} }, "swordsman")).toEqual({ team: ["swordsman", "gunner"], focus: 0, aspects: {}, relics: {} })
-    // Removing moves the others up, and never empties the team.
+    // Removing moves the others up; a saved slot can be emptied.
     expect(removeFromTeam({ team: ["swordsman", "gunner", "tidecaller"], focus: 2, aspects: {}, relics: {} }, 0)).toEqual({ team: ["gunner", "tidecaller"], focus: 1, aspects: {}, relics: {} })
-    expect(removeFromTeam({ team: ["swordsman"], focus: 0, aspects: {}, relics: {} }, 0)).toEqual({ team: ["swordsman"], focus: 0, aspects: {}, relics: {} })
+    expect(removeFromTeam({ team: ["swordsman"], focus: 0, aspects: {}, relics: {} }, 0)).toEqual({ team: [], focus: 0, aspects: {}, relics: {} })
   })
 
   it("equips an aspect in the team on one member only: one on another moves to her, and leaving the team takes it off", () => {

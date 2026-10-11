@@ -22,9 +22,10 @@ import type { Nav, Screen } from "./menu/screens.ts"
 import { startingWith } from "./draft.ts"
 import { selectionIn } from "./navigation.ts"
 import type { UiActions, UiStore } from "./store.ts"
+import { editingParty, menuDraftFor } from "./store.ts"
 
 export const Menu = ({ store, actions }: { readonly store: UiStore; readonly actions: UiActions }) => {
-  const play = store.menuPlay, draft = store.menuDraft, screens = store.menuScreens
+  const play = store.menuPlay, draft = menuDraftFor(store), screens = store.menuScreens
   const screen = screens.value[screens.value.length - 1]!
   /** Whether "Leave the game?" is asked (Android's back button on the home screen). */
   const leaving = useSignal(false)
@@ -41,12 +42,17 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
       prepare(screens.value[screens.value.length - 1]!)
     }
   }
-  /** The party is kept as it is set up: saved when it changed and follows the rules, with nothing to confirm. */
+  /** Gear edits save to the browsed slot, or the party in use outside Party. */
   const save = () => {
     const tuning = store.tuning.peek(), account = store.account.peek(), { team, aspects, relics } = draft.peek()
-    const changed = JSON.stringify(team) !== JSON.stringify(account.selection.team) || JSON.stringify(aspects) !== JSON.stringify(account.selection.aspects) || JSON.stringify(relics) !== JSON.stringify(account.selection.relics)
+    const browsing = editingParty(store), slot = store.menuPartySlot.peek()
+    const kept = browsing ? account.saved[slot] ?? { team: [], aspects: {}, relics: {} } : account.selection
+    const changed = JSON.stringify(team) !== JSON.stringify(kept.team) || JSON.stringify(aspects) !== JSON.stringify(kept.aspects) || JSON.stringify(relics) !== JSON.stringify(kept.relics)
     const allowed = teamProblems(tuning, account, team, aspects).length === 0 && teamRelicProblems(tuning, account, team, relics).length === 0
-    if (changed && team.every((id) => owns(account, { kind: "character", id })) && allowed) actions.saveTeam(team, aspects, relics)
+    if (changed && team.every((id) => owns(account, { kind: "character", id })) && allowed) {
+      if (browsing) actions.editTeamSlot(slot, team, aspects, relics)
+      else actions.saveTeam(team, aspects, relics)
+    }
   }
   const enter = () => {
     if (playLock(store.tuning.value, store.account.value, play.value) === null) actions.enter(startingWith(draft.value.team, leader), draft.value.aspects, play.value, draft.value.relics)
@@ -55,8 +61,6 @@ export const Menu = ({ store, actions }: { readonly store: UiStore; readonly act
     const requested = store.menuOpens.peek()
     if (requested !== null) { nav.go(requested); store.menuOpens.value = null }
   }, [])
-  // Leaving a screen keeps what was set up on it.
-  useEffect(() => save, [screen.kind])
   useEffect(() => {
     // Back (Escape, or Android's back button) steps back; on the home screen, where the game can close, it asks to leave.
     const onKey = (event: KeyboardEvent) => {

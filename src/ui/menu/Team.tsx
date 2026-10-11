@@ -2,10 +2,9 @@
  * The party: three places, in the order they fight in (1 starts). A tap on
  * a place opens the roster over the left of the screen, as cards (it scrolls: the roster will
  * grow); a tap on a card puts her there (one already in the party swaps
- * places). Nothing here needs confirming, the party is kept as it is set up.
- * Three more parties can be saved (each with its aspects and relics) and
- * loaded in a tap: tap an empty slot to save the party there, a saved one
- * to load it. Edits save to the active slot immediately.
+ * places). Character edits save immediately.
+ * Three saved slots are edited independently; empty slots stay empty until
+ * a character is added. Use party explicitly switches the party in play.
  */
 import { useSignal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
@@ -33,9 +32,9 @@ export const Team = ({ store, actions, nav, draft }: {
 }) => {
   const picking = useSignal(false)
   const tuning = store.tuning.value, account = store.account.value, { team, focus, aspects, relics } = draft.value
-  const slot = account.activeTeamSlot
-  const keep = (next: TeamDraft, at?: number | null) => {
-    if (!actions.saveTeam(next.team, next.aspects, next.relics, at)) return false
+  const slot = store.menuPartySlot.value, inUse = slot === account.activeTeamSlot
+  const keep = (next: TeamDraft) => {
+    if (!actions.editTeamSlot(slot, next.team, next.aspects, next.relics)) return false
     draft.value = next
     picking.value = false
     return true
@@ -45,14 +44,17 @@ export const Team = ({ store, actions, nav, draft }: {
     return aspect === undefined ? tuning.classes[tuning.characters[member].class].plain.name : aspectOf(tuning.aspects, aspect).name
   }
   return <Screen name="lineup">
-    <TopBar icon="team" title="Party" detail={slot === null ? "No slot" : `Slot ${slot}`} close={nav.back}>
+    <TopBar icon="team" title="Party" detail={`Slot ${slot}`} close={nav.back} end={<Pill size="small" disabled={team.length === 0 || inUse} onClick={() => actions.saveTeam(team, aspects, relics, slot)}>{inUse ? "In use" : "Use party"}</Pill>}>
       <div class="lineup__saved" role="group" aria-label="Saved parties">
       {Array.from({ length: savedTeamSlots }, (_, index) => {
         const at = index + 1, saved = account.saved[at]
-        return <button type="button" key={at} class="lineup__slot" aria-pressed={slot === at} aria-label={saved === undefined ? `Save the party as party ${at}` : `Load party ${at}`} onClick={() => {
-          keep(saved === undefined ? draft.value : { team: saved.team, focus: 0, aspects: saved.aspects, relics: saved.relics }, at)
+        return <button type="button" key={at} class="lineup__slot" aria-pressed={slot === at} aria-label={`Edit party ${at}${account.activeTeamSlot === at ? ", in use" : ""}`} onClick={() => {
+          store.menuPartySlot.value = at
+          draft.value = { ...(saved ?? { team: [], aspects: {}, relics: {} }), focus: 0 }
+          picking.value = false
         }}>
           <b>{at}</b>{saved === undefined ? <Icon name="plus" /> : saved.team.map((member) => <Face key={member} of={{ character: member }} tint={elementOf(tuning, member)} size={20} />)}
+          {account.activeTeamSlot === at && <Icon name="check" />}
         </button>
       })}
       </div>
@@ -79,7 +81,7 @@ export const Team = ({ store, actions, nav, draft }: {
       </section>
     })}</div>
     {picking.value && <>
-      <Panel class="lineup__picker in-left" title={`Place ${focus + 1}`} detail={team[focus] === undefined ? "Empty" : tuning.characters[team[focus]!].name}>
+      <Panel class="lineup__picker in-left" title={`Place ${focus + 1}`} detail={team[focus] === undefined ? "Empty" : tuning.characters[team[focus]!].name} note={inUse && team.length === 1 ? "Use another party to remove the last character." : undefined} noteIcon="info">
         <Cards>{ids(tuning.characters).map((id) => {
           const at = team.indexOf(id)
           return <CharacterCard key={id} store={store} character={id} mark={at >= 0 ? at + 1 : undefined} selected={team[focus] === id} onClick={() => {
@@ -89,7 +91,7 @@ export const Team = ({ store, actions, nav, draft }: {
         })}</Cards>
       </Panel>
       <div class="lineup__picker-actions in-below">
-        <Pill size="small" tone="dark" disabled={team.length === 1 || team[focus] === undefined} onClick={() => keep(removeFromTeam(draft.value, focus))}>Remove</Pill>
+        <Pill size="small" tone="dark" disabled={(inUse && team.length === 1) || team[focus] === undefined} onClick={() => keep(removeFromTeam(draft.value, focus))}>Remove</Pill>
         <Pill size="small" tone="dark" onClick={() => (picking.value = false)}>Done</Pill>
       </div>
     </>}

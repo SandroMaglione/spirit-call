@@ -29,6 +29,7 @@ import { Bar, Chips, Fact, Panel } from "../kit/panel.tsx"
 import { Actions, Screen, SideTabs, TopBar } from "../kit/shell.tsx"
 import { sourceOf } from "../../content/collection.ts"
 import type { UiActions, UiStore } from "../store.ts"
+import { menuDraftFor } from "../store.ts"
 import { describeSource, ids, MaterialIcon, Wallet } from "./parts.tsx"
 import type { CharacterTab, GearFocus, GearTab, Nav } from "./screens.ts"
 
@@ -109,7 +110,7 @@ const Ascension = ({ store, actions, character }: { readonly store: UiStore; rea
  * very slot.
  */
 const GearSummary = ({ store, nav, character }: { readonly store: UiStore; readonly nav: Nav; readonly character: CharacterId }) => {
-  const tuning = store.tuning.value, account = store.account.value, draft = store.menuDraft.value
+  const tuning = store.tuning.value, account = store.account.value, draft = menuDraftFor(store).value
   const spec = tuning.characters[character], aspect = draft.aspects[character]
   const relics = draft.relics[character] ?? {}, worn = account.worn[character] ?? {}
   const open = (tab: GearTab, focus?: GearFocus) => nav.go({ kind: "gear", character, tab, ...(focus === undefined ? {} : { focus }) })
@@ -148,7 +149,7 @@ interface Move {
 const Skills = ({ store, character }: { readonly store: UiStore; readonly character: CharacterId }) => {
   const selected = useSignal(0)
   const tuning = store.tuning.value, spec = tuning.characters[character]
-  const attack = attackOf(tuning, { class: spec.class, aspect: aspectFor(tuning, character, store.menuDraft.value.aspects[character]) })
+  const attack = attackOf(tuning, { class: spec.class, aspect: aspectFor(tuning, character, menuDraftFor(store).value.aspects[character]) })
   const moves: ReadonlyArray<Move> = [
     { name: attack.name, slot: "Attack", icon: <AbilityIcon kind={spec.class} />, body: <>
       <Chips items={attack.combo.map((move) => moveNames[move.shape])} />
@@ -195,7 +196,7 @@ export const Character = ({ store, actions, nav, character, tab }: {
     </TopBar>
     <SideTabs label="Character details" current={tab} onChange={(id) => nav.replace({ kind: "character", character, tab: id })} tabs={[
       { id: "overview", label: "Attributes", badge: owned && (train(tuning, account, character).ok || ascend(tuning, account, character).ok) },
-      { id: "gear", label: "Gear", badge: emptyRelicSlots(tuning, account, store.menuDraft.value, character).length > 0 },
+      { id: "gear", label: "Gear", badge: emptyRelicSlots(tuning, account, menuDraftFor(store).value, character).length > 0 },
       { id: "kit", label: "Skills" }
     ]} />
     {tab === "overview" ? <Attributes store={store} actions={actions} character={character} /> : tab === "gear" ? <GearSummary key={character} store={store} nav={nav} character={character} /> : <Skills key={character} store={store} character={character} />}

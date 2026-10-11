@@ -11,7 +11,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as ManagedRuntime from "effect/ManagedRuntime"
 
-import { ascend, encounterOf, finishTutorial, openAudition, recordRun, saveTeam, select, setTeam, train, wear } from "../account/account.ts"
+import { ascend, editTeamSlot, encounterOf, finishTutorial, openAudition, recordRun, saveTeam, select, setTeam, train, wear } from "../account/account.ts"
 import type { Account, Checked, Earned, Play, SavedTeam, TeamAspects, TeamRelics } from "../account/account.ts"
 import { AccountList, layer as accountListLayer } from "../account/account-list.ts"
 import type { AccountSummary } from "../account/account-list.ts"
@@ -53,6 +53,8 @@ export interface App {
   readonly saveTeam: (slot: number, team: SavedTeam | null) => Account | undefined
   /** Saves a party edit and its active saved slot together, immediately. */
   readonly setTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics, slot?: number | null) => Checked<Account>
+  /** Edits a saved slot immediately, without switching the party in use. */
+  readonly editTeamSlot: (slot: number, team: SavedTeam) => Checked<Account>
   /** Records a run of `play` (`null` for a run of nothing) that ended with the arena's result, played by `team` (as it entered the arena), and its log: what it earned. A playtest build also sends it. */
   readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue, team: ReadonlyArray<BuildValue>) => Earned
   /** Marks the tutorial done (finished or skipped): the game no longer opens on it. */
@@ -211,6 +213,11 @@ export const startApp = async (id: string, name: string): Promise<App> => {
     saveTeam: (slot, team) => apply(saveTeam(tuning, account, slot, team)),
     setTeam: (team, aspects, relics, slot) => {
       const checked = setTeam(tuning, account, team, aspects, relics, slot)
+      if (checked.ok) changed(checked.value)
+      return checked
+    },
+    editTeamSlot: (slot, team) => {
+      const checked = editTeamSlot(tuning, account, slot, team)
       if (checked.ok) changed(checked.value)
       return checked
     },

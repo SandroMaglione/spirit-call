@@ -111,11 +111,11 @@ export const placeInTeam = (draft: TeamDraft, character: CharacterId): TeamDraft
   return membersOnly({ ...draft, team: next, focus })
 }
 
-/** The team without the member in `slot` (the others move up); a team keeps at least one. */
+/** The team without the member in `slot` (the others move up); a saved slot may be empty. */
 export const removeFromTeam = (draft: TeamDraft, slot: number): TeamDraft => {
-  if (draft.team.length <= 1 || slot >= draft.team.length) return draft
+  if (slot < 0 || slot >= draft.team.length) return draft
   const team = draft.team.filter((_, index) => index !== slot)
-  return membersOnly({ ...draft, team, focus: Math.min(draft.focus, team.length - 1) })
+  return membersOnly({ ...draft, team, focus: Math.max(0, Math.min(draft.focus, team.length - 1)) })
 }
 
 /** The draft's aspects and relics on its members only, each on one of them (the first in the team keeps it). */

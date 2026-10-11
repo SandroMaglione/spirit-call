@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect"
 import * as KeyValueStore from "effect/persistence/KeyValueStore"
 import { describe, expect, it } from "vitest"
 
-import { setTeam, train, unlock } from "../src/account/account.ts"
+import { editTeamSlot, setTeam, train, unlock } from "../src/account/account.ts"
 import { AccountReadError, AccountStore, accountKey, layer as accountLayer } from "../src/account/account-store.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { newAccount } from "../src/content/account.ts"
@@ -85,6 +85,27 @@ describe("account store", () => {
     expect(again.store.account.activeTeamSlot).toBe(2)
     expect(again.store.account.selection.team).toEqual(["gunner"])
     expect(again.store.account.saved[2]?.team).toEqual(["gunner"])
+  })
+
+  it("keeps an unused slot's edits and emptiness through a restart without changing the party in use", async () => {
+    const changed = await onDevice({}, (store) => {
+      const owned = unlock(defaultTuning, store.account, { kind: "character", id: "gunner" }, 2000)
+      const edited = editTeamSlot(defaultTuning, owned, 2, { team: ["gunner"], aspects: {}, relics: {} })
+      if (!edited.ok) throw new Error("slot not edited")
+      return store.save(edited.value).pipe(Effect.as(edited.value))
+    })
+    const again = await onDevice({ [key]: JSON.stringify(changed.saved) })
+    expect(again.store.account).toEqual(changed.used)
+    expect(again.store.account.activeTeamSlot).toBe(1)
+    expect(again.store.account.selection.team).toEqual(["swordsman"])
+    const cleared = await onDevice({ [key]: JSON.stringify(changed.saved) }, (store) => {
+      const edited = editTeamSlot(defaultTuning, store.account, 2, { team: [], aspects: {}, relics: {} })
+      if (!edited.ok) throw new Error("slot not cleared")
+      return store.save(edited.value)
+    })
+    const empty = await onDevice({ [key]: JSON.stringify(cleared.saved) })
+    expect(empty.store.account.saved[2]).toBeUndefined()
+    expect(empty.store.account.activeTeamSlot).toBe(1)
   })
 
   it("puts an older account with no saved parties in Slot 1 and repairs a removed slot", async () => {

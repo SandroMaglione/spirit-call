@@ -97,10 +97,12 @@ is no undoing an update, so:
 ## Saved parties
 
 The save's third version remembers the active saved-party slot. A party
-edit saves the current selection and that slot together; the other slots
-stay as they were. Versions 1 and 2 migrate with no active slot, since they
-never kept which one was selected. New accounts keep the starter party in
-Slot 1. An older account with no saved parties keeps its current party in
+edit to that party saves the current selection and slot together. Edits to
+another slot save only that slot; Use party switches the current selection
+and active slot together, and refuses an empty party. A cleared unused
+slot is absent from the saved parties. Versions 1 and 2 migrate with no
+active slot, since they never kept which one was selected. New accounts
+keep the starter party in Slot 1. An older account with no saved parties keeps its current party in
 Slot 1 too. Existing saved parties are never replaced by this default;
 an invalid selected slot is cleared when other saved parties remain.
 

@@ -6,6 +6,7 @@
  */
 import { elementOf } from "./draft.ts"
 import type { UiStore } from "./store.ts"
+import { menuDraftFor } from "./store.ts"
 
 /** Motes at fixed places: the same sky on every visit. */
 export const motes = Array.from({ length: 28 }, (_, i) => ({ left: `${(i * 37 + 7) % 98}%`, top: `${(i * 23 + 11) % 96}%`, animationDelay: `${-(i * 1.7) % 9}s`, animationDuration: `${7 + (i % 5) * 1.5}s` }))
@@ -13,11 +14,11 @@ export const motes = Array.from({ length: 28 }, (_, i) => ({ left: `${(i * 37 + 
 /** The element the menu shows in: a sky asked for, else the inspected character's, else the leader's; `undefined` for plain stone. */
 export const menuElement = (store: UiStore): string | undefined => {
   const screens = store.menuScreens.value, screen = screens[screens.length - 1]!
-  const team = store.menuDraft.value.team
+  const team = menuDraftFor(store).value.team
   const leader = team.includes(store.menuCharacter.value) ? store.menuCharacter.value : team[0]!
   const sky = store.sky.value
   if (sky !== null) return sky === "plain" ? undefined : sky
-  return elementOf(store.tuning.value, screen.kind === "character" ? screen.character : leader)
+  return screen.kind === "character" ? elementOf(store.tuning.value, screen.character) : leader === undefined ? undefined : elementOf(store.tuning.value, leader)
 }
 
 export const Backdrop = ({ store }: { readonly store: UiStore }) => {

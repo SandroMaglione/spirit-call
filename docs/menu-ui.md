@@ -173,11 +173,12 @@ is left, and keep text off it.
   one's first quest directly, with the saved party, or go to Home. Skip
   leaves for the menu; Settings' Controls tab can replay it. It pays
   and records nothing. Switching and elemental bursts are left for later.
-- **The party is kept as it is set up.** There is no confirm: the menu
+- **Party edits are kept as they are made.** The menu
   saves it immediately when a character is changed, swapped, added, or
   removed, and when an aspect or relic is equipped. The current party and
-  its active saved slot are kept together in one account change, if they
-  follow the rules. Only a failure is shown.
+  its active saved slot are kept together in one account change. Editing
+  another slot changes only that slot; Use party explicitly puts it in use.
+  Only a failure is shown.
 - **Her gear has a screen of its own** (`menu/Gear.tsx`), since there
   will be many aspects, relics, and looks, each with its own explanation:
   tabs Aspect, Relics, Looks; the cards on the left (relics under her four
@@ -216,11 +217,14 @@ is left, and keep text off it.
   alone at the tier's level. Try is always available, even before inviting
   her: the Training Ground lends her alone with her plain kit at the
   party's level, records nothing, and leaves the saved party alone.
-- **Saved parties**: the party screen's top bar holds three slots (tap an
-  empty one to save the party there, a saved one to load it). The selected
-  slot is highlighted and named beside Party, or "No slot" when none is
-  selected. Edits save to the active slot immediately, with no Save button.
-  The slot survives leaving the screen, a run, and restarting the game.
+- **Saved parties**: the party screen's top bar holds three slots. Tapping
+  one browses its own contents, including a fully empty slot. The browsed
+  slot is highlighted and named beside Party; a check marks the slot in use.
+  Use party switches to the browsed slot and is disabled for an empty one.
+  Character and gear edits save immediately, with no Save button. The party
+  in use must retain one member: use another party before removing its last
+  character. An unused party may be cleared completely.
+  Saved edits and the party in use survive restarting the game.
   The starter party occupies Slot 1. Home's portraits have no slot caption.
   The party screen has no Play button; its three places use the full height
   below the top bar. Playing starts from Home or a challenge.

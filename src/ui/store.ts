@@ -40,6 +40,9 @@ export interface UiStore {
   /** The spirit on the lobby stage; selecting one never reorders party slots. */
   readonly menuCharacter: Signal<CharacterId>
   readonly menuDraft: Signal<TeamDraft>
+  /** The saved slot being browsed, independent of the party in use. */
+  readonly menuPartySlot: Signal<number>
+  readonly menuPartyDraft: Signal<TeamDraft>
   readonly menuScreens: Signal<ReadonlyArray<Screen>>
   readonly flow: Signal<FlowState>
   /** Whether the run going on is paused (its in-game menu open). */
@@ -111,6 +114,8 @@ export const createUiStore = (initial: {
   menuPlay: signal(initial.account.selection.play),
   menuCharacter: signal(initial.account.selection.team[0]!),
   menuDraft: signal({ team: initial.account.selection.team, focus: 0, aspects: initial.account.selection.aspects, relics: initial.account.selection.relics }),
+  menuPartySlot: signal(initial.account.activeTeamSlot ?? 1),
+  menuPartyDraft: signal({ ...(initial.account.saved[initial.account.activeTeamSlot ?? 1] ?? { team: [], aspects: {}, relics: {} }), focus: 0 }),
   menuScreens: signal([{ kind: "home" }]),
   flow: signal(initial.flow),
   paused: signal(false),
@@ -136,10 +141,19 @@ export const createUiStore = (initial: {
 
 export const UiStoreService = Descriptor.Service<UiStore>()("Shooter/UiStore")
 
+/** Party inspection and its character/gear pages use the browsed slot; gameplay pages use the active party. */
+export const editingParty = (store: UiStore): boolean => {
+  const screens = store.menuScreens.value
+  const at = screens.findLastIndex((screen) => screen.kind === "team")
+  return at >= 0 && screens.slice(at + 1).every((screen) => screen.kind === "character" || screen.kind === "gear")
+}
+export const menuDraftFor = (store: UiStore): Signal<TeamDraft> => editingParty(store) ? store.menuPartyDraft : store.menuDraft
+
 /** What the UI can ask for: plain functions (the app wires them to the game and the account). */
 export interface UiActions {
   /** Save the party and its active slot together; false when the rules refuse it. An omitted slot keeps the current one. */
   readonly saveTeam: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics, slot?: number | null) => boolean
+  readonly editTeamSlot: (slot: number, team: ReadonlyArray<CharacterId>, aspects: TeamAspects, relics: TeamRelics) => boolean
   /** Enter the arena with `team` (in order, with `aspects` and `relics` equipped; the saved relics when not given) to play `play`. */
   readonly enter: (team: ReadonlyArray<CharacterId>, aspects: TeamAspects, play: Play, relics?: TeamRelics) => void
   /** Enter an Extra with `team`, `aspects`, and `relics` (the saved ones when not given): nothing it does is recorded on the account. */
