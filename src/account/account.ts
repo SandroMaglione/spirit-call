@@ -168,6 +168,8 @@ export interface Account {
   readonly saved: { readonly [slot: number]: SavedTeam }
   /** The auditions opened with an invitation, by character (see `openAudition`). */
   readonly auditions: { readonly [Id in CharacterId]?: OpenedAudition }
+  /** When the tutorial was finished or skipped (epoch milliseconds); `null`: not yet, so the game opens on it. */
+  readonly tutorialDoneAt: number | null
 }
 
 /** Something that can be owned. */
@@ -302,7 +304,8 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
     selection: { team: [starter.selection.character], aspects: {}, relics: {}, play: { kind: "quest", quest: starter.selection.quest } },
     worn: {},
     saved: {},
-    auditions: {}
+    auditions: {},
+    tutorialDoneAt: null
   }
   const items: Array<Item> = [
     ...starter.aspects.map((id) => ({ kind: "aspect" as const, id })),
@@ -310,6 +313,10 @@ export const createAccount = (tuning: Tuning, starter: StarterSet, id: string, n
   ]
   return items.reduce((account, item) => unlock(tuning, account, item, now), empty)
 }
+
+/** The tutorial finished or skipped at `now`: the game no longer opens on it (it stays in the settings). */
+export const finishTutorial = (account: Account, now: number): Account =>
+  account.tutorialDoneAt === null ? { ...account, tutorialDoneAt: now } : account
 
 /** `character`'s level in `account`, from its experience (level 1 when not owned). */
 export const characterLevel = (tuning: Tuning, account: Account, character: CharacterId): LevelProgress =>

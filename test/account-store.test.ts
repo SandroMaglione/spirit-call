@@ -39,15 +39,26 @@ describe("account store", () => {
     expect(store.notes).toEqual([])
     expect(Object.keys(store.account.owned.characters)).toEqual([...newAccount.characters])
     expect(store.account.id).toBe(id)
-    expect(saved).toMatchObject({ version: 1, account: { id } })
+    expect(saved).toMatchObject({ version: 2, account: { id, tutorialDoneAt: null } })
   })
 
   it("loads every version of the save ever shipped", async () => {
-    const { store, saved } = await onDevice({ [key]: fixture(1) })
-    expect(store.account.id).toBe("0f8e7d6c-5b4a-4321-8765-1234567890ab")
-    expect(store.account.totals.runs).toBe(1)
-    expect(store.account.wallet.windEssence).toBe(6)
-    expect(saved.version).toBe(1)
+    for (const version of [1, 2]) {
+      const { store, saved } = await onDevice({ [key]: fixture(version) })
+      expect(store.account.id).toBe("0f8e7d6c-5b4a-4321-8765-1234567890ab")
+      expect(store.account.totals.runs).toBe(1)
+      expect(store.account.wallet.windEssence).toBe(6)
+      // It played before the tutorial came: it does not open on it.
+      expect(store.account.tutorialDoneAt).toBe(store.account.createdAt)
+      expect(saved.version).toBe(2)
+    }
+  })
+
+  it("opens a first-version account never played on the tutorial", async () => {
+    const unplayed = JSON.parse(fixture(1))
+    unplayed.account.totals = { runs: 0, clears: 0, kills: 0, secondsPlayed: 0 }
+    const { store } = await onDevice({ [key]: JSON.stringify(unplayed) })
+    expect(store.account.tutorialDoneAt).toBeNull()
   })
 
   it("saves every change whole, and loads it back as it was", async () => {

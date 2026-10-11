@@ -65,8 +65,8 @@ const ById = <S extends Schema.Top>(value: S) => Schema.Record(Schema.String, va
 const Unlocked = Schema.Struct({ unlockedAt: Schema.Number })
 const Relics = ById(ById(Schema.String))
 
-/** The account as stored (`AccountRecord`): its shape, with every content id a plain string. */
-export const AccountRecordSchema = Schema.Struct({
+/** The account as stored in version 1. */
+const AccountRecordV1 = Schema.Struct({
   id: Schema.String,
   createdAt: Schema.Number,
   totals: Schema.Struct({ runs: Schema.Number, clears: Schema.Number, kills: Schema.Number, secondsPlayed: Schema.Number }),
@@ -95,6 +95,12 @@ export const AccountRecordSchema = Schema.Struct({
   saved: ById(Schema.Struct({ team: Schema.Array(Schema.String), aspects: ById(Schema.String), relics: Relics }))
 })
 
+/** The account as stored (`AccountRecord`): its shape, with every content id a plain string. Since version 2: when the tutorial was done. */
+export const AccountRecordSchema = Schema.Struct({
+  ...AccountRecordV1.fields,
+  tutorialDoneAt: Schema.NullOr(Schema.Number)
+})
+
 // The Schema describes exactly the record `convert.ts` reads and writes, both ways.
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
 const same = <_ extends true>() => undefined
@@ -103,17 +109,26 @@ same<Same<typeof AccountRecordSchema.Type, AccountRecord>>()
 /** Version 1: the account as the server kept it when it moved onto the device. */
 export const StoredAccountV1 = Schema.Struct({
   version: Schema.Literal(1),
+  account: AccountRecordV1
+})
+
+/** Version 2: and when the tutorial was done. */
+export const StoredAccountV2 = Schema.Struct({
+  version: Schema.Literal(2),
   account: AccountRecordSchema
 })
 
-export const StoredAccount = Schema.Union([StoredAccountV1])
-export const StoredAccountLatest = StoredAccountV1
+export const StoredAccount = Schema.Union([StoredAccountV1, StoredAccountV2])
+export const StoredAccountLatest = StoredAccountV2
 export type StoredAccountLatest = typeof StoredAccountLatest.Type
 
 /** Brings a saved account of any version to the latest, one version at a time. */
 export const migrateAccount = (stored: typeof StoredAccount.Type): StoredAccountLatest => {
   switch (stored.version) {
+    // An account that played before the tutorial came has no need of it; one never played opens on it.
     case 1:
+      return migrateAccount({ version: 2, account: { ...stored.account, tutorialDoneAt: stored.account.totals.runs > 0 ? stored.account.createdAt : null } })
+    case 2:
       return stored
   }
 }
