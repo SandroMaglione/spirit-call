@@ -30,7 +30,6 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
-
-    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- No internet: the game runs from the files in the app and sends nothing. Only a debug
+         build (src/debug) may reach the network, to load a dev server or send playtest runs. -->
 </manifest>
