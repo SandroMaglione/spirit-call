@@ -341,8 +341,9 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const dealer = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, Leveled)
     return dealer?.ok === true ? dealer.value.data.member.get().level : fielded
   }
-  // In the Training Ground the team cannot fall (only the fire hurts, and never to the end).
-  const training = tuning.waves.enabled && tuning.challenges[resources.challenge.get()].objective.kind === "training"
+  // In the Training Ground (and the tutorial) the team cannot fall (only the fire hurts, and never to the end).
+  const objectiveKind = tuning.challenges[resources.challenge.get()].objective.kind
+  const training = tuning.waves.enabled && (objectiveKind === "training" || objectiveKind === "tutorial")
   // Enemies a warder's tether holds take only a share (see `features/wards.ts`).
   const warded = wardedTaken(tuning, queries.wards.each().map(({ data }) => ({ kind: data.enemy.get().kind, ward: data.ward.get() })))
   const dead = new Set<number>()

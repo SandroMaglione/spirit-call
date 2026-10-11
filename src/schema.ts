@@ -1259,6 +1259,20 @@ export interface ControlOptionsValue {
 }
 export const ControlOptions = Descriptor.Resource<ControlOptionsValue>()("Shooter/ControlOptions")
 
+/**
+ * The tutorial's progress (see the `tutorial` objective): the step asked
+ * (its index; the steps' count once all are done), how far into it
+ * (`count`: dashes, hits, perfect dodges), and the step set up last (its
+ * dummy stood up, its skill readied; -1 before the first).
+ */
+export interface TutorialValue {
+  readonly step: number
+  readonly count: number
+  readonly ready: number
+}
+export const Tutorial = Descriptor.Resource<TutorialValue>()("Shooter/Tutorial")
+export const tutorialStart: TutorialValue = { step: 0, count: 0, ready: -1 }
+
 /** Deterministic random state (mulberry32), so runs replay exactly. */
 export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
 
@@ -1463,6 +1477,7 @@ export const Game = Schema.bind(
       DodgeChain,
       Paused,
       ControlOptions,
+      Tutorial,
       Practice,
       PracticeField
     },

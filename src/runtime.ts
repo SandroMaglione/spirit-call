@@ -10,7 +10,7 @@ import { noGuard } from "./features/guard.ts"
 import { initialControls } from "./features/input.ts"
 import { initialTime } from "./features/time.ts"
 import { initialWaves } from "./features/waves.ts"
-import { emptyRunLog, Flow, Game, noMantle, noTwist, noUltimateMoment } from "./schema.ts"
+import { emptyRunLog, Flow, Game, noMantle, noTwist, noUltimateMoment, tutorialStart } from "./schema.ts"
 import type { BuildValue, TwistValue, ViewportValue } from "./schema.ts"
 
 /**
@@ -44,6 +44,7 @@ export const initialResources = (
   PartyState: [],
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
   ControlOptions: { aimAssist: true },
+  Tutorial: tutorialStart,
   Viewport: viewport,
   Stats: { kills: 0, shots: 0, reactions: [], tally: noTally },
   RunLog: emptyRunLog,

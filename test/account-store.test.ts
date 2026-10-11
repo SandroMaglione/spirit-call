@@ -43,8 +43,7 @@ describe("account store", () => {
   })
 
   it("loads every version of the save ever shipped", async () => {
-    for (const version of [1, 2]) {
-      const { store, saved } = await onDevice({ [key]: fixture(version) })
+    for (const { store, saved } of await Promise.all([1, 2].map((version) => onDevice({ [key]: fixture(version) })))) {
       expect(store.account.id).toBe("0f8e7d6c-5b4a-4321-8765-1234567890ab")
       expect(store.account.totals.runs).toBe(1)
       expect(store.account.wallet.windEssence).toBe(6)

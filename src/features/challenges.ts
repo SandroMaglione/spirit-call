@@ -20,8 +20,10 @@ export const objectiveMet = (objective: Objective, waves: WavesValue): boolean =
     case "endure":
       return false
     // Extras: training never ends (it is left from the in-game menu); practice ends when the team falls.
+    // The tutorial is left by the app, once its last step is done (see `features/tutorial.ts`).
     case "training":
     case "practice":
+    case "tutorial":
       return false
   }
 }
@@ -48,9 +50,10 @@ export const objectiveProgress = (spec: ChallengeSpec, waves: WavesValue): numbe
     }
     case "endure":
       return Math.min(1, Math.max(0, wavesCleared(waves) / spec.objective.goal))
-    // Extras pay nothing, so how far they got is only the wave.
+    // Extras pay nothing, so how far they got is only the wave; nor does the tutorial.
     case "training":
     case "practice":
+    case "tutorial":
       return 0
   }
 }

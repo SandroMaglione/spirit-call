@@ -12,8 +12,8 @@ import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
 import { view } from "../config/view.ts"
-import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Passives, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Waves, BasicAttack } from "../schema.ts"
-import type { SkillsValue, WavesValue } from "../schema.ts"
+import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Passives, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Tutorial, Waves, BasicAttack } from "../schema.ts"
+import type { SkillsValue, TutorialValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { dashOf, traitsIn } from "../features/build.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -205,10 +205,10 @@ const skillStatus = (tuning: TuningValue, skills: SkillsValue, energy: number) =
 /**
  * Progress toward a challenge's objective, in a few characters, for the
  * objectives the wave marks do not show: for lasting until the fall the wave against the goal (then the wave alone,
- * past it), and practice the enemies defeated. Clearing waves shows its marks only;
+ * past it), practice the enemies defeated, and the tutorial its step. Clearing waves shows its marks only;
  * training, nothing.
  */
-const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, kills: number): string => {
+const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, kills: number, tutorial: TutorialValue): string => {
   const objective = challenge.objective
   switch (objective.kind) {
     case "clearWaves":
@@ -219,6 +219,8 @@ const challengeProgress = (challenge: ChallengeSpec, waves: WavesValue, kills: n
       return ""
     case "practice":
       return `${kills} defeated`
+    case "tutorial":
+      return tutorial.step < objective.steps.length ? `Step ${tutorial.step + 1} / ${objective.steps.length}` : "Done"
   }
 }
 
@@ -250,7 +252,8 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     tuning: Game.System.readResource(Tuning),
     challenge: Game.System.readResource(Challenge),
     enemyLevel: Game.System.readResource(EnemyLevel),
-    stats: Game.System.readResource(Stats)
+    stats: Game.System.readResource(Stats),
+    tutorial: Game.System.readResource(Tutorial)
   },
   machines: { flow: Game.System.machine(Flow) },
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock), sounds: Game.System.service(Sounds) }
@@ -324,7 +327,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
   }
   setText(hud.quest, challenge.name)
   showWaves(hud.waves, challenge.objective.kind === "clearWaves" ? challenge.waves.scripted.length : 0, waves)
-  setText(hud.progress, challengeProgress(challenge, waves, resources.stats.get().kills))
+  setText(hud.progress, challengeProgress(challenge, waves, resources.stats.get().kills, resources.tutorial.get()))
 })
 
 /** The damage and the hits a second are over this many seconds. */
