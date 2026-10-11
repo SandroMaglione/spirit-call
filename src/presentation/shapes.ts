@@ -17,12 +17,36 @@ export interface ShapesOptions {
   readonly depthTest?: boolean
   /** Drawing order among see-through layers: higher draws later. */
   readonly order?: number
+  /** Vertices it has room for from the start (it grows past them, but growing re-creates its buffers mid-frame). */
+  readonly capacity?: number
 }
 
 const tau = Math.PI * 2
 
 /** Segments for a full circle of this radius: smooth when large, cheap when small. */
 const segmentsFor = (radius: number): number => Math.max(10, Math.min(96, Math.ceil(Math.sqrt(Math.abs(radius)) * 4)))
+
+/**
+ * The unit circle cut in `segments`: the cosine and sine of each cut's
+ * angle, `index / segments` of a turn, for `index` 0 to `segments`. Worked
+ * out once per number of segments (the very values a loop over the angles
+ * would compute), instead of for every circle drawn.
+ */
+const circles = new Map<number, { readonly cos: Float64Array; readonly sin: Float64Array }>()
+const unitCircle = (segments: number): { readonly cos: Float64Array; readonly sin: Float64Array } => {
+  const known = circles.get(segments)
+  if (known !== undefined) return known
+  const cos = new Float64Array(segments + 1)
+  const sin = new Float64Array(segments + 1)
+  for (let index = 0; index <= segments; index++) {
+    const angle = (index / segments) * tau
+    cos[index] = Math.cos(angle)
+    sin[index] = Math.sin(angle)
+  }
+  const circle = { cos, sin }
+  circles.set(segments, circle)
+  return circle
+}
 
 /** 0xRRGGBB to linear RGB (vertex colors are linear), memoized: shapes reuse a handful of colors. */
 const linear = new Map<number, readonly [number, number, number]>()
@@ -66,7 +90,7 @@ export class Shapes {
     // Its bounds change every frame.
     this.mesh.frustumCulled = false
     this.mesh.renderOrder = options.order ?? 0
-    this.grow(1024)
+    this.grow(options.capacity ?? 1024)
   }
 
   /** Lays the layer on the floor, `height` world units above it: the plane's (x, y) is the floor's (x, y). */
@@ -118,14 +142,14 @@ export class Shapes {
     if (alpha <= 0 || rx <= 0 || ry <= 0) return this
     this.paint(color, alpha)
     const segments = segmentsFor(Math.max(rx, ry))
+    const circle = unitCircle(segments)
     const cos = Math.cos(rotation)
     const sin = Math.sin(rotation)
     let px = x + cos * rx
     let py = y + sin * rx
     for (let index = 1; index <= segments; index++) {
-      const angle = (index / segments) * tau
-      const ex = Math.cos(angle) * rx
-      const ey = Math.sin(angle) * ry
+      const ex = circle.cos[index]! * rx
+      const ey = circle.sin[index]! * ry
       const nx = x + ex * cos - ey * sin
       const ny = y + ex * sin + ey * cos
       this.triangle(x, y, px, py, nx, ny)
@@ -140,10 +164,8 @@ export class Shapes {
     const points = this.outline
     points.length = 0
     const segments = segmentsFor(Math.max(rx, ry))
-    for (let index = 0; index < segments; index++) {
-      const angle = (index / segments) * tau
-      points.push(x + Math.cos(angle) * rx, y + Math.sin(angle) * ry)
-    }
+    const circle = unitCircle(segments)
+    for (let index = 0; index < segments; index++) points.push(x + circle.cos[index]! * rx, y + circle.sin[index]! * ry)
     return this.strokePath(points, true, width, color, alpha)
   }
 

@@ -109,10 +109,11 @@ export class Fx {
   private readonly animations: Array<Animation> = []
   private readonly pending: Array<{ delay: number; readonly run: () => void }> = []
   private readonly squash: number
-  private readonly ringShapes = new Shapes({ depthTest: false, order: 1 })
-  private readonly sheetShapes = new Shapes({ depthTest: false, order: 1 })
+  // Room up front for a crowd fight's worth, so a busy frame never re-creates their buffers mid-fight.
+  private readonly ringShapes = new Shapes({ depthTest: false, order: 1, capacity: 16_384 })
+  private readonly sheetShapes = new Shapes({ depthTest: false, order: 1, capacity: 16_384 })
   private readonly particleShapes = new Shapes({ depthTest: false, order: 2 })
-  private readonly flashShapes = new Shapes({ depthTest: false, additive: true, order: 3 })
+  private readonly flashShapes = new Shapes({ depthTest: false, additive: true, order: 3, capacity: 16_384 })
   private readonly digits = new Digits(4)
 
   constructor(layer: Group, squash: number) {
