@@ -1,4 +1,4 @@
-import { effect } from "@preact/signals"
+import { effect, signal } from "@preact/signals"
 import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, touchLayout } from "./config/input.ts"
@@ -81,11 +81,12 @@ const start = async (mount: HTMLElement) => {
   // A dev quick start (`?play`, below) plays the last played account, or a new one.
   const quickStart = new URLSearchParams(devQuery).has("play") || stressLoad !== undefined
   // The models load while the account is picked: they are most of the wait on a phone's network.
-  const looks = loadLooks()
+  const progress = signal(0)
+  const looks = loadLooks((share) => (progress.value = share))
   // Awaited below; a failure before then is reported there, not as unhandled.
   looks.catch(() => undefined)
   const accounts = openAccounts()
-  const picked = quickStart ? await devAccount(accounts) : await showAccounts(mount, accounts, holdAccount)
+  const picked = quickStart ? await devAccount(accounts) : await showAccounts(mount, accounts, holdAccount, progress)
   loaded = picked.loaded
   const shell = await startApp(picked.id, picked.name)
   const account = shell.account

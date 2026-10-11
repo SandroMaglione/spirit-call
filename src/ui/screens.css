@@ -458,4 +458,23 @@
 .accounts__new { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
 .accounts__new > .pill { min-width: 96px; justify-content: center; padding: 0 20px; }
 .accounts__problem { color: var(--red); font-size: 14px; font-weight: 700; }
-.accounts__loading { position: absolute; left: 50%; top: 50%; translate: -50% -50%; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: .04em; animation: fade .3s backwards; }
+
+/* The loading screen, after an account is picked (Loading.tsx). */
+.loading-sky__aura { position: absolute; left: 50%; top: 46%; width: 80%; height: 110%; translate: -50% -50%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 26%, transparent), color-mix(in srgb, var(--mid) 14%, transparent) 55%, transparent); opacity: 0; transition: opacity 1.2s ease; }
+.loading-sky__aura[data-on] { opacity: 1; }
+.loading { display: grid; place-content: center; justify-items: center; gap: 44px; animation: fade .4s backwards; }
+.loading__stones { display: flex; gap: 26px; }
+.loading__stone { position: relative; isolation: isolate; width: 52px; height: 52px; font-size: 52px; }
+.loading__stone > div { position: absolute; inset: 0; }
+.loading__dim { opacity: .28; filter: grayscale(1) brightness(.75); }
+.loading__lit { transition: clip-path .5s ease-out; filter: drop-shadow(0 0 0 transparent); }
+.loading__stone[data-filling] { animation: stone-bob 1.6s ease-in-out infinite; }
+.loading__stone[data-full] .loading__lit { animation: stone-lit .7s ease-out both; }
+.loading__stone::after { content: ""; position: absolute; left: 50%; top: 50%; width: 90px; height: 90px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--glow) 55%, transparent), transparent); opacity: 0; z-index: -1; }
+.loading__stone[data-full]::after { animation: stone-flash .9s ease-out; }
+.loading__tip { margin: 0; max-width: 460px; min-height: 2.6em; text-align: center; color: var(--dim); font-size: 15px; line-height: 1.35; animation: fade .6s backwards; }
+.loading__tip b { display: block; margin-bottom: 4px; color: var(--gold); font-size: 11px; letter-spacing: .24em; text-transform: uppercase; }
+.loading-out { transition: opacity .4s ease; opacity: 0; }
+@keyframes stone-bob { 50% { transform: translateY(-5px); } }
+@keyframes stone-lit { 0% { transform: scale(1); } 35% { transform: scale(1.18); filter: drop-shadow(0 0 10px var(--glow)) brightness(1.5); } 100% { transform: scale(1); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--glow) 70%, transparent)); } }
+@keyframes stone-flash { 0% { opacity: 0; transform: scale(.4); } 30% { opacity: 1; } 100% { opacity: 0; transform: scale(1.4); } }

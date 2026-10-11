@@ -124,8 +124,8 @@ export interface BrowserHost {
   destroy(): void
 }
 
-/** Every model the looks use: start it early (`loadLooks`), the menu waits on it. */
-export const loadLooks = () => loadModels(modelsInLooks())
+/** Every model the looks use: start it early (`loadLooks`), the menu waits on it. `onProgress` hears the share loaded. */
+export const loadLooks = (onProgress?: (share: number) => void) => loadModels(modelsInLooks(), onProgress)
 
 export const createBrowserHost = async (
   mount: HTMLElement,

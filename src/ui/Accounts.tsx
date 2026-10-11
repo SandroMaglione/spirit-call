@@ -2,15 +2,17 @@
  * The way in: the accounts on this device. Pick one to play, make a new
  * one (a name, no password), or delete one. It shows before the game
  * loads, over the backdrop, until an account is picked that no other tab
- * is playing; then it says the game is loading (the models take a while
- * on a phone's network) until the game is up.
+ * is playing; then the loading screen shows (the models take a while on
+ * a phone's network) until the game is up.
  */
 import { render } from "preact"
 import { useSignal } from "@preact/signals"
+import type { ReadonlySignal } from "@preact/signals"
 import { useEffect } from "preact/hooks"
 
 import { accountNameLimit } from "../account/account.ts"
 import { Confirm } from "./kit/Confirm.tsx"
+import { Loading } from "./Loading.tsx"
 import { RoundButton } from "./kit/controls.tsx"
 import { Panel, Row } from "./kit/panel.tsx"
 import { fitToScreen } from "./kit/scale.ts"
@@ -128,8 +130,8 @@ export interface Opened extends Picked {
   readonly loaded: () => void
 }
 
-/** Shows the accounts over `parent` until one is picked and playing it is held (`hold`), then a loading view until `loaded`. */
-export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id: string) => Promise<boolean>): Promise<Opened> =>
+/** Shows the accounts over `parent` until one is picked and playing it is held (`hold`), then the loading screen (`progress`, 0 to 1) until `loaded`. */
+export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id: string) => Promise<boolean>, progress: ReadonlySignal<number>): Promise<Opened> =>
   new Promise((resolve) => {
     const backdrop = document.createElement("div")
     backdrop.className = "ui-backdrop"
@@ -138,14 +140,21 @@ export const showAccounts = (parent: HTMLElement, accounts: Accounts, hold: (id:
     root.className = "ui"
     parent.append(backdrop, root)
     fitToScreen([backdrop, root])
+    // The loading screen fades out over the menu, once.
+    let closing = false
     const loaded = () => {
-      render(null, root)
+      if (closing) return
+      closing = true
       backdrop.remove()
-      root.remove()
+      root.classList.add("loading-out")
+      setTimeout(() => {
+        render(null, root)
+        root.remove()
+      }, 400)
     }
     render(<AccountPicker accounts={accounts} play={async (account) => {
       if (!(await hold(account.id))) return false
-      render(<div class="ui-screen"><p class="accounts__loading" role="status">Loading…</p></div>, root)
+      render(<Loading progress={progress} />, root)
       resolve({ id: account.id, name: account.name, loaded })
       return true
     }} />, root)
