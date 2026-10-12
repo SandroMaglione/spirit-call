@@ -3,8 +3,7 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.17.1",
-  "bevyTsRelease": "0.4.0",
-  "bevyTsSource": "4713b7ec05cd32bf22f71c227f221bddfb01643c",
+  "bevyTsRelease": "0.5.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
