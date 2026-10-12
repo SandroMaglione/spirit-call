@@ -1,5 +1,6 @@
 import { NodeRegistry } from "@typeonce/bevy-ts-render"
 import { DirectionalLight, Group, HemisphereLight, OrthographicCamera, Scene, WebGLRenderer } from "three"
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
 
 import { actionButtons, teamSlots } from "../config/input.ts"
 import type { ActionButton, PartyTaps } from "../config/input.ts"
@@ -20,7 +21,6 @@ import { arenaLooks, modelsInLooks } from "./looks.ts"
 import { disposeModel, loadModels } from "./models.ts"
 import type { ModelId, ModelSource } from "./models.ts"
 import type { ArenaId } from "../content/arena.ts"
-import type { Box } from "../physics/shapes.ts"
 import { floorLayers, trailOrder } from "./layers.ts"
 import { disposeNode, instancesOf } from "./nodes.ts"
 import { makeAssets } from "./render-assets.ts"
@@ -184,7 +184,7 @@ export const createBrowserHost = async (
   scene.add(grid.mesh)
   // The arena's floor and scenery: the courtyard's until a run stands in another (see `showArena`).
   let dressing: { readonly id: ArenaId; readonly dressing: Dressing } | null = null
-  const showArena = (id: ArenaId, holes: ReadonlyArray<Box>) => {
+  const showArena = (id: ArenaId, holes: ReadonlyArray<Box2>) => {
     if (dressing?.id === id) return
     dressing?.dressing.dispose()
     const look = arenaLooks[id]

@@ -102,7 +102,7 @@ How an enemy moves when it is not attacking (`features/behaviors.ts`):
   thrown from the circle.
 
 Enemies find their **way around walls**: with no clear line to the player,
-they follow a flow field over the arena (`physics/paths.ts`) instead of
+they follow a flow field over the arena (`FlowField` in `@typeonce/bevy-ts-math`) instead of
 pressing against the wall in between. Enemies that circle or keep their
 distance come around too while a wall hides the player, rather than holding
 their place around her through it. One still pressed against walls without

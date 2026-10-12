@@ -3,26 +3,25 @@
  * (a notch that traps a body or a shot), and no pool lies under a wall.
  */
 import { describe, expect, it } from "vitest"
+import { around, overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { ArenaId } from "../src/content/arena.ts"
 import { hazardBoxes, hazardWalls, propBoxes } from "../src/features/arena.ts"
-import type { Box } from "../src/physics/shapes.ts"
-import { boxAround } from "../src/physics/shapes.ts"
-import { circleOverlapsBox, sweepCircleBoxes } from "../src/physics/collide.ts"
 import { arenaLooks } from "../src/presentation/looks.ts"
 
 /** The widest body (an elite brute) passes with room to spare. */
 const passage = 80
 const { width, height, wallThickness: edge } = defaultTuning.arena
 
-const blockers = (id: ArenaId): Array<{ readonly name: string; readonly box: Box }> => {
+const blockers = (id: ArenaId): Array<{ readonly name: string; readonly box: Box2 }> => {
   const spec = defaultTuning.arenas[id]
   return [
-    ...spec.pillars.map((pillar, index) => ({ name: `pillar ${index + 1}`, box: boxAround(pillar.x * width, pillar.y * height, pillar.size / 2, pillar.size / 2) })),
+    ...spec.pillars.map((pillar, index) => ({ name: `pillar ${index + 1}`, box: around(pillar.x * width, pillar.y * height, pillar.size / 2, pillar.size / 2) })),
     ...spec.walls.map((wall, index) => ({
       name: `wall ${index + 1}`,
-      box: wall.along === "x" ? boxAround(wall.x * width, wall.y * height, wall.length / 2, 18) : boxAround(wall.x * width, wall.y * height, 18, wall.length / 2)
+      box: wall.along === "x" ? around(wall.x * width, wall.y * height, wall.length / 2, 18) : around(wall.x * width, wall.y * height, 18, wall.length / 2)
     })),
     ...hazardWalls(defaultTuning, id).map((box, index) => ({ name: `pool wall ${index + 1}`, box })),
     ...propBoxes(defaultTuning, id).map((box, index) => ({ name: `prop ${index + 1}`, box })),
@@ -34,7 +33,7 @@ const blockers = (id: ArenaId): Array<{ readonly name: string; readonly box: Box
 }
 
 /** The gap between two boxes (0 or less when they touch). */
-const gap = (a: Box, b: Box): number => {
+const gap = (a: Box2, b: Box2): number => {
   const x = Math.max(a.minX - b.maxX, b.minX - a.maxX)
   const y = Math.max(a.minY - b.maxY, b.minY - a.maxY)
   return x > 0 && y > 0 ? Math.hypot(x, y) : Math.max(x, y)
@@ -63,7 +62,7 @@ describe("arena layouts", () => {
       for (let row = 0; row < rows; row++) {
         for (let column = 0; column < columns; column++) {
           const point = { x: (column + .5) * step, y: (row + .5) * step }
-          if (!boxes.some((box) => circleOverlapsBox(point, passage / 2, box))) open.add(row * columns + column)
+          if (!boxes.some((box) => overlapsCircle(box, point, passage / 2))) open.add(row * columns + column)
         }
       }
       const start = Math.floor(rows / 2) * columns + Math.floor(columns / 2)

@@ -4,13 +4,13 @@
  * Bodies in a state (burning, soaked) are tinted toward its color.
  */
 import { Quaternion, Vector3 } from "three"
+import { lerp, normalizeOr } from "@typeonce/bevy-ts-math/Vec2"
 
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen, worldHeight } from "../math/iso.ts"
-import { lerp, normalizeOr } from "../math/vec.ts"
 import { attackOf, dashOf, traitsIn } from "../features/build.ts"
 import { Action, Aim, Airborne, Overcharged, Overdriven, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Turned, Velocity, BasicAttack } from "../schema.ts"
 import type { ActiveState } from "../schema.ts"

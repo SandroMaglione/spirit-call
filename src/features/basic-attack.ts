@@ -15,15 +15,14 @@
  * pipeline like everything else. A move's lunge
  * is an impulse on the player's knockback.
  */
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { sweepCircleBoxes, sweepCircleCircle } from "@typeonce/bevy-ts-math/Collide2"
+import { scale, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import { lob } from "../content/skills.ts"
 import type { AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
 import type { Shockwave } from "../content/classes.ts"
-import { scale } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import { sweepCircleBoxes, sweepCircleCircle } from "../physics/collide.ts"
-import type { Box } from "../physics/shapes.ts"
 import { Action, Aim, Airborne, Arrival,
   Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Overcharged, Overdriven, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
 import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
@@ -128,7 +127,7 @@ const lungeDistance = (
 }
 
 /** Where shots leave: in front, clamped so no wall or point-blank target is skipped. */
-const muzzleOf = (tuning: TuningValue, position: Vec2, aim: Vec2, radius: number, boxes: ReadonlyArray<Box>, targets: ReadonlyArray<{ readonly at: Vec2; readonly radius: number }>): Vec2 => {
+const muzzleOf = (tuning: TuningValue, position: Vec2, aim: Vec2, radius: number, boxes: ReadonlyArray<Box2>, targets: ReadonlyArray<{ readonly at: Vec2; readonly radius: number }>): Vec2 => {
   const reach = scale(aim, tuning.player.muzzleOffset)
   const blocked = sweepCircleBoxes(position, reach, radius, boxes)
   let until = blocked?.time ?? 1

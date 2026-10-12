@@ -3,10 +3,10 @@
  * shields, wards, armor, bursts about to go off, active hitboxes, lobbed skills,
  * whirls, totems, thrown discs, and spawn warnings.
  */
+import { lerp } from "@typeonce/bevy-ts-math/Vec2"
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
-import { lerp } from "../math/vec.ts"
 import { AttackPhase, Attacker, Barrier, Body, Burst, Projectile, Velocity, Disc, Elite, Enemy, Game, Ground, Hitbox, Lobbed, Marked, PendingSpawn, Poise, Position, PrevPosition, RenderClock, RenderHost, Rock, Shield, Totem, Tuning, Turned, Vortex, Ward } from "../schema.ts"
 import { aimLocked } from "../features/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"

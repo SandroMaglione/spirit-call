@@ -5,12 +5,11 @@
  * crowd's separation, standing still while attacking or stunned, sliding
  * with a strong push, a charge's run, and getting out of corners.
  */
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { normalizeOr, scale, zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import type { Behavior } from "../content/enemies.ts"
-import { normalizeOr, scale, zero } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import type { Box } from "../physics/shapes.ts"
 import type { AttackPhase, AttackRef, BrainValue, EnemyMode } from "../schema.ts"
 import { attackOf } from "./build.ts"
 
@@ -109,7 +108,7 @@ export const skirmishTurn = (
 
 /** A box a body keeps away from, and how close to it counts as pressing against it (see `unstickDirection`). */
 export interface Obstacle {
-  readonly box: Box
+  readonly box: Box2
   readonly reach: number
 }
 

@@ -1,3 +1,4 @@
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { ArenaId } from "../src/content/arena.ts"
 import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
@@ -19,7 +20,6 @@ import type { EnemyKind } from "../src/content/enemies.ts"
 import { attackOf, damageDealt, damageTaken } from "../src/features/build.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Aim, Dash, Enemy, Flow, Game, Invulnerable, Player, Position, RunScope, Velocity } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"

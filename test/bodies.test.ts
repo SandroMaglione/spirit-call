@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
+import { distance } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { bodyRules, bodyScore, dashScore } from "../src/content/characters.ts"
 import { dashOf } from "../src/features/build.ts"
 import { knockbackTaken } from "../src/features/motion.ts"
-import { distance } from "../src/math/vec.ts"
 import { Enemy, Game, Poise } from "../src/schema.ts"
 import { center, cursorAt, doubleTap, placeDummies, start } from "./helpers.ts"
 

@@ -4,14 +4,13 @@
  * (reactions, and motes off bodies in a state).
  */
 import { Group, Vector3 } from "three"
+import { lerp, normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { isMelee } from "../content/attacks.ts"
 import type { StateId } from "../content/elements.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen, toScreenAt } from "../math/iso.ts"
-import { lerp, normalizeOr } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { arenaOf } from "../features/arena.ts"
 import { Action, Body, Broke, Camera, Cast, Challenge, Death, PerfectDodged, ElementState, Enemy, Explosion, Game, Ground, Guard, Guarded, Heal, Hit, Impact, Knockback, Member, Player, Position, PrevPosition, Raising, Reaction, RenderClock, RenderHost, RenderNodes, Tuning, Zap } from "../schema.ts"
 import type { ReactionKind } from "../schema.ts"

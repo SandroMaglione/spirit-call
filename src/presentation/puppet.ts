@@ -8,8 +8,8 @@
 import { AnimationMixer, BackSide, Bone, Color, DoubleSide, FrontSide, LoopRepeat, Mesh, MeshBasicMaterial, MeshStandardMaterial, PropertyBinding, SkinnedMesh, Sprite } from "three"
 import type { AnimationAction, BufferGeometry, Material, Object3D, Quaternion, Skeleton, SpriteMaterial, Vector3 } from "three"
 import { clone } from "three/addons/utils/SkeletonUtils.js"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
-import type { Vec2 } from "../math/vec.ts"
 import { advanceLocomotion, freshLocomotion, oneShotPose, shotBlend } from "./animation.ts"
 import type { Locomotion, OneShot } from "./animation.ts"
 import { keepRim } from "./glow.ts"

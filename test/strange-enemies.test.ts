@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, blow, Burst, Damage, Enemy, Game, Health, Player, Position, PrevPosition, RunScope, Ward } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ClearEnemies, plainEnemies, start } from "./helpers.ts"

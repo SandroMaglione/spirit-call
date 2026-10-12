@@ -4,6 +4,7 @@
  * shockwave, a ring running out along the floor.
  */
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -13,7 +14,6 @@ import type { AttackSpec } from "../src/content/enemies.ts"
 import { validateContent } from "../src/content/validate.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { answering, movesetOf, readFrom } from "../src/features/moveset.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, Hitbox, PendingSpawn, Player, Poise, Position, Rampage, Roused, RunScope, Stunned } from "../src/schema.ts"
 import { center, ClearEnemies, cursorAt, start, steps } from "./helpers.ts"

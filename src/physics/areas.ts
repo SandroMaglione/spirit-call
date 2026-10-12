@@ -3,8 +3,7 @@
  * used for both, so what the player sees during a windup is exactly what
  * lands.
  */
-import { normalizeOr } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
+import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 export type Area =
   | { readonly kind: "circle"; readonly center: Vec2; readonly radius: number }

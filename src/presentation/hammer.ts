@@ -3,11 +3,10 @@
  * her and down onto where it lands, that spot marked on the floor while it
  * falls, and the blow coming down there in cracks, dust, and grit.
  */
+import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { projection, view } from "../config/view.ts"
 import type { MeleeMove } from "../content/attacks.ts"
 import { toScreen } from "../math/iso.ts"
-import { normalizeOr } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Action, Explosion, Game, RenderHost } from "../schema.ts"
 import type { Fx } from "./fx.ts"
 import type { FeedbackState } from "./host-types.ts"

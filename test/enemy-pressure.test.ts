@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -6,7 +7,6 @@ import type { AttackSpec } from "../src/content/enemies.ts"
 import { validateContent } from "../src/content/validate.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
 import { aimPoint } from "../src/features/moveset.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Attacker, AttackPhase, ElementState, Enemy, Game, Health, Player, RunScope, Stats, Velocity } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { center, ClearEnemies, start, steps } from "./helpers.ts"

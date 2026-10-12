@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.17.1",
-  "bevyTsRelease": "0.4.0",
+  "bevyTsRelease": "0.5.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -43,6 +43,7 @@
     "@preact/signals": "2.11.3",
     "@typeonce/bevy-ts": "link:../../bevy-ts/packages/core",
     "@typeonce/bevy-ts-browser": "link:../../bevy-ts/packages/browser",
+    "@typeonce/bevy-ts-math": "link:../../bevy-ts/packages/math",
     "@typeonce/bevy-ts-render": "link:../../bevy-ts/packages/render",
     "effect": "4.0.2",
     "preact": "11.0.1",

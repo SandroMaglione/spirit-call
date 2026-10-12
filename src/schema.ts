@@ -5,6 +5,8 @@
 import { Descriptor, Schema } from "@typeonce/bevy-ts"
 import type * as Entity from "@typeonce/bevy-ts/Entity"
 import type { NodeRegistry } from "@typeonce/bevy-ts-render"
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
@@ -22,9 +24,7 @@ import type { BarrierEffect, CompanionsEffect, MantleEffect, OverchargeEffect, O
 import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
-import type { Vec2 } from "./math/vec.ts"
 import type { Area } from "./physics/areas.ts"
-import type { Box } from "./physics/shapes.ts"
 import type { RenderHostValue, RenderNode } from "./presentation/host-types.ts"
 import type { SoundBoard } from "./presentation/sound.ts"
 
@@ -40,7 +40,7 @@ export const Velocity = Descriptor.Component<Vec2>()("Shooter/Velocity")
 /** Circle collider against walls. */
 export const Body = Descriptor.Component<{ readonly radius: number }>()("Shooter/Body")
 /** Static axis-aligned wall. */
-export const Wall = Descriptor.Component<Box>()("Shooter/Wall")
+export const Wall = Descriptor.Component<Box2>()("Shooter/Wall")
 /**
  * A low wall (see `content/arena.ts`), not a pillar, a prop, or the arena's
  * edge: a hop through the air carries her over it (see `Airborne`).
@@ -804,7 +804,7 @@ export type RenderableValue =
   | { readonly kind: "enemy"; readonly enemy: EnemyKind; readonly radius: number; readonly elite?: EliteElement; readonly champion?: true }
   | { readonly kind: "projectile"; readonly faction: Faction; readonly style: ProjectileStyle; readonly radius: number; readonly element: ElementId | null }
   /** A wall of the arena; `prop`, when it is one of the arena's props (its place among them: see `content/arena.ts`). */
-  | { readonly kind: "wall"; readonly box: Box; readonly placement: WallPlacement; readonly arena: ArenaId; readonly prop?: number }
+  | { readonly kind: "wall"; readonly box: Box2; readonly placement: WallPlacement; readonly arena: ArenaId; readonly prop?: number }
   | { readonly kind: "totem"; readonly element: ElementId | null }
   /** A skill's companion (see `CompanionsEffect`): an echo of `character`, its body `radius`. */
   | { readonly kind: "companion"; readonly character: CharacterId; readonly radius: number }

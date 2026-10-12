@@ -5,6 +5,7 @@
  * first levels breathe.
  */
 import { describe, expect, it } from "vitest"
+import * as Random from "@typeonce/bevy-ts-math/Random"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -13,7 +14,6 @@ import type { WavePlan } from "../src/content/challenges.ts"
 import { levelGap } from "../src/features/build.ts"
 import { windupOf } from "../src/features/enemies.ts"
 import { composeWave } from "../src/features/waves.ts"
-import { Random } from "../src/math/rng.ts"
 import { Enemy, Game, PendingSpawn } from "../src/schema.ts"
 import { start } from "./helpers.ts"
 
@@ -97,15 +97,15 @@ describe("endless waves", () => {
   const cost = (wave: ReturnType<typeof composeWave>) => wave.reduce((sum, entry) => sum + defaultTuning.enemies[typeof entry === "string" ? entry : entry.kind].cost, 0)
 
   it("grow stronger, not bigger: past its budget's ceiling a wave stops growing", () => {
-    expect(cost(composeWave(defaultTuning, plan(null), 3, new Random(1)))).toBeLessThanOrEqual(10)
-    expect(cost(composeWave(defaultTuning, plan(null), 40, new Random(1)))).toBeLessThanOrEqual(12)
+    expect(cost(composeWave(defaultTuning, plan(null), 3, Random.make(1)))).toBeLessThanOrEqual(10)
+    expect(cost(composeWave(defaultTuning, plan(null), 40, Random.make(1)))).toBeLessThanOrEqual(12)
   })
 
   it("bring a champion every few waves, of a kind that fights as a boss, unless one still stands", () => {
-    const fifth = composeWave(defaultTuning, plan(5), 5, new Random(1))
+    const fifth = composeWave(defaultTuning, plan(5), 5, Random.make(1))
     const leader = fifth.find((entry) => typeof entry !== "string" && entry.champion === true)
     expect(leader).toMatchObject({ elite: "fire", champion: true })
-    expect(composeWave(defaultTuning, plan(5), 4, new Random(1)).some((entry) => typeof entry !== "string" && entry.champion === true)).toBe(false)
-    expect(composeWave(defaultTuning, plan(5), 5, new Random(1), true).some((entry) => typeof entry !== "string" && entry.champion === true)).toBe(false)
+    expect(composeWave(defaultTuning, plan(5), 4, Random.make(1)).some((entry) => typeof entry !== "string" && entry.champion === true)).toBe(false)
+    expect(composeWave(defaultTuning, plan(5), 5, Random.make(1), true).some((entry) => typeof entry !== "string" && entry.champion === true)).toBe(false)
   })
 })

@@ -6,9 +6,9 @@
  */
 import type { EntityId, Handle } from "@typeonce/bevy-ts/Entity"
 import type { Query } from "@typeonce/bevy-ts/Query"
+import { sweepCircleCircle } from "@typeonce/bevy-ts-math/Collide2"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
-import type { Vec2 } from "../math/vec.ts"
-import { sweepCircleCircle } from "../physics/collide.ts"
 import { Dash, Game, Health, Hurtbox, Invulnerable, Position, Shield } from "../schema.ts"
 import type { Faction, Root } from "../schema.ts"
 

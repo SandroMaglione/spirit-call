@@ -7,13 +7,14 @@
  * the element it applies (see `features/elements.ts`).
  */
 import type { ReadCell, WriteCell } from "@typeonce/bevy-ts/Query"
+import { overlapsCircle } from "@typeonce/bevy-ts-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import * as SpatialGrid from "@typeonce/bevy-ts-math/SpatialGrid"
 import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { normalizeOr, scale, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import { circleOverlapsBox, sweepCircleBoxes } from "../physics/collide.ts"
-import { SpatialGrid } from "../physics/grid.ts"
+import { positive } from "../physics/sizes.ts"
 import {
   Arc,
   Barrier,
@@ -98,7 +99,7 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
  * contacts win, so nothing fast can pass through what it should hit.
  */
 export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
-    local: () => ({ grid: new SpatialGrid(96), targets: new Array<Target>(), nearby: new Array<Target>() }),
+    local: () => ({ grid: SpatialGrid.make(positive(96)), targets: new Array<Target>(), nearby: new Array<Target>() }),
     queries: {
       projectiles: Game.Query({
         selection: { position: Game.Query.write(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.write(Projectile) }
@@ -148,7 +149,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       const r = projectile.radius
 
       // Earliest wall contact along the path (or right away if it starts inside one).
-      const inWall = boxes.some((box) => circleOverlapsBox(origin, r, box))
+      const inWall = boxes.some((box) => overlapsCircle(box, origin, r))
       const wall = inWall ? { time: 0 } : sweepCircleBoxes(origin, delta, r, boxes)
 
       nearby.length = 0
@@ -208,7 +209,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
           }
           if (next !== undefined) {
             const jump = { ...projectile.blow, damage: projectile.blow.damage * chain.share, chain: null, hitStop: 0 }
-            events.damage.emit({ target: Game.Entity.handle(next.entity, Health), faction: projectile.faction, direction: normalizeOr(sub(next.at, contact.target.at), direction), blow: jump })
+            events.damage.emit({ target: Game.Entity.handle(next.entity, Health), faction: projectile.faction, direction: normalizeOr(subtract(next.at, contact.target.at), direction), blow: jump })
             events.zap.emit({ path: [contact.at, next.at], heal: false })
           }
         }

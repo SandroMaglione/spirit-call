@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { chainFrom } from "../src/features/thunder.ts"
 import type { Struck } from "../src/features/thunder.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { ElementState, Enemy, Energy, Game, Health, Member, Player, Position, Stats, Totem } from "../src/schema.ts"
 import { center, cursorAt, placeDummies, start, steps, hitBy } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"

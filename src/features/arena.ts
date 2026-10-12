@@ -3,14 +3,13 @@
  * boundary walls, pillars, low walls, and hazards, spawned with each run (so
  * a run of another challenge stands in another arena).
  */
+import { around, type Box2 } from "@typeonce/bevy-ts-math/Box2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { ArenaId } from "../content/arena.ts"
-import type { Box } from "../physics/shapes.ts"
-import { boxAround } from "../physics/shapes.ts"
 import { Challenge, Game, Ground, LowWall, Position, Renderable, RunScope, Tuning, Wall } from "../schema.ts"
 import type { WallPlacement } from "../schema.ts"
 
-const makeWall = (box: Box, placement: WallPlacement, arena: ArenaId, prop?: number) =>
+const makeWall = (box: Box2, placement: WallPlacement, arena: ArenaId, prop?: number) =>
   Game.Command.spawn(
     [Wall, box],
     [Position, { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }],
@@ -18,7 +17,7 @@ const makeWall = (box: Box, placement: WallPlacement, arena: ArenaId, prop?: num
   )
 
 /** A low wall: one a hop carries her over (see `LowWall`). */
-const makeLowWall = (box: Box, arena: ArenaId) =>
+const makeLowWall = (box: Box2, arena: ArenaId) =>
   Game.Command.spawn(
     [Wall, box],
     [LowWall, {}],
@@ -30,7 +29,7 @@ const makeLowWall = (box: Box, arena: ArenaId) =>
 const wallThickness = 36
 
 /** The arena's hazards as boxes on the floor (whole tiles; see `content/arena.ts`). */
-export const hazardBoxes = (tuning: TuningValue, id: ArenaId): ReadonlyArray<{ readonly element: "fire" | "water"; readonly box: Box }> => {
+export const hazardBoxes = (tuning: TuningValue, id: ArenaId): ReadonlyArray<{ readonly element: "fire" | "water"; readonly box: Box2 }> => {
   const { width, height, cells } = tuning.arena
   const cellX = width / cells
   const cellY = height / cells
@@ -45,7 +44,7 @@ export const hazardBoxes = (tuning: TuningValue, id: ArenaId): ReadonlyArray<{ r
  * just outside the pool: one across its north or south edge, one down its
  * west or east edge, meeting at their corner.
  */
-export const hazardWalls = (tuning: TuningValue, id: ArenaId): ReadonlyArray<Box> => {
+export const hazardWalls = (tuning: TuningValue, id: ArenaId): ReadonlyArray<Box2> => {
   const boxes = hazardBoxes(tuning, id)
   return tuning.arenas[id].hazards.flatMap((hazard, index) => {
     const { box } = boxes[index]!
@@ -62,7 +61,7 @@ export const hazardWalls = (tuning: TuningValue, id: ArenaId): ReadonlyArray<Box
 }
 
 /** The arena's props as boxes on the floor (see `PropSpec`), on whole units so one flush against a wall touches it exactly. */
-export const propBoxes = (tuning: TuningValue, id: ArenaId): ReadonlyArray<Box> =>
+export const propBoxes = (tuning: TuningValue, id: ArenaId): ReadonlyArray<Box2> =>
   (tuning.arenas[id].props ?? []).map((prop) => ({
     minX: Math.round(prop.x - prop.width / 2),
     minY: Math.round(prop.y - prop.depth / 2),
@@ -87,13 +86,13 @@ export const SpawnArena = Game.System("Shooter/SpawnArena", {
   commands.spawnIn(RunScope, makeWall({ minX: -t, minY: height, maxX: width + t, maxY: height + t }, "front", id))
   commands.spawnIn(RunScope, makeWall({ minX: width, minY: 0, maxX: width + t, maxY: height }, "front", id))
   for (const pillar of spec.pillars) {
-    commands.spawnIn(RunScope, makeWall(boxAround(pillar.x * width, pillar.y * height, pillar.size / 2, pillar.size / 2), "sorted", id))
+    commands.spawnIn(RunScope, makeWall(around(pillar.x * width, pillar.y * height, pillar.size / 2, pillar.size / 2), "sorted", id))
   }
   for (const wall of spec.walls) {
     const half = wall.length / 2
     const box = wall.along === "x"
-      ? boxAround(wall.x * width, wall.y * height, half, wallThickness / 2)
-      : boxAround(wall.x * width, wall.y * height, wallThickness / 2, half)
+      ? around(wall.x * width, wall.y * height, half, wallThickness / 2)
+      : around(wall.x * width, wall.y * height, wallThickness / 2, half)
     commands.spawnIn(RunScope, makeLowWall(box, id))
   }
   for (const box of hazardWalls(tuning, id)) commands.spawnIn(RunScope, makeLowWall(box, id))

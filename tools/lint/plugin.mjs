@@ -24,7 +24,7 @@ const layers = [
     name: "simulation",
     paths: ["src/features/", "src/physics/", "src/math/", "src/config/", "src/schema.ts", "src/schedules.ts", "src/simulation.ts", "src/runtime.ts"],
     parts: ["content", "simulation"],
-    packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-browser"]
+    packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-browser", "@typeonce/bevy-ts-math"]
   },
   // The account's rules are pure (no Effect), so the UI can use them; storing the account (and a playtest build's sending) is the Effect side.
   { name: "account rules", paths: ["src/account/account.ts", "src/account/calls.ts", "src/account/progression.ts", "src/account/convert.ts"], parts: ["content", "simulation", "account rules"], packages: [] },
@@ -38,9 +38,9 @@ const layers = [
     name: "presentation",
     paths: ["src/presentation/"],
     parts: ["content", "simulation", "presentation", "ui", "dev"],
-    packages: ["three", "@typeonce/bevy-ts", "@typeonce/bevy-ts-render", "@typeonce/bevy-ts-browser"]
+    packages: ["three", "@typeonce/bevy-ts", "@typeonce/bevy-ts-render", "@typeonce/bevy-ts-browser", "@typeonce/bevy-ts-math"]
   },
-  { name: "dev", paths: ["src/dev/"], parts: ["content", "simulation", "dev"], packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-devtools", "@typeonce/bevy-ts-render"] },
+  { name: "dev", paths: ["src/dev/"], parts: ["content", "simulation", "dev"], packages: ["@typeonce/bevy-ts", "@typeonce/bevy-ts-devtools", "@typeonce/bevy-ts-render", "@typeonce/bevy-ts-math"] },
   { name: "entry", paths: ["src/main.ts"], parts: "*", packages: "*" }
 ]
 

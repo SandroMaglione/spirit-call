@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest"
+import { length, normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { AttackMove } from "../src/content/attacks.ts"
 import type { CharacterId } from "../src/content/characters.ts"
 import { damageDealt, damageTaken, resolveBuild } from "../src/features/build.ts"
-import { length, normalizeOr } from "../src/math/vec.ts"
-import type { Vec2 } from "../src/math/vec.ts"
 import { Aim, Facing, Game, Player, Velocity } from "../src/schema.ts"
 import { cursorAt, start, steps, plainAttack } from "./helpers.ts"
 

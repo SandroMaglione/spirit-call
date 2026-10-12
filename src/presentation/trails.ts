@@ -9,11 +9,11 @@
  * (see `createBrowserHost`). Trails follow the player, so a
  * lunge carries its slash along.
  */
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { Shapes } from "./shapes.ts"
 
 import type { MeleeMove } from "../content/attacks.ts"
 import { view } from "../config/view.ts"
-import type { Vec2 } from "../math/vec.ts"
 
 interface Trail {
   readonly move: MeleeMove

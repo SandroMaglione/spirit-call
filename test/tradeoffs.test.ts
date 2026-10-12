@@ -5,6 +5,7 @@
  * on her hurt more, and a second wind keeps her standing once a run.
  */
 import { describe, expect, it } from "vitest"
+import { distance } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -14,7 +15,6 @@ import type { RelicId } from "../src/content/relics.ts"
 import { relicWorth, validateContent } from "../src/content/validate.ts"
 import { dashOf } from "../src/features/build.ts"
 import { damageBonusPercent } from "../src/features/passives.ts"
-import { distance } from "../src/math/vec.ts"
 import { blow, Damage, Game, Health, Player } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
 import { center, doubleTap, start, testRelic, withRelic } from "./helpers.ts"

@@ -4,16 +4,13 @@
  * over its whirl, to glide down where she steers.
  */
 import { describe, expect, it } from "vitest"
+import { around, overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { hopLanding } from "../src/features/motion.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
-import { normalizeOr } from "../src/math/vec.ts"
-import type { Vec2 } from "../src/math/vec.ts"
-import { circleOverlapsBox } from "../src/physics/collide.ts"
-import { boxAround } from "../src/physics/shapes.ts"
-import type { Box } from "../src/physics/shapes.ts"
 import { Airborne, Energy, Game, LowWall, Player, Position, RunScope, Vortex, Wall } from "../src/schema.ts"
 import { center, cursorAt, start, steps } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
@@ -33,7 +30,7 @@ const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Quer
 })
 
 /** A wall standing at `box`, low (a hop goes over it) or tall. */
-const placeWall = (box: Box, low: boolean) =>
+const placeWall = (box: Box2, low: boolean) =>
   Game.Schedule(Game.System("Test/PlaceWall", {}, ({ commands }) => {
     commands.spawnIn(RunScope, low ? Game.Command.spawn([Wall, box], [LowWall, {}]) : Game.Command.spawn([Wall, box]))
   }), Game.Schedule.applyDeferred())
@@ -54,26 +51,26 @@ describe("where a hop lands", () => {
 
   it("lands its full reach on open floor, and over a low wall on the way", () => {
     expect(hopLanding(from, east, 160, 16, [], [])).toEqual({ x: 159.99, y: 0 })
-    const landed = hopLanding(from, east, 160, 16, [], [boxAround(80, 0, 18, 100)])
+    const landed = hopLanding(from, east, 160, 16, [], [around(80, 0, 18, 100)])
     expect(landed.x).toBeCloseTo(160, 1)
   })
 
   it("comes down beyond a low wall it would land on, clear of it", () => {
-    const wall = boxAround(155, 0, 18, 100)
+    const wall = around(155, 0, 18, 100)
     const landed = hopLanding(from, east, 160, 16, [], [wall])
     expect(landed.x).toBeGreaterThan(wall.maxX + 16)
     expect(landed.x).toBeLessThan(wall.maxX + 16 + 2)
-    expect(circleOverlapsBox(landed, 16, wall)).toBe(false)
+    expect(overlapsCircle(wall, landed, 16)).toBe(false)
   })
 
   it("never goes past a tall wall (a pillar, or the arena's edge)", () => {
-    const landed = hopLanding(from, east, 160, 16, [boxAround(120, 0, 18, 100)], [])
+    const landed = hopLanding(from, east, 160, 16, [around(120, 0, 18, 100)], [])
     expect(landed.x).toBeCloseTo(120 - 18 - 16, 1)
   })
 
   it("lands short of a low wall with a tall one right behind it", () => {
-    const low = boxAround(150, 0, 18, 100)
-    const landed = hopLanding(from, east, 160, 16, [boxAround(190, 0, 18, 100)], [low])
+    const low = around(150, 0, 18, 100)
+    const landed = hopLanding(from, east, 160, 16, [around(190, 0, 18, 100)], [low])
     expect(landed.x).toBeCloseTo(150 - 18 - 16, 1)
   })
 })
@@ -83,7 +80,7 @@ describe("the Gust over walls", () => {
   if (gust.kind !== "plunge") throw new Error("the Gust is a plunge")
   const faceRightThenGust = [{ frame: 0, press: ["right" as const] }, { frame: 3, release: ["right" as const] }, { frame: 8, press: ["special" as const], release: ["special" as const] }]
   /** A wall across her way, `distance` ahead of where she stands at `from`. */
-  const across = (from: Vec2, distance: number): Box => boxAround(from.x + right.x * distance, from.y + right.y * distance, 18, 140)
+  const across = (from: Vec2, distance: number): Box2 => around(from.x + right.x * distance, from.y + right.y * distance, 18, 140)
 
   it("hops over a low wall she would land on, onto its far side", () => {
     const run = field({ keys: faceRightThenGust })
@@ -96,7 +93,7 @@ describe("the Gust over walls", () => {
     expect(airborne).toBe(false)
     expect(ahead(from, at)).toBeGreaterThan(gust.distance)
     expect(at.x).toBeGreaterThan(wall.maxX)
-    expect(circleOverlapsBox(at, radius, wall)).toBe(false)
+    expect(overlapsCircle(wall, at, radius)).toBe(false)
   })
 
   it("stops at a tall wall in her way", () => {

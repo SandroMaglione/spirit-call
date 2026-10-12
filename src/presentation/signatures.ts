@@ -46,13 +46,12 @@
  * Skills in `ownLook` are not drawn by the shared looks too (see
  * `presentation/effects.ts`).
  */
+import { lerp, normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { projection, view } from "../config/view.ts"
 import { isMelee } from "../content/attacks.ts"
 import type { CompanionsEffect, CutEffect, EmberRingEffect, SkillId } from "../content/skills.ts"
 import { companionStart } from "../features/companions.ts"
 import { toScreen } from "../math/iso.ts"
-import { lerp, normalizeOr, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Action, Barrier, Cast, Companion, Dome, Pyre, Hit, Overcharged, Overdriven, Explosion, Game, RenderNodes, Player, Position, Turned, PrevPosition, RenderClock, RenderHost, Tuning, UltimateCalled, Zap } from "../schema.ts"
 import type { CastValue } from "../schema.ts"
 import type { Fx } from "./fx.ts"
@@ -894,7 +893,7 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
     if (zap.skill === "stormFlurry" && zap.path.length >= 2) {
       const [from, to] = [zap.path[0]!, zap.path.at(-1)!]
       const effect = tuning.skills.stormFlurry.effect
-      sparkTear(fx, feedback, from, normalizeOr(sub(to, from), { x: 1, y: 0 }), Math.hypot(to.x - from.x, to.y - from.y), effect.kind === "overcharge" ? effect.dashStrike.width : 70)
+      sparkTear(fx, feedback, from, normalizeOr(subtract(to, from), { x: 1, y: 0 }), Math.hypot(to.x - from.x, to.y - from.y), effect.kind === "overcharge" ? effect.dashStrike.width : 70)
     }
   }
   // Overcharged (her body glows, see `DrawPlayer`): lightning thrown out with each blow.

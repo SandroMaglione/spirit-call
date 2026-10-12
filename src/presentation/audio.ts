@@ -2,11 +2,11 @@
  * Sounds for what happened since the last frame, panned by where it happened
  * on screen.
  */
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import type { AttackMove } from "../content/attacks.ts"
 import type { SkillEffect } from "../content/skills.ts"
 import { projection, viewZoom } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Action, Broke, Camera, PerfectDodged, Cast, Death, Explosion, Game, Hit, Impact, Reaction, RenderHost, Sounds, Zap } from "../schema.ts"
 import type { StateId } from "../content/elements.ts"
 import type { ReactionKind } from "../schema.ts"

@@ -7,9 +7,8 @@
  * on reaching them. Hits go through the combat pipeline (`Damage`) like
  * every other blow, tested like shots (see `features/targets.ts`).
  */
-import { normalizeOr, scale, sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import { sweepCircleBoxes } from "../physics/collide.ts"
+import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { Damage, Disc, ElementState, Game, Health, Impact, Position, PrevPosition, Renderable, Time, Tuning } from "../schema.ts"
 import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -87,7 +86,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         const blocked = sweep(delta, until, disc.direction)
         if (bounce !== undefined) {
           // Off the enemy toward the next, with the way there (and a little more) to fly.
-          const toward = sub(bounce.toward, bounce.at)
+          const toward = subtract(bounce.toward, bounce.at)
           data.position.set(bounce.at)
           disc = { ...disc, direction: normalizeOr(toward, disc.direction), range: Math.hypot(toward.x, toward.y) + disc.radius * 2, bounces: disc.bounces - 1, hit }
           break
@@ -113,7 +112,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
           for (const contact of sweepTargets(origin, { x: 0, y: 0 }, disc.radius, targets, disc.faction, [])) {
             if (shieldBlocks(contact.target, origin)) continue
             ticked.push(contact.target.id)
-            const push = normalizeOr(sub(contact.target.at, origin), disc.direction)
+            const push = normalizeOr(subtract(contact.target.at, origin), disc.direction)
             events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: disc.faction, direction: push, blow: grind })
           }
           nextTick += disc.hoverTick
@@ -130,7 +129,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
           continue
         }
         const home = thrower.value.data.position.get()
-        const toward = sub(home, origin)
+        const toward = subtract(home, origin)
         const distance = Math.hypot(toward.x, toward.y)
         const travel = disc.speed * dt
         // Caught: it reaches the thrower this step.

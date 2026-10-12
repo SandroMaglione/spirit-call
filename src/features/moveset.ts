@@ -4,18 +4,17 @@
  * kind has one (see `content/champions.ts`), and what the player is doing
  * that its attacks answer (see `Read`).
  */
+import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
+import { subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type * as Random from "@typeonce/bevy-ts-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { AttackSpec, Behavior, Read } from "../content/enemies.ts"
-import type { Random } from "../math/rng.ts"
-import { sub } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import { sweepCircleBoxes } from "../physics/collide.ts"
-import type { Box } from "../physics/shapes.ts"
 import type { AttackerValue, EnemyKind } from "../schema.ts"
 
 /** Whether a circle of `radius` gets from `from` to `to` without touching a wall. */
-export const hasLineOfSight = (from: Vec2, to: Vec2, radius: number, boxes: ReadonlyArray<Box>): boolean =>
-  sweepCircleBoxes(from, sub(to, from), radius, boxes) === undefined
+export const hasLineOfSight = (from: Vec2, to: Vec2, radius: number, boxes: ReadonlyArray<Box2>): boolean =>
+  sweepCircleBoxes(from, subtract(to, from), radius, boxes) === undefined
 
 /** Radius used for the line-of-sight check before starting an attack, or undefined when none is needed. */
 const sightRadius = (spec: AttackSpec): number | undefined =>
@@ -49,7 +48,7 @@ export type Reading = Readonly<Record<Read, boolean>>
  * attacker is `alone` (too little support around it) or `pressed` (struck
  * again and again lately).
  */
-export const readFrom = (origin: Vec2, target: Moving, speed: number, boxes: ReadonlyArray<Box>, open: boolean, alone = false, pressed = false): Reading => {
+export const readFrom = (origin: Vec2, target: Moving, speed: number, boxes: ReadonlyArray<Box2>, open: boolean, alone = false, pressed = false): Reading => {
   const dx = target.at.x - origin.x, dy = target.at.y - origin.y
   const distance = Math.hypot(dx, dy)
   const outward = distance < 1e-6 ? 0 : (target.velocity.x * dx + target.velocity.y * dy) / distance
@@ -77,7 +76,7 @@ export const answering = (attacks: ReadonlyArray<AttackSpec>, usable: ReadonlyAr
 }
 
 /** Whether `spec` can start from `origin` at `target`: the target within its range and, for shots and lanes, in sight. */
-export const canStart = (spec: AttackSpec, origin: Vec2, target: Vec2, boxes: ReadonlyArray<Box>): boolean => {
+export const canStart = (spec: AttackSpec, origin: Vec2, target: Vec2, boxes: ReadonlyArray<Box2>): boolean => {
   const distance = Math.hypot(target.x - origin.x, target.y - origin.y)
   if (distance > spec.triggerRange || distance < spec.minRange) return false
   const sight = sightRadius(spec)
@@ -85,7 +84,7 @@ export const canStart = (spec: AttackSpec, origin: Vec2, target: Vec2, boxes: Re
 }
 
 /** One of the attacks (indices into `attacks`) at random by weight; no draw when there is a single one. */
-export const pickAttack = (attacks: ReadonlyArray<AttackSpec>, choices: ReadonlyArray<number>, random: Random): number | undefined => {
+export const pickAttack = (attacks: ReadonlyArray<AttackSpec>, choices: ReadonlyArray<number>, random: Random.Random): number | undefined => {
   if (choices.length <= 1) return choices[0]
   const total = choices.reduce((sum, index) => sum + attacks[index]!.weight, 0)
   let roll = random.next() * total

@@ -116,6 +116,9 @@ keeps them, and releasing).
 - Simulation (`src/features/`, `src/schema.ts`, `src/schedules.ts`, physics,
   math, config): the ECS. Deterministic (time and randomness come from the
   world's `Time` and `Rng`), headless, and tested without a browser.
+  Vectors, swept collision, the spatial grid, the flow field, and random
+  numbers come from `@typeonce/bevy-ts-math` (`Vec2`, `Box2`, `Collide2`,
+  `SpatialGrid`, `FlowField`, `Random`).
 - `src/presentation/`: rendering (Three.js), sounds, effects, and the in-arena
   HUD (plain DOM). The world is 3D (low-poly), seen by an orthographic
   camera whose view of the floor is exactly `src/math/iso.ts`'s projection

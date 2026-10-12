@@ -9,12 +9,11 @@
  * her feet as its splinters fly.
  */
 import { Vector3 } from "three"
+import { lerp, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
-import { lerp } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Cast, Explosion, Game, Lobbed, Player, Position, PrevPosition, RenderClock, RenderHost, Splintering } from "../schema.ts"
 import type { Shapes } from "./shapes.ts"
 

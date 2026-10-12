@@ -3,12 +3,13 @@
  * `PendingSpawn` first, whose warning marker is visible on the floor, so
  * nothing appears on top of the player unannounced.
  */
+import { clampLength, length, moveToward, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import * as FlowField from "@typeonce/bevy-ts-math/FlowField"
+import * as Scalar from "@typeonce/bevy-ts-math/Scalar"
+import * as SpatialGrid from "@typeonce/bevy-ts-math/SpatialGrid"
 import { trainingDummies } from "../content/arena.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { clampLength, length, moveToward, normalizeOr, scale, sub, zero } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
-import { SpatialGrid } from "../physics/grid.ts"
-import { FlowField } from "../physics/paths.ts"
+import { positive } from "../physics/sizes.ts"
 import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
 import { behaviorOf, currentAttack, hasLineOfSight } from "./moveset.ts"
@@ -241,7 +242,7 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
  * progress: attacks are commitments.
  */
 export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
-    local: () => ({ grid: new SpatialGrid(64), bodies: new Array<{ x: number; y: number; r: number; id: number }>(), paths: new FlowField(30) }),
+    local: () => ({ grid: SpatialGrid.make(positive(64)), bodies: new Array<{ x: number; y: number; r: number; id: number }>(), paths: FlowField.make(positive(30)) }),
     queries: {
       enemies: Game.Query({
         selection: {
@@ -290,7 +291,9 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       ? [{ minX: pool.center.x - pool.half.x, minY: pool.center.y - pool.half.y, maxX: pool.center.x + pool.half.x, maxY: pool.center.y + pool.half.y }]
       : []))
     const avoided = laid.length === 0 ? boxes : [...boxes, ...laid]
-    if (paths.cellSize !== tuning.paths.cellSize) local.paths = paths = new FlowField(tuning.paths.cellSize)
+    // A cell size being edited live may pass through zero: keep the field until it is positive again.
+    const cellSize = Scalar.Positive.option(tuning.paths.cellSize)
+    if (cellSize !== null && paths.cellSize !== cellSize) local.paths = paths = FlowField.make(cellSize)
     paths.setWalls(avoided, tuning.paths.clearance)
     if (target !== undefined) paths.setGoal(target)
 
@@ -398,13 +401,13 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       }
       let desired: Vec2 = zero
       if (chase !== undefined) {
-        const toward = normalizeOr(sub(chase.at, position), zero)
+        const toward = normalizeOr(subtract(chase.at, position), zero)
         // Straight at her when nothing is in between; around the walls (and the arena's hazards) otherwise (the
         // paths lead to her: one going for a turned enemy heads straight for it).
         const way = hasLineOfSight(position, chase.at, radius, avoided) || !chase.her ? toward : (paths.way(position) ?? toward)
         // Seeing her over the arena's pools counts (shots fly over them); only walls hide her.
         const sight = way === toward || hasLineOfSight(position, chase.at, radius, boxes)
-        const distance = length(sub(chase.at, position))
+        const distance = length(subtract(chase.at, position))
         const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, sight, distance, speed, dt })
         // Under her threat, a skirmisher whose turn it is keeps just out of her reach, circling, until it runs out of patience.
         const wary = behavior.kind === "skirmish" && mode === "engage" && read !== undefined && read.threatens(position) && data.brain.get().modeTimer < tuning.reading.patience
@@ -441,7 +444,7 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
             stuck = 0
           } else if ((stuck += dt) >= rules.after) {
             // Pressed against walls for a while: stuck if it got barely anywhere of the way it wanted to go.
-            if (length(sub(position, pressedAt)) < wants * pace * rules.after * rules.progress) {
+            if (length(subtract(position, pressedAt)) < wants * pace * rules.after * rules.progress) {
               unstick = { direction: out, remaining: rules.seconds }
               goal = scale(out, speed)
             }

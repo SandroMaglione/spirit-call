@@ -2,12 +2,11 @@
  * Aim cues: the attack area, the touch assist pick, skill aiming previews,
  * the power attack charge, and the mouse reticle.
  */
+import { lerp, normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { isMelee } from "../content/attacks.ts"
 import { skillSlots } from "../content/skills.ts"
 import type { SkillEffect } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
-import { lerp, normalizeOr } from "../math/vec.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { attackOf } from "../features/build.ts"
 import { Aim, Controls, Enemy, Game, Hurtbox, Player, Position, PrevPosition, RenderClock, RenderHost, Skills, Tuning, BasicAttack } from "../schema.ts"
 import { barrageTargets, lobTarget } from "../features/skills.ts"

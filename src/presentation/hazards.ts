@@ -10,9 +10,9 @@
  */
 import { CircleGeometry, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from "three"
 import type { BufferGeometry, Material } from "three"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { view } from "../config/view.ts"
-import type { Vec2 } from "../math/vec.ts"
 import { Game, Ground, RenderNodes } from "../schema.ts"
 import type { HazardNode } from "./host-types.ts"
 import type { PoolLook, PoolTones } from "./looks.ts"

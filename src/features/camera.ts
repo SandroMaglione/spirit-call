@@ -1,4 +1,4 @@
-import { add, clampLength, scale, sub, zero } from "../math/vec.ts"
+import { add, clampLength, scale, subtract, zero } from "@typeonce/bevy-ts-math/Vec2"
 import { Camera, Controls, Game, Player, Position, Time, Tuning } from "../schema.ts"
 
 /**
@@ -21,7 +21,7 @@ export const FollowCamera = Game.System("Shooter/FollowCamera", {
   const position = player.value.data.position.get()
   const controls = resources.controls.get()
   // Mouse: lead a little toward the cursor. Touch: stay centered on the player.
-  const lead = controls.device === "touch" ? zero : clampLength(scale(sub(controls.aimPoint, position), tuning.aimLead), tuning.maxAimLead)
+  const lead = controls.device === "touch" ? zero : clampLength(scale(subtract(controls.aimPoint, position), tuning.aimLead), tuning.maxAimLead)
   const target = add(position, lead)
   const camera = resources.camera.get()
   const follow = 1 - Math.exp(-tuning.followRate * resources.time.get().dt)

@@ -18,12 +18,12 @@
  * next member, her special 30 steps later and her ultimate 70 steps later.
  */
 import type { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
+import * as Random from "@typeonce/bevy-ts-math/Random"
 
 import type { KeyBindings } from "../config/input.ts"
 import { tuningWith } from "../config/tuning.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { makeEnemy } from "../features/enemies.ts"
-import { Random } from "../math/rng.ts"
 import { Enemy, Game, Health, Hit, Player, Position, PrevPosition, RunScope } from "../schema.ts"
 import type { BuildValue, EnemyKind, ViewportValue } from "../schema.ts"
 
@@ -94,7 +94,7 @@ const script = (steps: number, viewport: ViewportValue) => {
 }
 
 const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number, scripted: number) => {
-  const random = new Random(11)
+  const random = Random.make(11)
   const ringAround = (center: { readonly x: number; readonly y: number }) => {
     const angle = random.next() * Math.PI * 2
     const distance = random.range(ring.near, ring.far)

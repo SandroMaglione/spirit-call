@@ -10,7 +10,7 @@
  *   screen.x = (x - y) / √2 · zoom
  *   screen.y = (x + y) / √2 · squash · zoom
  */
-import type { Vec2 } from "./vec.ts"
+import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 const INV_SQRT2 = Math.SQRT1_2
 
