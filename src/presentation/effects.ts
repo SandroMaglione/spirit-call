@@ -23,6 +23,31 @@ import { ownLook } from "./signatures.ts"
 /** A world direction as a unit direction on screen. */
 const screenDirection = (direction: Vec2): Vec2 => normalizeOr(toScreen(projection, direction), { x: 0, y: -1 })
 
+/** What `sparkedHits` reads of a blow that landed. */
+interface LandedHit {
+  readonly entity: number
+  readonly amount: number
+  readonly heavy: boolean
+  readonly periodic: boolean
+  readonly faction: string
+}
+
+/**
+ * The blows on enemies that throw sparks and a flash: one per body hit
+ * since the last frame, its heaviest (a heavy blow first, then the most
+ * damage, then the first). A body caught in a burst cascade can take dozens
+ * of blows in a frame; one set of sparks shows it as well as many.
+ */
+export const sparkedHits = <H extends LandedHit>(hits: ReadonlyArray<H>): ReadonlySet<H> => {
+  const heaviest = new Map<number, H>()
+  for (const hit of hits) {
+    if (hit.amount <= 0 || hit.periodic || hit.faction === "player") continue
+    const known = heaviest.get(hit.entity)
+    if (known === undefined || (hit.heavy && !known.heavy) || (hit.heavy === known.heavy && hit.amount > known.amount)) heaviest.set(hit.entity, hit)
+  }
+  return new Set(heaviest.values())
+}
+
 /**
  * Turns gameplay events into cosmetic effects: slash trails, and for each
  * blow that lands an impact flash, sparks flying along the push, a popping
@@ -125,7 +150,9 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)
     }
   }
-  for (const hit of events.hit.all()) {
+  const hits = events.hit.all()
+  const sparked = sparkedHits(hits)
+  for (const hit of hits) {
     // A blow that deals nothing (a gust's push) shows nothing of a hit.
     if (hit.amount <= 0) continue
     const at = toScreen(projection, hit.at)
@@ -140,14 +167,16 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     if (hit.faction === "player") {
       feedback.shake = Math.max(feedback.shake, view.hurtShake)
       feedback.hurt = 1
-      fx.number(at, hit.amount, view.healthFill)
+      fx.number(at, hit.amount, view.healthFill, { important: true })
       fx.sparks(body, direction, { color: view.playerHurt, count: 6, speed: 260, spread: 0.7, size: 3, life: 0.22, stretch: 3 })
       continue
     }
     const heavy = hit.heavy
-    fx.flash(body, heavy ? 46 : 30, view.hitFlash, heavy ? 0.14 : 0.09)
-    fx.sparks(body, direction, { color: impact.spark, count: heavy ? 14 : 8, speed: heavy ? 620 : 440, spread: heavy ? 0.75 : 0.5, size: heavy ? 3.2 : 2.6, life: heavy ? 0.3 : 0.22, stretch: 4 })
-    fx.number(at, hit.amount, heavy ? impact.heavyNumber : view.damageNumber, { size: heavy ? 1.5 : 1, drift: direction.x * (heavy ? 26 : 16), life: heavy ? 0.8 : 0.6 })
+    if (sparked.has(hit)) {
+      fx.flash(body, heavy ? 46 : 30, view.hitFlash, heavy ? 0.14 : 0.09)
+      fx.sparks(body, direction, { color: impact.spark, count: heavy ? 14 : 8, speed: heavy ? 620 : 440, spread: heavy ? 0.75 : 0.5, size: heavy ? 3.2 : 2.6, life: heavy ? 0.3 : 0.22, stretch: 4 })
+    }
+    fx.number(at, hit.amount, heavy ? impact.heavyNumber : view.damageNumber, { size: heavy ? 1.5 : 1, drift: direction.x * (heavy ? 26 : 16), life: heavy ? 0.8 : 0.6, important: heavy || hit.killed })
     feedback.shake = Math.max(feedback.shake, heavy ? impact.heavyShake : hit.killed ? impact.killShake : impact.shake)
     if (heavy) {
       feedback.kick.x = direction.x * impact.kick
@@ -246,7 +275,7 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
     if (perfect.chain > 1) fx.ring(at, spec.ring * 1.4 * grow * projection.zoom, spec.color, 0.65)
     fx.burst(heart, { color: spec.color, count: Math.round(40 * grow), speed: 640, size: 3.5, life: 0.55, stretch: 5, drag: 3 })
     fx.burst(heart, { color: view.hitFlash, count: 14, speed: 300, size: 4, life: 0.4 })
-    if (perfect.chain > 1) fx.number({ x: heart.x, y: heart.y - 30 * projection.zoom }, perfect.chain, spec.color, { size: 1.6, life: 0.7 })
+    if (perfect.chain > 1) fx.number({ x: heart.x, y: heart.y - 30 * projection.zoom }, perfect.chain, spec.color, { size: 1.6, life: 0.7, important: true })
     services.host.feedback.punch = Math.max(services.host.feedback.punch, grow)
     services.host.feedback.shake = Math.max(services.host.feedback.shake, spec.shake * grow)
   }

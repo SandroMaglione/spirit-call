@@ -201,6 +201,8 @@ export interface HudRefs {
   readonly focus: HTMLElement
   /** An ultimate's moment (see `ShowUltimateMoments`): the dim around her, her element's glow at the edges, and its lines turning in. */
   readonly moment: HTMLElement
+  /** Its parts, built up by their opacity and scale: the glow it starts with, its glow at full strength, and its lines. */
+  readonly momentParts: { readonly start: HTMLElement; readonly full: HTMLElement; readonly lines: HTMLElement }
   /** A fall: the screen darkens at its edges for a moment, glowing in her color (see `SpawnFx`). */
   readonly fall: HTMLElement
 }
@@ -308,6 +310,12 @@ export interface RenderHostValue {
   readonly fx: Fx
   /** Heat haze bending the scene (see `Haze`): sources added each frame. */
   readonly haze: Haze
+  /**
+   * Compiles every shader the scenes can show (with `extras` added for the
+   * while, out of the camera's sight) and readies the haze, so nothing
+   * compiles in the middle of a fight (see `WarmUpFights`).
+   */
+  warm(extras: ReadonlyArray<Object3D>): Promise<void>
   /** Drops shed by moving spirits, in the 3D scene (hidden behind bodies). */
   readonly drops: DropTrail
   /** Rock's stone (plates, an Earthrise's spikes, chunks), in the 3D scene. */

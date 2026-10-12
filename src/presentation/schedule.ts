@@ -24,9 +24,11 @@ import { ShowSignatures } from "./signatures.ts"
 import { ShowWindwall } from "./windwall.ts"
 import { ShowSwordsmanWind } from "./swordsman-wind.ts"
 import { ShowTutorial } from "./tutorial.ts"
+import { WarmUpFights } from "./warm-up.ts"
 
 export const frame = Game.Schedule(
   SyncArena,
+  WarmUpFights,
   SyncNodes,
   ApplyCamera,
   InterpolateActors,

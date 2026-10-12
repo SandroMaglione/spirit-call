@@ -37,8 +37,15 @@ export const engine = {
   stepSeconds: 1 / 60,
   /** Longest host frame admitted into the simulation (tab switches, hitches). */
   maxFrameSeconds: 0.25,
-  /** Most simulation steps run for one displayed frame before time is dropped. */
-  maxStepsPerFrame: 8
+  /**
+   * Most simulation steps run for one displayed frame before time is dropped.
+   * Kept low: after a slow frame, catching up several steps runs several
+   * steps' worth of hits, effects, and sounds in the next one, so it is slow
+   * too. Three keep full speed down to 20 frames a second; slower, the game
+   * slows for a moment rather than lurching ahead. A step's results are the
+   * same either way: only how many run per frame changes.
+   */
+  maxStepsPerFrame: 3
 }
 
 export const defaultTuning = {

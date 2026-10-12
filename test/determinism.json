@@ -1,0 +1,1242 @@
+{
+ "bot:eliteHunt": [
+  {
+   "step": 60,
+   "hash": "9bf7e640"
+  },
+  {
+   "step": 120,
+   "hash": "0b9c4235"
+  },
+  {
+   "step": 180,
+   "hash": "2c92e3df"
+  },
+  {
+   "step": 240,
+   "hash": "afefbf85"
+  },
+  {
+   "step": 300,
+   "hash": "fba0264e"
+  },
+  {
+   "step": 360,
+   "hash": "0a1da7d7"
+  },
+  {
+   "step": 420,
+   "hash": "4ac9f270"
+  },
+  {
+   "step": 480,
+   "hash": "7c6d8401"
+  },
+  {
+   "step": 540,
+   "hash": "cf110d4d"
+  },
+  {
+   "step": 600,
+   "hash": "d32ea502"
+  },
+  {
+   "step": 660,
+   "hash": "128975a5"
+  },
+  {
+   "step": 720,
+   "hash": "301e55d6"
+  },
+  {
+   "step": 780,
+   "hash": "dcfda527"
+  },
+  {
+   "step": 840,
+   "hash": "d9e7e7d9"
+  },
+  {
+   "step": 900,
+   "hash": "a9ba57ce"
+  },
+  {
+   "step": 960,
+   "hash": "3b759429"
+  },
+  {
+   "step": 1020,
+   "hash": "3e8df743"
+  },
+  {
+   "step": 1080,
+   "hash": "a215f7ed"
+  },
+  {
+   "step": 1140,
+   "hash": "75f0dad2"
+  },
+  {
+   "step": 1200,
+   "hash": "011a8160"
+  },
+  {
+   "step": 1260,
+   "hash": "1cd36528"
+  },
+  {
+   "step": 1320,
+   "hash": "242166b8"
+  },
+  {
+   "step": 1380,
+   "hash": "f650e948"
+  },
+  {
+   "step": 1440,
+   "hash": "a9f689f1"
+  },
+  {
+   "step": 1500,
+   "hash": "bee5e95d"
+  },
+  {
+   "step": 1560,
+   "hash": "63c6ab0d"
+  },
+  {
+   "step": 1620,
+   "hash": "d56a77e6"
+  },
+  {
+   "step": 1680,
+   "hash": "db4c5386"
+  },
+  {
+   "step": 1740,
+   "hash": "ff1fa68f"
+  },
+  {
+   "step": 1800,
+   "hash": "74528a90"
+  },
+  {
+   "step": 1860,
+   "hash": "97e6cf7a"
+  },
+  {
+   "step": 1920,
+   "hash": "768081ff"
+  },
+  {
+   "step": 1980,
+   "hash": "8d8ab107"
+  },
+  {
+   "step": 2040,
+   "hash": "6d4340fc"
+  },
+  {
+   "step": 2100,
+   "hash": "a29134fb"
+  },
+  {
+   "step": 2160,
+   "hash": "52337116"
+  },
+  {
+   "step": 2220,
+   "hash": "3766330c"
+  },
+  {
+   "step": 2280,
+   "hash": "a305fd5f"
+  },
+  {
+   "step": 2340,
+   "hash": "4d29280b"
+  },
+  {
+   "step": 2400,
+   "hash": "1e37cfb9"
+  },
+  {
+   "step": 2400,
+   "hash": "460c0feb"
+  }
+ ],
+ "bot:gauntletChampion": [
+  {
+   "step": 60,
+   "hash": "369f93b0"
+  },
+  {
+   "step": 120,
+   "hash": "469ecbe5"
+  },
+  {
+   "step": 180,
+   "hash": "0fdd548e"
+  },
+  {
+   "step": 240,
+   "hash": "e7b81be0"
+  },
+  {
+   "step": 300,
+   "hash": "8f74418e"
+  },
+  {
+   "step": 360,
+   "hash": "a392a437"
+  },
+  {
+   "step": 420,
+   "hash": "30009860"
+  },
+  {
+   "step": 480,
+   "hash": "1ce71616"
+  },
+  {
+   "step": 540,
+   "hash": "4f7fa05f"
+  },
+  {
+   "step": 600,
+   "hash": "15af2915"
+  },
+  {
+   "step": 660,
+   "hash": "2c46eba5"
+  },
+  {
+   "step": 720,
+   "hash": "9bd3d3da"
+  },
+  {
+   "step": 780,
+   "hash": "7b084441"
+  },
+  {
+   "step": 840,
+   "hash": "1f31cfb2"
+  },
+  {
+   "step": 900,
+   "hash": "3941161d"
+  },
+  {
+   "step": 960,
+   "hash": "7495110e"
+  },
+  {
+   "step": 1020,
+   "hash": "0821ed2e"
+  },
+  {
+   "step": 1080,
+   "hash": "e85088a6"
+  },
+  {
+   "step": 1140,
+   "hash": "5d0bbc0d"
+  },
+  {
+   "step": 1200,
+   "hash": "8fd33dd6"
+  },
+  {
+   "step": 1260,
+   "hash": "40442a1c"
+  },
+  {
+   "step": 1320,
+   "hash": "f1eeef44"
+  },
+  {
+   "step": 1380,
+   "hash": "44a2e032"
+  },
+  {
+   "step": 1440,
+   "hash": "6e4fb790"
+  },
+  {
+   "step": 1500,
+   "hash": "df110cac"
+  },
+  {
+   "step": 1560,
+   "hash": "f8044f43"
+  },
+  {
+   "step": 1620,
+   "hash": "fab969dd"
+  },
+  {
+   "step": 1680,
+   "hash": "bd41835a"
+  },
+  {
+   "step": 1740,
+   "hash": "09f54bb7"
+  },
+  {
+   "step": 1800,
+   "hash": "e754319d"
+  },
+  {
+   "step": 1860,
+   "hash": "7001371d"
+  },
+  {
+   "step": 1920,
+   "hash": "1efedee5"
+  },
+  {
+   "step": 1980,
+   "hash": "56ce7068"
+  },
+  {
+   "step": 2031,
+   "hash": "ec153fbf"
+  }
+ ],
+ "bot:holdTheLine": [
+  {
+   "step": 60,
+   "hash": "9bf7e640"
+  },
+  {
+   "step": 120,
+   "hash": "0b9c4235"
+  },
+  {
+   "step": 180,
+   "hash": "ba9486a1"
+  },
+  {
+   "step": 240,
+   "hash": "9e3dc63b"
+  },
+  {
+   "step": 300,
+   "hash": "1a51570a"
+  },
+  {
+   "step": 360,
+   "hash": "24c43300"
+  },
+  {
+   "step": 420,
+   "hash": "bd9e43ad"
+  },
+  {
+   "step": 480,
+   "hash": "40819042"
+  },
+  {
+   "step": 540,
+   "hash": "32f04d61"
+  },
+  {
+   "step": 600,
+   "hash": "61dc9818"
+  },
+  {
+   "step": 660,
+   "hash": "4d3415c1"
+  },
+  {
+   "step": 720,
+   "hash": "88d4463d"
+  },
+  {
+   "step": 780,
+   "hash": "3a97f128"
+  },
+  {
+   "step": 840,
+   "hash": "d2ef4c7d"
+  },
+  {
+   "step": 900,
+   "hash": "cd8c04a9"
+  },
+  {
+   "step": 960,
+   "hash": "4a16981d"
+  },
+  {
+   "step": 1020,
+   "hash": "2399ab93"
+  },
+  {
+   "step": 1080,
+   "hash": "f7eef370"
+  },
+  {
+   "step": 1140,
+   "hash": "a25b2f6f"
+  },
+  {
+   "step": 1200,
+   "hash": "470f97dd"
+  },
+  {
+   "step": 1260,
+   "hash": "1db85e68"
+  },
+  {
+   "step": 1320,
+   "hash": "5de33219"
+  },
+  {
+   "step": 1380,
+   "hash": "e3f4ed02"
+  },
+  {
+   "step": 1440,
+   "hash": "8fac2ab7"
+  },
+  {
+   "step": 1500,
+   "hash": "786b5701"
+  },
+  {
+   "step": 1560,
+   "hash": "dc8b8d42"
+  },
+  {
+   "step": 1620,
+   "hash": "fcf055b3"
+  },
+  {
+   "step": 1680,
+   "hash": "f23e7214"
+  },
+  {
+   "step": 1740,
+   "hash": "3fc0ad42"
+  },
+  {
+   "step": 1800,
+   "hash": "ba604663"
+  },
+  {
+   "step": 1860,
+   "hash": "cfb58533"
+  },
+  {
+   "step": 1920,
+   "hash": "5b7a71ff"
+  },
+  {
+   "step": 1980,
+   "hash": "7ec635c2"
+  },
+  {
+   "step": 2040,
+   "hash": "09c12420"
+  },
+  {
+   "step": 2100,
+   "hash": "033f3552"
+  },
+  {
+   "step": 2160,
+   "hash": "290a1b90"
+  },
+  {
+   "step": 2220,
+   "hash": "e8ef36df"
+  },
+  {
+   "step": 2280,
+   "hash": "3e41a7d2"
+  },
+  {
+   "step": 2340,
+   "hash": "f28e85f0"
+  },
+  {
+   "step": 2400,
+   "hash": "763b0781"
+  },
+  {
+   "step": 2400,
+   "hash": "efc3e21b"
+  }
+ ],
+ "bot:stormFront": [
+  {
+   "step": 60,
+   "hash": "00081f47"
+  },
+  {
+   "step": 120,
+   "hash": "4658e892"
+  },
+  {
+   "step": 180,
+   "hash": "4c94e7c7"
+  },
+  {
+   "step": 240,
+   "hash": "1449c961"
+  },
+  {
+   "step": 300,
+   "hash": "593af0d0"
+  },
+  {
+   "step": 360,
+   "hash": "e6c96e8c"
+  },
+  {
+   "step": 420,
+   "hash": "d3759287"
+  },
+  {
+   "step": 480,
+   "hash": "3c5e15cf"
+  },
+  {
+   "step": 540,
+   "hash": "2153e745"
+  },
+  {
+   "step": 600,
+   "hash": "745a36e1"
+  },
+  {
+   "step": 660,
+   "hash": "718f83ec"
+  },
+  {
+   "step": 720,
+   "hash": "c2961915"
+  },
+  {
+   "step": 780,
+   "hash": "6d4ec6e2"
+  },
+  {
+   "step": 840,
+   "hash": "a4eb1159"
+  },
+  {
+   "step": 900,
+   "hash": "9b2fc293"
+  },
+  {
+   "step": 960,
+   "hash": "cb0caf93"
+  },
+  {
+   "step": 1020,
+   "hash": "47f4842e"
+  },
+  {
+   "step": 1080,
+   "hash": "760e0ac9"
+  },
+  {
+   "step": 1140,
+   "hash": "ccfd8500"
+  },
+  {
+   "step": 1200,
+   "hash": "f6c13010"
+  },
+  {
+   "step": 1260,
+   "hash": "47301085"
+  },
+  {
+   "step": 1320,
+   "hash": "663430d3"
+  },
+  {
+   "step": 1380,
+   "hash": "973381ba"
+  },
+  {
+   "step": 1440,
+   "hash": "4c299732"
+  },
+  {
+   "step": 1500,
+   "hash": "1b9312a5"
+  },
+  {
+   "step": 1560,
+   "hash": "47459791"
+  },
+  {
+   "step": 1620,
+   "hash": "b6ca01fe"
+  },
+  {
+   "step": 1680,
+   "hash": "5fcd4066"
+  },
+  {
+   "step": 1740,
+   "hash": "cd73d8d6"
+  },
+  {
+   "step": 1800,
+   "hash": "47ec2539"
+  },
+  {
+   "step": 1860,
+   "hash": "07d3ee42"
+  },
+  {
+   "step": 1920,
+   "hash": "306e2e78"
+  },
+  {
+   "step": 1980,
+   "hash": "1779d7f2"
+  },
+  {
+   "step": 2040,
+   "hash": "83c57a96"
+  },
+  {
+   "step": 2100,
+   "hash": "0e3cbf50"
+  },
+  {
+   "step": 2160,
+   "hash": "1a5ffdc5"
+  },
+  {
+   "step": 2220,
+   "hash": "cddce57f"
+  },
+  {
+   "step": 2280,
+   "hash": "73c58eaa"
+  },
+  {
+   "step": 2340,
+   "hash": "51d56ea9"
+  },
+  {
+   "step": 2400,
+   "hash": "81c50656"
+  },
+  {
+   "step": 2400,
+   "hash": "f8d3ae0e"
+  }
+ ],
+ "bot:untilFall3": [
+  {
+   "step": 60,
+   "hash": "766bb414"
+  },
+  {
+   "step": 120,
+   "hash": "26c5f719"
+  },
+  {
+   "step": 180,
+   "hash": "6e2bc2dd"
+  },
+  {
+   "step": 240,
+   "hash": "733dbc86"
+  },
+  {
+   "step": 300,
+   "hash": "8fab0785"
+  },
+  {
+   "step": 360,
+   "hash": "b7b192c6"
+  },
+  {
+   "step": 420,
+   "hash": "105a6ebb"
+  },
+  {
+   "step": 480,
+   "hash": "2f2e3d6a"
+  },
+  {
+   "step": 540,
+   "hash": "218edcbc"
+  },
+  {
+   "step": 600,
+   "hash": "4b1dec94"
+  },
+  {
+   "step": 660,
+   "hash": "02420d33"
+  },
+  {
+   "step": 720,
+   "hash": "8580ead1"
+  },
+  {
+   "step": 780,
+   "hash": "3872201c"
+  },
+  {
+   "step": 840,
+   "hash": "572b0257"
+  },
+  {
+   "step": 900,
+   "hash": "60b65ef8"
+  },
+  {
+   "step": 960,
+   "hash": "15948838"
+  },
+  {
+   "step": 1020,
+   "hash": "c351b44d"
+  },
+  {
+   "step": 1080,
+   "hash": "b1c707dc"
+  },
+  {
+   "step": 1140,
+   "hash": "bd426974"
+  },
+  {
+   "step": 1200,
+   "hash": "972de38f"
+  },
+  {
+   "step": 1260,
+   "hash": "2f176f0b"
+  },
+  {
+   "step": 1320,
+   "hash": "cb4a2ce3"
+  },
+  {
+   "step": 1380,
+   "hash": "1be25e5c"
+  },
+  {
+   "step": 1440,
+   "hash": "0fa13e40"
+  },
+  {
+   "step": 1500,
+   "hash": "b6887565"
+  },
+  {
+   "step": 1560,
+   "hash": "28bc2797"
+  },
+  {
+   "step": 1620,
+   "hash": "21d8a594"
+  },
+  {
+   "step": 1680,
+   "hash": "227bf300"
+  },
+  {
+   "step": 1740,
+   "hash": "73b4699c"
+  },
+  {
+   "step": 1800,
+   "hash": "37ad1472"
+  },
+  {
+   "step": 1860,
+   "hash": "f4f7f419"
+  },
+  {
+   "step": 1920,
+   "hash": "1a9c0042"
+  },
+  {
+   "step": 1980,
+   "hash": "c9fbf4ba"
+  },
+  {
+   "step": 2040,
+   "hash": "36542980"
+  },
+  {
+   "step": 2100,
+   "hash": "ac76dd77"
+  },
+  {
+   "step": 2160,
+   "hash": "52eb266d"
+  },
+  {
+   "step": 2220,
+   "hash": "5dd3b149"
+  },
+  {
+   "step": 2280,
+   "hash": "70abb852"
+  },
+  {
+   "step": 2340,
+   "hash": "46b8520f"
+  },
+  {
+   "step": 2400,
+   "hash": "090f34d4"
+  },
+  {
+   "step": 2460,
+   "hash": "e4b992e8"
+  },
+  {
+   "step": 2520,
+   "hash": "f337721a"
+  },
+  {
+   "step": 2580,
+   "hash": "32e9475a"
+  },
+  {
+   "step": 2640,
+   "hash": "ac5652e6"
+  },
+  {
+   "step": 2700,
+   "hash": "ee82cb30"
+  },
+  {
+   "step": 2760,
+   "hash": "430f6cc6"
+  },
+  {
+   "step": 2820,
+   "hash": "b650e98a"
+  },
+  {
+   "step": 2880,
+   "hash": "3f2e4a9b"
+  },
+  {
+   "step": 2940,
+   "hash": "a1bbce5b"
+  },
+  {
+   "step": 3000,
+   "hash": "663e3c16"
+  },
+  {
+   "step": 3060,
+   "hash": "56dab8fb"
+  },
+  {
+   "step": 3120,
+   "hash": "43a24668"
+  },
+  {
+   "step": 3180,
+   "hash": "4b88d8af"
+  },
+  {
+   "step": 3240,
+   "hash": "a7e20003"
+  },
+  {
+   "step": 3300,
+   "hash": "e9a5b2fb"
+  },
+  {
+   "step": 3360,
+   "hash": "4daac550"
+  },
+  {
+   "step": 3420,
+   "hash": "8c8cca3a"
+  },
+  {
+   "step": 3480,
+   "hash": "c758ea53"
+  },
+  {
+   "step": 3540,
+   "hash": "fa0fe1a9"
+  },
+  {
+   "step": 3600,
+   "hash": "183eb058"
+  },
+  {
+   "step": 3660,
+   "hash": "b29cd2ba"
+  },
+  {
+   "step": 3720,
+   "hash": "63782d5a"
+  },
+  {
+   "step": 3780,
+   "hash": "d34f324a"
+  },
+  {
+   "step": 3840,
+   "hash": "79581076"
+  },
+  {
+   "step": 3900,
+   "hash": "015be3a7"
+  },
+  {
+   "step": 3960,
+   "hash": "c01fd284"
+  },
+  {
+   "step": 4020,
+   "hash": "3e9eafdf"
+  },
+  {
+   "step": 4080,
+   "hash": "e4379685"
+  },
+  {
+   "step": 4140,
+   "hash": "bdc61926"
+  },
+  {
+   "step": 4200,
+   "hash": "e9bc9b66"
+  },
+  {
+   "step": 4260,
+   "hash": "3602b837"
+  },
+  {
+   "step": 4320,
+   "hash": "f4bd5fe1"
+  },
+  {
+   "step": 4380,
+   "hash": "361043b1"
+  },
+  {
+   "step": 4440,
+   "hash": "e515d6cf"
+  },
+  {
+   "step": 4500,
+   "hash": "f9f5f9c5"
+  },
+  {
+   "step": 4560,
+   "hash": "ba890557"
+  },
+  {
+   "step": 4620,
+   "hash": "39a0a356"
+  },
+  {
+   "step": 4680,
+   "hash": "34d029c9"
+  },
+  {
+   "step": 4740,
+   "hash": "36bbc4ed"
+  },
+  {
+   "step": 4800,
+   "hash": "3bc06212"
+  },
+  {
+   "step": 4860,
+   "hash": "e9faa783"
+  },
+  {
+   "step": 4920,
+   "hash": "03fbad30"
+  },
+  {
+   "step": 4980,
+   "hash": "82f0811d"
+  },
+  {
+   "step": 5040,
+   "hash": "9d17e75c"
+  },
+  {
+   "step": 5100,
+   "hash": "edc1bd73"
+  },
+  {
+   "step": 5146,
+   "hash": "ce3b028c"
+  }
+ ],
+ "scene:crowd": [
+  {
+   "step": 60,
+   "hash": "fe70c4b2"
+  },
+  {
+   "step": 120,
+   "hash": "1dfbd6d7"
+  },
+  {
+   "step": 180,
+   "hash": "176338d2"
+  },
+  {
+   "step": 240,
+   "hash": "6b8905bf"
+  },
+  {
+   "step": 300,
+   "hash": "7f37904c"
+  },
+  {
+   "step": 360,
+   "hash": "398d2b74"
+  },
+  {
+   "step": 420,
+   "hash": "adb23550"
+  },
+  {
+   "step": 480,
+   "hash": "91d816c9"
+  },
+  {
+   "step": 540,
+   "hash": "768348c7"
+  },
+  {
+   "step": 600,
+   "hash": "70a6ce42"
+  },
+  {
+   "step": 660,
+   "hash": "35cc3402"
+  },
+  {
+   "step": 720,
+   "hash": "35f6a200"
+  },
+  {
+   "step": 780,
+   "hash": "1cef365e"
+  },
+  {
+   "step": 840,
+   "hash": "0f1af6c5"
+  },
+  {
+   "step": 900,
+   "hash": "73d00515"
+  },
+  {
+   "step": 960,
+   "hash": "e3e9d20e"
+  },
+  {
+   "step": 1020,
+   "hash": "9ed7c4b8"
+  },
+  {
+   "step": 1080,
+   "hash": "19a635f9"
+  },
+  {
+   "step": 1140,
+   "hash": "0ac4c234"
+  },
+  {
+   "step": 1200,
+   "hash": "375604e9"
+  },
+  {
+   "step": 1200,
+   "hash": "0771090d"
+  }
+ ],
+ "scene:crowd-fire": [
+  {
+   "step": 60,
+   "hash": "87f4952c"
+  },
+  {
+   "step": 120,
+   "hash": "c84f1900"
+  },
+  {
+   "step": 180,
+   "hash": "a700d0fe"
+  },
+  {
+   "step": 240,
+   "hash": "61c3c1ce"
+  },
+  {
+   "step": 300,
+   "hash": "a74ab26a"
+  },
+  {
+   "step": 360,
+   "hash": "061136cc"
+  },
+  {
+   "step": 420,
+   "hash": "cb193f74"
+  },
+  {
+   "step": 480,
+   "hash": "a60617d2"
+  },
+  {
+   "step": 540,
+   "hash": "afd90c09"
+  },
+  {
+   "step": 600,
+   "hash": "700ab731"
+  },
+  {
+   "step": 660,
+   "hash": "1d979fbf"
+  },
+  {
+   "step": 720,
+   "hash": "5991c50b"
+  },
+  {
+   "step": 780,
+   "hash": "e16168d3"
+  },
+  {
+   "step": 840,
+   "hash": "0d94ff89"
+  },
+  {
+   "step": 900,
+   "hash": "52899a08"
+  },
+  {
+   "step": 960,
+   "hash": "63253517"
+  },
+  {
+   "step": 1020,
+   "hash": "620bed15"
+  },
+  {
+   "step": 1080,
+   "hash": "c581ffe7"
+  },
+  {
+   "step": 1140,
+   "hash": "38aa1d6b"
+  },
+  {
+   "step": 1200,
+   "hash": "7272675a"
+  },
+  {
+   "step": 1200,
+   "hash": "dc738f83"
+  }
+ ],
+ "scene:kills": [
+  {
+   "step": 60,
+   "hash": "10c83efe"
+  },
+  {
+   "step": 120,
+   "hash": "b9550ef8"
+  },
+  {
+   "step": 180,
+   "hash": "3a3c31af"
+  },
+  {
+   "step": 240,
+   "hash": "494c25d1"
+  },
+  {
+   "step": 300,
+   "hash": "0f7725bc"
+  },
+  {
+   "step": 360,
+   "hash": "02abb4f0"
+  },
+  {
+   "step": 420,
+   "hash": "0fdc19db"
+  },
+  {
+   "step": 480,
+   "hash": "0668d0a3"
+  },
+  {
+   "step": 540,
+   "hash": "2e7c3e9b"
+  },
+  {
+   "step": 600,
+   "hash": "b481fcf7"
+  },
+  {
+   "step": 660,
+   "hash": "f8400d72"
+  },
+  {
+   "step": 720,
+   "hash": "5feaca71"
+  },
+  {
+   "step": 780,
+   "hash": "f77cbeb3"
+  },
+  {
+   "step": 840,
+   "hash": "adf27c2d"
+  },
+  {
+   "step": 900,
+   "hash": "1630ad4a"
+  },
+  {
+   "step": 960,
+   "hash": "9517e52c"
+  },
+  {
+   "step": 1020,
+   "hash": "19e1ed2b"
+  },
+  {
+   "step": 1080,
+   "hash": "7e7f442b"
+  },
+  {
+   "step": 1140,
+   "hash": "da8a3fe7"
+  },
+  {
+   "step": 1200,
+   "hash": "4457c9c2"
+  },
+  {
+   "step": 1200,
+   "hash": "6e41b69d"
+  }
+ ]
+}
