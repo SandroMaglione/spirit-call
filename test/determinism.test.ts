@@ -14,6 +14,11 @@
  * never to make a failing test pass. It also writes every sample's raw values
  * to `.data/determinism/` (not committed), and a failing run writes its own
  * to `.data/determinism/current/`, to compare.
+ *
+ * The fingerprints are CI's (Linux, x64): record them there (a `node:24`
+ * container with `--platform linux/amd64` will do). A Mac with Apple silicon
+ * plays `bot:stormFront` a last bit differently, so that one fight fails
+ * there even on an unchanged commit.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
