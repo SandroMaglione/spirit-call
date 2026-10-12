@@ -5,7 +5,7 @@
  * direction, plays its loops by how its body moves, and plays one-shot
  * moments over them (see `animation.ts`).
  */
-import { AnimationMixer, Bone, Color, LoopRepeat, Mesh, MeshBasicMaterial, MeshStandardMaterial, PropertyBinding, SkinnedMesh, Sprite } from "three"
+import { AnimationMixer, BackSide, Bone, Color, DoubleSide, FrontSide, LoopRepeat, Mesh, MeshBasicMaterial, MeshStandardMaterial, PropertyBinding, SkinnedMesh, Sprite } from "three"
 import type { AnimationAction, BufferGeometry, Material, Object3D, Quaternion, Skeleton, SpriteMaterial, Vector3 } from "three"
 import { clone } from "three/addons/utils/SkeletonUtils.js"
 
@@ -18,8 +18,22 @@ import { tintedHex, tintedRgb } from "./tint.ts"
 import type { Tint } from "./tint.ts"
 import type { ModelSource } from "./models.ts"
 
-/** A copy's materials that are its own, with their colors before any tint, and their own glow (glowing eyes) before any flash. */
-export type OwnMaterials = ReadonlyArray<{ readonly material: MeshStandardMaterial | MeshBasicMaterial; readonly base: Color; readonly glow: Color }>
+/**
+ * A copy's materials that are its own, with their colors before any tint,
+ * and their own glow (glowing eyes) before any flash; `parts`, the meshes
+ * drawn with each, and `sides`, its see-through copies (see `seeThroughSides`).
+ */
+export type OwnMaterials = ReadonlyArray<OwnMaterial>
+
+type PaintedMaterial = MeshStandardMaterial | MeshBasicMaterial
+
+interface OwnMaterial {
+  readonly material: PaintedMaterial
+  readonly base: Color
+  readonly glow: Color
+  readonly parts: Array<Mesh>
+  readonly sides: { pair: readonly [PaintedMaterial, PaintedMaterial] | null }
+}
 
 /** A copy's own halo (see `glow.ts`): its sprite, with its opacity and size before the body's state changes them. */
 export interface OwnHalo {
@@ -35,20 +49,24 @@ export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonl
   const materials: Array<OwnMaterials[number]> = []
   let halo: OwnHalo | null = null
   if (ownMaterials) {
-    const copies = new Map<Material, MeshStandardMaterial | MeshBasicMaterial>()
+    const copies = new Map<Material, OwnMaterial>()
     // Parts sharing a material keep sharing the copy.
-    const own = (material: Material): Material => {
+    const own = (material: Material, part: Mesh): Material => {
       if (!(material instanceof MeshStandardMaterial) && !(material instanceof MeshBasicMaterial)) return material
       const known = copies.get(material)
-      if (known !== undefined) return known
+      if (known !== undefined) {
+        known.parts.push(part)
+        return known.material
+      }
       const copy = material.clone()
       keepRim(copy)
-      copies.set(material, copy)
-      materials.push({ material: copy, base: copy.color.clone(), glow: copy instanceof MeshStandardMaterial ? copy.emissive.clone().multiplyScalar(copy.emissiveIntensity) : new Color(0) })
+      const entry: OwnMaterial = { material: copy, base: copy.color.clone(), glow: copy instanceof MeshStandardMaterial ? copy.emissive.clone().multiplyScalar(copy.emissiveIntensity) : new Color(0), parts: [part], sides: { pair: null } }
+      copies.set(material, entry)
+      materials.push(entry)
       return copy
     }
     object.traverse((part) => {
-      if (part instanceof Mesh) part.material = Array.isArray(part.material) ? part.material.map(own) : own(part.material)
+      if (part instanceof Mesh) part.material = Array.isArray(part.material) ? part.material.map((material) => own(material, part)) : own(part.material, part)
       if (part instanceof Sprite && part.userData["halo"] === true) {
         part.material = part.material.clone()
         halo = { sprite: part, material: part.material, opacity: part.material.opacity, size: part.scale.x }
@@ -60,7 +78,10 @@ export const copyModel = (source: ModelSource, ownMaterials: boolean): { readonl
 
 /** Frees what a copy owns: its materials and skeletons (geometry and textures stay with the loaded model). */
 export const disposeCopy = (object: Object3D, materials: OwnMaterials): void => {
-  for (const { material } of materials) material.dispose()
+  for (const { material, sides } of materials) {
+    material.dispose()
+    for (const side of sides.pair ?? []) side.dispose()
+  }
   const skeletons = new Set<Skeleton>()
   object.traverse((part) => {
     if (part instanceof SkinnedMesh) skeletons.add(part.skeleton)
@@ -79,6 +100,39 @@ const tinted = new Color()
 const flash = new Color()
 
 /**
+ * A double-sided material's see-through look: its back faces, then its
+ * front faces, as two copies drawn one after the other (each part's
+ * geometry drawn twice, as two groups). That is how three.js draws a
+ * see-through double-sided material, in two passes, but it redoes the
+ * shader's setup before each pass, every frame; the copies compile once.
+ * Made the first time `entry` goes see-through, or `null` when its parts
+ * cannot be drawn so (a part whose geometry is already split in groups).
+ */
+const seeThroughSides = (entry: OwnMaterial): readonly [PaintedMaterial, PaintedMaterial] | null => {
+  if (entry.sides.pair !== null) return entry.sides.pair
+  if (entry.parts.some((part) => Array.isArray(part.material))) return null
+  for (const part of entry.parts) {
+    const geometry = part.geometry
+    const count = geometry.index?.count ?? geometry.getAttribute("position").count
+    // Shared by every copy of the model; a part drawn with one material ignores its groups.
+    if (geometry.groups.length === 0) {
+      geometry.addGroup(0, count, 0)
+      geometry.addGroup(0, count, 1)
+    }
+    if (geometry.groups.length !== 2 || geometry.groups.some((group, index) => group.start !== 0 || group.count !== count || group.materialIndex !== index)) return null
+  }
+  const side = (which: typeof BackSide | typeof FrontSide): PaintedMaterial => {
+    const copy = entry.material.clone()
+    copy.side = which
+    copy.transparent = true
+    keepRim(copy)
+    return copy
+  }
+  entry.sides.pair = [side(BackSide), side(FrontSide)]
+  return entry.sides.pair
+}
+
+/**
  * Colors `materials` multiplied by `tint` (white for none), lit by `glow`
  * (0..1) of `glowColor` over their own glow, and see-through below
  * `opacity` 1.
@@ -87,7 +141,8 @@ export const paintMaterials = (materials: OwnMaterials, tint: number, glowColor:
   tinted.setHex(tint)
   flash.setHex(glowColor).multiplyScalar(glow)
   const seeThrough = opacity < 1
-  for (const { material, base, glow: own } of materials) {
+  for (const entry of materials) {
+    const { material, base, glow: own } = entry
     material.color.copy(base).multiply(tinted)
     if (material instanceof MeshStandardMaterial) {
       material.emissive.copy(own).add(flash)
@@ -97,6 +152,20 @@ export const paintMaterials = (materials: OwnMaterials, tint: number, glowColor:
       material.color.add(flash)
     }
     material.opacity = opacity
+    const sides = seeThrough && material.side === DoubleSide && !material.transparent ? seeThroughSides(entry) : null
+    if (sides !== null) {
+      for (const copy of sides) {
+        copy.color.copy(material.color)
+        copy.opacity = opacity
+        if (copy instanceof MeshStandardMaterial && material instanceof MeshStandardMaterial) {
+          copy.emissive.copy(material.emissive)
+          copy.emissiveIntensity = material.emissiveIntensity
+        }
+      }
+    }
+    const shown = sides ?? material
+    for (const part of entry.parts) if (part.material !== shown) part.material = shown as Material | Array<Material>
+    if (sides !== null) continue
     if (material.transparent !== seeThrough) {
       material.transparent = seeThrough
       material.needsUpdate = true

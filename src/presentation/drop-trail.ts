@@ -11,6 +11,7 @@ import { AdditiveBlending, Color, IcosahedronGeometry, InstancedMesh, Matrix4, M
 import type { Object3D } from "three"
 
 import type { Vec2 } from "../math/vec.ts"
+import { showInstances } from "./uploads.ts"
 
 /** How a shed particle moves: a drop falls (and may ripple), an ember rises, a wisp curls. */
 export type TrailKind = "drop" | "ember" | "wisp"
@@ -162,7 +163,7 @@ export class DropTrail {
       this.dropMesh.setMatrixAt(index, this.matrix)
       this.dropMesh.setColorAt(index, drop.color)
     })
-    this.dropMesh.count = this.drops.length
+    showInstances(this.dropMesh, this.drops.length)
     this.ripples.forEach((ripple, index) => {
       const t = 1 - ripple.life / ripple.maxLife
       const radius = ripple.radius * (0.35 + 0.65 * Math.sqrt(t))
@@ -173,11 +174,7 @@ export class DropTrail {
       // Additive: fading is darkening.
       this.rippleMesh.setColorAt(index, this.faded.copy(ripple.color).multiplyScalar(0.7 * (1 - t)))
     })
-    this.rippleMesh.count = this.ripples.length
-    for (const mesh of [this.dropMesh, this.rippleMesh]) {
-      mesh.instanceMatrix.needsUpdate = true
-      if (mesh.instanceColor !== null) mesh.instanceColor.needsUpdate = true
-    }
+    showInstances(this.rippleMesh, this.ripples.length)
   }
 
   get active(): number {

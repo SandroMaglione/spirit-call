@@ -26,6 +26,7 @@ import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Member, Player
 import type { ElementId } from "../content/elements.ts"
 import { airborneLift, diving, soarPhase } from "./actors.ts"
 import type { RenderHostValue } from "./host-types.ts"
+import { setStyle } from "./styles.ts"
 
 const css = (color: number): string => `#${color.toString(16).padStart(6, "0")}`
 
@@ -76,6 +77,21 @@ const release = (fx: RenderHostValue["fx"], element: ElementId | null, at: Vec2,
   }
 }
 
+/**
+ * The moment's parts at `build` (0..1), by their opacity and scale only (see
+ * `.hud__moment` in index.html): the glow it starts with gives way to its
+ * glow at full strength, and the lines close in from a third larger (their
+ * hole at 30% of the way out, then 18%). Shrinking spreads their mask's fade
+ * wider, so they are a little brighter to make up for it.
+ */
+const showBuild = (parts: RenderHostValue["hud"]["momentParts"], build: number): void => {
+  const scale = (30 - 12 * build) / 18
+  setStyle(parts.start, "opacity", (1 - build).toFixed(3))
+  setStyle(parts.full, "opacity", build.toFixed(3))
+  setStyle(parts.lines, "opacity", Math.min(1, (0.35 + 0.4 * build) * (1 + 0.8 * (scale - 1))).toFixed(3))
+  setStyle(parts.lines, "scale", scale.toFixed(3))
+}
+
 export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
   queries: { player: Game.Query({ selection: { position: Game.Query.read(Position), previous: Game.Query.read(PrevPosition) }, with: [Player] }) },
   resources: { moment: Game.System.readResource(UltimateMoment), tuning: Game.System.readResource(Tuning) },
@@ -99,7 +115,7 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
     const build = 1 - moment.remaining / moment.seconds
     const t = Math.min(1, build * 1.6)
     feedback.moment = Math.max(feedback.moment, 1 - (1 - t) ** 3)
-    refs.style.setProperty("--build", build.toFixed(3))
+    showBuild(host.hud.momentParts, build)
     // Her element's light drawn in toward her from all around.
     if (player !== undefined && moment.character !== null) {
       const color = view.elements[tuning.characters[moment.character].element]
@@ -114,7 +130,7 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
       }
     }
   } else feedback.moment = Math.max(0, feedback.moment - seconds / spec.release)
-  refs.style.opacity = feedback.moment.toFixed(3)
+  setStyle(refs, "opacity", feedback.moment.toFixed(3))
   // It goes off: a flash on her, rings out across the floor, streaks, a deep blast, and a shake.
   for (const cast of events.cast.all()) {
     if (cast.called !== true) continue

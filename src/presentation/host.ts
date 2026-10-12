@@ -36,7 +36,7 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
   root.innerHTML = `
     <div class="hud__vignette" data-vignette></div>
     <div class="hud__focus" data-focus></div>
-    <div class="hud__moment" data-moment></div>
+    <div class="hud__moment" data-moment><i class="hud__moment-glow hud__moment-glow--start" data-moment-start></i><i class="hud__moment-glow hud__moment-glow--full" data-moment-full></i><i class="hud__moment-lines" data-moment-lines></i></div>
     <div class="hud__fall" data-fall></div>
     <div class="hud__quest"><div class="hud__quest-name" data-quest></div><div class="hud__waves" data-waves></div><div class="hud__quest-progress" data-progress></div><div class="hud__meter" data-meter hidden><b data-damage></b><span data-hits></span></div></div>
     <div class="hud__vitals">
@@ -111,6 +111,11 @@ const createHud = (): { readonly root: HTMLElement; readonly refs: HudRefs } => 
       vignette: root.querySelector<HTMLElement>("[data-vignette]")!,
       focus: root.querySelector<HTMLElement>("[data-focus]")!,
       moment: root.querySelector<HTMLElement>("[data-moment]")!,
+      momentParts: {
+        start: root.querySelector<HTMLElement>("[data-moment-start]")!,
+        full: root.querySelector<HTMLElement>("[data-moment-full]")!,
+        lines: root.querySelector<HTMLElement>("[data-moment-lines]")!
+      },
       fall: root.querySelector<HTMLElement>("[data-fall]")!
     }
   }
@@ -282,6 +287,17 @@ export const createBrowserHost = async (
       return {
         x: size.width / 2 + (at.x - center.x) * scale + cameraView.offset.x,
         y: size.height / 2 + (at.y - center.y) * scale + cameraView.offset.y
+      }
+    },
+    warm: async (extras) => {
+      for (const extra of extras) scene.add(extra)
+      scene.updateMatrixWorld()
+      try {
+        await renderer.compileAsync(scene, camera)
+        await renderer.compileAsync(overlayScene, overlayCamera)
+        await haze.warm(renderer)
+      } finally {
+        for (const extra of extras) scene.remove(extra)
       }
     },
     render: () => {

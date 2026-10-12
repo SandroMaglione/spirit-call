@@ -20,6 +20,7 @@ import { skillRecharge } from "../features/skills.ts"
 import { elementOf } from "../ui/draft.ts"
 import { setText } from "./draw.ts"
 import { skillIcons, stateIcons, classIcons } from "./icons.ts"
+import { setStyle } from "./styles.ts"
 
 /**
  * The on-screen touch controls: the stick under the thumb (or a faint hint
@@ -51,8 +52,9 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   const layout = live.stick !== null || actionButtons.some((name) => live.buttons[name].held)
     ? live.layout : touchLayout(services.host.size, services.host.safeArea())
   const place = (element: HTMLElement, x: number, y: number, radius: number) => {
-    element.style.transform = `translate(${x - radius}px, ${y - radius}px)`
-    element.style.width = element.style.height = `${radius * 2}px`
+    setStyle(element, "transform", `translate(${x - radius}px, ${y - radius}px)`)
+    setStyle(element, "width", `${radius * 2}px`)
+    setStyle(element, "height", `${radius * 2}px`)
   }
   const stickRadius = layout.stick.radius
   if (live.stick === null) {
@@ -97,10 +99,10 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
     place(refs.root, zone.center.x, zone.center.y, zone.radius * (drawnShare[name] ?? 1))
     refs.root.classList.toggle("is-held", state.held)
     refs.root.classList.toggle("is-ready", fill[name] <= 0)
-    refs.cooldown.style.setProperty("--cd", String(Math.max(0, Math.min(1, fill[name]))))
+    setStyle(refs.cooldown, "--cd", String(Math.max(0, Math.min(1, fill[name]))))
     setText(refs.seconds, seconds[name] > 0.05 ? seconds[name].toFixed(1) : "")
     const aim = state.aim
-    refs.aim.hidden = aim === null || zone.aimRadius === undefined
+    setHidden(refs.aim, aim === null || zone.aimRadius === undefined)
     if (aim !== null && zone.aimRadius !== undefined) {
       place(refs.aim, zone.center.x + aim.x * zone.aimRadius, zone.center.y + aim.y * zone.aimRadius, 14)
     }
@@ -112,6 +114,11 @@ const showIcon = <Id extends string>(place: HTMLElement, icons: { readonly [K in
   if (place.dataset["icon"] === id) return
   place.dataset["icon"] = id
   place.innerHTML = icons[id]
+}
+
+/** Hides or shows `element`, touching the page only when that changes. */
+const setHidden = (element: HTMLElement, hidden: boolean): void => {
+  if (element.hidden !== hidden) element.hidden = hidden
 }
 
 /** A color as CSS. */
@@ -148,14 +155,14 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
   const wait = resources.teamSwitch.get().cooldown
   const waiting = wait > 0
   // The switch's wait, as the share of it left (it fills each face that waits).
-  team.root.style.setProperty("--wait", String(Math.min(1, wait / tuning.team.switchCooldown)))
+  setStyle(team.root, "--wait", String(Math.min(1, wait / tuning.team.switchCooldown)))
   const members = queries.members.each()
   // A team of one has nothing to switch to.
   const shown = members.length > 1
   const rows = touchMode ? partyLayout(services.host.size, services.host.safeArea()) : undefined
   team.members.forEach((refs, slot) => {
     const found = shown ? members.find(({ data }) => data.member.get().slot === slot) : undefined
-    refs.root.hidden = found === undefined
+    setHidden(refs.root, found === undefined)
     if (found === undefined) return
     const { data } = found
     const character = data.member.get().character
@@ -170,28 +177,31 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
     refs.root.classList.toggle("is-ready", ready && !fallen)
     // Her ultimate's icon left of her row once it is ready, as Genshin's: worth switching to her.
     showIcon(refs.burst, skillIcons, ultimate.skill)
-    refs.root.style.setProperty("--color", css(view.characters[character]))
+    setStyle(refs.root, "--color", css(view.characters[character]))
     const element = elementOf(tuning, character)
     if (element === null) delete refs.root.dataset["element"]
-    else refs.root.dataset["element"] = element
+    else if (refs.root.dataset["element"] !== element) refs.root.dataset["element"] = element
     if (refs.portrait.dataset["portrait"] !== character) refs.portrait.dataset["portrait"] = character
     setText(refs.face.querySelector("kbd"), String(slot + 1))
-    refs.face.dataset["initial"] = tuning.characters[character].name.charAt(0)
+    const initial = tuning.characters[character].name.charAt(0)
+    if (refs.face.dataset["initial"] !== initial) refs.face.dataset["initial"] = initial
     setText(refs.name, tuning.characters[character].name)
-    refs.health.style.width = `${(100 * health.current) / health.max}%`
-    refs.state.className = state === null ? "" : `team__state--${state.id}`
+    setStyle(refs.health, "width", `${(100 * health.current) / health.max}%`)
+    const stateClass = state === null ? "" : `team__state--${state.id}`
+    if (refs.state.className !== stateClass) refs.state.className = stateClass
     // On touch, as Genshin's party list: the rows down the right side, each face at its row's place.
     const zone = rows?.[slot]
     if (zone === undefined) {
-      refs.root.style.removeProperty("top")
-      refs.root.style.removeProperty("right")
-      refs.face.style.removeProperty("width")
-      refs.face.style.removeProperty("height")
+      setStyle(refs.root, "top", "")
+      setStyle(refs.root, "right", "")
+      setStyle(refs.face, "width", "")
+      setStyle(refs.face, "height", "")
       return
     }
-    refs.root.style.top = `${zone.center.y - zone.radius}px`
-    refs.root.style.right = `${services.host.size.width - zone.center.x - zone.radius}px`
-    refs.face.style.width = refs.face.style.height = `${zone.radius * 2}px`
+    setStyle(refs.root, "top", `${zone.center.y - zone.radius}px`)
+    setStyle(refs.root, "right", `${services.host.size.width - zone.center.x - zone.radius}px`)
+    setStyle(refs.face, "width", `${zone.radius * 2}px`)
+    setStyle(refs.face, "height", `${zone.radius * 2}px`)
   })
 })
 
@@ -289,7 +299,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     for (const slot of skillSlots) {
       const refs = hud.skills[slot]
       setText(refs.root.querySelector("span"), slots[slot].spec.name)
-      refs.cooldown.style.height = `${100 * slots[slot].recharge}%`
+      setStyle(refs.cooldown, "height", `${100 * slots[slot].recharge}%`)
       refs.root.classList.toggle("is-ready", slots[slot].recharge <= 0)
     }
     const element = elementOf(tuning, field.member.get().character)
@@ -298,16 +308,16 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
       else hud.root.dataset["element"] = element
     }
     const health = field.health.get()
-    hud.health.style.width = `${(100 * health.current) / health.max}%`
+    setStyle(hud.health, "width", `${(100 * health.current) / health.max}%`)
     setText(hud.healthText, `${Math.ceil(health.current)} / ${Math.ceil(health.max)}`)
   } else {
-    hud.health.style.width = "0%"
+    setStyle(hud.health, "width", "0%")
     setText(hud.healthText, "")
   }
   // Her state, as Genshin's: its icon over the left end of her health bar, a ring inside it running down with its time.
   const state = field?.state.get().current ?? null
   const clock = services.host.feedback.stateClock
-  hud.state.hidden = state === null
+  setHidden(hud.state, state === null)
   if (state === null) clock.id = null
   else {
     if (clock.id !== state.id || state.remaining > clock.full) {
@@ -315,8 +325,9 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
       clock.full = state.remaining
     }
     showIcon(hud.state, stateIcons, state.id)
-    hud.state.className = `hud__state hud__state--${state.id}`
-    hud.state.style.setProperty("--left", String(clock.full <= 0 ? 0 : Math.min(1, state.remaining / clock.full)))
+    const stateClass = `hud__state hud__state--${state.id}`
+    if (hud.state.className !== stateClass) hud.state.className = stateClass
+    setStyle(hud.state, "--left", String(clock.full <= 0 ? 0 : Math.min(1, state.remaining / clock.full)))
   }
   // What is being played, and how far the run is: small, out of the way.
   if (!tuning.waves.enabled) {

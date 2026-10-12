@@ -76,6 +76,17 @@ keeps them, and releasing).
   characters, kits, aspects, or relics.
 - `pnpm lab`: the difficulty lab (a bot fights every wave of every
   challenge; see `docs/enemies.md`). Run it before and after tuning enemies.
+- `pnpm perf`: how long frames take in the worst case: each performance
+  scene (`src/dev/perf-scene.ts`, a crowd hit by a whole team at once)
+  played in headless Chrome (`CHROME_PATH`) at 1x, 4x, and 6x CPU
+  slowdown, read from the page's raw samples, a CPU profile, and a trace
+  (`--label <name>` writes `.data/perf/<name>.json`, `--compare <json>`
+  prints the change). `node --import tsx scripts/stress.ts --scene crowd`
+  times the same fight's simulation steps in Node (`--systems` adds up the
+  time in each system). Effects, sounds, and shaders have budgets: see
+  `docs/models.md`, "Budgets". Run both before and
+  after work on speed; `test/determinism.test.ts` proves the simulation
+  still plays exactly the same.
 - `/tools/progress/` on the dev server: a dev-only design aid projecting a
   new account's journey from the game's numbers, editable live (see
   `tools/progress/README.md`). It never edits content or ships.
@@ -83,7 +94,9 @@ keeps them, and releasing).
   `?character=`, `?aspect=`, `?challenge=` for a quick start, and `?arena=` to
   fight every challenge in one arena, `?wave=4` to start every challenge at a
   wave, and `?charged` to keep the
-  team's energy full, to try ultimates); backquote (or the key left of 1 or of Z)
+  team's energy full, to try ultimates); `?perf=crowd,30` (or `crowd-fire`,
+  `kills`) plays a performance scene and shows a summary of frame times
+  when its script ends (open it on a phone over the network); backquote (or the key left of 1 or of Z)
   opens the tuning panel (live numbers, spawns and elite spawns).
 
 ## How the code is organized

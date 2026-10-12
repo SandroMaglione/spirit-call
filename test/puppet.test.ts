@@ -121,4 +121,31 @@ describe("painting a copy", () => {
     disposeCopy(second.object, second.materials)
     original.dispose()
   })
+  it("draws a double-sided copy see-through as its back then its front, without changing its own material", async () => {
+    const { BackSide, DoubleSide, FrontSide, Mesh, MeshStandardMaterial, SphereGeometry } = await import("three")
+    const { copyModel, paintMaterials, disposeCopy } = await import("../src/presentation/puppet.ts")
+    const scene = new Group()
+    const part = new Mesh(new SphereGeometry(), new MeshStandardMaterial({ color: 0x336699, side: DoubleSide }))
+    scene.add(part)
+    const copy = copyModel({ id: "thunderSpirit", scene, clips: new Map(), spec: { url: "", height: 1, clips: {} } }, true)
+    const mesh = copy.object.children[0] as InstanceType<typeof Mesh>
+    const own = copy.materials[0]!.material
+    const version = own.version
+    paintMaterials(copy.materials, 0xffffff, 0xff0000, 0.5, 0.55)
+    const sides = mesh.material as Array<InstanceType<typeof MeshStandardMaterial>>
+    expect(sides.map((side) => side.side)).toEqual([BackSide, FrontSide])
+    expect(sides.every((side) => side.transparent && side.opacity === 0.55)).toBe(true)
+    expect(sides[0]!.color).toEqual(own.color)
+    // Both groups draw the whole part, the back first.
+    const count = mesh.geometry.index!.count
+    expect(mesh.geometry.groups).toEqual([{ start: 0, count, materialIndex: 0 }, { start: 0, count, materialIndex: 1 }])
+    // Frame after frame, nothing asks for a shader's setup again.
+    paintMaterials(copy.materials, 0xffffff, 0xff0000, 0.5, 0.55)
+    expect(mesh.material).toBe(sides)
+    expect(own.version).toBe(version)
+    expect(own.transparent).toBe(false)
+    paintMaterials(copy.materials, 0xffffff, 0, 0, 1)
+    expect(mesh.material).toBe(own)
+    disposeCopy(copy.object, copy.materials)
+  })
 })

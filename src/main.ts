@@ -2,9 +2,12 @@ import { effect, signal } from "@preact/signals"
 import { Result } from "@typeonce/bevy-ts"
 import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
-import { keyBindings, touchLayout } from "./config/input.ts"
+import { keyBindings, scriptedPartyTaps, touchButtons, touchLayout } from "./config/input.ts"
 import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
+import { makePerfScene, parsePerf } from "./dev/perf-scene.ts"
+import { startPerfRecord } from "./dev/perf-record.ts"
+import { defaultChallenge } from "./features/challenges.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.ts"
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
 import { holdAccount, openAccounts, SaveReadFailed, startApp } from "./app/app.ts"
@@ -127,13 +130,19 @@ const start = async (mount: HTMLElement) => {
   setMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
   // `?stress=300,2000` loads many enemies and projectiles to measure performance.
   const stressLoad = parseStress(devQuery)
+  // `?perf=crowd,30` plays a scripted crowd fight and records how long frames take (see dev/perf-scene.ts and scripts/perf.ts):
+  // the scene's numbers, team, and input, nothing from the account, so it plays the fight the Node benchmark plays.
+  const perfQuery = parsePerf(devQuery)
+  const perfScene = perfQuery === undefined ? undefined : makePerfScene(perfQuery.scene, perfQuery.enemies, 1200, { width: window.innerWidth, height: window.innerHeight })
   // `?arena=` fights every challenge in one arena (see dev/build.ts).
-  const tuning = waveFromQuery(arenaFromQuery(stressLoad !== undefined ? stressTuning() : dev ? loadSavedTuning() : defaultTuning, devQuery), devQuery)
+  const tuning = perfScene !== undefined
+    ? perfScene.tuning
+    : waveFromQuery(arenaFromQuery(stressLoad !== undefined ? stressTuning() : dev ? loadSavedTuning() : defaultTuning, devQuery), devQuery)
   // Resume the last account, unless the player explicitly asked for the picker.
   const entryUrl = new URL(window.location.href)
   const choosingAccount = entryUrl.searchParams.has("accounts")
   // A dev quick start (`?play`, below) plays the last played account, or a new one.
-  const quickStart = !choosingAccount && (new URLSearchParams(devQuery).has("play") || stressLoad !== undefined)
+  const quickStart = !choosingAccount && (new URLSearchParams(devQuery).has("play") || stressLoad !== undefined || perfScene !== undefined)
   // The models load while the account is picked: they are most of the wait on a phone's network.
   const progress = signal(0)
   const looks = loadLooks((share) => (progress.value = share))
@@ -169,12 +178,14 @@ const start = async (mount: HTMLElement) => {
   const flow = quickStart || tutorialFirst ? "Playing" : "Menu"
   const lastTeam = teamOf(tuning, account, account.selection.team)
   // A quick start may name aspects and relics the account does not own (a dev tool), but never one twice, or one that does not fit.
-  const team = tutorialFirst
+  const team = perfScene !== undefined
+    ? perfScene.team
+    : tutorialFirst
     ? teamOf(tuning, account, [newAccount.selection.character], {}, {})
     : withValidRelics(tuning, withValidAspects(tuning, quickStart ? teamFromQuery(tuning, devQuery, lastTeam, (character) => buildOf(tuning, account, character)) : lastTeam))
   const selected = encounterOf(tuning, account.selection.play, account)
-  const challenge = tutorialFirst ? "tutorial" : quickStart ? challengeFromQuery(tuning, devQuery, selected.challenge) : selected.challenge
-  const enemyLevel = tutorialFirst ? 1 : quickStart ? enemyLevelFromQuery(devQuery, selected.enemyLevel) : selected.enemyLevel
+  const challenge = perfScene !== undefined ? defaultChallenge : tutorialFirst ? "tutorial" : quickStart ? challengeFromQuery(tuning, devQuery, selected.challenge) : selected.challenge
+  const enemyLevel = perfScene !== undefined || tutorialFirst ? 1 : quickStart ? enemyLevelFromQuery(devQuery, selected.enemyLevel) : selected.enemyLevel
   const practice = quickStart && challenge === "practice" ? practiceFromQuery(tuning, devQuery) : undefined
   /** The quest or tier being played: runs are recorded against it; `null` for a dev quick start, which plays neither. */
   let playing: Play | null = null
@@ -184,7 +195,7 @@ const start = async (mount: HTMLElement) => {
   // The game is for phones: in the apps, and on a touch screen, the controls start as touch (the pad shows from the
   // first fight); a key or a mouse button switches to the keyboard's, and a touch back.
   const touchScreen = inApp || window.matchMedia("(pointer: coarse)").matches || new URLSearchParams(window.location.search).has("touch")
-  const device = touchScreen ? "touch" : "desktop"
+  const device = touchScreen && perfScene === undefined ? "touch" : "desktop"
   const { muted, volume, ...comfort } = shell.settings
   const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: { muted, volume }, comfort, device })
   if (partyTest) uiStore.menuScreens.value = [{ kind: "home" }, { kind: "team" }]
@@ -372,10 +383,11 @@ const start = async (mount: HTMLElement) => {
 
   const runtime = Game.Runtime.make({
     services: Game.Runtime.services(
-      Game.Runtime.service(KeyboardInput, keyboard),
-      Game.Runtime.service(PointerInput, pointer),
-      Game.Runtime.service(TouchInput, touch),
-      Game.Runtime.service(PartyInput, browser.party),
+      // `?perf` plays its script instead of the devices.
+      Game.Runtime.service(KeyboardInput, perfScene === undefined ? keyboard : Keyboard.scripted(keyBindings, perfScene.keys)),
+      Game.Runtime.service(PointerInput, perfScene === undefined ? pointer : Pointer.scripted(perfScene.pointer)),
+      Game.Runtime.service(TouchInput, perfScene === undefined ? touch : Touch.scripted(touchButtons, [])),
+      Game.Runtime.service(PartyInput, perfScene === undefined ? browser.party : scriptedPartyTaps([])),
       Game.Runtime.service(FrameContext, frameContext),
       Game.Runtime.service(RenderClock, clock),
       Game.Runtime.service(RenderHost, browser.host),
@@ -394,7 +406,7 @@ const start = async (mount: HTMLElement) => {
     debug: true
   })
   runtime.tick(setup)
-  runtime.tick(Game.Schedule(stress.populate, Game.Schedule.applyDeferred()))
+  runtime.tick(Game.Schedule(perfScene?.populate ?? stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
   /** Applies the comfort settings: the camera's shake and zoom, the page's motion, and the aim assist in the arena. */
   function applyComfort() {
@@ -413,10 +425,14 @@ const start = async (mount: HTMLElement) => {
   })
   // The menu's models and portraits, over the UI.
   const showcase = createShowcase(mount, browser.models)
-  if (dev) createTuningPanel(mount, tuning, devCommands)
+  // Not while measuring: its thousands of nodes cost style work every frame.
+  if (dev && perfScene === undefined) createTuningPanel(mount, tuning, devCommands)
 
   // One fixed step: dev commands (tuning edits, spawns), the simulation, the (usually empty) stress top-up, and `?charged`'s full energy.
-  const step = chargedFromQuery(devQuery)
+  // `?perf`: the scene's step, as the Node benchmark and the determinism test run it (and a count of its hits).
+  const step = perfScene !== undefined
+    ? Game.Schedule(fixedUpdate, perfScene.keep, KeepCharged, Game.Schedule.applyDeferred(), perfScene.count)
+    : chargedFromQuery(devQuery)
     ? Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, KeepCharged, Game.Schedule.applyDeferred())
     : Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
   // Name the schedule objects actually ticked: `step` wraps fixedUpdate.
@@ -428,6 +444,14 @@ const start = async (mount: HTMLElement) => {
 
   const stats = browser.host.stats
   let simMs = 0
+  // `?perf`'s raw samples (see dev/perf-record.ts): what each frame cost, until the scene's script ends.
+  const perfRecord = perfScene === undefined ? undefined : startPerfRecord(perfScene.name, perfScene.enemies)
+  const perfCounts = { steps: 0, lastFrame: performance.now(), started: 0, nodes: 0, hits: 0 }
+  if (perfRecord !== undefined) {
+    const gl = browser.host.renderer.getContext()
+    const named = gl.getExtension("WEBGL_debug_renderer_info")
+    perfRecord.gpu = String(named === null ? gl.getParameter(gl.RENDERER) : gl.getParameter(named.UNMASKED_RENDERER_WEBGL))
+  }
   const loop = FixedLoop.start({
     source: FixedLoop.animationFrames(window),
     stepSeconds: engine.stepSeconds,
@@ -443,6 +467,7 @@ const start = async (mount: HTMLElement) => {
         return Result.failure(error)
       }
       simMs += performance.now() - started
+      perfCounts.steps += 1
       return result
     },
     render: (frameTiming) => {
@@ -455,6 +480,7 @@ const start = async (mount: HTMLElement) => {
     onFailure: (failure) => crash(failure.kind === "UpdateFailure" ? failure.error : new Error(`The game loop stopped: ${failure.kind}`))
   })
   if (!loop.ok) throw new Error(`Invalid loop option: ${loop.error.field}`)
+  if (perfRecord !== undefined) perfRecord.started = true
   halt = () => {
     loop.value.stop()
     input.cancel()
@@ -470,12 +496,44 @@ const start = async (mount: HTMLElement) => {
     stats.steps = fixedSteps
     if (elapsedSeconds > 0) stats.fps += (1 / elapsedSeconds - stats.fps) * 0.05
     stats.simMs += (simMs - stats.simMs) * 0.05
+    const frameSimMs = simMs
     simMs = 0
     const started = performance.now()
     runtime.tick(frame)
     browser.host.render()
     showcase.render(elapsedSeconds)
-    stats.drawMs += (performance.now() - started - stats.drawMs) * 0.05
+    const drawn = performance.now()
+    stats.drawMs += (drawn - started - stats.drawMs) * 0.05
+    if (perfRecord !== undefined && perfScene !== undefined && !perfRecord.done) recordPerf(perfRecord, perfScene, frameSimMs, drawn - started, fixedSteps, drawn)
+  }
+
+  /** One frame of `?perf`'s samples; once the scene's script has run out, the summary. */
+  function recordPerf(record: NonNullable<typeof perfRecord>, scene: NonNullable<typeof perfScene>, frameSimMs: number, drawMs: number, steps: number, now: number) {
+    const info = browser.host.renderer.info
+    const sound = sounds.stats()
+    const effects = browser.host.fx.counts
+    record.push({
+      t: now,
+      interval: now - perfCounts.lastFrame,
+      simMs: frameSimMs,
+      drawMs,
+      steps,
+      calls: info.render.calls,
+      triangles: info.render.triangles,
+      programs: info.programs?.length ?? 0,
+      particles: effects.particles,
+      numbers: effects.numbers,
+      voices: sound.live,
+      started: sound.started - perfCounts.started,
+      nodes: sound.nodes - perfCounts.nodes,
+      haze: browser.host.haze.applied ? 1 : 0,
+      hits: scene.hits() - perfCounts.hits
+    })
+    perfCounts.lastFrame = now
+    perfCounts.started = sound.started
+    perfCounts.nodes = sound.nodes
+    perfCounts.hits = scene.hits()
+    if (perfCounts.steps >= scene.steps) record.finish(mount)
   }
 }
 

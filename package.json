@@ -21,6 +21,7 @@
     "db": "node --import tsx --import ./scripts/assets.ts scripts/db.ts",
     "balance": "node --import tsx --import ./scripts/assets.ts scripts/balance.ts",
     "shot": "node --import tsx --import ./scripts/assets.ts scripts/screenshot.ts",
+    "perf": "node --import tsx scripts/perf.ts",
     "effect-source": "node scripts/effect-source.ts",
     "app": "vite build && cap sync",
     "app:android": "pnpm app && cap open android",

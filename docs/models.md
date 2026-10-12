@@ -91,6 +91,31 @@ the previous section's endpoint and carry any elapsed frame remainder.
   need justifies more. See `art/enemies/README.md` for sources and checks.
 - Keep a character under about 5,000 triangles and a 512 px texture; check
   new art at phone size on the network address.
+- **Effects are capped** (`fx.ts`, `limits`): at most 1,024 particles
+  alive, drawn as one instanced batch (`particles.ts`); past about 300 new
+  ones in a frame each throw keeps an eighth (at least one); a body hit
+  many times in a frame throws sparks and a flash for its heaviest blow
+  only; at most 48 floating numbers (an important one, heavy, a kill, what
+  the player takes, replaces the oldest), 64 flashes and 32 rings. Ordinary
+  play stays far below them; only a crowd's burst cascade reaches them.
+- **Sounds are capped** (`sound.ts`, `limits`): a sound is recorded once
+  audio unlocks and played as that recording (4 audio nodes); plays of one
+  sound in the same frame merge into one; at most 6 start in a frame (the
+  most important first) and 16 sound at once.
+- **Draw see-through double-sided materials in one pass.** three.js draws a
+  material that is both `transparent` and `DoubleSide` twice and redoes its
+  shader setup before each pass, every frame. Flat layers set
+  `forceSinglePass`; a model's double-sided materials turn see-through as a
+  back-face copy and a front-face copy (`puppet.ts`).
+- **Everything a fight can show compiles before it starts**
+  (`warm-up.ts`): its enemy kinds baked, the team as it is and
+  see-through, the arena's fading pieces, the haze, and every shader in the
+  scenes. A new kind of thing a fight can show is added to the warm-up;
+  `pnpm perf`'s `programs` column (compiled shaders after the warm-up, and
+  at the end) must stay flat.
+- Upload only what is drawn: an instanced or dynamic buffer marks the range
+  in use (`uploads.ts`, `Shapes.flush`); without one, three.js uploads the
+  whole buffer every frame.
 
 Enemy attack poses follow `AttackPhase` and `Attacker.elapsed` directly:
 `Windup`, `Active`, and `Recovery` stretch to content timings. Ranged attacks

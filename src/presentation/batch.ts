@@ -10,6 +10,7 @@
  */
 import { Color, DynamicDrawUsage, InstancedBufferAttribute, InstancedMesh, Object3D } from "three"
 import type { BufferGeometry, Group, Material } from "three"
+import { showInstances, uploadFirst } from "./uploads.ts"
 
 export class Instance {
   /** Where it is: parented in the node's tree like a mesh. */
@@ -89,20 +90,10 @@ export class Batch {
         this.geometry.getAttribute("instanceGlow").setXYZW(index, member.glow.r, member.glow.g, member.glow.b, member.glowAmount)
       }
     }
-    mesh.count = members.length
     if (this.animated) {
-      this.geometry.getAttribute("instancePose").needsUpdate = true
-      this.geometry.getAttribute("instancePoseBlend").needsUpdate = true
-      this.geometry.getAttribute("instanceGlow").needsUpdate = true
+      for (const name of ["instancePose", "instancePoseBlend", "instanceGlow"]) uploadFirst(this.geometry.getAttribute(name) as InstancedBufferAttribute, members.length)
     }
-    mesh.instanceMatrix.clearUpdateRanges()
-    mesh.instanceMatrix.addUpdateRange(0, members.length * 16)
-    mesh.instanceMatrix.needsUpdate = true
-    if (mesh.instanceColor !== null) {
-      mesh.instanceColor.clearUpdateRanges()
-      mesh.instanceColor.addUpdateRange(0, members.length * 3)
-      mesh.instanceColor.needsUpdate = true
-    }
+    showInstances(mesh, members.length)
   }
 
   dispose(): void {

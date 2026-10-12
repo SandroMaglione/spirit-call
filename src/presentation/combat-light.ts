@@ -3,6 +3,7 @@
 import { AdditiveBlending, Color, CylinderGeometry, InstancedMesh, Matrix4, MeshBasicMaterial, Quaternion, Vector3 } from "three"
 import type { Object3D } from "three"
 import type { Vec2 } from "../math/vec.ts"
+import { showInstances } from "./uploads.ts"
 
 export type ShotLook = "round" | "spark" | "orb" | "enemy"
 type Point = { readonly x: number; readonly y: number; readonly z: number }
@@ -123,9 +124,7 @@ export class CombatLight {
         this.line(point(-3, 0, 0), point(10, 0, 0), 3 * fade, 0xffffff, fade)
       }
     }
-    this.mesh.count = this.shown
-    this.mesh.instanceMatrix.needsUpdate = true
-    if (this.mesh.instanceColor !== null) this.mesh.instanceColor.needsUpdate = true
+    showInstances(this.mesh, this.shown)
   }
 
   dispose(): void {

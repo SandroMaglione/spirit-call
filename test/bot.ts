@@ -24,6 +24,7 @@ import { keyBindings, touchButtons } from "../src/config/input.ts"
 import { engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ChallengeId, EliteElement } from "../src/content/challenges.ts"
+import type { ProbeSystem } from "./fingerprint.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import type { Tally } from "../src/content/stars.ts"
 import { makeEnemy } from "../src/features/enemies.ts"
@@ -585,6 +586,14 @@ export interface BotRun {
   readonly rotateEvery?: number
   /** Skip the expensive standing-still pressure probe in large balance sweeps. */
   readonly measurePressure?: boolean
+  /** Watches the run without changing it (see `test/determinism.test.ts`): `system` runs after every step, then `after`. */
+  readonly probe?: BotProbe
+}
+
+/** What watches a bot's run: a system run after each step, and a call after it with the runtime. */
+export interface BotProbe {
+  readonly system: ProbeSystem
+  readonly after: (runtime: ReturnType<typeof createSimulation>["runtime"], step: number) => void
 }
 
 export interface BotReport {
@@ -667,7 +676,7 @@ export const runBot = (run: BotRun): BotReport => {
       else { dealtHits += 1; taken += hit.amount }
     }
   })
-  const measuredUpdate = Game.Schedule(sim.fixedUpdate, Measure)
+  const measuredUpdate = run.probe === undefined ? Game.Schedule(sim.fixedUpdate, Measure) : Game.Schedule(sim.fixedUpdate, Measure, run.probe.system)
   if (run.enemies !== undefined) {
     const enemies = run.enemies
     const Clear = Game.System("Bot/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
@@ -758,6 +767,7 @@ export const runBot = (run: BotRun): BotReport => {
     if (move.dash && move.closing !== true) dashes += 1
     if (move.direction.x !== 0 || move.direction.y !== 0) last = move.direction
     sim.runtime.tick(measuredUpdate)
+    run.probe?.after(sim.runtime, step)
     members = sim.runtime.inspect(Members)
     const now = sim.runtime.inspect(Vitals) ?? health
     if (now < health) {

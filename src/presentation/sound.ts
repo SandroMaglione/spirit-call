@@ -1,5 +1,6 @@
 /**
- * Game sounds synthesized live with Web Audio (no audio files).
+ * Game sounds synthesized with Web Audio (no audio files): built live at
+ * first, then pre-rendered once audio unlocks (see "Pre-rendered" below).
  *
  * Each sound is a few layers built from small instruments:
  *
@@ -20,6 +21,23 @@
  * Heavy sounds duck the others for a moment so they cut through; a
  * compressor keeps overlapping sounds from clipping. Repeated sounds are
  * rate-limited and vary their pitch slightly.
+ *
+ * Pre-rendered: built live, a sound is 10 to 40 audio nodes made on the
+ * spot, and a crowd hit asks for dozens of sounds at once. So once audio
+ * unlocks, each sound is rendered offline (by the same instruments), a few
+ * per idle moment, in two takes (its noise starting in different places) at
+ * each pitch the game asks for; from then on a play is that recording
+ * through its own volume and pan into the same mixer and room (4 nodes),
+ * its slight pitch variation a change of playback rate. Until its
+ * recording is ready a sound is built live as before.
+ *
+ * Under a crowd's load, sounds landing together are merged or dropped:
+ * plays asked for in the same moment (one frame) of the same sound play as
+ * one, a little louder; at most `limits.perFrame` start at once, the most
+ * important first (heavy sounds and ultimates, kills, heavy hits, then the
+ * loudest); and at most `limits.voices` sound at once (counted until their
+ * own sound ends, not their echo in the room), a new important one cutting
+ * the oldest other one short.
  *
  * Browsers start audio suspended: the board unlocks on the first pointer or
  * key press. Mute starts from `options.muted`; remembering it is the
@@ -90,6 +108,16 @@ export interface SoundBoard {
   /** The player's volume, 0..1 (1 by default), over every sound. */
   readonly volume: () => number
   setVolume(volume: number): void
+  /** What has played so far (for `?perf`'s samples). */
+  readonly stats: () => SoundStats
+}
+
+/** Counts for measuring: plays started and audio nodes made since the board began, plays still sounding, and sounds still to record. */
+export interface SoundStats {
+  readonly started: number
+  readonly nodes: number
+  readonly live: number
+  readonly toRecord: number
 }
 
 /** The loudest a single sound plays, before the master volume. */
@@ -101,7 +129,7 @@ const duckDepth = 0.45
 const duckRecovery = 0.18
 
 interface Voice {
-  readonly context: AudioContext
+  readonly context: BaseAudioContext
   /** Where this play's layers connect. */
   readonly out: AudioNode
   readonly noise: AudioBuffer
@@ -496,6 +524,79 @@ interface Mixer {
   readonly distortion: Float32Array<ArrayBuffer>
 }
 
+/** How many sounds at once: sounding (until their own sound ends), and starting in one frame. */
+export const limits = { voices: 16, perFrame: 6 }
+
+/** Takes of each sound recorded (at each pitch), one picked at random each play. */
+const takes = 2
+
+/** The pitches a sound is recorded at once audio unlocks (others are recorded the first time they are asked for). */
+const usualPitches = (name: SoundName): ReadonlyArray<number> =>
+  // A combo's swings climb by 0.067 a move (see `audio.ts`); a power move plays at 0.85.
+  name === "slash" || name === "thrust" || name === "spin" || name === "shot" || name === "disc" || name === "throw" ? [1, 1.067, 1.134, 1.201, 1.268, 1.335, 0.85] : [1]
+
+/** How much a sound matters when too many land at once: lower first. Heavy sounds and ultimates, then kills, then heavy hits, then the rest. */
+const rank = (name: SoundName): number => (voices[name][0].heavy === true || name === "ultimateCall" ? 0 : name === "kill" ? 1 : name === "heavyHit" ? 2 : 3)
+
+/** Calls `stopped` with each time a source made on `context` is told to stop, and `made` for each node made. */
+const watchNodes = (context: BaseAudioContext, made: () => void, stopped: (when: number) => void): void => {
+  const makers = ["createGain", "createOscillator", "createBiquadFilter", "createBufferSource", "createWaveShaper", "createStereoPanner"] as const
+  for (const name of makers) {
+    const make = (context[name] as () => AudioNode).bind(context)
+    Object.assign(context, {
+      [name]: () => {
+        made()
+        const node = make() as AudioNode & { stop?: (when?: number) => void }
+        const stop = node.stop
+        if (typeof stop === "function") {
+          node.stop = (when?: number) => {
+            stopped(when ?? 0)
+            stop.call(node, when)
+          }
+        }
+        return node
+      }
+    })
+  }
+}
+
+/**
+ * How long a sound lasts: its sources' latest stop, found by building it on
+ * a stand-in for an audio context that makes no audio nodes (it only hears
+ * when each source is told to stop).
+ */
+const lengthOf = (build: (voice: Voice) => void, voice: Omit<Voice, "context" | "out">): number => {
+  let end = 0
+  const param = { value: 0, setValueAtTime: () => param, linearRampToValueAtTime: () => param, exponentialRampToValueAtTime: () => param, setTargetAtTime: () => param, cancelScheduledValues: () => param }
+  const node = () => ({
+    gain: param, frequency: param, Q: param, pan: param, playbackRate: param, type: "", buffer: null, curve: null,
+    connect: <T>(target: T) => target,
+    start: () => undefined,
+    stop: (when = 0) => {
+      end = Math.max(end, when)
+    }
+  })
+  const standIn = { createGain: node, createOscillator: node, createBiquadFilter: node, createBufferSource: node, createWaveShaper: node, createStereoPanner: node }
+  build({ ...voice, context: standIn as unknown as BaseAudioContext, out: node() as unknown as AudioNode })
+  return end
+}
+
+/** A sound playing: when its own sound ends, whether it is important (see `rank`), and how to cut it short (a recording; one built live cannot be). */
+interface Playing {
+  readonly end: number
+  readonly important: boolean
+  readonly stop: (() => void) | null
+}
+
+/** A play asked for this frame, merged with the others of its sound. */
+interface Asked {
+  readonly name: SoundName
+  readonly options: PlayOptions
+  count: number
+  volume: number
+  pan: number
+}
+
 /**
  * The browser's sound board. `unlockHost` (usually `window`) resumes audio on
  * the first pointer or key press, as browsers require.
@@ -505,6 +606,71 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
   let muted = options.muted ?? false
   let volume = clampVolume(options.volume ?? 1)
   const last = new Map<SoundName, number>()
+  // Measuring (for `stats`): plays started, nodes made, and the latest stop of the play being built live.
+  const counted = { started: 0, nodes: 0, end: 0 }
+  const playing: Array<Playing> = []
+  /** Recordings by sound and pitch (see `keyOf`), each a few takes. */
+  const recorded = new Map<string, ReadonlyArray<AudioBuffer>>()
+  const asked = new Set<string>()
+  const toRecord: Array<{ readonly name: SoundName; readonly pitch: number }> = []
+  let recording = false
+  /** Plays asked for in this moment (one frame, or one tap), played together once it is over. */
+  const queued: Array<{ readonly name: SoundName; readonly options: PlayOptions }> = []
+
+  const keyOf = (name: SoundName, pitch: number): string => `${name}@${pitch.toFixed(3)}`
+
+  /** Records `name` at `pitch` offline, by the same instruments, as long as it sounds. */
+  const record = async (name: SoundName, pitch: number): Promise<AudioBuffer> => {
+    const { noise, distortion, context } = mixer!
+    const rate = context.sampleRate
+    const build = voices[name][1]
+    const end = lengthOf(build, { noise, distortion, at: 0, pitch, volume: 1 })
+    const offline = new OfflineAudioContext(1, Math.max(1, Math.ceil((end + 0.01) * rate)), rate)
+    build({ context: offline, out: offline.destination, noise, distortion, at: 0, pitch, volume: 1 })
+    return offline.startRendering()
+  }
+
+  /** Runs `run` when the page is idle (or soon, where it cannot tell), with how many milliseconds it has. */
+  const whenIdle = (run: (spare: () => number) => void): void => {
+    if (typeof requestIdleCallback === "function") requestIdleCallback((deadline) => run(() => (deadline.didTimeout ? 0 : deadline.timeRemaining())), { timeout: 500 })
+    else setTimeout(() => run(() => 0), 50)
+  }
+
+  /** Records `name` at `pitch`: its takes, then kept for playing. */
+  const recordTakes = async (name: SoundName, pitch: number): Promise<void> => {
+    recorded.set(keyOf(name, pitch), await Promise.all(Array.from({ length: takes }, () => record(name, pitch))))
+  }
+
+  /**
+   * Records the sounds waiting, in idle moments: as many started in one as
+   * it has time for (building a sound to record takes a moment; recording it
+   * happens off the page's thread), or a few when the page is never idle.
+   */
+  const recordNext = (): void => {
+    if (recording || toRecord.length === 0 || mixer === undefined || typeof OfflineAudioContext === "undefined") return
+    recording = true
+    whenIdle((spare) => {
+      const started: Array<Promise<void>> = []
+      while (toRecord.length > 0 && (spare() > 4 || started.length < 8)) {
+        const next = toRecord.shift()!
+        // A recording that fails leaves the sound built live.
+        started.push(recordTakes(next.name, next.pitch).catch(() => undefined))
+        if (spare() <= 4 && started.length >= 8) break
+      }
+      void Promise.all(started).finally(() => {
+        recording = false
+        recordNext()
+      })
+    })
+  }
+
+  const askRecording = (name: SoundName, pitch: number): void => {
+    const key = keyOf(name, pitch)
+    if (asked.has(key)) return
+    asked.add(key)
+    toRecord.push({ name, pitch })
+    recordNext()
+  }
 
   const ensure = (): Mixer | undefined => {
     if (mixer !== undefined) return mixer
@@ -530,6 +696,8 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
     const samples = noise.getChannelData(0)
     for (let index = 0; index < samples.length; index++) samples[index] = Math.random() * 2 - 1
     mixer = { context, bus, front: master, reverb: convolver, noise, distortion: distortionCurve() }
+    watchNodes(context, () => (counted.nodes += 1), (when) => (counted.end = Math.max(counted.end, when)))
+    for (const name of Object.keys(voices) as Array<SoundName>) for (const pitch of usualPitches(name)) askRecording(name, pitch)
     return mixer
   }
 
@@ -539,6 +707,89 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
     bus.gain.setValueAtTime(Math.min(bus.gain.value, 1), now)
     bus.gain.linearRampToValueAtTime(duckDepth, now + 0.01)
     bus.gain.setTargetAtTime(1, now + 0.05, duckRecovery / 3)
+  }
+
+  /** Room for one more sound: one that has ended leaves it; past `limits.voices`, an important one cuts the oldest other one short. */
+  const room = (now: number, important: boolean): boolean => {
+    for (let index = playing.length - 1; index >= 0; index--) if (playing[index]!.end <= now) playing.splice(index, 1)
+    if (playing.length < limits.voices) return true
+    if (!important) return false
+    const oldest = playing.findIndex((other) => !other.important && other.stop !== null)
+    if (oldest === -1) return false
+    playing[oldest]!.stop!()
+    playing.splice(oldest, 1)
+    return true
+  }
+
+  /** Plays one sound (merged plays as one, `count` of them); whether it started. */
+  const start = (asked: Asked): boolean => {
+    const { context, front, bus, reverb } = mixer!
+    const { name } = asked
+    const [mix, build] = voices[name]
+    const now = context.currentTime
+    const previous = last.get(name)
+    if (previous !== undefined && now - previous < (mix.interval ?? 0.02)) return false
+    const important = rank(name) <= 1
+    if (!room(now, important)) return false
+    last.set(name, now)
+
+    // Per play: input -> pan -> dry bus, and a send to the room.
+    const input = context.createGain()
+    const pan = context.createStereoPanner()
+    pan.pan.value = Math.max(-1, Math.min(1, asked.pan))
+    input.connect(pan).connect(mix.heavy === true ? front : bus)
+    const send = context.createGain()
+    send.gain.value = mix.reverb
+    pan.connect(send).connect(reverb)
+    if (mix.heavy === true) duck(bus, now)
+
+    // Several of one sound at once: one, a little louder.
+    const loudness = asked.volume * Math.min(1.5, 1 + 0.15 * (asked.count - 1))
+    const pitch = asked.options.pitch ?? 1
+    const variation = 0.96 + Math.random() * 0.08
+    const at = now + 0.005
+    const takes = recorded.get(keyOf(name, pitch))
+    if (takes !== undefined) {
+      const source = context.createBufferSource()
+      source.buffer = takes[Math.floor(Math.random() * takes.length)]!
+      source.playbackRate.value = variation
+      input.gain.value = loudness
+      source.connect(input)
+      source.start(at)
+      playing.push({ end: at + source.buffer.duration / variation, important, stop: () => source.stop() })
+    } else {
+      askRecording(name, pitch)
+      counted.end = now
+      build({ context, out: input, noise: mixer!.noise, distortion: mixer!.distortion, at, pitch: pitch * variation, volume: loudness })
+      playing.push({ end: counted.end, important, stop: null })
+    }
+    counted.started += 1
+    return true
+  }
+
+  /** Plays what this moment asked for: merged by sound, the most important first, at most `limits.perFrame`. */
+  const flush = (): void => {
+    const batch = queued.splice(0)
+    if (muted || mixer === undefined || mixer.context.state !== "running") return
+    const merged = new Map<SoundName, Asked>()
+    for (const { name, options } of batch) {
+      const known = merged.get(name)
+      const pan = options.pan ?? 0
+      const loud = options.volume ?? 1
+      if (known === undefined) merged.set(name, { name, options, count: 1, volume: loud, pan })
+      else {
+        // Panned to where they were on average, as loud as the loudest of them.
+        known.pan = (known.pan * known.count + pan) / (known.count + 1)
+        known.count += 1
+        known.volume = Math.max(known.volume, loud)
+      }
+    }
+    const order = [...merged.values()].sort((a, b) => rank(a.name) - rank(b.name) || b.volume - a.volume)
+    let started = 0
+    for (const asked of order) {
+      if (started >= limits.perFrame) break
+      if (start(asked)) started += 1
+    }
   }
 
   const unlock = () => {
@@ -552,32 +803,13 @@ export const createSoundBoard = (unlockHost: Window, options: { readonly muted?:
   return {
     play(name, options = {}) {
       if (muted || mixer === undefined || mixer.context.state !== "running") return
-      const { context } = mixer
-      const [mix, build] = voices[name]
-      const now = context.currentTime
-      const previous = last.get(name)
-      if (previous !== undefined && now - previous < (mix.interval ?? 0.02)) return
-      last.set(name, now)
-
-      // Per play: input -> pan -> dry bus, and a send to the room.
-      const input = context.createGain()
-      const pan = context.createStereoPanner()
-      pan.pan.value = Math.max(-1, Math.min(1, options.pan ?? 0))
-      input.connect(pan).connect(mix.heavy === true ? mixer.front : mixer.bus)
-      const send = context.createGain()
-      send.gain.value = mix.reverb
-      pan.connect(send).connect(mixer.reverb)
-      if (mix.heavy === true) duck(mixer.bus, now)
-
-      build({
-        context,
-        out: input,
-        noise: mixer.noise,
-        distortion: mixer.distortion,
-        at: now + 0.005,
-        pitch: (options.pitch ?? 1) * (0.96 + Math.random() * 0.08),
-        volume: options.volume ?? 1
-      })
+      queued.push({ name, options })
+      // Everything asked for in this moment (a frame's systems, a tap's handlers) plays together once it is over.
+      if (queued.length === 1) queueMicrotask(flush)
+    },
+    stats: () => {
+      const now = mixer?.context.currentTime ?? 0
+      return { started: counted.started, nodes: counted.nodes, live: playing.filter((sound) => sound.end > now).length, toRecord: asked.size - recorded.size }
     },
     muted: () => muted,
     setMuted(next) {

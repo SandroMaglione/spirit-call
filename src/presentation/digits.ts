@@ -54,6 +54,8 @@ export class Digits {
     texture.colorSpace = SRGBColorSpace
     texture.minFilter = LinearMipmapLinearFilter
     this.mesh = new Mesh(new BufferGeometry(), new MeshBasicMaterial({ map: texture, vertexColors: true, transparent: true, depthTest: false, depthWrite: false, side: DoubleSide }))
+    // Flat: one pass looks the same as three.js's two for see-through double-sided materials, without redoing its shader setup each frame.
+    this.mesh.material.forceSinglePass = true
     this.mesh.frustumCulled = false
     this.mesh.renderOrder = order
     this.grow(256)
