@@ -1,7 +1,8 @@
 /**
  * What `pnpm lint:game` checks (part of `pnpm check`): the simulation's
  * schedules on a headless runtime with idle input, and the render schedule
- * `frame` described without running (its event reads count). `UiRequest`
+ * `frame` and the dev panel's `ApplyDevCommands` described without running
+ * (their reads and writes count). `UiRequest`
  * is sent by the UI with `runtime.send`.
  *
  *   pnpm lint:game
@@ -13,8 +14,9 @@
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
 import { keyBindings } from "../src/config/input.ts"
+import { ApplyDevCommands } from "../src/dev/commands.ts"
 import { frame } from "../src/presentation/schedule.ts"
-import { UiRequest } from "../src/schema.ts"
+import { Game, UiRequest } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
 export const lintTarget = () => {
@@ -22,7 +24,7 @@ export const lintTarget = () => {
   return {
     runtime: sim.runtime,
     schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
-    describe: { frame },
+    describe: { frame, dev: Game.Schedule(ApplyDevCommands) },
     hostEvents: [UiRequest]
   }
 }
