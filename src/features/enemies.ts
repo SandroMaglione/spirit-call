@@ -10,7 +10,7 @@ import * as SpatialGrid from "@typeonce/bevy-ts-math/SpatialGrid"
 import { trainingDummies } from "../content/arena.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { positive } from "../physics/sizes.ts"
-import { makeBody } from "./bodies.ts"
+import { FighterBodyParts, makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
 import { behaviorOf, currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -101,6 +101,9 @@ export const restOf = (tuning: TuningValue, level: number, champion: boolean): n
   return early * (champion ? championPower(tuning, level).cooldown : 1)
 }
 
+/** Every component `makeEnemy` may give an enemy. */
+export const EnemyParts = [...FighterBodyParts, Enemy, Attacker, Marked, AttackPhase, Brain, EnemyMode, Poise, Renderable, Elite, Rampage, Shield, Ward] as const
+
 /**
  * An enemy of `kind` at `level` (see `EnemyLevel`); an elite one (see
  * `Tuning.elites`) when `elite` names its element: bigger, tougher, immune
@@ -121,7 +124,7 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   const { def } = base
   const size = elite === null ? 1 : lead?.scale ?? tuning.elites.scale
   const affinities = elite === null ? stats.elements : { ...stats.elements, [elite]: "immune" as const }
-  const body = Game.Command.insert(
+  const body = Game.Command.extend(
     makeBody({ at, faction: "enemy", stats: { hp, atk, def, speed }, radius: stats.radius * size, hurtboxRadius: stats.hurtboxRadius * size, affinities }),
     [Enemy, { kind, champion: lead !== null, rest: restOf(tuning, level, lead !== null), windup: windupOf(tuning, level) }],
     [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
@@ -135,15 +138,15 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
   // Staggered, so elites of a wave do not all discharge together.
   const draft = elite === null
     ? body
-    : Game.Command.insert(body, [Elite, { element: elite, trail: tuning.elites.trailEvery, discharge: tuning.elites.discharge.every * (0.5 + (at.x % 97) / 194), charging: null }])
+    : Game.Command.extend(body, [Elite, { element: elite, trail: tuning.elites.trailEvery, discharge: tuning.elites.discharge.every * (0.5 + (at.x % 97) / 194), charging: null }])
   // A champion with its own moveset fights in phases (see content/champions.ts).
-  const fighting = lead !== null && tuning.champions.movesets[kind] !== undefined ? Game.Command.insert(draft, [Rampage, { phase: 0, opened: 0, pressure: 0 }]) : draft
+  const fighting = lead !== null && tuning.champions.movesets[kind] !== undefined ? Game.Command.extend(draft, [Rampage, { phase: 0, opened: 0, pressure: 0 }]) : draft
   const form = tuning.shields
   const shielded = !shield
     ? fighting
-    : Game.Command.insert(fighting, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (form.arcDegrees * Math.PI) / 360, turnRate: (form.turnRate * Math.PI) / 180 }])
+    : Game.Command.extend(fighting, [Shield, { facing: { x: 1, y: 0 }, halfAngle: (form.arcDegrees * Math.PI) / 360, turnRate: (form.turnRate * Math.PI) / 180 }])
   // A warder reaches for an ally as soon as it is out.
-  return stats.ward === null ? shielded : Game.Command.insert(shielded, [Ward, { ally: null, formed: 0, wait: 0 }])
+  return stats.ward === null ? shielded : Game.Command.extend(shielded, [Ward, { ally: null, formed: 0, wait: 0 }])
 }
 
 /**
@@ -160,6 +163,9 @@ export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, 
     return makePendingSpawn(kind, { x: at.x + Math.cos(angle) * spread, y: at.y + Math.sin(angle) * spread }, delay, index === 0 ? elite : null, undefined, false, index === 0 && shield)
   })
 }
+
+/** The components of `makePendingSpawn`. */
+export const PendingSpawnParts = [PendingSpawn] as const
 
 /**
  * A spawn warning that becomes an enemy of `kind` (an elite, when `elite`
@@ -182,21 +188,22 @@ export const respawnOf = (kind: EnemyKind, respawns: { readonly at: Vec2; readon
  * when destroyed.
  */
 export const SpawnTrainingDummies = Game.System("Shooter/SpawnTrainingDummies", {
-  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge), level: Game.System.readResource(EnemyLevel) }
+  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge), level: Game.System.readResource(EnemyLevel) },
+  commands: Game.System.commands(Game.System.spawns(...EnemyParts, Immortal, Respawns))
 }, ({ resources, commands }) => {
   const tuning = resources.tuning.get()
   const objective = tuning.challenges[resources.challenge.get()].objective
   if (tuning.waves.enabled && objective.kind === "training") {
     for (const dummy of objective.dummies) {
       const at = { x: dummy.x * tuning.arena.width, y: dummy.y * tuning.arena.height }
-      commands.spawnIn(RunScope, Game.Command.insert(makeEnemy(tuning, dummy.kind, at, 1, resources.level.get()), [Immortal, {}]))
+      commands.spawnIn(RunScope, Game.Command.extend(makeEnemy(tuning, dummy.kind, at, 1, resources.level.get()), [Immortal, {}]))
     }
     return
   }
   if (tuning.waves.enabled) return
   for (const spot of trainingDummies) {
     const at = { x: spot.x * tuning.arena.width, y: spot.y * tuning.arena.height }
-    const draft = Game.Command.insert(makeEnemy(tuning, "dummy", at), [Respawns, { at, delay: tuning.enemies.dummy.respawnDelay }])
+    const draft = Game.Command.extend(makeEnemy(tuning, "dummy", at), [Respawns, { at, delay: tuning.enemies.dummy.respawnDelay }])
     commands.spawnIn(RunScope, draft)
   }
 })
@@ -210,7 +217,8 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
     level: Game.System.readResource(EnemyLevel),
     waves: Game.System.readResource(Waves),
     challenge: Game.System.readResource(Challenge)
-  }
+  },
+  commands: Game.System.commands(Game.System.spawns(...EnemyParts, PracticeUnit, Respawns), Game.System.despawns(PendingSpawn))
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
@@ -223,13 +231,13 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
       data.pending.set({ ...pending, remaining })
       continue
     }
-    commands.despawn(entity.id)
+    commands.despawn(entity)
     // Alternate strafing directions so groups of shooters spread out.
     const made = makeEnemy(tuning, pending.kind, pending.at, entity.id % 2 === 0 ? 1 : -1, level, pending.elite, pending.champion === true, pending.shield === true)
     // Enemy Practice's: it holds its spot (see `KeepPracticeField`).
-    const draft = pending.slot === undefined ? made : Game.Command.insert(made, [PracticeUnit, { slot: pending.slot }])
+    const draft = pending.slot === undefined ? made : Game.Command.extend(made, [PracticeUnit, { slot: pending.slot }])
     commands.spawnIn(RunScope, pending.kind === "dummy"
-      ? Game.Command.insert(draft, [Respawns, { at: pending.at, delay: tuning.enemies.dummy.respawnDelay }])
+      ? Game.Command.extend(draft, [Respawns, { at: pending.at, delay: tuning.enemies.dummy.respawnDelay }])
       : draft)
   }
 })

@@ -18,7 +18,7 @@ import { cut, lob, vortex, barrage } from "../src/content/skills.ts"
 import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { attackOf, damageDealt, damageTaken } from "../src/features/build.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Aim, Dash, Enemy, Flow, Game, Invulnerable, Player, Position, RunScope, Velocity } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
@@ -262,9 +262,10 @@ export const start = (options: StartOptions = {}) => {
 
 /** Despawns every enemy (training dummies included). */
 export const ClearEnemies = Game.System("Test/ClearEnemies", {
-  queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
+  queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
+  commands: Game.System.commands(Game.System.despawns(Enemy))
 }, ({ queries, commands }) => {
-  for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+  for (const { entity } of queries.enemies.each()) commands.despawn(entity)
 })
 
 /** The center of the default arena, where the player spawns. */
@@ -282,7 +283,7 @@ export const cursorAt = (offset: Vec2): Vec2 => {
 
 /** A schedule that replaces every enemy with training dummies (of `tuning`) at offsets from the player's spawn. */
 export const placeDummies = (offsets: ReadonlyArray<Vec2>, tuning: Tuning = defaultTuning) => {
-  const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnDummies", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(plainEnemies(tuning), "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
   })
   return Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())

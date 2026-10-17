@@ -85,7 +85,7 @@ import {
 import type { Faction } from "../schema.ts"
 import { lob } from "../content/skills.ts"
 import { damageDealt } from "./build.ts"
-import { makeProjectile } from "./combat.ts"
+import { makeProjectile, ProjectileParts } from "./combat.ts"
 import { readPlayer } from "./behaviors.ts"
 import { aimPoint, answering, behaviorOf, canStart, movesetOf, pickAttack, readFrom } from "./moveset.ts"
 import type { Moving } from "./moveset.ts"
@@ -166,7 +166,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     walls: Walls
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { damage: Game.System.writeEvent(Damage), roused: Game.System.writeEvent(Roused), released: Game.System.writeEvent(AttackReleased) }
+  events: { damage: Game.System.writeEvent(Damage), roused: Game.System.writeEvent(Roused), released: Game.System.writeEvent(AttackReleased) },
+  commands: Game.System.commands(Game.System.spawns(...ProjectileParts, Lobbed, Hitbox))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   // Enemy attacks run at the enemies' pace (slower in slow motion).
@@ -453,7 +454,8 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     holders: Holders
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged), explosion: Game.System.writeEvent(Explosion) }
+  events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.despawns(Hitbox))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const slow = resources.slowMotion.get()
@@ -517,7 +519,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
       })
     }
     const remaining = hitbox.remaining - dt * paceOf(slow, hitbox.faction)
-    if (remaining <= 0) commands.despawn(entity.id)
+    if (remaining <= 0) commands.despawn(entity)
     else data.hitbox.set({ ...hitbox, remaining, hit })
   }
 })

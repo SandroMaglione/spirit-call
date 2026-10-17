@@ -6,8 +6,8 @@
 import * as Random from "@typeonce/bevy-ts-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { tuningWith } from "../config/tuning.ts"
-import { makeProjectile } from "../features/combat.ts"
-import { makeEnemy } from "../features/enemies.ts"
+import { makeProjectile, ProjectileParts } from "../features/combat.ts"
+import { EnemyParts, makeEnemy } from "../features/enemies.ts"
 import { blow, Game, Invulnerable, Player, Projectile, RunScope } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
 
@@ -34,11 +34,13 @@ export const makeStress = (tuning: TuningValue, load: StressLoad) => {
   const kinds = Object.keys(tuning.enemies) as Array<EnemyKind>
   const inArena = () => ({ x: random.range(80, tuning.arena.width - 80), y: random.range(80, tuning.arena.height - 80) })
 
-  const populate = Game.System("Stress/Populate", {}, ({ commands }) => {
+  const populate = Game.System("Stress/Populate", {
+    commands: Game.System.commands(Game.System.spawns(...EnemyParts, Invulnerable))
+  }, ({ commands }) => {
     for (let index = 0; index < load.enemies; index++) {
       const kind = load.mixed ? kinds[index % kinds.length]! : "dummy"
       const enemy = makeEnemy(tuning, kind, inArena())
-      commands.spawnIn(RunScope, load.mixed ? Game.Command.insert(enemy, [Invulnerable, { remaining: 1e9 }]) : enemy)
+      commands.spawnIn(RunScope, load.mixed ? Game.Command.extend(enemy, [Invulnerable, { remaining: 1e9 }]) : enemy)
     }
   })
 
@@ -47,7 +49,8 @@ export const makeStress = (tuning: TuningValue, load: StressLoad) => {
     queries: {
       projectiles: Game.Query({ selection: { projectile: Game.Query.read(Projectile) } }),
       player: Game.Query({ selection: { invulnerable: Game.Query.write(Invulnerable) }, with: [Player] })
-    }
+    },
+    commands: Game.System.commands(Game.System.spawns(...ProjectileParts))
   }, ({ queries, commands }) => {
     if (load.mixed) for (const { data } of queries.player.each()) data.invulnerable.set({ remaining: 1e9 })
     for (let count = queries.projectiles.each().length; count < load.projectiles; count++) {

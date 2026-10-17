@@ -94,7 +94,8 @@ export const CastLifts = Game.System("Shooter/CastLifts", {
   queries: {
     enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), stunned: Game.Query.write(Stunned), disarmed: Game.Query.write(Disarmed), invulnerable: Game.Query.write(Invulnerable) }, with: [Health] })
   },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.inserts(Lifted))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -117,7 +118,8 @@ export const CastLifts = Game.System("Shooter/CastLifts", {
 export const UpdateLifted = Game.System("Shooter/UpdateLifted", {
   queries: { lifted: Game.Query({ selection: { lifted: Game.Query.write(Lifted), invulnerable: Game.Query.write(Invulnerable) }, with: [Health] }) },
   resources: { time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage) }
+  events: { damage: Game.System.writeEvent(Damage) },
+  commands: Game.System.commands(Game.System.removes(Lifted))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.lifted.each()) {

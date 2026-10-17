@@ -43,7 +43,7 @@ import {
 } from "../schema.ts"
 import type { MoveContext, TriggeredEffectsValue } from "../schema.ts"
 import { dashOf, traitsIn } from "./build.ts"
-import { makeGround } from "./ground.ts"
+import { GroundParts, makeGround } from "./ground.ts"
 import { skillAim } from "./skills.ts"
 
 /** Whether a move of the basic attack matches `filter`; no move (a skill) never does. */
@@ -209,7 +209,8 @@ const Wielders = Game.Query({
 export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects", {
   queries: { wielders: Wielders, dashers: Dashers },
   resources: { tuning: Game.System.readResource(Tuning) },
-  events: { triggered: Game.System.readEvent(TriggeredEffects), cast: Game.System.writeEvent(Cast), heal: Game.System.writeEvent(Heal) }
+  events: { triggered: Game.System.readEvent(TriggeredEffects), cast: Game.System.writeEvent(Cast), heal: Game.System.writeEvent(Heal) },
+  commands: Game.System.commands(Game.System.spawns(...GroundParts))
 }, ({ queries, resources, events, commands }) => {
   const queue = events.triggered.all()
   if (queue.length === 0) return

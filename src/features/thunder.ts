@@ -139,7 +139,8 @@ const strike = (
 
 /** Totems: planted at the caster's feet, a little ahead of her (where she faces); their first zap comes at once. */
 export const CastTotems = Game.System("Shooter/CastTotems", {
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Position, Totem, Renderable))
 }, ({ events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -166,7 +167,8 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
     pushed: Game.Query({ selection: { knockback: Game.Query.write(Knockback), enemy: Game.Query.optional(Enemy) }, with: [Health] }),
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap), heal: Game.System.writeEvent(Heal) }
+  events: { damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap), heal: Game.System.writeEvent(Heal) },
+  commands: Game.System.commands(Game.System.despawns(Totem))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
@@ -216,7 +218,7 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
       }
     }
     const remaining = totem.remaining - dt
-    if (remaining <= 0) commands.despawn(entity.id)
+    if (remaining <= 0) commands.despawn(entity)
     else data.totem.set({ ...totem, remaining, nextTick, inside })
   }
 })

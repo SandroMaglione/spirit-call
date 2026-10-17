@@ -31,7 +31,7 @@ const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Quer
 
 /** A wall standing at `box`, low (a hop goes over it) or tall. */
 const placeWall = (box: Box2, low: boolean) =>
-  Game.Schedule(Game.System("Test/PlaceWall", {}, ({ commands }) => {
+  Game.Schedule(Game.System("Test/PlaceWall", { commands: Game.System.commands(Game.System.spawns(Wall, LowWall)) }, ({ commands }) => {
     commands.spawnIn(RunScope, low ? Game.Command.spawn([Wall, box], [LowWall, {}]) : Game.Command.spawn([Wall, box]))
   }), Game.Schedule.applyDeferred())
 

@@ -13,7 +13,8 @@ import { enemyPace } from "./time.ts"
 /** A fallen enemy that bursts lights its fuse where it fell. */
 export const ArmBursts = Game.System("Shooter/ArmBursts", {
   resources: { tuning: Game.System.readResource(Tuning) },
-  events: { death: Game.System.readEvent(Death) }
+  events: { death: Game.System.readEvent(Death) },
+  commands: Game.System.commands(Game.System.spawns(Burst))
 }, ({ resources, events, commands }) => {
   const tuning = resources.tuning.get()
   for (const death of events.death.all()) {
@@ -38,7 +39,8 @@ const blastSeconds = 0.08
 export const UpdateBursts = Game.System("Shooter/UpdateBursts", {
   queries: { bursts: Game.Query({ selection: { burst: Game.Query.write(Burst) } }) },
   resources: { time: Game.System.readResource(Time), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { explosion: Game.System.writeEvent(Explosion) }
+  events: { explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.despawns(Burst))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt * enemyPace(resources.slowMotion.get())
   for (const { entity, data } of queries.bursts.each()) {
@@ -55,6 +57,6 @@ export const UpdateBursts = Game.System("Shooter/UpdateBursts", {
       commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, { area, faction, blow: struck, remaining: blastSeconds, hit: [] }]))
     }
     events.explosion.emit({ at: burst.at, radius: burst.radius, faction: "enemy", kind: "blast", heavy: true, element: burst.element?.id ?? null })
-    commands.despawn(entity.id)
+    commands.despawn(entity)
   }
 })

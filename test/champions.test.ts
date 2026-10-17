@@ -57,8 +57,8 @@ const Field = Game.Inspector("Test/Champions", {
 }))
 
 /** Removes every enemy but champions as soon as it appears; with `champions`, champions too. */
-const wipe = (champions: boolean) => Game.System("Test/Wipe", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-  for (const { entity, data } of queries.enemies.each()) if (champions || !data.enemy.get().champion) commands.despawn(entity.id)
+const wipe = (champions: boolean) => Game.System("Test/Wipe", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+  for (const { entity, data } of queries.enemies.each()) if (champions || !data.enemy.get().champion) commands.despawn(entity)
 })
 
 /** Keeps the player untouchable, so only the objective ends the run. */

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { unstickDirection } from "../src/features/behaviors.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, Game, Player, Position, RunScope, Wall } from "../src/schema.ts"
 import { center, ClearEnemies, start, steps } from "./helpers.ts"
 
@@ -12,7 +12,7 @@ describe("finding the way around walls", () => {
     // A wall between them, wider than the chaser could slide along; it chases straight at her.
     const tuning = tuningWith({ enemies: { chaser: { behavior: { kind: "chase", stopDistance: 50 }, attacks: [] } } })
     const run = start({ tuning })
-    const Place = Game.System("Test/WallAndChaser", {}, ({ commands }) => {
+    const Place = Game.System("Test/WallAndChaser", { commands: Game.System.commands(Game.System.spawns(...EnemyParts, Wall)) }, ({ commands }) => {
       commands.spawnIn(RunScope, Game.Command.spawn([Wall, { minX: center.x + 100, minY: center.y - 260, maxX: center.x + 130, maxY: center.y + 260 }]))
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 300, y: center.y }))
     })
@@ -44,7 +44,7 @@ describe("finding the way around walls", () => {
     /** Puts the L and one enemy of `kind` in its inside corner; after `seconds`, how far up it got (the lowest y from her), where it ended (x from her: below 100, on her side of the wall), and how near her. */
     const fromCorner = (tuning: Tuning, kind: "charger" | "shooter" | "chaser", seconds: number, top = -200) => {
       const run = start({ tuning })
-      const Place = Game.System("Test/CornerAndEnemy", {}, ({ commands }) => {
+      const Place = Game.System("Test/CornerAndEnemy", { commands: Game.System.commands(Game.System.spawns(...EnemyParts, Wall)) }, ({ commands }) => {
         for (const wall of corner(center, top)) commands.spawnIn(RunScope, Game.Command.spawn([Wall, wall]))
         commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: center.x + 160, y: center.y + 70 }))
       })

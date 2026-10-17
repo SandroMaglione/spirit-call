@@ -10,7 +10,7 @@
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { Body, Cast, Companion, Game, Heal, Health, Hurtbox, Invulnerable, Member, Player, Position, PrevPosition, Renderable, RunScope, Time, Velocity, Zap } from "../schema.ts"
-import { makeDisc } from "./discs.ts"
+import { DiscParts, makeDisc } from "./discs.ts"
 import { castBlow } from "./skills.ts"
 
 /** How far off the one on the field a companion stops (world units), and its body's radius. */
@@ -30,7 +30,8 @@ const Callers = Game.Query({ selection: { position: Game.Query.read(Position), m
 /** Companions: called up behind the caster, in her likeness; they act one after the other, the first a moment after the call. */
 export const CastCompanions = Game.System("Shooter/CastCompanions", {
   queries: { callers: Callers },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Position, PrevPosition, Velocity, Body, Companion, Renderable))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -73,7 +74,8 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
     bodies: Shootable
   },
   resources: { time: Game.System.readResource(Time) },
-  events: { heal: Game.System.writeEvent(Heal), zap: Game.System.writeEvent(Zap) }
+  events: { heal: Game.System.writeEvent(Heal), zap: Game.System.writeEvent(Zap) },
+  commands: Game.System.commands(Game.System.spawns(...DiscParts), Game.System.despawns(Companion))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const companions = queries.companions.each()
@@ -146,7 +148,7 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
       }
     }
     const remaining = companion.remaining - dt
-    if (remaining <= 0 || dealt >= effect.budget - 1e-9) commands.despawn(entity.id)
+    if (remaining <= 0 || dealt >= effect.budget - 1e-9) commands.despawn(entity)
     else data.companion.set({ ...companion, remaining, nextTick, dealt, facing })
   }
 })

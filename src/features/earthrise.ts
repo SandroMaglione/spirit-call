@@ -73,7 +73,8 @@ const Bodies = Game.Query({
 /** Earthrises cast: a rock for each target, its crack following it, one after the other. */
 export const CastEarthrise = Game.System("Shooter/CastEarthrise", {
   queries: { bodies: Bodies },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Rock))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -119,7 +120,8 @@ const Holdable = Game.Query({ selection: { enemy: Game.Query.read(Enemy), health
 export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
   queries: { rocks: Game.Query({ selection: { rock: Game.Query.write(Rock) } }), bodies: Struck, holdable: Holdable },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage), explosion: Game.System.writeEvent(Explosion) }
+  events: { damage: Game.System.writeEvent(Damage), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.despawns(Rock))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
@@ -132,7 +134,7 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
       data.rock.set({ ...rock, at, remaining })
       continue
     }
-    commands.despawn(entity.id)
+    commands.despawn(entity)
     const { effect } = rock
     const caught = new Set<number>()
     for (const body of queries.bodies.each()) {
@@ -174,7 +176,8 @@ export const faultPoints = (effect: FaultEffect, from: Vec2, direction: Vec2, le
 /** Faults cast: their rocks down a line toward the aim, shortened by walls, one after the other. */
 export const CastFaults = Game.System("Shooter/CastFaults", {
   queries: { walls: Walls },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Rock))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -191,7 +194,8 @@ export const CastFaults = Game.System("Shooter/CastFaults", {
 
 /** Quakes cast: a slam under her for each, following her, wider each time; the last holds what it catches. */
 export const CastQuakes = Game.System("Shooter/CastQuakes", {
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Rock))
 }, ({ events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect

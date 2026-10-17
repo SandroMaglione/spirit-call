@@ -14,6 +14,9 @@ import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { shieldBlocks, sweepTargets, targetOf, Targets } from "./targets.ts"
 
+/** The components of `makeDisc`. */
+export const DiscParts = [Position, PrevPosition, Disc, Renderable] as const
+
 /** A disc leaving `at`, rendered like a projectile. */
 export const makeDisc = (at: Vec2, disc: DiscValue) =>
   Game.Command.spawn(
@@ -38,7 +41,8 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
     throwers: Throwers
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) },
-  events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) }
+  events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) },
+  commands: Game.System.commands(Game.System.despawns(Disc))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const boxes = wallBoxes(queries.walls.each())
@@ -126,7 +130,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         const thrower = queries.throwers.getHandle(disc.thrower)
         const back = disc.back + dt
         if (!thrower.ok || back > maxBackSeconds) {
-          commands.despawn(entity.id)
+          commands.despawn(entity)
           continue
         }
         const home = thrower.value.data.position.get()
@@ -136,7 +140,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         // Caught: it reaches the thrower this step.
         if (distance <= travel + disc.radius) {
           sweep(toward, 1, normalizeOr(toward, disc.direction))
-          commands.despawn(entity.id)
+          commands.despawn(entity)
           continue
         }
         const direction = normalizeOr(toward, disc.direction)

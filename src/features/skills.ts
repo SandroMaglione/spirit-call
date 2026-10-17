@@ -63,7 +63,7 @@ import {
 } from "../schema.ts"
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
-import { makeGround } from "./ground.ts"
+import { GroundParts, makeGround } from "./ground.ts"
 import { hopLanding, knockbackTaken, tallWallBoxes, Walls, wallBoxes } from "./motion.ts"
 import { paceOf } from "./time.ts"
 
@@ -284,7 +284,8 @@ export const LandAirborne = Game.System("Shooter/LandAirborne", {
     airborne: Game.Query({ selection: { airborne: Game.Query.write(Airborne), player: Game.Query.optional(Player), position: Game.Query.optional(Position) }, with: [Member] })
   },
   resources: { time: Game.System.readResource(Time) },
-  events: { cast: Game.System.writeEvent(Cast) }
+  events: { cast: Game.System.writeEvent(Cast) },
+  commands: Game.System.commands(Game.System.removes(Airborne))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.airborne.each()) {
@@ -328,7 +329,8 @@ const TeamMembers = Game.Query({ selection: { position: Game.Query.read(Position
 export const CastCuts = Game.System("Shooter/CastCuts", {
   queries: { walls: Walls, turning: Turning, facers: Facers, leapers: Leapers },
   resources: { tuning: Game.System.readResource(Tuning) },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox))
 }, ({ queries, resources, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -368,7 +370,8 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
 /** Blasts: a cone fanning out from the caster toward the aim, driving what it hits away from her; she turns that way. */
 export const CastBlasts = Game.System("Shooter/CastBlasts", {
   queries: { turning: Turning, facers: Facers },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -396,7 +399,8 @@ export const CastBlasts = Game.System("Shooter/CastBlasts", {
  */
 export const CastPlunges = Game.System("Shooter/CastPlunges", {
   queries: { walls: Walls, facers: Facers, hoppers: Hoppers },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.inserts(Airborne))
 }, ({ queries, events, commands }) => {
   const walls = queries.walls.each()
   for (const cast of events.cast.all()) {
@@ -435,7 +439,8 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
 export const CastLeaps = Game.System("Shooter/CastLeaps", {
   queries: { leapers: Leapers, teamMembers: TeamMembers, facers: Facers },
   resources: { tuning: Game.System.readResource(Tuning) },
-  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox), Game.System.inserts(Airborne))
 }, ({ queries, resources, events, commands }) => {
   const decay = resources.tuning.get().knockback.decay
   for (const cast of events.cast.all()) {
@@ -465,7 +470,8 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
 
 /** Lobbed skills: thrown toward the aim, clamped to their range, over walls. */
 export const CastLobs = Game.System("Shooter/CastLobs", {
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Lobbed))
 }, ({ events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -486,7 +492,8 @@ export const CastLobs = Game.System("Shooter/CastLobs", {
  * one after the other, each landing and exploding like a lobbed skill.
  */
 export const CastBarrages = Game.System("Shooter/CastBarrages", {
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Lobbed))
 }, ({ events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -507,7 +514,8 @@ export const CastBarrages = Game.System("Shooter/CastBarrages", {
  */
 export const CastVortices = Game.System("Shooter/CastVortices", {
   queries: { teamMembers: TeamMembers },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Vortex), Game.System.inserts(Airborne))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -553,7 +561,8 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
     })
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage) }
+  events: { damage: Game.System.writeEvent(Damage) },
+  commands: Game.System.commands(Game.System.despawns(Vortex))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
@@ -583,7 +592,7 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
       }
     }
     const remaining = vortex.remaining - dt
-    if (remaining <= 0) commands.despawn(entity.id)
+    if (remaining <= 0) commands.despawn(entity)
     else data.vortex.set({ ...vortex, remaining, nextTick })
   }
 })
@@ -592,7 +601,8 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
 export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
   queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.write(Lobbed) } }) },
   resources: { time: Game.System.readResource(Time), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { explosion: Game.System.writeEvent(Explosion) }
+  events: { explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox), Game.System.despawns(Lobbed))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.lobbed.each()) {
@@ -604,7 +614,7 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
       data.lobbed.set({ ...lobbed, elapsed })
       continue
     }
-    commands.despawn(entity.id)
+    commands.despawn(entity)
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: lobbed.to, radius: effect.radius },
       faction: lobbed.faction,
@@ -623,7 +633,8 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
  */
 export const CastNovas = Game.System("Shooter/CastNovas", {
   queries: { projectiles: Game.Query({ selection: { position: Game.Query.read(Position), projectile: Game.Query.read(Projectile) } }) },
-  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion), impact: Game.System.writeEvent(Impact) }
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion), impact: Game.System.writeEvent(Impact) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.despawns(Projectile))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -643,7 +654,7 @@ export const CastNovas = Game.System("Shooter/CastNovas", {
       if (projectile.faction === cast.faction) continue
       const position = data.position.get()
       if ((position.x - at.x) ** 2 + (position.y - at.y) ** 2 > effect.radius * effect.radius) continue
-      commands.despawn(entity.id)
+      commands.despawn(entity)
       events.impact.emit({ at: position, faction: projectile.faction, wall: false, shielded: false })
     }
   }

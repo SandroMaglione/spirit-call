@@ -48,7 +48,7 @@ import {
   BasicAttack
 } from "../schema.ts"
 import type { DashValue } from "../schema.ts"
-import { bodyParts, fighterParts } from "./bodies.ts"
+import { BodyParts, bodyParts, FighterParts, fighterParts } from "./bodies.ts"
 import type { BodyMotion } from "./bodies.ts"
 import { dashOf, resolveBuild } from "./build.ts"
 import { traitsOf } from "../content/passives.ts"
@@ -56,6 +56,9 @@ import type { Passive } from "../content/passives.ts"
 import type { ResolvedBuild } from "./build.ts"
 import { initialSkills } from "./skills.ts"
 import { initialBasicAttack } from "./basic-attack.ts"
+
+/** The components of `makeMember`. */
+export const MemberParts = [...FighterParts, Member, Passives, BasicAttack, Skills, Energy] as const
 
 /** A team member in `slot`, at full health, with her build's kit (taking every element as it is). */
 export const makeMember = (build: ResolvedBuild, slot: number) =>
@@ -84,6 +87,9 @@ const fresh = (tuning: TuningValue, character: CharacterId, passives: ReadonlyAr
   dash: { remaining: 0, charges: dashOf(tuning, character, traitsOf(passives)).charges, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: Infinity, perfect: false, from: { x: 0, y: 0 } }
 })
 
+/** The components of `fieldParts`. */
+export const FieldParts = [...BodyParts, Player, Aim, Facing, Dash, Renderable] as const
+
 /** `member`'s body on the field at `at`: her size and look, and what it carries. */
 export const fieldParts = (tuning: TuningValue, member: { readonly character: CharacterId }, at: Vec2, carried: Carried) => {
   const { character } = member
@@ -100,14 +106,15 @@ export const fieldParts = (tuning: TuningValue, member: { readonly character: Ch
 
 /** Spawns the team (`Team`, at most `teamSize`), the first one on the field at the arena's center. */
 export const SpawnTeam = Game.System("Shooter/SpawnTeam", {
-  resources: { tuning: Game.System.readResource(Tuning), team: Game.System.readResource(Team) }
+  resources: { tuning: Game.System.readResource(Tuning), team: Game.System.readResource(Team) },
+  commands: Game.System.commands(Game.System.spawns(...MemberParts, ...FieldParts))
 }, ({ resources, commands }) => {
   const tuning = resources.tuning.get()
   const at = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
   resources.team.get().slice(0, teamSize).forEach((build, slot) => {
     const resolved = resolveBuild(tuning, build)
     const member = makeMember(resolved, slot)
-    if (slot === 0) commands.spawnIn(RunScope, Game.Command.insert(member, ...fieldParts(tuning, resolved, at, fresh(tuning, resolved.character, resolved.passives, at))))
+    if (slot === 0) commands.spawnIn(RunScope, Game.Command.extend(member, ...fieldParts(tuning, resolved, at, fresh(tuning, resolved.character, resolved.passives, at))))
     else commands.spawnIn(RunScope, member)
   })
 })
@@ -178,7 +185,8 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
     slowMotion: Game.System.writeResource(SlowMotion),
     arrival: Game.System.writeResource(Arrival)
   },
-  events: { action: Game.System.writeEvent(Action) }
+  events: { action: Game.System.writeEvent(Action) },
+  commands: Game.System.commands(Game.System.inserts(...FieldParts, BasicAttack), Game.System.removes(...FieldParts))
 }, ({ queries, resources, events, commands }) => {
   const [field] = queries.field.each()
   if (field === undefined) return

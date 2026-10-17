@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 
 import { defaultTuning, engine } from "../src/config/tuning.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { Attacker, AttackPhase, blow, Burst, Damage, Enemy, Game, Health, Player, Position, PrevPosition, RunScope, Ward } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ClearEnemies, plainEnemies, start } from "./helpers.ts"
@@ -36,7 +36,7 @@ const World = Game.Inspector("Test/StrangeEnemies", {
 /** Training with only these enemies, at offsets from the player (who stands still unless moved). */
 const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly offset: Vec2 }>) => {
   const run = start()
-  const Spawn = Game.System("Test/SpawnSome", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnSome", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     for (const { kind, offset } of enemies) commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))

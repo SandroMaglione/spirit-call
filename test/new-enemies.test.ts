@@ -4,7 +4,7 @@ import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands } from "../src/dev/commands.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
@@ -47,7 +47,7 @@ const cursorAt = (offset: Vec2) => {
 /** Training mode with just one enemy of `kind` at `offset` from the player (carrying a shield, when `shield`). */
 const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}, shield = false) => {
   const run = start(options)
-  const Spawn = Game.System("Test/SpawnOne", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnOne", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(plainEnemies(options.tuning ?? defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, null, false, shield))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))

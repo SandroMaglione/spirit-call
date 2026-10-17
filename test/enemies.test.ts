@@ -6,7 +6,7 @@ import type { Wave } from "../src/content/challenges.ts"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import { enemyStats, makeEnemy } from "../src/features/enemies.ts"
+import { enemyStats, EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { UiRequest, Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ReadFlow, doubleTap, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
@@ -50,10 +50,10 @@ const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}) => {
   const base = plainEnemies(options.tuning ?? defaultTuning)
   const tuning: Tuning = { ...base, enemies: { ...base.enemies } }
   const run = start({ ...options, tuning })
-  const Clear = Game.System("Test/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-    for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+  const Clear = Game.System("Test/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+    for (const { entity } of queries.enemies.each()) commands.despawn(entity)
   })
-  const Spawn = Game.System("Test/Spawn", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/Spawn", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -247,8 +247,8 @@ describe("waves", () => {
 
   it("starts the next wave after the current one is cleared", () => {
     const { run, world } = firstWave()
-    const Clear = Game.System("Test/ClearWave", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-      for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+    const Clear = Game.System("Test/ClearWave", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+      for (const { entity } of queries.enemies.each()) commands.despawn(entity)
     })
     run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred()))
     stepUntil(run, () => world().waves.number === 2)

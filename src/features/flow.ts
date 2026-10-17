@@ -176,6 +176,8 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
 })
 
 /** Removes everything the previous run spawned (enemies, projectiles, hitboxes, spawn warnings). */
-export const ClearRun = Game.System("Shooter/ClearRun", {}, ({ commands }) => {
+export const ClearRun = Game.System("Shooter/ClearRun", {
+  commands: Game.System.commands(Game.System.despawnsScope(RunScope))
+}, ({ commands }) => {
   commands.despawnScope(RunScope)
 })

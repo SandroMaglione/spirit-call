@@ -73,7 +73,7 @@ import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict, stateDamage } from "./elements.ts"
-import { respawnOf } from "./enemies.ts"
+import { PendingSpawnParts, respawnOf } from "./enemies.ts"
 import { barrierMeets } from "./barriers.ts"
 import { mantleMeets, mantleTaken } from "./windwall.ts"
 import { plateTakes } from "./guard.ts"
@@ -82,6 +82,9 @@ import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./t
 import { paceOf } from "./time.ts"
 import { wardedTaken } from "./wards.ts"
 import type { Target } from "./targets.ts"
+
+/** The components of `makeProjectile`. */
+export const ProjectileParts = [Position, PrevPosition, Velocity, Projectile, Renderable] as const
 
 export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileValue) =>
   Game.Command.spawn(
@@ -110,7 +113,8 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       dodgeAttackers: DodgeAttackers
     },
     resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion), mantle: Game.System.readResource(Mantle) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) }
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) },
+    commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.despawns(Projectile))
   }, ({ queries, resources, events, commands, local }) => {
     const { grid, targets, nearby } = local
     const dt = resources.time.get().dt
@@ -176,7 +180,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
         data.position.set(at)
         events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: true })
         events.guarded.emit({ at, kind: "barred" })
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
 
@@ -225,13 +229,13 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
         data.position.set(shieldedAt)
         burst(projectile, shieldedAt)
         events.impact.emit({ at: shieldedAt, faction: projectile.faction, wall: false, shielded: true })
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
       if (stopAt !== undefined) {
         data.position.set({ x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
         burst(projectile, { x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
       if (wall !== undefined) {
@@ -239,7 +243,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
         data.position.set(at)
         events.impact.emit({ at, faction: projectile.faction, wall: true, shielded: false })
         burst(projectile, at)
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
       const at = { x: origin.x + delta.x, y: origin.y + delta.y }
@@ -248,7 +252,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       if (range <= 1e-6) {
         events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: false })
         burst(projectile, at)
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
       data.projectile.set({ ...projectile, range, pierce, hit })
@@ -337,7 +341,8 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     guard: Game.System.writeResource(Guard),
     mantle: Game.System.readResource(Mantle),
     enemyLevel: Game.System.readResource(EnemyLevel)
-  }
+  },
+  commands: Game.System.commands(Game.System.spawns(PlateShatter, StateBurst, Arc, ...PendingSpawnParts), Game.System.despawns(Health))
 }, ({ queries, events, resources, commands }) => {
   const tuning = resources.tuning.get()
   // The level gap (see `levelGap`): a blow the team deals lands by its dealer's level (the one on the field when it is
@@ -487,7 +492,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     events.death.emit({ at, faction: data.hurtbox.get().faction, enemy, atk: data.stats.get().atk })
     // A fallen team member stays (out of the fight); everything else is gone.
     if (data.player.present) data.state.set({ current: null })
-    else commands.despawn(entity.id)
+    else commands.despawn(entity)
     if (data.hurtbox.get().faction === "enemy") {
       kills += 1
       hitStop = Math.max(hitStop, tuning.feedback.hitStopOnKill)

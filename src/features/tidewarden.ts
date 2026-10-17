@@ -30,12 +30,13 @@ export const CastTidewarden = Game.System("Shooter/CastTidewarden", {
       with: [Enemy]
     })
   },
-  events: { cast: Game.System.readEvent(Cast), damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap) }
+  events: { cast: Game.System.readEvent(Cast), damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap) },
+  commands: Game.System.commands(Game.System.spawns(Position, Dome, Hitbox), Game.System.inserts(Turned), Game.System.despawns(Dome))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind === "dome") {
-      for (const { entity, data } of queries.domes.each()) if (data.dome.get().faction === cast.faction) commands.despawn(entity.id)
+      for (const { entity, data } of queries.domes.each()) if (data.dome.get().faction === cast.faction) commands.despawn(entity)
       const blow = castBlow(cast, effect)
       commands.spawnIn(RunScope, Game.Command.spawn(
         [Position, cast.from],
@@ -89,7 +90,8 @@ export const UpdateDomes = Game.System("Shooter/UpdateDomes", {
     })
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { reaction: Game.System.writeEvent(Reaction) }
+  events: { reaction: Game.System.writeEvent(Reaction) },
+  commands: Game.System.commands(Game.System.despawns(Dome))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
@@ -98,7 +100,7 @@ export const UpdateDomes = Game.System("Shooter/UpdateDomes", {
     const dome = data.dome.get()
     const remaining = dome.remaining - dt
     if (remaining <= 0) {
-      commands.despawn(entity.id)
+      commands.despawn(entity)
       continue
     }
     const center = field === undefined ? data.position.get() : field.data.position.get()
@@ -136,7 +138,8 @@ export const UpdateTurned = Game.System("Shooter/UpdateTurned", {
     field: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] })
   },
   resources: { time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap) }
+  events: { damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap) },
+  commands: Game.System.commands(Game.System.removes(Turned))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const [field] = queries.field.each()

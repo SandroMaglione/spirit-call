@@ -6,7 +6,7 @@ import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { MeleeMove } from "../src/content/attacks.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { UiRequest, Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, BasicAttack } from "../src/schema.ts"
 import { start, windCut, withWindCut, plainAttack, plainEnemies, hitBy } from "./helpers.ts"
 
@@ -52,9 +52,10 @@ const arena = (
     touch: options.touch ?? [{ frame: 0, press: ["attack"] }, { frame: frames, release: ["attack"] }]
   })
   const Place = Game.System("Test/PlaceDummies", {
-    queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
+    queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
+    commands: Game.System.commands(Game.System.spawns(...EnemyParts), Game.System.despawns(Enemy))
   }, ({ queries, commands }) => {
-    for (const { entity } of queries.dummies.each()) commands.despawn(entity.id)
+    for (const { entity } of queries.dummies.each()) commands.despawn(entity)
     for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(defaultTuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
@@ -160,9 +161,10 @@ describe("sword slash", () => {
     // A chaser right in front: after one slash it ends up out of reach for a while.
     const run = start({ touch: [{ frame: 0, press: ["attack"] }, { frame: 1, release: ["attack"] }] })
     const Place = Game.System("Test/PlaceChaser", {
-      queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
+      queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
+      commands: Game.System.commands(Game.System.spawns(...EnemyParts), Game.System.despawns(Enemy))
     }, ({ queries, commands }) => {
-      for (const { entity } of queries.dummies.each()) commands.despawn(entity.id)
+      for (const { entity } of queries.dummies.each()) commands.despawn(entity)
       commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), "chaser", { x: center.x + 70, y: center.y }))
     })
     run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))

@@ -12,7 +12,7 @@ import { championMovesets } from "../src/content/champions.ts"
 import { followUpsOf, wave } from "../src/content/enemies.ts"
 import type { AttackSpec } from "../src/content/enemies.ts"
 import { validateContent } from "../src/content/validate.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { answering, movesetOf, readFrom } from "../src/features/moveset.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, Hitbox, PendingSpawn, Player, Poise, Position, Rampage, Roused, RunScope, Stunned } from "../src/schema.ts"
@@ -50,7 +50,7 @@ const duel = (offset: Vec2, options: { readonly health?: number; readonly tuning
   const tuning = options.tuning ?? sturdy
   const run = start({ tuning, ...(options.keys === undefined ? {} : { keys: options.keys }), ...(options.pointer === undefined ? {} : { pointer: options.pointer }) })
   const at = run.runtime.inspect(Field).player!
-  const Spawn = Game.System("Test/SpawnKing", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnKing", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(tuning, "brute", { x: at.x + offset.x, y: at.y + offset.y }, 1, 20, "fire", true))
   })
   const Wound = Game.System("Test/Wound", { queries: { enemies: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Enemy] }) } }, ({ queries }) => {
@@ -192,7 +192,7 @@ describe("champion movesets", () => {
     expect([...called.pending, ...called.enemies.filter((enemy) => !enemy.champion).map((enemy) => enemy.kind)].sort()).toEqual(["chaser", "shooter"])
     // With its support standing, it never calls.
     const backed = duel({ x: 200, y: 0 }, { tuning: supported })
-    const Back = Game.System("Test/Back", {}, ({ commands }) => {
+    const Back = Game.System("Test/Back", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
       for (const offset of [{ x: 400, y: 300 }, { x: 400, y: -300 }]) commands.spawnIn(RunScope, makeEnemy(supported, "sniper", { x: center.x + offset.x, y: center.y + offset.y }, 1, 20))
     })
     backed.runtime.tick(Game.Schedule(Back, Game.Schedule.applyDeferred()))

@@ -7,7 +7,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import type { LobMove } from "../src/content/attacks.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { Controls, Enemy, Energy, Game, Lobbed, Player, Position, Projectile, RunScope, Velocity } from "../src/schema.ts"
 import { ClearEnemies, gunner, plainAttack, start, swordsman, tidecaller, withWindCut, grenadeSkill, volley, withVolley } from "./helpers.ts"
 
@@ -106,7 +106,7 @@ describe("touch controls", () => {
     // One dummy, off the facing and nearer than the touch aim's set distance.
     const dummy = { x: center.x + 150, y: center.y + 80 }
     const alone = (run: ReturnType<typeof start>) => {
-      const Spawn = Game.System("Test/SpawnDummy", {}, ({ commands }) => {
+      const Spawn = Game.System("Test/SpawnDummy", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
         commands.spawnIn(RunScope, makeEnemy(defaultTuning, "dummy", dummy))
       })
       run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -260,8 +260,8 @@ describe("touch controls", () => {
   it("keeps the aim still when there is no player (game over)", () => {
     const run = start({ touch: [{ frame: 0, stick: { x: 1, y: 0 }, press: ["attack"] }] })
     run.step(2)
-    const Remove = Game.System("Test/RemovePlayer", { queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) } }, ({ queries, commands }) => {
-      for (const { entity } of queries.player.each()) commands.despawn(entity.id)
+    const Remove = Game.System("Test/RemovePlayer", { queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) }, commands: Game.System.commands(Game.System.despawns(Player)) }, ({ queries, commands }) => {
+      for (const { entity } of queries.player.each()) commands.despawn(entity)
     })
     run.runtime.tick(Game.Schedule(Remove, Game.Schedule.applyDeferred()))
     const AimPoint = Game.Inspector("Test/AimPoint", { resources: { controls: Game.System.readResource(Controls) } }, ({ resources }) => resources.controls.get())

@@ -16,12 +16,13 @@
 import { overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
 import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
 import { AttackReleased, Elite, Enemy, Game, Health, Hit, Hitbox, Rampage, RunScope, Time, Tuning } from "../schema.ts"
-import { makeGroupSpawns } from "./enemies.ts"
-import { makeGround } from "./ground.ts"
+import { makeGroupSpawns, PendingSpawnParts } from "./enemies.ts"
+import { GroundParts, makeGround } from "./ground.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 export const LeavePools = Game.System("Shooter/LeavePools", {
-  events: { released: Game.System.readEvent(AttackReleased) }
+  events: { released: Game.System.readEvent(AttackReleased) },
+  commands: Game.System.commands(Game.System.spawns(...GroundParts))
 }, ({ events, commands }) => {
   for (const released of events.released.all()) {
     const spec = released.attack
@@ -31,7 +32,8 @@ export const LeavePools = Game.System("Shooter/LeavePools", {
 })
 
 export const ReleaseShockwaves = Game.System("Shooter/ReleaseShockwaves", {
-  events: { released: Game.System.readEvent(AttackReleased) }
+  events: { released: Game.System.readEvent(AttackReleased) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox))
 }, ({ events, commands }) => {
   for (const released of events.released.all()) {
     const spec = released.attack
@@ -61,7 +63,8 @@ export const callPoints = (at: Vec2, radius: number, count: number, clearance: n
 export const CallSupport = Game.System("Shooter/CallSupport", {
   queries: { walls: Walls, elites: Game.Query({ selection: { elite: Game.Query.read(Elite) }, with: [Enemy] }) },
   resources: { tuning: Game.System.readResource(Tuning) },
-  events: { released: Game.System.readEvent(AttackReleased) }
+  events: { released: Game.System.readEvent(AttackReleased) },
+  commands: Game.System.commands(Game.System.spawns(...PendingSpawnParts))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   for (const released of events.released.all()) {

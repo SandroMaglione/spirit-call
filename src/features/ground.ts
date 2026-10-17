@@ -14,6 +14,9 @@ import { elements } from "../content/elements.ts"
 import { ElementAffinities, ElementState, Game, Ground, Health, Hurtbox, Invulnerable, Position, Reaction, Time, Tuning } from "../schema.ts"
 import { afflict } from "./elements.ts"
 
+/** The components of `makeGround`. */
+export const GroundParts = [Ground] as const
+
 /** A pool of `spec`'s element around `center`, its burns from `atk`; `charges`: left by the player. */
 export const makeGround = (spec: GroundSpec, center: Vec2, atk: number, charges: boolean) =>
   Game.Command.spawn([Ground, { element: spec.element, center, radius: spec.radius, remaining: spec.seconds, duration: spec.seconds, atk, charges, permanent: false, half: null, out: 0 }])
@@ -52,7 +55,8 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
     })
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { reaction: Game.System.writeEvent(Reaction) }
+  events: { reaction: Game.System.writeEvent(Reaction) },
+  commands: Game.System.commands(Game.System.despawns(Ground))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
@@ -68,7 +72,7 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
     }
     const remaining = ground.remaining - dt
     if (remaining <= 0) {
-      commands.despawn(pool.entity.id)
+      commands.despawn(pool.entity)
       continue
     }
     pool.data.ground.set({ ...ground, remaining })
@@ -89,7 +93,7 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
     if (!newer) continue
     out.add(pool.entity.id)
     if (ground.permanent) pool.data.ground.set({ ...ground, out: tuning.hazards.relightSeconds })
-    else commands.despawn(pool.entity.id)
+    else commands.despawn(pool.entity)
     events.reaction.emit({ at: ground.center, kind: "out", state: elements[ground.element].state, faction: null })
   }
   const standing = live.filter((pool) => active(pool.data.ground.get()) && !out.has(pool.entity.id))

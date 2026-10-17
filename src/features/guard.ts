@@ -22,7 +22,8 @@ const Casters = Game.Query({ selection: { position: Game.Query.read(Position) },
 /** Guards cast: a ring of stone bursts out around the caster, throwing back what crowds her, and she starts raising (casting again while raising starts over). */
 export const CastGuards = Game.System("Shooter/CastGuards", {
   queries: { casters: Casters },
-  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.inserts(Raising))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -55,7 +56,8 @@ export const RaiseGuards = Game.System("Shooter/RaiseGuards", {
     })
   },
   resources: { time: Game.System.readResource(Time), guard: Game.System.writeResource(Guard) },
-  events: { guarded: Game.System.writeEvent(Guarded) }
+  events: { guarded: Game.System.writeEvent(Guarded) },
+  commands: Game.System.commands(Game.System.removes(Raising))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.raising.each()) {
@@ -83,11 +85,12 @@ const Breakable = Game.Query({ selection: { position: Game.Query.read(Position),
 export const ShatterPlates = Game.System("Shooter/ShatterPlates", {
   queries: { shatters: Game.Query({ selection: { shatter: Game.Query.read(PlateShatter) } }), breakable: Breakable },
   resources: { tuning: Game.System.readResource(Tuning) },
-  events: { guarded: Game.System.writeEvent(Guarded) }
+  events: { guarded: Game.System.writeEvent(Guarded) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.despawns(PlateShatter))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   for (const { entity, data } of queries.shatters.each()) {
-    commands.despawn(entity.id)
+    commands.despawn(entity)
     const { at, effect, atk, charges, attacker } = data.shatter.get()
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: at, radius: effect.radius },

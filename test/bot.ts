@@ -30,7 +30,7 @@ import type { ChallengeId, EliteElement } from "../src/content/challenges.ts"
 import type { ProbeSystem } from "./fingerprint.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import type { Tally } from "../src/content/stars.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { createSimulation } from "../src/simulation.ts"
 import { projection } from "../src/config/view.ts"
 import { currentAttack } from "../src/features/moveset.ts"
@@ -679,10 +679,10 @@ export const runBot = (run: BotRun): BotReport => {
   const measuredUpdate = run.probe === undefined ? Game.Schedule(sim.fixedUpdate, Measure) : Game.Schedule(sim.fixedUpdate, Measure, run.probe.system)
   if (run.enemies !== undefined) {
     const enemies = run.enemies
-    const Clear = Game.System("Bot/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-      for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+    const Clear = Game.System("Bot/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+      for (const { entity } of queries.enemies.each()) commands.despawn(entity)
     })
-    const Spawn = Game.System("Bot/Spawn", {}, ({ commands }) => {
+    const Spawn = Game.System("Bot/Spawn", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
       const middle = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
       for (const { kind, offset, champion } of enemies) {
         commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: middle.x + offset.x, y: middle.y + offset.y }, 1, run.enemyLevel ?? 1, champion ?? null, champion !== undefined))

@@ -42,12 +42,13 @@ export const CastHearth = Game.System("Shooter/CastHearth", {
   queries: {
     pyres: Game.Query({ selection: { pyre: Game.Query.read(Pyre) } })
   },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Position, Pyre, Hitbox, EmberRing), Game.System.despawns(Pyre))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind === "pyre") {
-      for (const { entity, data } of queries.pyres.each()) if (data.pyre.get().faction === cast.faction) commands.despawn(entity.id)
+      for (const { entity, data } of queries.pyres.each()) if (data.pyre.get().faction === cast.faction) commands.despawn(entity)
       const tick = castBlow(cast, { ...effect, power: effect.tickPower, knockback: 0, hitStop: 0, heavy: false })
       commands.spawnIn(RunScope, Game.Command.spawn(
         [Position, cast.from],
@@ -85,7 +86,8 @@ export const UpdateEmberRings = Game.System("Shooter/UpdateEmberRings", {
     })
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage), reaction: Game.System.writeEvent(Reaction) }
+  events: { damage: Game.System.writeEvent(Damage), reaction: Game.System.writeEvent(Reaction) },
+  commands: Game.System.commands(Game.System.despawns(EmberRing))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
@@ -96,7 +98,7 @@ export const UpdateEmberRings = Game.System("Shooter/UpdateEmberRings", {
       continue
     }
     if (ring.remaining <= 0) {
-      commands.despawn(entity.id)
+      commands.despawn(entity)
       continue
     }
     const center = data.position.get()
@@ -138,14 +140,15 @@ export const UpdatePyres = Game.System("Shooter/UpdatePyres", {
     })
   },
   resources: { time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage) }
+  events: { damage: Game.System.writeEvent(Damage) },
+  commands: Game.System.commands(Game.System.despawns(Pyre))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.pyres.each()) {
     const pyre = data.pyre.get()
     const remaining = pyre.remaining - dt
     if (remaining <= 0) {
-      commands.despawn(entity.id)
+      commands.despawn(entity)
       continue
     }
     const center = data.position.get()

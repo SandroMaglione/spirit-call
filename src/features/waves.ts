@@ -22,7 +22,7 @@ import { champion, elite, entryChampion, entryElite, entryKind, entryShield, shi
 import type { WaveEntry, WavePlan } from "../content/challenges.ts"
 import { Challenge, Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Time, Tuning, Twist, Waves } from "../schema.ts"
 import type { EnemyKind, TwistValue, WavesValue } from "../schema.ts"
-import { makeGroupSpawns } from "./enemies.ts"
+import { makeGroupSpawns, PendingSpawnParts } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 export const initialWaves = (tuning: TuningValue): WavesValue => ({ number: 0, phase: "break", timer: tuning.waves.firstDelay, queue: [], front: 0, size: 0, carried: 0 })
@@ -160,7 +160,8 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
     challenge: Game.System.readResource(Challenge),
     time: Game.System.readResource(Time),
     twist: Game.System.readResource(Twist)
-  }
+  },
+  commands: Game.System.commands(Game.System.spawns(...PendingSpawnParts))
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   const spec = tuning.challenges[resources.challenge.get()]

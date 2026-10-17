@@ -19,8 +19,8 @@ const withChallenge = (spec: Partial<ChallengeSpec>): Tuning => ({
 })
 
 /** Removes every enemy as soon as it appears, as if the player cleared each wave instantly. */
-const Wipe = Game.System("Test/Wipe", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-  for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+const Wipe = Game.System("Test/Wipe", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+  for (const { entity } of queries.enemies.each()) commands.despawn(entity)
 })
 
 /** Keeps the player untouchable, so only the objective ends the run. */

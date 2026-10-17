@@ -11,7 +11,7 @@ import type { TutorialStep } from "../content/tutorial.ts"
 import { Action, Cast, Challenge, Dash, Enemy, EnemyLevel, Energy, Game, Hit, Immortal, PendingSpawn, PerfectDodged, Player, Position, RunScope, Skills, SlowMotion, Time, Tuning, Tutorial, UltimateCalled } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { makeEnemy } from "./enemies.ts"
+import { EnemyParts, makeEnemy } from "./enemies.ts"
 
 /** How close to a move step's spot counts as there (world units). */
 export const tutorialSpotRadius = 70
@@ -57,7 +57,8 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
     cast: Game.System.readEvent(Cast),
     called: Game.System.readEvent(UltimateCalled),
     perfect: Game.System.readEvent(PerfectDodged)
-  }
+  },
+  commands: Game.System.commands(Game.System.spawns(...EnemyParts, Immortal), Game.System.despawns(Enemy, PendingSpawn))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const objective = tuning.challenges[resources.challenge.get()].objective
@@ -81,14 +82,14 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
     const standing = queries.enemies.each()
     const keep = wanted !== null && standing.length === 1 && standing[0]!.data.enemy.get().kind === wanted.kind
     if (!keep) {
-      for (const { entity } of standing) commands.despawn(entity.id)
-      for (const { entity } of queries.pending.each()) commands.despawn(entity.id)
+      for (const { entity } of standing) commands.despawn(entity)
+      for (const { entity } of queries.pending.each()) commands.despawn(entity)
       if (wanted !== null) {
         const offset = tutorialSpot(tuning, wanted.offset)
         const at = player.data.position.get()
         const radius = tuning.enemies[wanted.kind].radius
         const near = { x: Math.max(radius, Math.min(tuning.arena.width - radius, at.x + offset.x)), y: Math.max(radius, Math.min(tuning.arena.height - radius, at.y + offset.y)) }
-        commands.spawnIn(RunScope, Game.Command.insert(makeEnemy(tuning, wanted.kind, near, 1, resources.level.get()), [Immortal, {}]))
+        commands.spawnIn(RunScope, Game.Command.extend(makeEnemy(tuning, wanted.kind, near, 1, resources.level.get()), [Immortal, {}]))
       }
     }
     if (step.kind === "special" || step.kind === "ultimate") {

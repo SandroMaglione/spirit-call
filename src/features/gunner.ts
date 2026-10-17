@@ -13,7 +13,8 @@ const Wielders = Game.Query({ selection: { position: Game.Query.read(Position) }
 /** Overdrives cast: she takes it up (casting again starts it over), fire bursting out around her. */
 export const CastOverdrives = Game.System("Shooter/CastOverdrives", {
   queries: { wielders: Wielders },
-  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.inserts(Overdriven))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -36,7 +37,8 @@ export const CastOverdrives = Game.System("Shooter/CastOverdrives", {
 /** Overdrives run down; one whose wielder left the field is lost. */
 export const TickOverdrives = Game.System("Shooter/TickOverdrives", {
   queries: { overdriven: Game.Query({ selection: { overdriven: Game.Query.write(Overdriven), player: Game.Query.optional(Player) } }) },
-  resources: { time: Game.System.readResource(Time) }
+  resources: { time: Game.System.readResource(Time) },
+  commands: Game.System.commands(Game.System.removes(Overdriven))
 }, ({ queries, resources, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.overdriven.each()) {

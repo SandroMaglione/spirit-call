@@ -43,7 +43,8 @@ const splintersFrom = (random: Random.Random, from: Vec2, faction: Faction, effe
 export const CastSplinters = Game.System("Shooter/CastSplinters", {
   queries: { wielders: Wielders },
   resources: { rng: Game.System.writeResource(Rng) },
-  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Lobbed), Game.System.inserts(Splintering))
 }, ({ queries, resources, events, commands }) => {
   let random: Random.Random | undefined
   for (const cast of events.cast.all()) {
@@ -76,7 +77,8 @@ const Throwers = Game.Query({
 export const ThrowSplinters = Game.System("Shooter/ThrowSplinters", {
   queries: { throwers: Throwers },
   resources: { time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng) },
-  events: { action: Game.System.readEvent(Action), explosion: Game.System.readEvent(Explosion) }
+  events: { action: Game.System.readEvent(Action), explosion: Game.System.readEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Lobbed), Game.System.removes(Splintering))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   let random: Random.Random | undefined

@@ -15,7 +15,8 @@ const Wielders = Game.Query({ selection: { position: Game.Query.read(Position) }
 /** Overcharges cast: she takes it up (casting again starts it over), thunder bursting out around her. */
 export const CastOvercharges = Game.System("Shooter/CastOvercharges", {
   queries: { wielders: Wielders },
-  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.inserts(Overcharged))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -47,7 +48,8 @@ export const TickOvercharges = Game.System("Shooter/TickOvercharges", {
     })
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) },
-  events: { zap: Game.System.writeEvent(Zap) }
+  events: { zap: Game.System.writeEvent(Zap) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.removes(Overcharged))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.overcharged.each()) {

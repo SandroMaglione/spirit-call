@@ -5,7 +5,7 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { AttackSpec } from "../src/content/enemies.ts"
 import { validateContent } from "../src/content/validate.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { aimPoint } from "../src/features/moveset.ts"
 import { Attacker, AttackPhase, ElementState, Enemy, Game, Health, Player, RunScope, Stats, Velocity } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
@@ -28,7 +28,7 @@ const World = Game.Inspector("Test/Pressure", {
 const arena = (kind: EnemyKind, offsets: ReadonlyArray<Vec2>, tuning: Tuning, options: StartOptions = {}) => {
   const sturdy = tuningWith({ ...tuning, characters: { swordsman: { stats: { hp: 1_000_000 } } } })
   const run = start({ ...options, tuning: sturdy })
-  const Spawn = Game.System("Test/SpawnPressure", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnPressure", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(sturdy, kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
