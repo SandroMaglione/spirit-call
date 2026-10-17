@@ -643,7 +643,7 @@ export type { EnemyKind }
 export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean; readonly rest?: number; readonly windup?: number }>()("Shooter/Enemy")
 
 /** Where an enemy is in its telegraphed attack cycle. */
-export const AttackPhase = Descriptor.State("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {
+export const AttackPhase = Descriptor.EntityState("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {
   // A windup can be cut off (the enemy broke) and goes back to ready.
   transitions: { ready: ["windup"], windup: ["active", "ready"], active: ["recovery"], recovery: ["ready"] }
 })
@@ -732,7 +732,7 @@ export const Brain = Descriptor.Component<BrainValue>()("Shooter/Brain")
  * closing in to attack (holding one of the few engagement slots), or backing
  * off after an attack.
  */
-export const EnemyMode = Descriptor.State("Shooter/EnemyMode", ["orbit", "engage", "retreat"] as const, {
+export const EnemyMode = Descriptor.EntityState("Shooter/EnemyMode", ["orbit", "engage", "retreat"] as const, {
   transitions: { orbit: ["engage"], engage: ["retreat"], retreat: ["orbit"] }
 })
 export type EnemyMode = (typeof EnemyMode.states)[number]
