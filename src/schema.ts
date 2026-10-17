@@ -39,9 +39,9 @@ export const Position = Descriptor.Component<Vec2>()("Shooter/Position")
 export const PrevPosition = Descriptor.Component<Vec2>()("Shooter/PrevPosition")
 export const Velocity = Descriptor.Component<Vec2>()("Shooter/Velocity")
 /** Circle collider against walls. */
-export const Body = Descriptor.Component<{ readonly radius: number }>()("Shooter/Body")
+export const Body = Descriptor.Component<{ readonly radius: number }>()("Shooter/Body", { immutable: true })
 /** Static axis-aligned wall. */
-export const Wall = Descriptor.Component<Box2>()("Shooter/Wall")
+export const Wall = Descriptor.Component<Box2>()("Shooter/Wall", { immutable: true })
 /**
  * A low wall (see `content/arena.ts`), not a pillar, a prop, or the arena's
  * edge: a hop through the air carries her over it (see `Airborne`).
@@ -59,7 +59,7 @@ export const Player = Descriptor.Tag("Shooter/Player")
  * on the bench.
  */
 /** A team member: her slot, who she is, the aspect on her, and her level (see `levelGap`). */
-export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly aspect: AspectId | null; readonly level: number }>()("Shooter/Member")
+export const Member = Descriptor.Component<{ readonly slot: number; readonly character: CharacterId; readonly aspect: AspectId | null; readonly level: number }>()("Shooter/Member", { immutable: true })
 /** Unit direction the entity aims at: where its attacks and skills go (the cursor, or the touch aim). */
 export const Aim = Descriptor.Component<Vec2>()("Shooter/Aim")
 
@@ -368,7 +368,7 @@ export const PlateShatter = Descriptor.Component<{
   readonly effect: GuardEffect
   readonly atk: number
   readonly charges: boolean
-}>()("Shooter/PlateShatter")
+}>()("Shooter/PlateShatter", { immutable: true })
 
 /** Damage is ignored while `remaining > 0`. */
 export const Invulnerable = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Invulnerable")
@@ -466,7 +466,7 @@ export interface ActiveState {
 export const ElementState = Descriptor.Component<{ readonly current: ActiveState | null }>()("Shooter/ElementState")
 
 /** How the body takes each element (an enemy's kind's; none for the player), fixed when it spawns. */
-export const ElementAffinities = Descriptor.Component<Affinities>()("Shooter/ElementAffinities")
+export const ElementAffinities = Descriptor.Component<Affinities>()("Shooter/ElementAffinities", { immutable: true })
 
 /**
  * An element left on the ground (a fire pool, a puddle), a circle of
@@ -524,7 +524,7 @@ export const Stunned = Descriptor.Component<{ readonly remaining: number }>()("S
 export const Disarmed = Descriptor.Component<{ readonly remaining: number }>()("Shooter/Disarmed")
 
 /** The passives of what an entity has equipped (see `content/passives.ts`). */
-export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/Passives")
+export const Passives = Descriptor.Component<ReadonlyArray<Passive>>()("Shooter/Passives", { immutable: true })
 
 /**
  * The stats combat reads (see `content/characters.ts`): ATK scales damage
@@ -641,7 +641,7 @@ export type { EnemyKind }
  * waits between attacks (low levels and champions, see `restOf`);
  * `windup`: how much longer its windups last (low levels, see `windupOf`).
  */
-export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean; readonly rest?: number; readonly windup?: number }>()("Shooter/Enemy")
+export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean; readonly rest?: number; readonly windup?: number }>()("Shooter/Enemy", { immutable: true })
 
 /** Where an enemy is in its telegraphed attack cycle. */
 export const AttackPhase = Descriptor.EntityState("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {
@@ -705,7 +705,7 @@ export interface BurstValue {
 export const Burst = Descriptor.Component<BurstValue>()("Shooter/Burst")
 
 /** A body that takes blows (their numbers show, its break bar fills) but loses no health: the Training Ground's dummies. */
-export const Immortal = Descriptor.Component<{}>()("Shooter/Immortal")
+export const Immortal = Descriptor.Component<{}>()("Shooter/Immortal", { immutable: true })
 
 /** A frontal shield: blocks projectiles hitting within `halfAngle` (radians) of `facing`. */
 export const Shield = Descriptor.Component<{ readonly facing: Vec2; readonly halfAngle: number; readonly turnRate: number }>()("Shooter/Shield")
@@ -762,7 +762,7 @@ export interface HitboxValue {
 export const Hitbox = Descriptor.Component<HitboxValue>()("Shooter/Hitbox")
 
 /** Comes back at `at` after `delay` seconds when killed (training dummies). */
-export const Respawns = Descriptor.Component<{ readonly at: Vec2; readonly delay: number }>()("Shooter/Respawns")
+export const Respawns = Descriptor.Component<{ readonly at: Vec2; readonly delay: number }>()("Shooter/Respawns", { immutable: true })
 
 /** An enemy about to appear: its spawn warning is visible until `remaining` runs out. */
 export const PendingSpawn = Descriptor.Component<{
@@ -781,7 +781,7 @@ export const PendingSpawn = Descriptor.Component<{
 }>()("Shooter/PendingSpawn")
 
 /** An enemy holding one of Enemy Practice's spots (see `PracticeField`): when it falls, the spot fills again. */
-export const PracticeUnit = Descriptor.Component<{ readonly slot: number }>()("Shooter/PracticeUnit")
+export const PracticeUnit = Descriptor.Component<{ readonly slot: number }>()("Shooter/PracticeUnit", { immutable: true })
 
 /**
  * An elite enemy (see `Tuning.elites`): its `element`, the time until it
@@ -813,7 +813,7 @@ export type RenderableValue =
   | { readonly kind: "hazard"; readonly element: "fire" | "water"; readonly half: Vec2; readonly arena: ArenaId }
 
 /** What the entity looks like; presence means "has a render node". */
-export const Renderable = Descriptor.Component<RenderableValue>()("Shooter/Renderable")
+export const Renderable = Descriptor.Component<RenderableValue>()("Shooter/Renderable", { immutable: true })
 
 // ── Events ────────────────────────────────────────────────────────────────
 
@@ -903,7 +903,7 @@ export const StateBurst = Descriptor.Component<{
   readonly side: Faction
   readonly by: Faction | null
   readonly direction: Vec2
-}>()("Shooter/StateBurst")
+}>()("Shooter/StateBurst", { immutable: true })
 
 /**
  * A blow on a charged body arcing on (see `elementRules.charged`), waiting to
@@ -919,7 +919,7 @@ export const Arc = Descriptor.Component<{
   readonly damage: number
   readonly atk: number
   readonly charges: boolean
-}>()("Shooter/Arc")
+}>()("Shooter/Arc", { immutable: true })
 
 /** An entity with health died, with its ATK (what a burst when it falls deals, see `BurstSpec`). */
 export const Death = Descriptor.Event<{ readonly at: Vec2; readonly faction: Faction; readonly enemy: EnemyKind | undefined; readonly atk: number }>()("Shooter/Death")
