@@ -54,15 +54,23 @@ and check it with `pnpm --dir deploy typecheck`. Use your local Alchemy
 Cloudflare profile or the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
 environment variables. Keep credentials outside the repository.
 
-From `deploy/`, apply the shared database migrations before deploying a
-release from main:
+The release is `prod`, at <https://spirit-call.typeonce.dev>: the game's
+files alone, with no Worker code and no database (the game keeps
+everything on the player's device). Run `pnpm check` (on Linux, for the
+determinism fingerprints), then deploy it from main:
+
+```sh
+pnpm release
+```
+
+For the testers' game, apply the playtest database's migrations first, from
+`deploy/`:
 
 ```sh
 pnpm alchemy deploy --config stacks/database.ts --stage shared
-pnpm alchemy deploy --stage prod
+pnpm alchemy deploy --stage playtest
 ```
 
-Use `--stage playtest` instead of `--stage prod` for the testers' game.
 Prod sends no runs; playtest does. A personal preview can use the default
 stage with `pnpm alchemy deploy`, and `pnpm alchemy destroy` removes it.
 You can also deploy a named preview with `--stage pr-<number>`. Its database

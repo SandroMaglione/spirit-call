@@ -1,7 +1,7 @@
 // The playtest database (see docs/playtest.md): the runs testers' playtest
 // builds send to the `playtest` stage, kept for tuning. That stage binds to
-// it by reference (deploy/alchemy.run.ts; prod binds it too, and never
-// writes); every other stage makes a database of its own.
+// it by reference (deploy/alchemy.run.ts; prod has none); every other
+// stage makes a database of its own.
 // It is its own stack so that no stage of the game owns it: destroying a
 // preview never touches it.
 //

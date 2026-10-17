@@ -4,7 +4,8 @@
   "type": "module",
   "packageManager": "pnpm@10.17.1",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --pretty false"
+    "typecheck": "tsc -p tsconfig.json --pretty false",
+    "release": "alchemy deploy --stage prod"
   },
   "dependencies": {
     "@effect/platform-node": "4.0.2",

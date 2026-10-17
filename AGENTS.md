@@ -48,8 +48,9 @@ keeps them, and releasing).
   GitHub runs only `pnpm check` (`.github/workflows/check.yml`). For a
   release, use the published bevy-ts version in package.json
   `ritmoRelease` (`scripts/use-ritmo.ts` does the swap in a
-  clean worktree). Apply the shared database migrations before deploying
-  `prod` or `playtest`. See `docs/local-workflows.md` for the commands and
+  clean worktree). `pnpm release` deploys `prod`, the release at
+  spirit-call.typeonce.dev: static files alone, no Worker code or database.
+  Apply the shared database migrations before deploying `playtest`. See `docs/local-workflows.md` for the commands and
   `docs/playtest.md`, "Releasing", for the stage rules.
 - `pnpm effect-source`: puts the source of the Effect release the game
   uses in `.repos/effect` (a single-commit copy of github.com/Effect-TS/effect
