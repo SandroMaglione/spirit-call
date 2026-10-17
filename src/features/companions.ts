@@ -9,8 +9,8 @@
  * share, or when its time is up.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import { Body, Cast, Companion, Game, Heal, Health, Hurtbox, Invulnerable, Member, Player, Position, PrevPosition, Renderable, RunScope, Time, Velocity, Zap } from "../schema.ts"
-import { DiscParts, makeDisc } from "./discs.ts"
+import { Body, Cast, Companion, Game, Heal, Health, Hurtbox, Invulnerable, Member, Player, Position, PrevPosition, Renderable, RunScope, Time, Velocity, Zap, Disc } from "../schema.ts"
+import { makeDisc } from "./discs.ts"
 import { castBlow } from "./skills.ts"
 
 /** How far off the one on the field a companion stops (world units), and its body's radius. */
@@ -75,7 +75,7 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
   },
   resources: { time: Game.System.readResource(Time) },
   events: { heal: Game.System.writeEvent(Heal), zap: Game.System.writeEvent(Zap) },
-  commands: Game.System.commands(Game.System.spawns(...DiscParts), Game.System.despawns(Companion))
+  commands: Game.System.commands(Game.System.spawns(Disc), Game.System.despawns(Companion))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const companions = queries.companions.each()

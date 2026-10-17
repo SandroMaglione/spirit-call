@@ -9,8 +9,8 @@ import * as Random from "@typeonce/ritmo-math/Random"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { hazardBoxes } from "../src/features/arena.ts"
 import { keepOut, readPlayer } from "../src/features/behaviors.ts"
-import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
-import { GroundParts, makeGround } from "../src/features/ground.ts"
+import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
+import { makeGround } from "../src/features/ground.ts"
 import { pickSpawnPoint, reinforceAfter } from "../src/features/waves.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
 import { center, ClearEnemies, cursorAt, start, plainAttack, plainEnemies } from "./helpers.ts"
@@ -37,7 +37,7 @@ const World = Game.Inspector("Test/Encounters", {
 
 /** Spawns `kind` (an elite of `elite`) at `offset` from the player, alone. */
 const alone = (run: ReturnType<typeof start>, kind: Parameters<typeof makeEnemy>[1], offset: { x: number; y: number }, elite: Parameters<typeof makeEnemy>[5] = null) => {
-  const Spawn = Game.System("Test/SpawnElite", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnElite", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, elite))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -155,7 +155,7 @@ describe("elite enemies", () => {
     // A thunder elite that never attacks otherwise, right beside her.
     const tuning = tuningWith({ enemies: { guardian: { attacks: [], speed: 0 } } })
     const run = start({ tuning })
-    const Spawn = Game.System("Test/SpawnThunder", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnThunder", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "guardian", { x: center.x + 80, y: center.y }, 1, 1, "thunder"))
     })
     run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -182,7 +182,7 @@ describe("arenas", () => {
   it("keep hazards for good, and a fire trench put out by water burns again after a while", () => {
     const run = start({ arena: "kilnworks" })
     const at = middleOf(hazardBoxes(defaultTuning, "kilnworks")[0]!.box)
-    const Douse = Game.System("Test/Douse", { commands: Game.System.commands(Game.System.spawns(...GroundParts)) }, ({ commands }) => {
+    const Douse = Game.System("Test/Douse", { commands: Game.System.commands(Game.System.spawns(Ground)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeGround({ element: "water", radius: 40, seconds: 0.5 }, at, 50, true))
     })
     run.runtime.tick(Game.Schedule(Douse, Game.Schedule.applyDeferred()))

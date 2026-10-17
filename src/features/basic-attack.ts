@@ -23,12 +23,11 @@ import { isMelee } from "../content/attacks.ts"
 import { lob } from "../content/skills.ts"
 import type { AttackMove, BasicAttackSpec, MeleeMove, PowerAttack } from "../content/attacks.ts"
 import type { Shockwave } from "../content/classes.ts"
-import { Action, Aim, Airborne, Arrival,
-  Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Overcharged, Overdriven, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Arrival, Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Overcharged, Overdriven, Stats, Time, Tuning, BasicAttack, Disc, Projectile } from "../schema.ts"
 import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
 import { attackOf, damageDealt } from "./build.ts"
-import { makeProjectile, ProjectileParts } from "./combat.ts"
-import { DiscParts, makeDisc } from "./discs.ts"
+import { makeProjectile } from "./combat.ts"
+import { makeDisc } from "./discs.ts"
 import { moveMatches } from "./passives.ts"
 import { lobTarget } from "./skills.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -166,7 +165,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     arrival: Game.System.readResource(Arrival)
   },
   events: { action: Game.System.writeEvent(Action) },
-  commands: Game.System.commands(Game.System.spawns(...ProjectileParts, ...DiscParts, Lobbed, Hitbox))
+  commands: Game.System.commands(Game.System.spawns(Projectile, Disc, Lobbed, Hitbox))
 }, ({ queries, resources, events, commands }) => {
   const controls = resources.controls.get()
   const tuning = resources.tuning.get()

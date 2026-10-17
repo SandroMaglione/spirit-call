@@ -27,37 +27,37 @@ import {
   ElementAffinities,
   ElementState,
   Enemy,
+  EnemyLevel,
   Energy,
   EnergyLedger,
   Explosion,
   Game,
   Guard,
-  Mantle,
   Guarded,
   Heal,
   Health,
   Hit,
+  Hitbox,
   HitFlash,
   HitStop,
-  Hitbox,
   Hurtbox,
   Immortal,
   Impact,
   Invulnerable,
   Knockback,
-  EnemyLevel,
+  Mantle,
   Member,
   PassiveCooldowns,
   Passives,
+  Paused,
+  PendingSpawn,
   PlateShatter,
   Player,
-  Paused,
   Poise,
   Position,
   PrevPosition,
   Projectile,
   Reaction,
-  Ward,
   Renderable,
   Respawns,
   RunScope,
@@ -68,13 +68,14 @@ import {
   Time,
   Tuning,
   Velocity,
+  Ward,
   Zap
 } from "../schema.ts"
 import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict, stateDamage } from "./elements.ts"
-import { PendingSpawnParts, respawnOf } from "./enemies.ts"
+import { respawnOf } from "./enemies.ts"
 import { barrierMeets } from "./barriers.ts"
 import { mantleMeets, mantleTaken } from "./windwall.ts"
 import { plateTakes } from "./guard.ts"
@@ -83,9 +84,6 @@ import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./t
 import { paceOf } from "./time.ts"
 import { wardedTaken } from "./wards.ts"
 import type { Target } from "./targets.ts"
-
-/** The components of `makeProjectile`. */
-export const ProjectileParts = [Position, PrevPosition, Velocity, Projectile, Renderable] as const
 
 export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileValue) =>
   Game.Command.spawn(
@@ -343,7 +341,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     mantle: Game.System.readResource(Mantle),
     enemyLevel: Game.System.readResource(EnemyLevel)
   },
-  commands: Game.System.commands(Game.System.spawns(PlateShatter, StateBurst, Arc, ...PendingSpawnParts), Game.System.despawns(Health))
+  commands: Game.System.commands(Game.System.spawns(PlateShatter, StateBurst, Arc, PendingSpawn), Game.System.despawns(Health))
 }, ({ queries, events, resources, commands }) => {
   const tuning = resources.tuning.get()
   // The level gap (see `levelGap`): a blow the team deals lands by its dealer's level (the one on the field when it is

@@ -6,7 +6,7 @@ import type { Wave } from "../src/content/challenges.ts"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import { enemyStats, EnemyParts, makeEnemy } from "../src/features/enemies.ts"
+import { enemyStats, EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { UiRequest, Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ReadFlow, doubleTap, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
@@ -53,7 +53,7 @@ const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}) => {
   const Clear = Game.System("Test/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
     for (const { entity } of queries.enemies.each()) commands.despawn(entity)
   })
-  const Spawn = Game.System("Test/Spawn", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+  const Spawn = Game.System("Test/Spawn", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))

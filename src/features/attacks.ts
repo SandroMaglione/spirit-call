@@ -47,12 +47,14 @@ import { areaTouchesCircle, pushDirection, shiftArea } from "../physics/areas.ts
 import {
   Aim,
   Attacker,
-  AttackReleased,
   AttackPhase,
+  AttackReleased,
+  BasicAttack,
   blow,
   CombatStats,
   Damage,
   Dash,
+  Disarmed,
   Dodged,
   Elite,
   Enemy,
@@ -64,28 +66,27 @@ import {
   Hurtbox,
   Invulnerable,
   Lobbed,
+  PendingSpawn,
   Player,
   Poise,
   Position,
   PrevPosition,
-  PendingSpawn,
+  Projectile,
   Rampage,
   Rng,
   Roused,
   RunScope,
   SlowMotion,
   Stunned,
-  Disarmed,
   Time,
   Tuning,
   Turned,
-  Velocity,
-  BasicAttack
+  Velocity
 } from "../schema.ts"
 import type { Faction } from "../schema.ts"
 import { lob } from "../content/skills.ts"
 import { damageDealt } from "./build.ts"
-import { makeProjectile, ProjectileParts } from "./combat.ts"
+import { makeProjectile } from "./combat.ts"
 import { readPlayer } from "./behaviors.ts"
 import { aimPoint, answering, behaviorOf, canStart, movesetOf, pickAttack, readFrom } from "./moveset.ts"
 import type { Moving } from "./moveset.ts"
@@ -167,7 +168,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng), slowMotion: Game.System.readResource(SlowMotion) },
   events: { damage: Game.System.writeEvent(Damage), roused: Game.System.writeEvent(Roused), released: Game.System.writeEvent(AttackReleased) },
-  commands: Game.System.commands(Game.System.spawns(...ProjectileParts, Lobbed, Hitbox))
+  commands: Game.System.commands(Game.System.spawns(Projectile, Lobbed, Hitbox))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   // Enemy attacks run at the enemies' pace (slower in slow motion).

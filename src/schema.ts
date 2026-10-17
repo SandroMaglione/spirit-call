@@ -1512,6 +1512,22 @@ export const Game = Schema.bind(
       PracticeField
     },
     events: { UiRequest, TriggeredEffects, Damage, Hit, Death, Broke, Roused, AttackReleased, Dodged, PerfectDodged, Impact, Explosion, Action, Cast, UltimateCalled, Heal, Guarded, Reaction, Zap }
+,
+    // What always comes together (see features/bodies.ts): a draft or insert missing one of these does not compile.
+    requires: [
+      // A fighter: its health, stats, and elements.
+      Schema.requires(Health, CombatStats, ElementState, ElementAffinities),
+      // A body moves and collides with walls (a companion is one too).
+      Schema.requires(Body, Position, PrevPosition, Velocity),
+      // A body attacks can hit is a fighter: every system about hits, states, and pushes finds all of these.
+      Schema.requires(Hurtbox, Body, Health, Knockback, HitFlash, Invulnerable, Stunned, Disarmed),
+      Schema.requires(Member, Health, Passives, BasicAttack, Skills, Energy),
+      Schema.requires(Player, Member, Hurtbox, Aim, Facing, Dash, Renderable),
+      Schema.requires(Enemy, Hurtbox, Attacker, Marked, AttackPhase, Brain, EnemyMode, Poise, Renderable),
+      Schema.requires(Projectile, Position, PrevPosition, Velocity, Renderable),
+      Schema.requires(Disc, Position, PrevPosition, Renderable),
+      Schema.requires(LowWall, Wall)
+    ]
   }),
   Root
 )

@@ -23,32 +23,35 @@ import {
   Aim,
   Airborne,
   Arrival,
-  Facing,
+  BasicAttack,
   Controls,
   Dash,
+  Disc,
+  Enemy,
   Energy,
+  Facing,
   Game,
   Health,
   HitStop,
-  SlowMotion,
   Invulnerable,
   Member,
   Passives,
   Player,
   Position,
   PrevPosition,
+  Projectile,
   Renderable,
   RunScope,
   Skills,
+  SlowMotion,
   Team,
   TeamSwitch,
   Time,
   Tuning,
-  Velocity,
-  BasicAttack
+  Velocity
 } from "../schema.ts"
 import type { DashValue } from "../schema.ts"
-import { BodyParts, bodyParts, FighterParts, fighterParts } from "./bodies.ts"
+import { BodyParts, bodyParts, fighterParts } from "./bodies.ts"
 import type { BodyMotion } from "./bodies.ts"
 import { dashOf, resolveBuild } from "./build.ts"
 import { traitsOf } from "../content/passives.ts"
@@ -56,9 +59,6 @@ import type { Passive } from "../content/passives.ts"
 import type { ResolvedBuild } from "./build.ts"
 import { initialSkills } from "./skills.ts"
 import { initialBasicAttack } from "./basic-attack.ts"
-
-/** The components of `makeMember`. */
-export const MemberParts = [...FighterParts, Member, Passives, BasicAttack, Skills, Energy] as const
 
 /** A team member in `slot`, at full health, with her build's kit (taking every element as it is). */
 export const makeMember = (build: ResolvedBuild, slot: number) =>
@@ -107,7 +107,7 @@ export const fieldParts = (tuning: TuningValue, member: { readonly character: Ch
 /** Spawns the team (`Team`, at most `teamSize`), the first one on the field at the arena's center. */
 export const SpawnTeam = Game.System("Shooter/SpawnTeam", {
   resources: { tuning: Game.System.readResource(Tuning), team: Game.System.readResource(Team) },
-  commands: Game.System.commands(Game.System.spawns(...MemberParts, ...FieldParts))
+  commands: Game.System.commands(Game.System.spawns(Player))
 }, ({ resources, commands }) => {
   const tuning = resources.tuning.get()
   const at = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
@@ -173,7 +173,9 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
         basicAttack: Game.Query.read(BasicAttack),
         airborne: Game.Query.optional(Airborne)
       },
-      with: [Player]
+      with: [Player],
+      // Proves the body can leave her: nothing else on her needs these components.
+      without: [Enemy, Projectile, Disc]
     }),
     members: Game.Query({ selection: { member: Game.Query.read(Member), health: Game.Query.read(Health) } })
   },
@@ -194,7 +196,7 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   const slot = field.data.member.get().slot
   const dash = field.data.dash.get()
   const members = queries.members.each().map(({ entity, data }) => ({
-    entity: entity.id,
+    entity,
     slot: data.member.get().slot,
     character: data.member.get().character,
     alive: data.health.get().current > 0

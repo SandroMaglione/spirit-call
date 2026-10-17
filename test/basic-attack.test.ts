@@ -6,7 +6,7 @@ import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { LobMove, MeleeMove, ShotMove } from "../src/content/attacks.ts"
-import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
+import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Stats, BasicAttack } from "../src/schema.ts"
 
 const Grenades = Game.Inspector("Test/Grenades", { queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }) } }, ({ queries }) => queries.lobbed.each().map(({ data }) => data.lobbed.get()))
@@ -39,7 +39,7 @@ const World = Game.Inspector("Test/Weapons", {
 /** Touch play with the assist off (so the facing stays world +x) and only the dummies at `offsets` (along +x). */
 const range = (offsets: ReadonlyArray<number>, touch: Touch.Timeline<TouchButton>, build?: BuildValue, tuning: Tuning = defaultTuning) => {
   const run = start({ tuning: { ...tuning, touch: tuningWith({ touch: { assist: { enabled: false } } }).touch }, touch, ...(build === undefined ? {} : { build }) })
-  const Spawn = Game.System("Test/SpawnDummies", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnDummies", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     for (const x of offsets) commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: center.x + x, y: center.y }))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))

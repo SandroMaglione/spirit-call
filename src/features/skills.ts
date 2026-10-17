@@ -24,33 +24,32 @@ import { add, clampLength, normalizeOr, rotate, scale, subtract, type Vec2 } fro
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import {
-  Challenge,
   Aim,
   Airborne,
   Arrival,
-  Body,
-  Facing,
-  HitStop,
-  Member,
-  UltimateCalled,
-  UltimateMoment,
-  noUltimateMoment,
   blow,
+  Body,
   Cast,
+  Challenge,
   CombatStats,
   Controls,
   Damage,
   Enemy,
   Energy,
   Explosion,
+  Facing,
   Game,
+  Ground,
   Health,
   Hitbox,
+  HitStop,
   Hurtbox,
   Impact,
   Invulnerable,
   Knockback,
   Lobbed,
+  Member,
+  noUltimateMoment,
   Player,
   Position,
   Projectile,
@@ -59,11 +58,13 @@ import {
   SlowMotion,
   Time,
   Tuning,
+  UltimateCalled,
+  UltimateMoment,
   Vortex
 } from "../schema.ts"
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
-import { GroundParts, makeGround } from "./ground.ts"
+import { makeGround } from "./ground.ts"
 import { hopLanding, knockbackTaken, tallWallBoxes, Walls, wallBoxes } from "./motion.ts"
 import { paceOf } from "./time.ts"
 
@@ -330,7 +331,7 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
   queries: { walls: Walls, turning: Turning, facers: Facers, leapers: Leapers },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { cast: Game.System.readEvent(Cast) },
-  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox))
+  commands: Game.System.commands(Game.System.spawns(Ground, Hitbox))
 }, ({ queries, resources, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -440,7 +441,7 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
   queries: { leapers: Leapers, teamMembers: TeamMembers, facers: Facers },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
-  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox), Game.System.inserts(Airborne))
+  commands: Game.System.commands(Game.System.spawns(Ground, Hitbox), Game.System.inserts(Airborne))
 }, ({ queries, resources, events, commands }) => {
   const decay = resources.tuning.get().knockback.decay
   for (const cast of events.cast.all()) {
@@ -602,7 +603,7 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
   queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.write(Lobbed) } }) },
   resources: { time: Game.System.readResource(Time), slowMotion: Game.System.readResource(SlowMotion) },
   events: { explosion: Game.System.writeEvent(Explosion) },
-  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox), Game.System.despawns(Lobbed))
+  commands: Game.System.commands(Game.System.spawns(Ground, Hitbox), Game.System.despawns(Lobbed))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.lobbed.each()) {

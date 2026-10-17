@@ -2,8 +2,8 @@
  * Bodies: everything that fights (enemies, and the team's character on the
  * field) is a fighter with a body, so every system about hits, states, and
  * pushes finds the same components on all of them. Combat's queries require
- * these components; a body made another way would silently be left out
- * (never hurt, never burning), so new kinds of fighters build on these too.
+ * these components; the schema requires them of every `Hurtbox`
+ * (`Schema.requires`), so a fighter made another way does not compile.
  *
  * The two halves are apart because a team member keeps being a fighter on
  * the bench (her health and state) while her body moves to whoever is on
@@ -53,9 +53,6 @@ export interface BodyMotion {
   readonly invulnerable: number
 }
 
-/** The components of `fighterParts`. */
-export const FighterParts = [Health, CombatStats, ElementState, ElementAffinities] as const
-
 /** A fighter at full health, in no state. */
 export const fighterParts = (spec: FighterSpec) => [
   [Health, { current: spec.stats.hp, max: spec.stats.hp }],
@@ -80,9 +77,6 @@ export const bodyParts = (spec: BodySpec, motion: BodyMotion = { previous: spec.
   [Stunned, { remaining: 0 }],
   [Disarmed, { remaining: 0 }]
 ] as const
-
-/** The components of `makeBody`. */
-export const FighterBodyParts = [...FighterParts, ...BodyParts] as const
 
 /** A fighter with a body, at rest. */
 export const makeBody = (spec: FighterSpec & BodySpec) => Game.Command.spawn(...fighterParts(spec), ...bodyParts(spec))

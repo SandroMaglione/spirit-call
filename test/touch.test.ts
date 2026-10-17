@@ -7,7 +7,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import type { LobMove } from "../src/content/attacks.ts"
-import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
+import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { Controls, Enemy, Energy, Game, Lobbed, Player, Position, Projectile, RunScope, Velocity } from "../src/schema.ts"
 import { ClearEnemies, gunner, plainAttack, start, swordsman, tidecaller, withWindCut, grenadeSkill, volley, withVolley } from "./helpers.ts"
 
@@ -106,7 +106,7 @@ describe("touch controls", () => {
     // One dummy, off the facing and nearer than the touch aim's set distance.
     const dummy = { x: center.x + 150, y: center.y + 80 }
     const alone = (run: ReturnType<typeof start>) => {
-      const Spawn = Game.System("Test/SpawnDummy", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+      const Spawn = Game.System("Test/SpawnDummy", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
         commands.spawnIn(RunScope, makeEnemy(defaultTuning, "dummy", dummy))
       })
       run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
