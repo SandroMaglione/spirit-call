@@ -16,7 +16,7 @@ const lintFixtures = (): Array<string> => {
 }
 
 describe("project lint rules", () => {
-  it("catch boundary, Effect barrel, and determinism violations, and let allowed imports through", () => {
+  it("catch boundary, Effect barrel, determinism, and cast violations, and let allowed code through", () => {
     const found = lintFixtures()
     const count = (entry: string) => found.filter((line) => line === entry).length
     expect(count("features/violations.ts: layer-boundaries")).toBe(3)
@@ -24,6 +24,7 @@ describe("project lint rules", () => {
     expect(count("features/violations.ts: deterministic-simulation")).toBe(4)
     expect(count("ui/violations.ts: layer-boundaries")).toBe(2)
     expect(count("content/violations.ts: layer-boundaries")).toBe(1)
+    expect(count("features/casts.ts: no-cast-escape")).toBe(2)
     expect(found.filter((line) => line.startsWith("account/"))).toEqual([])
   })
 })

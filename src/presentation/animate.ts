@@ -4,7 +4,7 @@
  * which moment). The simulation's timings decide; clips are stretched to
  * fit them, and everything stops with the world during hit-stop.
  */
-import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Area } from "../physics/areas.ts"
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"

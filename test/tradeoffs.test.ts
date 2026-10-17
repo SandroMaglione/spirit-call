@@ -5,7 +5,7 @@
  * on her hurt more, and a second wind keeps her standing once a run.
  */
 import { describe, expect, it } from "vitest"
-import { distance } from "@typeonce/bevy-ts-math/Vec2"
+import { distance } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -38,7 +38,7 @@ const alone = (build: BuildValue, keys: Parameters<typeof start>[0] extends infe
     })
     run.runtime.tick(Game.Schedule(Strike))
     // Past the blow, its hit-stop, and the untouchable moment after it.
-    run.step(Math.ceil(3 / engine.stepSeconds))
+    run.step(Math.ceil(3 / engine.step.dt))
   }
   return { ...run, strike, health: () => run.runtime.inspect(Vitals)! }
 }
@@ -72,7 +72,7 @@ describe("traits", () => {
     expect(own.charges).toBe(defaultTuning.dash.charges + 1)
     expect(own.distance).toBeCloseTo(defaultTuning.dash.distance * 0.75, 9)
     const run = alone({ character: "swordsman", relics: { dash: relic("featherstep") } }, doubleTap("right", 0))
-    run.step(2 + Math.ceil(own.duration / engine.stepSeconds))
+    run.step(2 + Math.ceil(own.duration / engine.step.dt))
     expect(distance(run.player().position, center)).toBeCloseTo(own.distance, 6)
     // One spent of three.
     expect(run.player().dash.charges).toBe(2)

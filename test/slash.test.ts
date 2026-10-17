@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import type { Touch } from "@typeonce/bevy-ts-browser"
+import type { Touch } from "@typeonce/ritmo-browser"
 
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { MeleeMove } from "../src/content/attacks.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { UiRequest, Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, BasicAttack } from "../src/schema.ts"
 import { start, windCut, withWindCut, plainAttack, plainEnemies, hitBy } from "./helpers.ts"
 
@@ -17,7 +17,7 @@ const [first, second, third, finisher] = sword.combo as [MeleeMove, MeleeMove, M
 const slash = { ...sword, first, second, third, finisher }
 const firstArc = first.shape === "arc" ? first.arcDegrees : 0
 const hp = defaultTuning.enemies.dummy.hp
-const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
 
 const World = Game.Inspector("Test/Slash", {
   queries: {
@@ -52,9 +52,10 @@ const arena = (
     touch: options.touch ?? [{ frame: 0, press: ["attack"] }, { frame: frames, release: ["attack"] }]
   })
   const Place = Game.System("Test/PlaceDummies", {
-    queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
+    queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
+    commands: Game.System.commands(Game.System.spawns(...EnemyParts), Game.System.despawns(Enemy))
   }, ({ queries, commands }) => {
-    for (const { entity } of queries.dummies.each()) commands.despawn(entity.id)
+    for (const { entity } of queries.dummies.each()) commands.despawn(entity)
     for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(defaultTuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
@@ -160,9 +161,10 @@ describe("sword slash", () => {
     // A chaser right in front: after one slash it ends up out of reach for a while.
     const run = start({ touch: [{ frame: 0, press: ["attack"] }, { frame: 1, release: ["attack"] }] })
     const Place = Game.System("Test/PlaceChaser", {
-      queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
+      queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
+      commands: Game.System.commands(Game.System.spawns(...EnemyParts), Game.System.despawns(Enemy))
     }, ({ queries, commands }) => {
-      for (const { entity } of queries.dummies.each()) commands.despawn(entity.id)
+      for (const { entity } of queries.dummies.each()) commands.despawn(entity)
       commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), "chaser", { x: center.x + 70, y: center.y }))
     })
     run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
@@ -240,14 +242,14 @@ describe("sword slash", () => {
       throw new Error("never hit")
     }
     const opening = hitStopOnHit(arena([at(0, 70)], 1, { tuning: noAssist }))
-    expect(opening).toBeGreaterThan(first.hitStop - 2 * engine.stepSeconds)
+    expect(opening).toBeGreaterThan(first.hitStop - 2 * engine.step.dt)
     expect(opening).toBeLessThanOrEqual(first.hitStop)
 
     // Only the finisher's spin reaches a dummy behind the player.
     const frames = [0]
     for (const move of [slash.first, slash.second, slash.third]) frames.push(frames.at(-1)! + steps(move.recovery) + 1)
     const finisher = hitStopOnHit(arena([at(180, 70)], 1, { tuning: noAssist, touch: frames.map((frame) => ({ frame, press: ["attack" as const], release: ["attack" as const] })) }))
-    expect(finisher).toBeGreaterThan(slash.finisher.hitStop - 2 * engine.stepSeconds)
+    expect(finisher).toBeGreaterThan(slash.finisher.hitStop - 2 * engine.step.dt)
     expect(slash.finisher.hitStop).toBeGreaterThan(first.hitStop)
   })
 })

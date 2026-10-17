@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { skillSlots } from "../src/content/skills.ts"
 import { actionButtons, drawnShare, partyLayout, stickRest, touchButtons, touchLayout } from "../src/config/input.ts"
@@ -7,7 +7,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import type { LobMove } from "../src/content/attacks.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { Controls, Enemy, Energy, Game, Lobbed, Player, Position, Projectile, RunScope, Velocity } from "../src/schema.ts"
 import { ClearEnemies, gunner, plainAttack, start, swordsman, tidecaller, withWindCut, grenadeSkill, volley, withVolley } from "./helpers.ts"
 
@@ -106,7 +106,7 @@ describe("touch controls", () => {
     // One dummy, off the facing and nearer than the touch aim's set distance.
     const dummy = { x: center.x + 150, y: center.y + 80 }
     const alone = (run: ReturnType<typeof start>) => {
-      const Spawn = Game.System("Test/SpawnDummy", {}, ({ commands }) => {
+      const Spawn = Game.System("Test/SpawnDummy", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
         commands.spawnIn(RunScope, makeEnemy(defaultTuning, "dummy", dummy))
       })
       run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -116,7 +116,7 @@ describe("touch controls", () => {
     it("a charged grenade, aimed at it while held, lands on it", () => {
       const power = plainAttack(defaultTuning, "gun").power!
       const full = power.holdDelay + power.chargeTime
-      const release = Math.round((full + 0.05) / engine.stepSeconds)
+      const release = Math.round((full + 0.05) / engine.step.dt)
       const run = alone(start({ build: gunner, touch: [{ frame: 0, press: ["attack"] }, { frame: release, release: ["attack"] }] }))
       run.step(release)
       // Held, the aim is the dummy itself (the opening shot pushed it), so what the cue shows is where it lands.
@@ -260,8 +260,8 @@ describe("touch controls", () => {
   it("keeps the aim still when there is no player (game over)", () => {
     const run = start({ touch: [{ frame: 0, stick: { x: 1, y: 0 }, press: ["attack"] }] })
     run.step(2)
-    const Remove = Game.System("Test/RemovePlayer", { queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) } }, ({ queries, commands }) => {
-      for (const { entity } of queries.player.each()) commands.despawn(entity.id)
+    const Remove = Game.System("Test/RemovePlayer", { queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) }, commands: Game.System.commands(Game.System.despawns(Player)) }, ({ queries, commands }) => {
+      for (const { entity } of queries.player.each()) commands.despawn(entity)
     })
     run.runtime.tick(Game.Schedule(Remove, Game.Schedule.applyDeferred()))
     const AimPoint = Game.Inspector("Test/AimPoint", { resources: { controls: Game.System.readResource(Controls) } }, ({ resources }) => resources.controls.get())

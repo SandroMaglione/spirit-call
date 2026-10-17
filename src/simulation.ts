@@ -12,7 +12,8 @@
  * for (let step = 0; step < 60; step++) sim.runtime.tick(sim.fixedUpdate)
  * ```
  */
-import { Touch } from "@typeonce/bevy-ts-browser"
+import { HostClock } from "@typeonce/ritmo"
+import { Touch } from "@typeonce/ritmo-browser"
 import type { ChallengeId } from "./content/challenges.ts"
 
 import { scriptedPartyTaps, touchButtons } from "./config/input.ts"
@@ -49,6 +50,8 @@ export interface SimulationOptions {
   readonly viewport?: ViewportValue
   /** What the controls start as (a phone's browser starts as touch); defaults to desktop. */
   readonly device?: "desktop" | "touch"
+  /** The clock the debug handle times systems with. Defaults to `HostClock.test()` (every timing 0, deterministic output). */
+  readonly hostClock?: HostClock.HostClock
 }
 
 export const defaultViewport: ViewportValue = { width: 1280, height: 720 }
@@ -56,7 +59,8 @@ export const defaultViewport: ViewportValue = { width: 1280, height: 720 }
 export const createSimulation = (options: SimulationOptions) => {
   const tuning = options.tuning ?? defaultTuning
   const viewport = options.viewport ?? defaultViewport
-  const runtime = Game.Runtime.make({
+  const hostClock = options.hostClock ?? HostClock.test()
+  const made = Game.Runtime.make({
     services: Game.Runtime.services(
       Game.Runtime.service(KeyboardInput, options.keyboard),
       Game.Runtime.service(PointerInput, options.pointer),
@@ -69,8 +73,10 @@ export const createSimulation = (options: SimulationOptions) => {
       Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }, options.device)
     },
     machines: initialMachines(options.flow),
-    debug: true
+    debug: { hostClock }
   })
+  if (!made.ok) throw new Error(`Simulation resources are invalid: ${JSON.stringify(made.error)}`)
+  const runtime = made.value
   runtime.debug.nameSchedules({ setup, fixedUpdate })
-  return { runtime, setup, fixedUpdate }
+  return { runtime, setup, fixedUpdate, hostClock }
 }

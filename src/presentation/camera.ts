@@ -7,7 +7,7 @@
  * Axes: the simulation's floor (x, y) is Three's (x, z), and up is +y.
  */
 import { OrthographicCamera, Vector3 } from "three"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { elevation } from "../math/iso.ts"
 import type { Projection } from "../math/iso.ts"

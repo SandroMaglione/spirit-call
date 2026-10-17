@@ -1,6 +1,6 @@
-import type { Pointer } from "@typeonce/bevy-ts-browser"
+import type { Pointer } from "@typeonce/ritmo-browser"
 import { describe, expect, it } from "vitest"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { DiscMove } from "../src/content/attacks.ts"

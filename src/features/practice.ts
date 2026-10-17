@@ -11,12 +11,12 @@
  * holds a spot of its own when asked (see `Tuning.champions`). It goes on
  * until the team falls.
  */
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import * as Random from "@typeonce/ritmo-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EliteElement } from "../content/challenges.ts"
 import type { EnemyKind } from "../content/enemies.ts"
 import { Challenge, Game, PendingSpawn, Player, Position, Practice, PracticeField, PracticeUnit, Rng, RunScope, Time, Tuning } from "../schema.ts"
-import { makePendingSpawn } from "./enemies.ts"
+import { makePendingSpawn, PendingSpawnParts } from "./enemies.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { pickSpawnPoint } from "./waves.ts"
 
@@ -60,7 +60,8 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
     field: Game.System.writeResource(PracticeField),
     time: Game.System.readResource(Time),
     rng: Game.System.writeResource(Rng)
-  }
+  },
+  commands: Game.System.commands(Game.System.spawns(...PendingSpawnParts))
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   const objective = tuning.challenges[resources.challenge.get()].objective

@@ -5,11 +5,11 @@
  * shipped skill raises one now, but the rule stands).
  */
 import { describe, expect, it } from "vitest"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
-import { makeProjectile } from "../src/features/combat.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { makeProjectile, ProjectileParts } from "../src/features/combat.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { barrierMeets } from "../src/features/barriers.ts"
 import { mantleMeets, mantleTaken } from "../src/features/windwall.ts"
 import { barrier } from "../src/content/skills.ts"
@@ -40,7 +40,7 @@ const World = Game.Inspector("Test/Windwall", {
 }))
 
 /** An enemy shot from `from` (an offset from her) flying at her. */
-const Shoot = (from: Vec2, speed = 600) => Game.System("Test/Shoot", {}, ({ commands }) => {
+const Shoot = (from: Vec2, speed = 600) => Game.System("Test/Shoot", { commands: Game.System.commands(Game.System.spawns(...ProjectileParts)) }, ({ commands }) => {
   const length = Math.hypot(from.x, from.y)
   const shot = { faction: "enemy" as const, style: "bolt" as const, radius: 7, blow: blow({ damage: 10, knockback: 0 }), range: 2000, pierce: 0, hit: [] }
   commands.spawnIn(RunScope, makeProjectile({ x: center.x + from.x, y: center.y + from.y }, { x: (-from.x / length) * speed, y: (-from.y / length) * speed }, shot))
@@ -105,7 +105,7 @@ describe("Windwall's Sky Lift", () => {
 
   it("never lifts a champion: skills do not take the fight's own out of it", () => {
     const run = arena([], [press("ultimate", 1)])
-    const Champion = Game.System("Test/Champion", {}, ({ commands }) => {
+    const Champion = Game.System("Test/Champion", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "brute", { x: center.x + 120, y: center.y }, 1, 1, "water", true))
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x - 120, y: center.y }, 1, 1))
     })
@@ -124,7 +124,7 @@ describe("Windwall's Sky Lift", () => {
     expect(far!.lifted).toBe(false)
     expect(near!.hurt).toBe(false)
     // Out of the fight while up: a shot passes it by.
-    const TeamShot = Game.System("Test/TeamShot", {}, ({ commands }) => {
+    const TeamShot = Game.System("Test/TeamShot", { commands: Game.System.commands(Game.System.spawns(...ProjectileParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeProjectile({ x: center.x + 30, y: center.y }, { x: 600, y: 0 }, { faction: "player", style: "bolt", radius: 7, blow: blow({ damage: 10, knockback: 0 }), range: 250, pierce: 0, hit: [] }))
     })
     run.runtime.tick(Game.Schedule(TeamShot))

@@ -3,11 +3,14 @@
  * boundary walls, pillars, low walls, and hazards, spawned with each run (so
  * a run of another challenge stands in another arena).
  */
-import { around, type Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { around, type Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { ArenaId } from "../content/arena.ts"
 import { Challenge, Game, Ground, LowWall, Position, Renderable, RunScope, Tuning, Wall } from "../schema.ts"
 import type { WallPlacement } from "../schema.ts"
+
+/** What a wall is made of (see `makeWall`). */
+const WallParts = [Wall, Position, Renderable] as const
 
 const makeWall = (box: Box2, placement: WallPlacement, arena: ArenaId, prop?: number) =>
   Game.Command.spawn(
@@ -15,6 +18,9 @@ const makeWall = (box: Box2, placement: WallPlacement, arena: ArenaId, prop?: nu
     [Position, { x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 }],
     [Renderable, { kind: "wall", box, placement, arena, ...(prop === undefined ? {} : { prop }) }]
   )
+
+/** What a low wall is made of (see `makeLowWall`). */
+const LowWallParts = [Wall, LowWall, Position, Renderable] as const
 
 /** A low wall: one a hop carries her over (see `LowWall`). */
 const makeLowWall = (box: Box2, arena: ArenaId) =>
@@ -74,7 +80,8 @@ export const arenaOf = (tuning: TuningValue, challenge: keyof TuningValue["chall
 
 /** Boundary walls around `[0, width] × [0, height]`, then the challenge's arena: pillars, low walls, and hazards. */
 export const SpawnArena = Game.System("Shooter/SpawnArena", {
-  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge) }
+  resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge) },
+  commands: Game.System.commands(Game.System.spawns(...WallParts, ...LowWallParts, Ground))
 }, ({ resources, commands }) => {
   const tuning = resources.tuning.get()
   const id = arenaOf(tuning, resources.challenge.get())

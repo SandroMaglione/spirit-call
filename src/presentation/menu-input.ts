@@ -1,4 +1,4 @@
-import type { Keyboard } from "@typeonce/bevy-ts-browser"
+import type { Keyboard } from "@typeonce/ritmo-browser"
 
 /** Menu activation keeps native keyboard behavior, and held combat inputs are released on entry. */
 export const createMenuInputHost = (target: EventTarget, active: () => boolean) => {

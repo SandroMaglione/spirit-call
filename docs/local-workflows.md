@@ -20,14 +20,14 @@ baseline. Test gameplay and UI in a browser and on a phone before release.
 
 ## Build against the published engine
 
-A companion PR may set `bevyTsSource` in `package.json` to a full bevy-ts
+A companion PR may set `ritmoSource` in `package.json` to a full bevy-ts
 commit SHA while its APIs are unpublished. The same swap script then
 fetches that exact commit into `.repos/bevy-ts-preview/<sha>`, installs and
 builds its packages, and links this worktree to them for CI and preview
 builds. It verifies the checked-out SHA and never changes the sibling
 bevy-ts repository. Day-to-day links still point at the sibling checkout.
-After the engine release is published, remove `bevyTsSource`, update
-`bevyTsRelease`, and run the published-engine checks below.
+After the engine release is published, remove `ritmoSource`, update
+`ritmoRelease`, and run the published-engine checks below.
 
 Day-to-day development links the sibling bevy-ts checkout. For a release,
 use a separate clean worktree, so local engine changes cannot enter it:
@@ -36,14 +36,14 @@ use a separate clean worktree, so local engine changes cannot enter it:
 git fetch origin main
 git worktree add --detach ../spirit-call-release origin/main
 cd ../spirit-call-release
-node scripts/use-published-bevy-ts.ts
+node scripts/use-ritmo.ts
 pnpm install --no-frozen-lockfile
 pnpm check
 ```
 
 The swap intentionally changes this worktree's `package.json` and lockfile.
 Keep it out of commits. Run the build or deployment commands below from
-this worktree. For a newer engine release, change `bevyTsRelease` in the
+this worktree. For a newer engine release, change `ritmoRelease` in the
 development checkout, validate against that published version in a clean
 worktree, and submit the version change as a normal pull request.
 

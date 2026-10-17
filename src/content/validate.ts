@@ -993,7 +993,7 @@ export const validateContent = (tuning: Tuning): Array<string> => {
         const affinity = tuning.enemies[kind].elements[track.element]
         return affinity === "resists" || affinity === "immune"
       })
-      if (resisting.length === 0 && !shows.elites.has(track.element as never)) problems.push(`trial ${id} rank ${index + 1}: nothing in it resists ${track.element}`)
+      if (resisting.length === 0 && ![...shows.elites].some((elite) => elite === track.element)) problems.push(`trial ${id} rank ${index + 1}: nothing in it resists ${track.element}`)
     })
   }
   rules.ascension.forEach((step, index) => {

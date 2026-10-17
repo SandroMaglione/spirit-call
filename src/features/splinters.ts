@@ -7,8 +7,8 @@
  * at once, they burst out all around her. Directions, distances, and fuses
  * are drawn from the seeded `Rng`.
  */
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Random from "@typeonce/ritmo-math/Random"
 import { lob } from "../content/skills.ts"
 import type { SkillId, SplintersEffect } from "../content/skills.ts"
 import { isMelee } from "../content/attacks.ts"
@@ -41,16 +41,18 @@ const splintersFrom = (random: Random.Random, from: Vec2, faction: Faction, effe
 
 /** Splinters cast: taken up for a while (casting again starts it over), or burst out around her at once. */
 export const CastSplinters = Game.System("Shooter/CastSplinters", {
+  queries: { wielders: Wielders },
   resources: { rng: Game.System.writeResource(Rng) },
-  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
-}, ({ resources, events, lookup, commands }) => {
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Lobbed), Game.System.inserts(Splintering))
+}, ({ queries, resources, events, commands }) => {
   let random: Random.Random | undefined
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "splinters") continue
     const blow = castBlow(cast, effect)
     if (effect.seconds > 0) {
-      const wielder = lookup.getHandle(cast.caster, Wielders)
+      const wielder = queries.wielders.getHandle(cast.caster)
       if (wielder.ok) commands.insert(wielder.value.entity.id, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
       continue
     }
@@ -75,7 +77,8 @@ const Throwers = Game.Query({
 export const ThrowSplinters = Game.System("Shooter/ThrowSplinters", {
   queries: { throwers: Throwers },
   resources: { time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng) },
-  events: { action: Game.System.readEvent(Action), explosion: Game.System.readEvent(Explosion) }
+  events: { action: Game.System.readEvent(Action), explosion: Game.System.readEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Lobbed), Game.System.removes(Splintering))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   let random: Random.Random | undefined

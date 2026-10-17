@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { entryKind } from "../src/content/challenges.ts"
 import type { Wave } from "../src/content/challenges.ts"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
-import { enemyStats, makeEnemy } from "../src/features/enemies.ts"
+import { enemyStats, EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { UiRequest, Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { ReadFlow, doubleTap, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
@@ -50,10 +50,10 @@ const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}) => {
   const base = plainEnemies(options.tuning ?? defaultTuning)
   const tuning: Tuning = { ...base, enemies: { ...base.enemies } }
   const run = start({ ...options, tuning })
-  const Clear = Game.System("Test/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-    for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+  const Clear = Game.System("Test/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+    for (const { entity } of queries.enemies.each()) commands.despawn(entity)
   })
-  const Spawn = Game.System("Test/Spawn", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/Spawn", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -78,7 +78,7 @@ describe("telegraphed attacks", () => {
     expect(area?.kind).toBe("cone")
     expect(run.world().player!.health).toBe(swordsman.hp)
 
-    run.step(Math.ceil(swipe.windup / engine.stepSeconds) + 2)
+    run.step(Math.ceil(swipe.windup / engine.step.dt) + 2)
     const hit = run.world().player!
     expect(hit.health).toBe(swordsman.hp - playerLoss(defaultTuning, "chaser", swipe.power))
     expect(hit.invulnerable).toBeGreaterThan(0)
@@ -89,7 +89,7 @@ describe("telegraphed attacks", () => {
     const dry = duel("chaser", { x: 300, y: 0 })
     const windupAt = stepUntil(dry, () => dry.world().enemies[0]?.attacker.phase === "windup")
     // React 0.2 s into the telegraph: dash screen-down (world +x+y, away from the cone's axis).
-    const react = windupAt + Math.round(0.2 / engine.stepSeconds)
+    const react = windupAt + Math.round(0.2 / engine.step.dt)
     const run = duel("chaser", { x: 300, y: 0 }, { keys: [...doubleTap("down", react - 3, { hold: true }), { frame: react + 20, release: ["down"] }] })
     run.step(windupAt + 60)
     expect(run.world().player!.health).toBe(swordsman.hp)
@@ -99,12 +99,12 @@ describe("telegraphed attacks", () => {
     const run = duel("chaser", { x: 300, y: 0 }, { tuning: swipeOnly })
     stepUntil(run, () => run.world().enemies[0]?.attacker.phase === "windup")
     // Past its aim lock, a gust throws the chaser away from her (world +x).
-    run.step(Math.ceil((swipe.windup - swipe.aimLock) / engine.stepSeconds) + 1)
+    run.step(Math.ceil((swipe.windup - swipe.aimLock) / engine.step.dt) + 1)
     const Push = Game.System("Test/Push", { queries: { enemies: Game.Query({ selection: { knockback: Game.Query.write(Knockback) }, with: [Enemy] }) } }, ({ queries }) => {
       for (const { data } of queries.enemies.each()) data.knockback.set({ x: 1500, y: 0 })
     })
     run.runtime.tick(Game.Schedule(Push))
-    run.step(Math.ceil(swipe.windup / engine.stepSeconds) + Math.ceil(swipe.active / engine.stepSeconds) + 4)
+    run.step(Math.ceil(swipe.windup / engine.step.dt) + Math.ceil(swipe.active / engine.step.dt) + 4)
     const world = run.world()
     expect(world.player!.health).toBe(swordsman.hp)
     const enemy = world.enemies[0]!
@@ -116,7 +116,7 @@ describe("telegraphed attacks", () => {
     const run = duel("chaser", { x: 200, y: 0 }, { tuning, keys: doubleTap("right", 0) })
     // The chaser closes in and attacks while the player is still invulnerable.
     const activeAt = stepUntil(run, () => run.world().enemies[0]?.attacker.phase === "active")
-    expect(activeAt).toBeLessThan(Math.round(5 / engine.stepSeconds))
+    expect(activeAt).toBeLessThan(Math.round(5 / engine.step.dt))
     run.step(30)
     expect(run.world().player!.health).toBe(tuning.characters.swordsman.stats.hp)
   })
@@ -143,7 +143,7 @@ describe("telegraphed attacks", () => {
     const early = direction()
     run.step(5)
     expect(direction()).not.toEqual(early) // tracking the moving player
-    run.step(Math.ceil((spec.windup - (spec.kind === "volley" ? spec.aimLock : 0)) / engine.stepSeconds) - 4)
+    run.step(Math.ceil((spec.windup - (spec.kind === "volley" ? spec.aimLock : 0)) / engine.step.dt) - 4)
     const locked = direction()
     run.step(3)
     expect(direction()).toEqual(locked)
@@ -161,7 +161,7 @@ describe("enemy stats", () => {
     const before = run.world().enemies[0]!.position
     run.step(10)
     const after = run.world().enemies[0]!.position
-    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
+    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.step.dt)
     expect(speed).toBeCloseTo(defaultTuning.enemies.chaser.speed / 2, 0)
   })
 })
@@ -247,8 +247,8 @@ describe("waves", () => {
 
   it("starts the next wave after the current one is cleared", () => {
     const { run, world } = firstWave()
-    const Clear = Game.System("Test/ClearWave", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-      for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+    const Clear = Game.System("Test/ClearWave", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+      for (const { entity } of queries.enemies.each()) commands.despawn(entity)
     })
     run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred()))
     stepUntil(run, () => world().waves.number === 2)

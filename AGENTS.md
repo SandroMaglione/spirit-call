@@ -1,7 +1,7 @@
 # Agents guide
 
 A top-down action game for the phone (and the browser), built on the
-`@typeonce/bevy-ts` ECS. **Read `docs/vision.md` first**: it is the game's
+`@typeonce/ritmo` ECS. **Read `docs/vision.md` first**: it is the game's
 design direction (pillars, non-goals, open questions). Design decisions are
 checked against it; open questions are asked, not guessed. Detailed rules
 for one area live next to it (`docs/elements.md`: elements, states, bursts,
@@ -22,6 +22,12 @@ keeps them, and releasing).
 
 ## Commands
 
+- This branch pins `ritmoSource` until the new packages are published. Run
+  `pnpm engine:prepare` before the first `pnpm install --frozen-lockfile`.
+  The helper fetches and builds that exact commit in `.repos/ritmo-preview/`;
+  no sibling checkout is required. Remove the source pin and run it again
+  when `ritmoRelease` is available on npm.
+
 - `pnpm dev --host --port 5199`: dev server, reachable from a phone on the
   same network (plain HTTP there is not a secure context: no
   `crypto.randomUUID`, clipboard, and similar).
@@ -41,7 +47,7 @@ keeps them, and releasing).
   removes it. Deployments, balance audits, and native builds run locally;
   GitHub runs only `pnpm check` (`.github/workflows/check.yml`). For a
   release, use the published bevy-ts version in package.json
-  `bevyTsRelease` (`scripts/use-published-bevy-ts.ts` does the swap in a
+  `ritmoRelease` (`scripts/use-ritmo.ts` does the swap in a
   clean worktree). Apply the shared database migrations before deploying
   `prod` or `playtest`. See `docs/local-workflows.md` for the commands and
   `docs/playtest.md`, "Releasing", for the stage rules.
@@ -117,7 +123,7 @@ keeps them, and releasing).
   math, config): the ECS. Deterministic (time and randomness come from the
   world's `Time` and `Rng`), headless, and tested without a browser.
   Vectors, swept collision, the spatial grid, the flow field, and random
-  numbers come from `@typeonce/bevy-ts-math` (`Vec2`, `Box2`, `Collide2`,
+  numbers come from `@typeonce/ritmo-math` (`Vec2`, `Box2`, `Collide2`,
   `SpatialGrid`, `FlowField`, `Random`).
 - `src/presentation/`: rendering (Three.js), sounds, effects, and the in-arena
   HUD (plain DOM). The world is 3D (low-poly), seen by an orthographic

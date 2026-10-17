@@ -1,13 +1,13 @@
-import { Descriptor } from "@typeonce/bevy-ts"
-import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
-import { NodeRegistry, RenderSync } from "@typeonce/bevy-ts-render"
+import { Descriptor } from "@typeonce/ritmo"
+import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
+import { NodeRegistry, RenderSync } from "@typeonce/ritmo-render"
 import { describe, expect, it } from "vitest"
 
 import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands, setAt } from "../src/dev/commands.ts"
 import { makeStress, stressTuning } from "../src/dev/stress.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
 import { Dash, FrameContext, Game, HitStop, KeyboardInput, PartyInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning } from "../src/schema.ts"
@@ -28,7 +28,7 @@ describe("hit-stop", () => {
     const tuning = withGun(tuningWith({ feedback: { hitStopOnKill: 0.1 } }), { power: 1000, speed: 1_000_000, range: 100_000 })
     // A dummy right in front of the player dies to the first shot.
     const run = start({ tuning, build: gunner, pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }] })
-    const Spawn = Game.System("Test/SpawnTarget", {}, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnTarget", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
@@ -39,7 +39,7 @@ describe("hit-stop", () => {
     run.step(2)
     expect(frozen()).toBe(true)
     const frozenPlayer = run.player()
-    run.step(Math.floor(0.1 / engine.stepSeconds) - 2)
+    run.step(Math.floor(0.1 / engine.step.dt) - 2)
     expect(frozen()).toBe(true)
     expect(run.player()).toEqual(frozenPlayer)
     run.step(3)
@@ -52,11 +52,11 @@ describe("hit-stop", () => {
       pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }],
       keys: doubleTap("right", 2)
     })
-    const Spawn = Game.System("Test/SpawnTarget", {}, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnTarget", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
-    run.step(Math.ceil(0.2 / engine.stepSeconds) + 6)
+    run.step(Math.ceil(0.2 / engine.step.dt) + 6)
     expect(run.player().dash.cooldown).toBeGreaterThan(0)
   })
 })
@@ -124,7 +124,7 @@ describe("render sync under multi-rate ticking", () => {
     }, ({ queries }) => queries.all.each().length)
 
     const tuning = stressTuning()
-    const runtime = Game.Runtime.make({
+    const made = Game.Runtime.make({
       services: Game.Runtime.services(
         Game.Runtime.service(KeyboardInput, Keyboard.scripted(keyBindings, [])),
         Game.Runtime.service(PointerInput, Pointer.scripted([])),
@@ -136,6 +136,8 @@ describe("render sync under multi-rate ticking", () => {
       resources: initialResources(tuning, defaultViewport),
       machines: initialMachines()
     })
+    if (!made.ok) throw new Error(JSON.stringify(made.error))
+    const runtime = made.value
     const stress = makeStress(tuning, { enemies: 20, projectiles: 300 })
     runtime.tick(setup)
     runtime.tick(Game.Schedule(stress.populate, stress.topUp, Game.Schedule.applyDeferred()))
@@ -157,7 +159,7 @@ describe("hit-stop and game over", () => {
     // Game-over detection must not be skipped by it, or the Death event is lost.
     const tuning = tuningWith({ characters: { swordsman: { stats: { hp: 5 } } }, feedback: { hitStopOnPlayerHit: 0.2 } })
     const run = start({ tuning })
-    const Spawn = Game.System("Test/SpawnChaser", {}, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: 1000, y: 900 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))

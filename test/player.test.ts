@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { distance, normalizeOr } from "@typeonce/bevy-ts-math/Vec2"
+import { distance, normalizeOr } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
@@ -42,7 +42,7 @@ describe("movement", () => {
 describe("dash", () => {
   it("covers exactly the dash distance, toward the cursor when standing still", () => {
     const run = start({ keys: doubleTap("right", 0) })
-    const dashSteps = Math.ceil(defaultTuning.dash.duration / engine.stepSeconds)
+    const dashSteps = Math.ceil(defaultTuning.dash.duration / engine.step.dt)
     run.step(2 + dashSteps)
     const { position, aim } = run.player()
     // The cursor is to the right of the screen center, i.e. world south-east.
@@ -71,7 +71,7 @@ describe("dash", () => {
   })
 
   it("needs two presses of the same key within the double-tap window", () => {
-    const slow = Math.ceil(defaultTuning.dash.doubleTapWindow / engine.stepSeconds) + 2
+    const slow = Math.ceil(defaultTuning.dash.doubleTapWindow / engine.step.dt) + 2
     const single = start({ keys: [{ frame: 0, press: ["right"] }, { frame: 1, release: ["right"] }] })
     single.step(20)
     expect(single.player().dash.cooldown).toBe(0)
@@ -87,7 +87,7 @@ describe("dash", () => {
     const run = start({ keys: doubleTap("right", 0) })
     run.step(3)
     expect(run.player().invulnerable).toBeCloseTo(defaultTuning.dash.invulnerability, 6)
-    const steps = Math.ceil(defaultTuning.dash.invulnerability / engine.stepSeconds)
+    const steps = Math.ceil(defaultTuning.dash.invulnerability / engine.step.dt)
     run.step(steps)
     expect(run.player().invulnerable).toBe(0)
   })
@@ -95,7 +95,7 @@ describe("dash", () => {
   it("respects the cooldown and buffers an early press", () => {
     // One charge, so the second dash waits for it to come back.
     const tuning = tuningWith({ dash: { charges: 1 } })
-    const cooldownSteps = Math.round(defaultTuning.dash.cooldown / engine.stepSeconds)
+    const cooldownSteps = Math.round(defaultTuning.dash.cooldown / engine.step.dt)
     const early = cooldownSteps - 3 // within the input buffer
     // The first dash starts on step 3; the second double tap completes `early` steps later.
     const run = start({ tuning, keys: [...doubleTap("right", 0), ...doubleTap("right", early)] })
@@ -106,7 +106,7 @@ describe("dash", () => {
   })
 
   it("has two charges: a second dash right after the first, then a wait for one to come back", () => {
-    const between = Math.ceil(defaultTuning.dash.duration / engine.stepSeconds) + 2
+    const between = Math.ceil(defaultTuning.dash.duration / engine.step.dt) + 2
     const run = start({ keys: [...doubleTap("right", 0), ...doubleTap("left", between), ...doubleTap("right", between * 2)] })
     run.step(3)
     expect(run.player().dash.charges).toBe(defaultTuning.dash.charges - 1)
@@ -117,7 +117,7 @@ describe("dash", () => {
     run.step(between)
     // A third has to wait for a charge.
     expect(run.player().dash.remaining).toBe(0)
-    run.step(Math.ceil(defaultTuning.dash.cooldown / engine.stepSeconds))
+    run.step(Math.ceil(defaultTuning.dash.cooldown / engine.step.dt))
     expect(run.player().dash.charges).toBeGreaterThanOrEqual(1)
   })
 

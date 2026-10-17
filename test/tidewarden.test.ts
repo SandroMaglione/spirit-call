@@ -6,10 +6,10 @@
  * chain snaps, striking it and leaving it stunned (never a champion).
  */
 import { describe, expect, it } from "vitest"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning } from "../src/config/tuning.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { ElementState, Enemy, Energy, Game, Health, Hurtbox, Player, Position, RunScope, Stunned, Turned } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
 import { center, ClearEnemies, cursorAt, start, steps } from "./helpers.ts"
@@ -42,7 +42,7 @@ const World = Game.Inspector("Test/Tidewarden", {
 /** A run with Tidewarden alone, enemies of `kinds` at `offsets` from her, and her energy full. */
 const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly at: Vec2; readonly champion?: boolean }>, keys: ReadonlyArray<ReturnType<typeof press>>) => {
   const run = start({ build: { character: "tidewarden" }, keys, pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }) }] })
-  const Spawn = Game.System("Test/SpawnEnemies", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnEnemies", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     for (const { kind, at, champion } of enemies) {
       commands.spawnIn(RunScope, makeEnemy(defaultTuning, kind, { x: center.x + at.x, y: center.y + at.y }, 1, 1, champion === true ? "water" : null, champion === true))
     }

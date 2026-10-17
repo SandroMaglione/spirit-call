@@ -11,6 +11,7 @@
     "shooter/layer-boundaries": "error",
     "shooter/no-effect-barrel": "error",
     "shooter/deterministic-simulation": "error",
+    "shooter/no-cast-escape": "error",
     "typescript/consistent-type-imports": "error",
     "typescript/no-import-type-side-effects": "error",
     "import/no-duplicates": "error",

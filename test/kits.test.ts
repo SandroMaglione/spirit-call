@@ -5,7 +5,7 @@
  * Thunderclap that holds what it strikes.
  */
 import { describe, expect, it } from "vitest"
-import { normalizeOr } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"

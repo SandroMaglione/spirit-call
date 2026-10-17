@@ -1,4 +1,4 @@
-import { add, clampLength, scale, subtract, zero } from "@typeonce/bevy-ts-math/Vec2"
+import { add, clampLength, scale, subtract, zero } from "@typeonce/ritmo-math/Vec2"
 import { Camera, Controls, Game, Player, Position, Time, Tuning } from "../schema.ts"
 
 /**
@@ -35,7 +35,8 @@ export const FollowCamera = Game.System("Shooter/FollowCamera", {
 
 /** Snaps the camera onto the player, e.g. after spawning. */
 export const SnapCamera = Game.System("Shooter/SnapCamera", {
-  queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) },
+  // The team this run just spawned: SpawnTeam must run first, with an applyDeferred() in between.
+  queries: { player: Game.System.thisTick(Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] })) },
   resources: { camera: Game.System.writeResource(Camera) }
 }, ({ queries, resources }) => {
   const player = queries.player.singleOptional()

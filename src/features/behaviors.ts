@@ -5,8 +5,8 @@
  * crowd's separation, standing still while attacking or stunned, sliding
  * with a strong push, a charge's run, and getting out of corners.
  */
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { normalizeOr, scale, zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import { normalizeOr, scale, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import type { Behavior } from "../content/enemies.ts"

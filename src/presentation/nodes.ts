@@ -4,8 +4,8 @@
  * the arena's look). See `looks.ts` for what each one looks like.
  */
 import { BoxGeometry, CylinderGeometry, Group, IcosahedronGeometry, Mesh, MeshBasicMaterial, MeshLambertMaterial } from "three"
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { projection, view } from "../config/view.ts"
 import { depthOf, toScreenAt, worldHeight } from "../math/iso.ts"

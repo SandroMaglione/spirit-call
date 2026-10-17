@@ -15,9 +15,9 @@
  * pipeline like everything else. A move's lunge
  * is an impulse on the player's knockback.
  */
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { sweepCircleBoxes, sweepCircleCircle } from "@typeonce/bevy-ts-math/Collide2"
-import { scale, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import { sweepCircleBoxes, sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
+import { scale, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import { lob } from "../content/skills.ts"
@@ -27,8 +27,8 @@ import { Action, Aim, Airborne, Arrival,
   Dash, Facing, blow, Body, CombatStats, Controls, Enemy, Game, Hit, Hitbox, Hurtbox, Knockback, Lobbed, Member, Player, Position, Raising, RunScope, Overcharged, Overdriven, Stats, Time, Tuning, BasicAttack } from "../schema.ts"
 import type { AttackRef, HitboxValue, MoveContext, BasicAttackValue } from "../schema.ts"
 import { attackOf, damageDealt } from "./build.ts"
-import { makeProjectile } from "./combat.ts"
-import { makeDisc } from "./discs.ts"
+import { makeProjectile, ProjectileParts } from "./combat.ts"
+import { DiscParts, makeDisc } from "./discs.ts"
 import { moveMatches } from "./passives.ts"
 import { lobTarget } from "./skills.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -165,7 +165,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     stats: Game.System.writeResource(Stats),
     arrival: Game.System.readResource(Arrival)
   },
-  events: { action: Game.System.writeEvent(Action) }
+  events: { action: Game.System.writeEvent(Action) },
+  commands: Game.System.commands(Game.System.spawns(...ProjectileParts, ...DiscParts, Lobbed, Hitbox))
 }, ({ queries, resources, events, commands }) => {
   const controls = resources.controls.get()
   const tuning = resources.tuning.get()
@@ -381,14 +382,15 @@ const Feeders = Game.Query({ selection: { position: Game.Query.read(Position), b
  * hit-stop must not drop them).
  */
 export const FeedDash = Game.System("Shooter/FeedDash", {
+  queries: { feeders: Feeders },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { hit: Game.System.readEvent(Hit) }
-}, ({ resources, events, lookup }) => {
+}, ({ queries, resources, events }) => {
   const tuning = resources.tuning.get()
   for (const hit of events.hit.all()) {
     const move = hit.source?.move
     if (hit.faction !== "enemy" || hit.periodic || move === undefined || move.dash || hit.source === null) continue
-    const found = lookup.getHandle(hit.source.attacker, Feeders)
+    const found = queries.feeders.getHandle(hit.source.attacker)
     if (!found.ok) continue
     const attack = found.value.data.basicAttack.get()
     const feed = attackOf(tuning, attack.attack).dashFeed

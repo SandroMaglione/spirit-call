@@ -4,7 +4,7 @@
  * (reactions, and motes off bodies in a state).
  */
 import { Group, Vector3 } from "three"
-import { lerp, normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { lerp, normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { isMelee } from "../content/attacks.ts"
 import type { StateId } from "../content/elements.ts"

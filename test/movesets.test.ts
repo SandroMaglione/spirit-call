@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Random from "@typeonce/ritmo-math/Random"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { AttackSpec } from "../src/content/enemies.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { pickAttack } from "../src/features/moveset.ts"
 import { Attacker, AttackPhase, Enemy, Game, Position, RunScope } from "../src/schema.ts"
 import { center, ClearEnemies, start, steps } from "./helpers.ts"
@@ -28,7 +28,7 @@ const World = Game.Inspector("Test/Movesets", {
 
 const duel = (tuning: Tuning, offset: Vec2) => {
   const run = start({ tuning })
-  const Spawn = Game.System("Test/SpawnChaser", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + offset.x, y: center.y + offset.y }))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))

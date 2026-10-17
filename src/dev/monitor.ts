@@ -3,9 +3,9 @@
  * schedule timings, the system map, entity counts, and an entity inspector.
  * Entities are picked and marked through their render nodes.
  */
-import type { Schema } from "@typeonce/bevy-ts/Schema"
-import { Monitor } from "@typeonce/bevy-ts-devtools"
-import type { NodeRegistry } from "@typeonce/bevy-ts-render"
+import type { Schema } from "@typeonce/ritmo/Schema"
+import { Monitor } from "@typeonce/ritmo-devtools"
+import type { NodeRegistry } from "@typeonce/ritmo-render"
 
 import type { RenderHostValue, RenderNode } from "../presentation/host-types.ts"
 
@@ -30,6 +30,7 @@ export const attachMonitor = <S extends Schema.Any, Root>(
   }
   return Monitor.attach(runtime, {
     schedules,
+    host: window,
     pick: (event) => {
       let best: number | undefined
       let bestDistance = pickRadius

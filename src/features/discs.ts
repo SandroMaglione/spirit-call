@@ -7,12 +7,15 @@
  * on reaching them. Hits go through the combat pipeline (`Damage`) like
  * every other blow, tested like shots (see `features/targets.ts`).
  */
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { Damage, Disc, ElementState, Game, Health, Impact, Position, PrevPosition, Renderable, Time, Tuning } from "../schema.ts"
 import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { shieldBlocks, sweepTargets, targetOf, Targets } from "./targets.ts"
+
+/** The components of `makeDisc`. */
+export const DiscParts = [Position, PrevPosition, Disc, Renderable] as const
 
 /** A disc leaving `at`, rendered like a projectile. */
 export const makeDisc = (at: Vec2, disc: DiscValue) =>
@@ -34,11 +37,13 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
     discs: Game.Query({ selection: { position: Game.Query.write(Position), disc: Game.Query.write(Disc) } }),
     targets: Targets,
     states: Game.Query({ selection: { state: Game.Query.read(ElementState) }, with: [Health] }),
-    walls: Walls
+    walls: Walls,
+    throwers: Throwers
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) },
-  events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) }
-}, ({ queries, resources, events, lookup, commands }) => {
+  events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) },
+  commands: Game.System.commands(Game.System.despawns(Disc))
+}, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const boxes = wallBoxes(queries.walls.each())
   const targets = queries.targets.each().map(({ entity, data }) => targetOf(entity.id, data))
@@ -122,10 +127,10 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         break
       }
       case "back": {
-        const thrower = lookup.getHandle(disc.thrower, Throwers)
+        const thrower = queries.throwers.getHandle(disc.thrower)
         const back = disc.back + dt
         if (!thrower.ok || back > maxBackSeconds) {
-          commands.despawn(entity.id)
+          commands.despawn(entity)
           continue
         }
         const home = thrower.value.data.position.get()
@@ -135,7 +140,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         // Caught: it reaches the thrower this step.
         if (distance <= travel + disc.radius) {
           sweep(toward, 1, normalizeOr(toward, disc.direction))
-          commands.despawn(entity.id)
+          commands.despawn(entity)
           continue
         }
         const direction = normalizeOr(toward, disc.direction)

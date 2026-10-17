@@ -8,7 +8,7 @@
  * reaches for an ally again after its cooldown. Wards run at the enemies'
  * pace, and stand still in a hit-stop.
  */
-import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { areaTouchesCircle } from "../physics/areas.ts"
 import { Enemy, Game, Health, Hit, HitStop, Hurtbox, Player, Poise, Position, SlowMotion, Stunned, Time, Tuning, Ward } from "../schema.ts"

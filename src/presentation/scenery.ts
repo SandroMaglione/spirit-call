@@ -4,7 +4,7 @@
  * arena (see `SyncArena`); tiles and props are drawn in batches.
  */
 import { Group, Mesh, MeshLambertMaterial, PlaneGeometry } from "three"
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
 
 import { Instance } from "./batch.ts"
 import type { RenderAssets } from "./host-types.ts"

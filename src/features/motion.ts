@@ -1,9 +1,9 @@
 /**
  * Moving bodies with swept collision against walls.
  */
-import { overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { moveCircle, sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { add, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
+import { moveCircle, sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { add, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"

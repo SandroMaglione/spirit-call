@@ -11,8 +11,8 @@
  * current entity counts.
  * Copy it and change the timelines, invariants, and questions.
  */
-import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
-import { Invariant, Session } from "@typeonce/bevy-ts-devtools"
+import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
+import { Invariant, Session } from "@typeonce/ritmo-devtools"
 
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
@@ -32,24 +32,26 @@ const sim = createSimulation({
   pointer: Pointer.scripted([{ frame: 0, move: { x: 900, y: 300 } }])
 })
 
-const PlayerPositions = Game.Inspector("Debug/PlayerPositions", {
+// An invariant is an inspector that returns a violation message, or
+// `undefined` while it holds; `Session.make` checks its reads against the runtime.
+const InsideArena = Invariant.fromInspector(Game.Inspector("player inside arena", {
   queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) }
-}, ({ queries }) => queries.player.each().map((match) => match.data.position.get()))
-
-const InsideArena = Invariant.make("player inside arena", () => {
+}, ({ queries }) => {
   const { width, height } = defaultTuning.arena
-  for (const { x, y } of sim.runtime.inspect(PlayerPositions)) {
+  for (const match of queries.player.each()) {
+    const { x, y } = match.data.position.get()
     if (x < 0 || y < 0 || x > width || y > height) return `player at (${x}, ${y})`
   }
   return undefined
-})
+}))
 
 // The render schedule needs renderer services the headless runtime lacks: describe it
 // (so its event reads count in lints) without running it.
 const session = Session.make(sim.runtime, {
   schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
   describe: { frame },
-  invariants: [InsideArena]
+  invariants: [InsideArena],
+  hostClock: sim.hostClock
 })
 
 console.log(session.run("setup"))

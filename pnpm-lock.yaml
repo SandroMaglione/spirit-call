@@ -47,18 +47,18 @@ importers:
       '@preact/signals':
         specifier: 2.11.3
         version: 2.11.3(preact@11.0.1)
-      '@typeonce/bevy-ts':
-        specifier: link:../../bevy-ts/packages/core
-        version: link:../../bevy-ts/packages/core
-      '@typeonce/bevy-ts-browser':
-        specifier: link:../../bevy-ts/packages/browser
-        version: link:../../bevy-ts/packages/browser
-      '@typeonce/bevy-ts-math':
-        specifier: link:../../bevy-ts/packages/math
-        version: link:../../bevy-ts/packages/math
-      '@typeonce/bevy-ts-render':
-        specifier: link:../../bevy-ts/packages/render
-        version: link:../../bevy-ts/packages/render
+      '@typeonce/ritmo':
+        specifier: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/core
+        version: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/core
+      '@typeonce/ritmo-browser':
+        specifier: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/browser
+        version: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/browser
+      '@typeonce/ritmo-math':
+        specifier: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/math
+        version: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/math
+      '@typeonce/ritmo-render':
+        specifier: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/render
+        version: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/render
       effect:
         specifier: 4.0.2
         version: 4.0.2
@@ -78,9 +78,9 @@ importers:
       '@effect/sql-sqlite-node':
         specifier: 4.0.2
         version: 4.0.2(effect@4.0.2)
-      '@typeonce/bevy-ts-devtools':
-        specifier: link:../../bevy-ts/packages/devtools
-        version: link:../../bevy-ts/packages/devtools
+      '@typeonce/ritmo-devtools':
+        specifier: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/devtools
+        version: link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/devtools
       '@types/node':
         specifier: 25.5.0
         version: 25.5.0

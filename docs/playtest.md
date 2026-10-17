@@ -175,7 +175,7 @@ developer decides, and nothing changes it on its own.
   database's new migrations, then deploy the chosen stage. See
   [local-workflows.md](local-workflows.md) for the commands. Merging to
   main deploys nothing; PR previews are created and removed locally too.
-- **bevy-ts stays at `bevyTsRelease`**; moving it to a newer published
+- **bevy-ts stays at `ritmoRelease`**; moving it to a newer published
   version is a deliberate local change, validated and reviewed in a PR.
 - **Dev tools are a dev build's** (`pnpm dev`): the tuning panel and its
   saved numbers, the URL's quick starts and tools, and the monitor are not

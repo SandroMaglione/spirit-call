@@ -50,7 +50,7 @@ import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
 import { SpawnTeam, SwitchCharacter, TickBench } from "./features/team.ts"
 import { CastBarrages, CastBlasts, CastCuts, CastLeaps, CastLobs, CastNovas, CastPlunges, CastVortices, LandAirborne, ReleaseUltimates, UpdateLobbed, UpdateVortices, UseSkills, ReadySkillsInPractice } from "./features/skills.ts"
-import { AdvanceTime } from "./features/time.ts"
+import { AdvanceTime, TickSlowMotion } from "./features/time.ts"
 import { UseBasicAttack, FeedDash } from "./features/basic-attack.ts"
 import { DirectWaves } from "./features/waves.ts"
 import { Flow, frozen, Game, paused, whileRunIsLive, whileRunning } from "./schema.ts"
@@ -228,6 +228,7 @@ const runOutcome = Game.Schedule.when(
 /** One fixed simulation step. */
 export const fixedUpdate = Game.Schedule(
   AdvanceTime,
+  TickSlowMotion,
   TickHitStop,
   // An ultimate whose moment ended goes off, for this step's casting systems (see `UltimateMoment`).
   Game.Schedule.when([Game.Condition.inState(Flow, "Playing")],

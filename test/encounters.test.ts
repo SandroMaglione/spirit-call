@@ -4,18 +4,18 @@
  * their hazards.
  */
 import { describe, expect, it } from "vitest"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import * as Random from "@typeonce/ritmo-math/Random"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { hazardBoxes } from "../src/features/arena.ts"
 import { keepOut, readPlayer } from "../src/features/behaviors.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
-import { makeGround } from "../src/features/ground.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
+import { GroundParts, makeGround } from "../src/features/ground.ts"
 import { pickSpawnPoint, reinforceAfter } from "../src/features/waves.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
 import { center, ClearEnemies, cursorAt, start, plainAttack, plainEnemies } from "./helpers.ts"
 
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 const middleOf = (box: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number }) => ({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 })
 
 const World = Game.Inspector("Test/Encounters", {
@@ -37,7 +37,7 @@ const World = Game.Inspector("Test/Encounters", {
 
 /** Spawns `kind` (an elite of `elite`) at `offset` from the player, alone. */
 const alone = (run: ReturnType<typeof start>, kind: Parameters<typeof makeEnemy>[1], offset: { x: number; y: number }, elite: Parameters<typeof makeEnemy>[5] = null) => {
-  const Spawn = Game.System("Test/SpawnElite", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnElite", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, elite))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -72,8 +72,8 @@ describe("where enemies come in", () => {
 
   /** Despawns `count` enemies of the field, as if they had fallen. */
   const defeat = (run: ReturnType<typeof start>, count: number) => {
-    const Defeat = Game.System("Test/Defeat", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-      for (const { entity } of queries.enemies.each().slice(0, count)) commands.despawn(entity.id)
+    const Defeat = Game.System("Test/Defeat", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+      for (const { entity } of queries.enemies.each().slice(0, count)) commands.despawn(entity)
     })
     run.runtime.tick(Game.Schedule(Defeat, Game.Schedule.applyDeferred()))
   }
@@ -155,7 +155,7 @@ describe("elite enemies", () => {
     // A thunder elite that never attacks otherwise, right beside her.
     const tuning = tuningWith({ enemies: { guardian: { attacks: [], speed: 0 } } })
     const run = start({ tuning })
-    const Spawn = Game.System("Test/SpawnThunder", {}, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnThunder", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "guardian", { x: center.x + 80, y: center.y }, 1, 1, "thunder"))
     })
     run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -182,7 +182,7 @@ describe("arenas", () => {
   it("keep hazards for good, and a fire trench put out by water burns again after a while", () => {
     const run = start({ arena: "kilnworks" })
     const at = middleOf(hazardBoxes(defaultTuning, "kilnworks")[0]!.box)
-    const Douse = Game.System("Test/Douse", {}, ({ commands }) => {
+    const Douse = Game.System("Test/Douse", { commands: Game.System.commands(Game.System.spawns(...GroundParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeGround({ element: "water", radius: 40, seconds: 0.5 }, at, 50, true))
     })
     run.runtime.tick(Game.Schedule(Douse, Game.Schedule.applyDeferred()))

@@ -7,7 +7,7 @@ import { initialWaves } from "../src/features/waves.ts"
 import { UiRequest, blow, Damage, Enemy, Game, Health, Immortal, Player, Poise } from "../src/schema.ts"
 import { ReadFlow, start } from "./helpers.ts"
 
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 const flowOf = (run: ReturnType<typeof start>) => run.runtime.inspect(ReadFlow)
 
 const Ground = Game.Inspector("Test/TrainingGround", {

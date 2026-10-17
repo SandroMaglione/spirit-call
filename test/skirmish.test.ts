@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith, engine } from "../src/config/tuning.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, EnemyMode, Game, Player, Position, RunScope } from "../src/schema.ts"
 import { ClearEnemies, start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
-const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
 
 const World = Game.Inspector("Test/Skirmish", {
   queries: {
@@ -25,7 +25,7 @@ const World = Game.Inspector("Test/Skirmish", {
 const surrounded = (count: number, distance: number) => {
   const tuning = tuningWith({ characters: { swordsman: { stats: { hp: 1_000_000 } } } })
   const run = start({ tuning })
-  const Place = Game.System("Test/Surround", {}, ({ commands }) => {
+  const Place = Game.System("Test/Surround", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     for (let index = 0; index < count; index++) {
       const angle = (index / count) * Math.PI * 2
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + Math.cos(angle) * distance, y: center.y + Math.sin(angle) * distance }))

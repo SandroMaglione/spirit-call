@@ -9,7 +9,7 @@
  */
 import { blow, Elite, Enemy, Game, Hitbox, Position, RunScope, SlowMotion, Stunned, Time, Tuning, Velocity, CombatStats } from "../schema.ts"
 import { damageDealt } from "./build.ts"
-import { makeGround } from "./ground.ts"
+import { GroundParts, makeGround } from "./ground.ts"
 import { enemyPace } from "./time.ts"
 
 export const UpdateElites = Game.System("Shooter/UpdateElites", {
@@ -25,7 +25,8 @@ export const UpdateElites = Game.System("Shooter/UpdateElites", {
       }
     })
   },
-  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), slowMotion: Game.System.readResource(SlowMotion) }
+  resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), slowMotion: Game.System.readResource(SlowMotion) },
+  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox))
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   const rules = tuning.elites

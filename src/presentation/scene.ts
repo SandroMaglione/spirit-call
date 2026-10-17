@@ -2,8 +2,8 @@
  * The scene: render nodes for renderables, the camera, interpolated actor
  * positions, and pillars fading in front of the player.
  */
-import { RenderSync } from "@typeonce/bevy-ts-render"
-import { lerp } from "@typeonce/bevy-ts-math/Vec2"
+import { RenderSync } from "@typeonce/ritmo-render"
+import { lerp } from "@typeonce/ritmo-math/Vec2"
 import { projection, view, viewZoom } from "../config/view.ts"
 import { engine } from "../config/tuning.ts"
 import { depthOf, screenHeight, toScreen, worldHeight } from "../math/iso.ts"
@@ -181,7 +181,7 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
   for (const { entity, data } of queries.lobbed.each()) {
     const lob = data.lobbed.get()
     if (lob.splinter === true || lob.faction !== "player") continue
-    const elapsed = lob.elapsed + services.clock.alpha * engine.stepSeconds
+    const elapsed = lob.elapsed + services.clock.alpha * engine.step.dt
     if (elapsed < 0) continue
     const flight = Math.min(1, elapsed / lob.effect.flightTime)
     const dx = lob.to.x - lob.from.x, dy = lob.to.y - lob.from.y

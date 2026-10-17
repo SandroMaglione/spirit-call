@@ -9,8 +9,8 @@
  * raises its rocks down a line toward the aim; a quake (see `QuakeEffect`)
  * slams around the caster, each slam a rock under her, wider than the last.
  */
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { earthrise } from "../content/skills.ts"
 import type { EarthriseEffect, FaultEffect, QuakeEffect } from "../content/skills.ts"
 import { Cast, Damage, Elite, Enemy, Explosion, Game, Health, Hurtbox, Invulnerable, Poise, Position, Rock, RunScope, Stunned, Time, Tuning } from "../schema.ts"
@@ -73,7 +73,8 @@ const Bodies = Game.Query({
 /** Earthrises cast: a rock for each target, its crack following it, one after the other. */
 export const CastEarthrise = Game.System("Shooter/CastEarthrise", {
   queries: { bodies: Bodies },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Rock))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -119,20 +120,21 @@ const Holdable = Game.Query({ selection: { enemy: Game.Query.read(Enemy), health
 export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
   queries: { rocks: Game.Query({ selection: { rock: Game.Query.write(Rock) } }), bodies: Struck, holdable: Holdable },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage), explosion: Game.System.writeEvent(Explosion) }
-}, ({ queries, resources, events, lookup, commands }) => {
+  events: { damage: Game.System.writeEvent(Damage), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.despawns(Rock))
+}, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
   for (const { entity, data } of queries.rocks.each()) {
     const rock = data.rock.get()
-    const followed = rock.target === null ? undefined : lookup.getHandle(rock.target, Struck)
+    const followed = rock.target === null ? undefined : queries.bodies.getHandle(rock.target)
     const at = followed?.ok === true ? followed.value.data.position.get() : rock.at
     const remaining = rock.remaining - dt
     if (remaining > 1e-9) {
       data.rock.set({ ...rock, at, remaining })
       continue
     }
-    commands.despawn(entity.id)
+    commands.despawn(entity)
     const { effect } = rock
     const caught = new Set<number>()
     for (const body of queries.bodies.each()) {
@@ -174,7 +176,8 @@ export const faultPoints = (effect: FaultEffect, from: Vec2, direction: Vec2, le
 /** Faults cast: their rocks down a line toward the aim, shortened by walls, one after the other. */
 export const CastFaults = Game.System("Shooter/CastFaults", {
   queries: { walls: Walls },
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Rock))
 }, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -191,7 +194,8 @@ export const CastFaults = Game.System("Shooter/CastFaults", {
 
 /** Quakes cast: a slam under her for each, following her, wider each time; the last holds what it catches. */
 export const CastQuakes = Game.System("Shooter/CastQuakes", {
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Rock))
 }, ({ events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect

@@ -1,6 +1,6 @@
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { ArenaId } from "../src/content/arena.ts"
-import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
+import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
 import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
 import type { Direction, PartyTap, TouchButton } from "../src/config/input.ts"
@@ -18,7 +18,7 @@ import { cut, lob, vortex, barrage } from "../src/content/skills.ts"
 import type { ChallengeId } from "../src/content/challenges.ts"
 import type { EnemyKind } from "../src/content/enemies.ts"
 import { attackOf, damageDealt, damageTaken } from "../src/features/build.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Aim, Dash, Enemy, Flow, Game, Invulnerable, Player, Position, RunScope, Velocity } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
@@ -66,7 +66,7 @@ export const plainAttack = (tuning: Tuning, cls: ClassId): BasicAttackSpec => at
 
 /** `tuning` with one more aspect, `id`: tests of aspects use made-up ones, so they hold whatever ships. */
 export const withAspect = (tuning: Tuning, id: string, spec: AspectSpec): Tuning =>
-  ({ ...tuning, aspects: { ...tuning.aspects, [id]: spec } }) as unknown as Tuning
+  ({ ...tuning, aspects: { ...tuning.aspects, [id]: spec } })
 
 /** `id` as an aspect's id (one added by `withAspect`). */
 export const aspectId = (id: string): AspectId => id as AspectId
@@ -77,7 +77,7 @@ export const testAspect = (tuning: Tuning, cls: ClassId, extra: Partial<AspectSp
 
 /** `tuning` with one more relic, `id`: tests of relics use made-up ones, so they hold whatever ships. */
 export const withRelic = (tuning: Tuning, id: string, spec: RelicSpec): Tuning =>
-  ({ ...tuning, relics: { ...tuning.relics, [id]: spec } }) as unknown as Tuning
+  ({ ...tuning, relics: { ...tuning.relics, [id]: spec } })
 
 /** `id` as a relic's id (one added by `withRelic`). */
 export const relicId = (id: string): RelicId => id as RelicId
@@ -100,14 +100,14 @@ export const windCut = cut({ length: 320, width: 120, power: 34, element: "wind"
 /** `tuning` with the Swordsman's special swapped for `windCut`. */
 export const withWindCut = (tuning: Tuning = defaultTuning): Tuning =>
   // The content types each skill by its effect; a test swaps one kind for another.
-  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Wind Cut", effect: windCut } } }) as unknown as Tuning
+  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Wind Cut", effect: windCut } } })
 
 /** The Barrage (the Gunner's ultimate before the Overdrive): fire shells lobbed one after the other around the cursor. */
 export const volley = barrage({ maxRange: 380, shells: 7, spread: 110, interval: 0.08, flightTime: 0.45, fuse: 0.15, radius: 70, power: 45, element: "fire", knockback: 260, hitStop: 0, heavy: false, leaves: { element: "fire", radius: 55, seconds: 3 } })
 
 /** `tuning` with the Gunner's ultimate swapped for `volley`. */
 export const withVolley = (tuning: Tuning = defaultTuning): Tuning =>
-  ({ ...tuning, skills: { ...tuning.skills, barrage: { ...tuning.skills.barrage, name: "Barrage", effect: volley } } }) as unknown as Tuning
+  ({ ...tuning, skills: { ...tuning.skills, barrage: { ...tuning.skills.barrage, name: "Barrage", effect: volley } } })
 
 /**
  * The Gale (the Swordsman's special before it became the Gust): a whirl at
@@ -118,7 +118,7 @@ export const gale = vortex({ maxRange: 0, radius: 270, seconds: 2.4, tick: 0.4, 
 
 /** `tuning` with the Swordsman's special swapped for `gale`. */
 export const withGale = (tuning: Tuning = defaultTuning): Tuning =>
-  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Gale", effect: gale } } }) as unknown as Tuning
+  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Gale", effect: gale } } })
 
 /** The Grenade (the Gunner's special before the Flare Jump): lobbed to the cursor, bursting in fire and leaving a fire pool. */
 export const grenadeSkill = {
@@ -147,20 +147,19 @@ export const splashSkill = {
  */
 export const withLobbedSpecials = (tuning: Tuning = defaultTuning): Tuning => {
   // Only the shipped ones are swapped: a test that set its own lob keeps it.
-  const skills = tuning.skills as Record<string, { readonly effect: { readonly kind: string } }>
-  return ({
+  return {
     ...tuning,
     skills: {
       ...tuning.skills,
-      flareJump: skills.flareJump!.effect.kind === "leap" ? grenadeSkill : skills.flareJump,
-      tidalWave: skills.tidalWave!.effect.kind === "plunge" ? splashSkill : skills.tidalWave
+      flareJump: tuning.skills.flareJump.effect.kind === "leap" ? grenadeSkill : tuning.skills.flareJump,
+      tidalWave: tuning.skills.tidalWave.effect.kind === "plunge" ? splashSkill : tuning.skills.tidalWave
     }
-  }) as unknown as Tuning
+  }
 }
 
 /** `tuning` (with the lobbed specials) whose Grenade is changed by `patch`. */
 export const withGrenade = (patch: Partial<typeof grenadeSkill.effect>, tuning: Tuning = defaultTuning): Tuning =>
-  ({ ...tuning, skills: { ...tuning.skills, flareJump: { ...grenadeSkill, effect: { ...grenadeSkill.effect, ...patch } } } }) as unknown as Tuning
+  ({ ...tuning, skills: { ...tuning.skills, flareJump: { ...grenadeSkill, effect: { ...grenadeSkill.effect, ...patch } } } })
 
 /** The gunner: the gun, the grenade as her special, and the Barrage as her ultimate. */
 export const gunner: BuildValue = { character: "gunner" }
@@ -263,16 +262,17 @@ export const start = (options: StartOptions = {}) => {
 
 /** Despawns every enemy (training dummies included). */
 export const ClearEnemies = Game.System("Test/ClearEnemies", {
-  queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }
+  queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
+  commands: Game.System.commands(Game.System.despawns(Enemy))
 }, ({ queries, commands }) => {
-  for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
+  for (const { entity } of queries.enemies.each()) commands.despawn(entity)
 })
 
 /** The center of the default arena, where the player spawns. */
 export const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
 /** Fixed steps covering `seconds` (rounded up). */
-export const steps = (seconds: number): number => Math.ceil(seconds / engine.stepSeconds)
+export const steps = (seconds: number): number => Math.ceil(seconds / engine.step.dt)
 
 /** The cursor (screen) pointing at a world offset from the player at spawn, in the default viewport. */
 export const cursorAt = (offset: Vec2): Vec2 => {
@@ -283,7 +283,7 @@ export const cursorAt = (offset: Vec2): Vec2 => {
 
 /** A schedule that replaces every enemy with training dummies (of `tuning`) at offsets from the player's spawn. */
 export const placeDummies = (offsets: ReadonlyArray<Vec2>, tuning: Tuning = defaultTuning) => {
-  const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnDummies", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(plainEnemies(tuning), "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
   })
   return Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())

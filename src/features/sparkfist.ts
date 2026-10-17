@@ -5,7 +5,7 @@
  * her pace and her dashes coming back are `ControlPlayer`'s, her blows'
  * element `UseBasicAttack`'s.
  */
-import { add, scale } from "@typeonce/bevy-ts-math/Vec2"
+import { add, scale } from "@typeonce/ritmo-math/Vec2"
 import { Cast, Dash, Explosion, Game, Hitbox, Member, Overcharged, Passives, Player, Position, RunScope, Time, Tuning, Zap } from "../schema.ts"
 import { dashOf, traitsIn } from "./build.ts"
 import { castBlow } from "./skills.ts"
@@ -14,12 +14,14 @@ const Wielders = Game.Query({ selection: { position: Game.Query.read(Position) }
 
 /** Overcharges cast: she takes it up (casting again starts it over), thunder bursting out around her. */
 export const CastOvercharges = Game.System("Shooter/CastOvercharges", {
-  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
-}, ({ events, lookup, commands }) => {
+  queries: { wielders: Wielders },
+  events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.inserts(Overcharged))
+}, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "overcharge") continue
-    const wielder = lookup.getHandle(cast.caster, Wielders)
+    const wielder = queries.wielders.getHandle(cast.caster)
     if (!wielder.ok) continue
     const strike = castBlow(cast, { ...effect, power: effect.dashStrike.power, knockback: effect.dashStrike.knockback, hitStop: 0.03, heavy: false })
     commands.insert(wielder.value.entity.id, [Overcharged, { remaining: effect.seconds, effect, blow: strike, skill: cast.skill }])
@@ -46,7 +48,8 @@ export const TickOvercharges = Game.System("Shooter/TickOvercharges", {
     })
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) },
-  events: { zap: Game.System.writeEvent(Zap) }
+  events: { zap: Game.System.writeEvent(Zap) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.removes(Overcharged))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.overcharged.each()) {

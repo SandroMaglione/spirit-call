@@ -4,7 +4,7 @@
  * `models.ts`). Giving something its model is changing its entry here; no
  * system changes. See `docs/models.md`.
  */
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { ArenaId } from "../content/arena.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"

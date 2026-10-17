@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Touch } from "@typeonce/bevy-ts-browser"
+import type { Touch } from "@typeonce/ritmo-browser"
 
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
@@ -15,7 +15,7 @@ import { Enemy, Game, Health, Player } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
 import { placeDummies, plainAttack, relicId, start, testRelic, withRelic } from "./helpers.ts"
 
-const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
 const sword = plainAttack(defaultTuning, "blade")
 
 const Healths = Game.Inspector("Test/Healths", {

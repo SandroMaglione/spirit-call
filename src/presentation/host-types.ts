@@ -1,6 +1,6 @@
 import type { BufferGeometry, Group, Mesh, Object3D, OrthographicCamera, Scene, WebGLRenderer } from "three"
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import type { ActionButton, SafeArea } from "../config/input.ts"
 import type { StateId } from "../content/elements.ts"

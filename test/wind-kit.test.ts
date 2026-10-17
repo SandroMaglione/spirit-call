@@ -4,8 +4,8 @@
  * over its whirl, to glide down where she steers.
  */
 import { describe, expect, it } from "vitest"
-import { around, overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { around, overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
+import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
@@ -31,7 +31,7 @@ const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Quer
 
 /** A wall standing at `box`, low (a hop goes over it) or tall. */
 const placeWall = (box: Box2, low: boolean) =>
-  Game.Schedule(Game.System("Test/PlaceWall", {}, ({ commands }) => {
+  Game.Schedule(Game.System("Test/PlaceWall", { commands: Game.System.commands(Game.System.spawns(Wall, LowWall)) }, ({ commands }) => {
     commands.spawnIn(RunScope, low ? Game.Command.spawn([Wall, box], [LowWall, {}]) : Game.Command.spawn([Wall, box]))
   }), Game.Schedule.applyDeferred())
 

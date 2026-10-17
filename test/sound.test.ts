@@ -103,8 +103,10 @@ const host = () => {
   const listeners = new Map<string, () => void>()
   return {
     window: {
-      addEventListener: (type: string, listener: () => void) => listeners.set(type, listener)
-    } as unknown as Window,
+      addEventListener: (type: string, listener: () => void) => {
+        listeners.set(type, listener)
+      }
+    },
     press: () => listeners.get("pointerdown")?.()
   }
 }

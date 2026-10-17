@@ -6,11 +6,12 @@
  * damage does: invulnerability, health, hit flash, knockback, death, and
  * the element it applies (see `features/elements.ts`).
  */
-import type { ReadCell, WriteCell } from "@typeonce/bevy-ts/Query"
-import { overlapsCircle } from "@typeonce/bevy-ts-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as SpatialGrid from "@typeonce/bevy-ts-math/SpatialGrid"
+import { Clock } from "@typeonce/ritmo"
+import type { ReadCell, WriteCell } from "@typeonce/ritmo/Query"
+import { overlapsCircle } from "@typeonce/ritmo-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as SpatialGrid from "@typeonce/ritmo-math/SpatialGrid"
 import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
@@ -73,7 +74,7 @@ import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict, stateDamage } from "./elements.ts"
-import { respawnOf } from "./enemies.ts"
+import { PendingSpawnParts, respawnOf } from "./enemies.ts"
 import { barrierMeets } from "./barriers.ts"
 import { mantleMeets, mantleTaken } from "./windwall.ts"
 import { plateTakes } from "./guard.ts"
@@ -82,6 +83,9 @@ import { shieldBlocks, sweepDodgers, sweepTargets, targetOf, Targets } from "./t
 import { paceOf } from "./time.ts"
 import { wardedTaken } from "./wards.ts"
 import type { Target } from "./targets.ts"
+
+/** The components of `makeProjectile`. */
+export const ProjectileParts = [Position, PrevPosition, Velocity, Projectile, Renderable] as const
 
 export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileValue) =>
   Game.Command.spawn(
@@ -106,11 +110,13 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       }),
       targets: Targets,
       walls: Walls,
-      barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } })
+      barriers: Game.Query({ selection: { barrier: Game.Query.read(Barrier) } }),
+      dodgeAttackers: DodgeAttackers
     },
     resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion), mantle: Game.System.readResource(Mantle) },
-    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) }
-  }, ({ queries, resources, events, commands, lookup, local }) => {
+    events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact), dodged: Game.System.writeEvent(Dodged), zap: Game.System.writeEvent(Zap), guarded: Game.System.writeEvent(Guarded), explosion: Game.System.writeEvent(Explosion) },
+    commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.despawns(Projectile))
+  }, ({ queries, resources, events, commands, local }) => {
     const { grid, targets, nearby } = local
     const dt = resources.time.get().dt
     /** A shot that bursts where it stops (see `OverdriveEffect`): its blast there. */
@@ -138,7 +144,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
     for (const { entity, data } of queries.projectiles.each()) {
       const projectile = data.projectile.get()
       const source = projectile.blow.source?.attacker
-      const attacker = source === undefined ? undefined : lookup.getHandle(source, DodgeAttackers)
+      const attacker = source === undefined ? undefined : queries.dodgeAttackers.getHandle(source)
       const window = dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
       const origin = data.position.get()
       const velocity = data.velocity.get()
@@ -175,7 +181,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
         data.position.set(at)
         events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: true })
         events.guarded.emit({ at, kind: "barred" })
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
 
@@ -224,13 +230,13 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
         data.position.set(shieldedAt)
         burst(projectile, shieldedAt)
         events.impact.emit({ at: shieldedAt, faction: projectile.faction, wall: false, shielded: true })
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
       if (stopAt !== undefined) {
         data.position.set({ x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
         burst(projectile, { x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
       if (wall !== undefined) {
@@ -238,7 +244,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
         data.position.set(at)
         events.impact.emit({ at, faction: projectile.faction, wall: true, shielded: false })
         burst(projectile, at)
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
       const at = { x: origin.x + delta.x, y: origin.y + delta.y }
@@ -247,7 +253,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       if (range <= 1e-6) {
         events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: false })
         burst(projectile, at)
-        commands.despawn(entity.id)
+        commands.despawn(entity)
         continue
       }
       data.projectile.set({ ...projectile, range, pierce, hit })
@@ -311,10 +317,15 @@ const Benched = Game.Query({
 export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   queries: {
     energies: Game.Query({ selection: { energy: Game.Query.write(Energy), health: Game.Query.read(Health), player: Game.Query.optional(Player), member: Game.Query.read(Member), passives: Game.Query.optional(Passives) } }),
-    wards: Game.Query({ selection: { ward: Game.Query.read(Ward), enemy: Game.Query.read(Enemy) } })
+    wards: Game.Query({ selection: { ward: Game.Query.read(Ward), enemy: Game.Query.read(Enemy) } }),
+    leveled: Leveled,
+    damageable: Damageable,
+    benched: Benched,
+    holders: PassiveHolders,
+    dealers: Dealer
   },
   events: {
-    damage: Game.System.readEvent(Damage),
+    damage: Game.System.thisTick(Game.System.readEvent(Damage)),
     hit: Game.System.writeEvent(Hit),
     death: Game.System.writeEvent(Death),
     reaction: Game.System.writeEvent(Reaction),
@@ -331,15 +342,16 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     guard: Game.System.writeResource(Guard),
     mantle: Game.System.readResource(Mantle),
     enemyLevel: Game.System.readResource(EnemyLevel)
-  }
-}, ({ queries, events, resources, lookup, commands }) => {
+  },
+  commands: Game.System.commands(Game.System.spawns(PlateShatter, StateBurst, Arc, ...PendingSpawnParts), Game.System.despawns(Health))
+}, ({ queries, events, resources, commands }) => {
   const tuning = resources.tuning.get()
   // The level gap (see `levelGap`): a blow the team deals lands by its dealer's level (the one on the field when it is
   // no member's, a totem's or a pool's), an enemy's by the level of the member it lands on.
   const enemyLevel = resources.enemyLevel.get()
   const fielded = queries.energies.each().find(({ data }) => data.player.present)?.data.member.get().level ?? enemyLevel
   const dealerLevel = (blow: Blow): number => {
-    const dealer = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, Leveled)
+    const dealer = blow.source === null ? undefined : queries.leveled.getHandle(blow.source.attacker)
     return dealer?.ok === true ? dealer.value.data.member.get().level : fielded
   }
   // In the Training Ground (and the tutorial) the team cannot fall (only the fire hurts, and never to the end).
@@ -350,13 +362,13 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   const dead = new Set<number>()
   let kills = 0
   let energy = 0
-  const now = resources.time.get().elapsed
+  const now = Clock.elapsed(resources.time.get())
   const ledger = Object.fromEntries(Object.entries(resources.energyLedger.get()).filter(([, value]) => value.expires > now))
   let hitStop = 0
   for (const damage of events.damage.all()) {
-    const found = lookup.getHandle(damage.target, Damageable)
+    const found = queries.damageable.getHandle(damage.target)
     if (!found.ok) {
-      const benched = lookup.getHandle(damage.target, Benched)
+      const benched = queries.benched.getHandle(damage.target)
       if (benched.ok && damage.blow.periodic) burnOnBench(tuning, benched.value.data, damage.blow, levelGap(tuning, benched.value.data.member.get().level, enemyLevel).taken)
       continue
     }
@@ -377,7 +389,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     }
 
     const health = data.health.get()
-    const holder = blow.source === null ? undefined : lookup.getHandle(blow.source.attacker, PassiveHolders)
+    const holder = blow.source === null ? undefined : queries.holders.getHandle(blow.source.attacker)
     const state = data.state.get().current
     const held = (data.stunned.present && data.stunned.get().remaining > 0) || (data.poise.present && data.poise.get().broken > 0)
     const wielder = holder?.ok === true && holder.value.data.health.present ? holder.value.data.health.get() : undefined
@@ -398,7 +410,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       ? (data.member.present ? levelGap(tuning, data.member.get().level, enemyLevel).taken : 1)
       : enemy !== undefined ? levelGap(tuning, dealerLevel(blow), enemyLevel).dealt : 1
     // A soaked dealer's blows are weaker (not its burns: a burn's strength was set as it caught).
-    const dealer = blow.source === null || blow.periodic ? undefined : lookup.getHandle(blow.source.attacker, Dealer)
+    const dealer = blow.source === null || blow.periodic ? undefined : queries.dealers.getHandle(blow.source.attacker)
     const soaked = dealer?.ok === true ? stateDamage(tuning, dealer.value.data.state.get()) : 1
     // Under the team's mantle of wind, blows on the one on the field land weaker (see `features/windwall.ts`).
     const mantled = mantleTaken(resources.mantle.get(), data.player.present, damage.faction, blow.periodic)
@@ -481,7 +493,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     events.death.emit({ at, faction: data.hurtbox.get().faction, enemy, atk: data.stats.get().atk })
     // A fallen team member stays (out of the fight); everything else is gone.
     if (data.player.present) data.state.set({ current: null })
-    else commands.despawn(entity.id)
+    else commands.despawn(entity)
     if (data.hurtbox.get().faction === "enemy") {
       kills += 1
       hitStop = Math.max(hitStop, tuning.feedback.hitStopOnKill)

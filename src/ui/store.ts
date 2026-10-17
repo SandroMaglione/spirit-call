@@ -7,7 +7,7 @@
  */
 import { signal } from "@preact/signals"
 import type { Signal } from "@preact/signals"
-import { Descriptor } from "@typeonce/bevy-ts"
+import { Descriptor } from "@typeonce/ritmo"
 
 import type { Account, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"

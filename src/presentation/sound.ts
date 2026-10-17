@@ -128,10 +128,40 @@ const reverbLevel = 0.9
 const duckDepth = 0.45
 const duckRecovery = 0.18
 
+/**
+ * The parts of Web Audio a sound is built from. A real `BaseAudioContext`
+ * is one; so is the silent stand-in `lengthOf` measures sounds with.
+ */
+interface ParamLike {
+  value: number
+  setValueAtTime(value: number, time: number): unknown
+  linearRampToValueAtTime(value: number, time: number): unknown
+  exponentialRampToValueAtTime(value: number, time: number): unknown
+  setTargetAtTime(target: number, time: number, constant: number): unknown
+  cancelScheduledValues(time: number): unknown
+}
+interface NodeLike {
+  connect(destination: NodeLike): NodeLike
+}
+interface SourceLike extends NodeLike {
+  start(when?: number, offset?: number): void
+  stop(when?: number): void
+}
+interface AudioGraph {
+  createGain(): NodeLike & { readonly gain: ParamLike }
+  createOscillator(): SourceLike & { type: string; readonly frequency: ParamLike }
+  createBiquadFilter(): NodeLike & { type: string; readonly frequency: ParamLike; readonly Q: ParamLike }
+  createBufferSource(): SourceLike & { buffer: AudioBuffer | null; readonly playbackRate: ParamLike }
+  createWaveShaper(): NodeLike & { curve: Float32Array<ArrayBuffer> | null }
+  createStereoPanner(): NodeLike & { readonly pan: ParamLike }
+}
+type GainLike = ReturnType<AudioGraph["createGain"]>
+type BufferSourceLike = ReturnType<AudioGraph["createBufferSource"]>
+
 interface Voice {
-  readonly context: BaseAudioContext
+  readonly context: AudioGraph
   /** Where this play's layers connect. */
-  readonly out: AudioNode
+  readonly out: NodeLike
   readonly noise: AudioBuffer
   readonly distortion: Float32Array<ArrayBuffer>
   /** Start time and pitch factor for this play. */
@@ -151,7 +181,7 @@ interface Mix {
 }
 
 /** An envelope: silent, up to `gain` over `attack`, then down to silence at `start + duration`. */
-const envelope = (voice: Voice, start: number, duration: number, gain: number, attack: number): GainNode => {
+const envelope = (voice: Voice, start: number, duration: number, gain: number, attack: number): GainLike => {
   const node = voice.context.createGain()
   node.gain.setValueAtTime(0.0001, start)
   node.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain * voice.volume), start + Math.min(attack, duration * 0.9))
@@ -159,7 +189,7 @@ const envelope = (voice: Voice, start: number, duration: number, gain: number, a
   return node
 }
 
-const noiseSource = (voice: Voice, start: number, duration: number): AudioBufferSourceNode => {
+const noiseSource = (voice: Voice, start: number, duration: number): BufferSourceLike => {
   const source = voice.context.createBufferSource()
   source.buffer = voice.noise
   source.start(start, Math.random() * 0.8)
@@ -576,8 +606,8 @@ const lengthOf = (build: (voice: Voice) => void, voice: Omit<Voice, "context" | 
       end = Math.max(end, when)
     }
   })
-  const standIn = { createGain: node, createOscillator: node, createBiquadFilter: node, createBufferSource: node, createWaveShaper: node, createStereoPanner: node }
-  build({ ...voice, context: standIn as unknown as BaseAudioContext, out: node() as unknown as AudioNode })
+  const standIn: AudioGraph = { createGain: node, createOscillator: node, createBiquadFilter: node, createBufferSource: node, createWaveShaper: node, createStereoPanner: node }
+  build({ ...voice, context: standIn, out: node() })
   return end
 }
 
@@ -601,7 +631,12 @@ interface Asked {
  * The browser's sound board. `unlockHost` (usually `window`) resumes audio on
  * the first pointer or key press, as browsers require.
  */
-export const createSoundBoard = (unlockHost: Window, options: { readonly muted?: boolean; readonly volume?: number } = {}): SoundBoard => {
+/** What resumes audio: the first pointer or key event on it (usually `window`). */
+export interface UnlockHost {
+  addEventListener(type: "pointerdown" | "keydown", listener: () => void): void
+}
+
+export const createSoundBoard = (unlockHost: UnlockHost, options: { readonly muted?: boolean; readonly volume?: number } = {}): SoundBoard => {
   let mixer: Mixer | undefined
   let muted = options.muted ?? false
   let volume = clampVolume(options.volume ?? 1)

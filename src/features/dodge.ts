@@ -31,11 +31,13 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
         passives: Game.Query.optional(Passives)
       },
       with: [Player]
-    })
+    }),
+    dodgeAttackers: DodgeAttackers,
+    attackers: Attackers
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), slowMotion: Game.System.writeResource(SlowMotion), chain: Game.System.writeResource(DodgeChain) },
   events: { dodged: Game.System.readEvent(Dodged), perfect: Game.System.writeEvent(PerfectDodged) }
-}, ({ queries, resources, events, lookup }) => {
+}, ({ queries, resources, events }) => {
   const tuning = resources.tuning.get()
   const rules = tuning.perfectDodge
   // The chain runs out when no perfect dodge joins it in time.
@@ -49,7 +51,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     if (dash.perfect) continue
     const dodged = dodges.find((dodge) => {
       if (dodge.target !== Game.Entity.handle(entity.id, Health)) return false
-      const attacker = dodge.attacker === null ? undefined : lookup.getHandle(dodge.attacker, DodgeAttackers)
+      const attacker = dodge.attacker === null ? undefined : queries.dodgeAttackers.getHandle(dodge.attacker)
       return dash.since <= dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
     })
     if (dodged === undefined) continue
@@ -69,7 +71,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     if (rules.reload) data.basicAttack.update((attack) => ({ ...attack, spent: 0, reloading: 0 }))
     data.invulnerable.update(({ remaining }) => ({ remaining: remaining + rules.invulnerability }))
     // The attacker's break bar fills (it breaks right after, see `BuildPoise`, if that fills it).
-    const attacker = dodged.attacker === null ? undefined : lookup.getHandle(dodged.attacker, Attackers)
+    const attacker = dodged.attacker === null ? undefined : queries.attackers.getHandle(dodged.attacker)
     if (attacker?.ok === true && attacker.value.data.poise.get().broken <= 0) {
       const bar = poiseOf(tuning, attacker.value.data.enemy.get().kind, attacker.value.data.health.get().max, attacker.value.data.enemy.get().champion)
       attacker.value.data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * rules.breakFill), quiet: 0 }))

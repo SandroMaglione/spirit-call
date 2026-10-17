@@ -36,10 +36,10 @@
  * free, past the crowd's windups; then the phase's attacks join the others,
  * with shorter rests. Such a champion never waits for the crowd's windups.
  */
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { clampLength, normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { clampLength, normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Random from "@typeonce/ritmo-math/Random"
 import { followUpsOf } from "../content/enemies.ts"
 import type { AttackSpec } from "../content/enemies.ts"
 import type { Area } from "../physics/areas.ts"
@@ -85,7 +85,7 @@ import {
 import type { Faction } from "../schema.ts"
 import { lob } from "../content/skills.ts"
 import { damageDealt } from "./build.ts"
-import { makeProjectile } from "./combat.ts"
+import { makeProjectile, ProjectileParts } from "./combat.ts"
 import { readPlayer } from "./behaviors.ts"
 import { aimPoint, answering, behaviorOf, canStart, movesetOf, pickAttack, readFrom } from "./moveset.ts"
 import type { Moving } from "./moveset.ts"
@@ -166,7 +166,8 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     walls: Walls
   },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time), rng: Game.System.writeResource(Rng), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { damage: Game.System.writeEvent(Damage), roused: Game.System.writeEvent(Roused), released: Game.System.writeEvent(AttackReleased) }
+  events: { damage: Game.System.writeEvent(Damage), roused: Game.System.writeEvent(Roused), released: Game.System.writeEvent(AttackReleased) },
+  commands: Game.System.commands(Game.System.spawns(...ProjectileParts, Lobbed, Hitbox))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   // Enemy attacks run at the enemies' pace (slower in slow motion).
@@ -448,11 +449,14 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     targets: Game.Query({
       selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable), dash: Game.Query.optional(Dash) },
       with: [Health]
-    })
+    }),
+    dodgeAttackers: DodgeAttackers,
+    holders: Holders
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
-  events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged), explosion: Game.System.writeEvent(Explosion) }
-}, ({ queries, resources, events, commands, lookup }) => {
+  events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged), explosion: Game.System.writeEvent(Explosion) },
+  commands: Game.System.commands(Game.System.despawns(Hitbox))
+}, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const slow = resources.slowMotion.get()
   const tuning = resources.tuning.get()
@@ -460,7 +464,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
   for (const { entity, data } of queries.hitboxes.each()) {
     let hitbox = data.hitbox.get()
     const sourceAttacker = hitbox.blow.source?.attacker
-    const dodgedEnemy = sourceAttacker === undefined ? undefined : lookup.getHandle(sourceAttacker, DodgeAttackers)
+    const dodgedEnemy = sourceAttacker === undefined ? undefined : queries.dodgeAttackers.getHandle(sourceAttacker)
     const window = dodgeWindowOf(tuning, dodgedEnemy?.ok === true ? dodgedEnemy.value.data.enemy.get() : undefined)
     // Not down yet (a hammer's windup): it strikes nothing meanwhile, and goes off as it comes down.
     if (hitbox.delay !== undefined && hitbox.delay > 0) {
@@ -476,7 +480,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     }
     // A blow that moves with its attacker goes where the attacker was pushed (see `HitboxValue.follows`).
     const source = hitbox.follows === undefined ? undefined : hitbox.blow.source?.attacker
-    const holder = source === undefined ? undefined : lookup.getHandle(source, Holders)
+    const holder = source === undefined ? undefined : queries.holders.getHandle(source)
     if (hitbox.follows !== undefined && holder?.ok === true) {
       const at = holder.value.data.position.get()
       const offset = { x: at.x - hitbox.follows.x, y: at.y - hitbox.follows.y }
@@ -515,7 +519,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
       })
     }
     const remaining = hitbox.remaining - dt * paceOf(slow, hitbox.faction)
-    if (remaining <= 0) commands.despawn(entity.id)
+    if (remaining <= 0) commands.despawn(entity)
     else data.hitbox.set({ ...hitbox, remaining, hit })
   }
 })

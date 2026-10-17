@@ -5,7 +5,7 @@
  * moment lasts. Playback belongs to the render node, never to the
  * simulation; the simulation's timings decide, the clips follow.
  */
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 export interface Locomotion {
   /** Where each loop is, 0..1. */

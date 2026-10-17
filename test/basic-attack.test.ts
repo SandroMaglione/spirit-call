@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import type { Touch } from "@typeonce/bevy-ts-browser"
+import type { Touch } from "@typeonce/ritmo-browser"
 
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { LobMove, MeleeMove, ShotMove } from "../src/content/attacks.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Stats, BasicAttack } from "../src/schema.ts"
 
 const Grenades = Game.Inspector("Test/Grenades", { queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }) } }, ({ queries }) => queries.lobbed.each().map(({ data }) => data.lobbed.get()))
@@ -14,7 +14,7 @@ import type { BuildValue } from "../src/schema.ts"
 import { ClearEnemies, gunner, start, swordsman, plainAttack, hitBy } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
-const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
 const hp = defaultTuning.enemies.dummy.hp
 const sword = plainAttack(defaultTuning, "blade")
 const swordPower = sword.power!
@@ -39,7 +39,7 @@ const World = Game.Inspector("Test/Weapons", {
 /** Touch play with the assist off (so the facing stays world +x) and only the dummies at `offsets` (along +x). */
 const range = (offsets: ReadonlyArray<number>, touch: Touch.Timeline<TouchButton>, build?: BuildValue, tuning: Tuning = defaultTuning) => {
   const run = start({ tuning: { ...tuning, touch: tuningWith({ touch: { assist: { enabled: false } } }).touch }, touch, ...(build === undefined ? {} : { build }) })
-  const Spawn = Game.System("Test/SpawnDummies", {}, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnDummies", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     for (const x of offsets) commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: center.x + x, y: center.y }))
   })
   run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
@@ -94,7 +94,7 @@ describe("power attack", () => {
     const before = run.world().player
     run.step(10)
     const after = run.world().player
-    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
+    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.step.dt)
     expect(speed).toBeCloseTo(swordsman.speed * swordPower.moveSpeedMultiplier, 0)
   })
 })
@@ -139,7 +139,7 @@ describe("stats in play", () => {
     const before = run.world().player
     run.step(10)
     const after = run.world().player
-    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
+    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.step.dt)
     expect(speed).toBeCloseTo(defaultTuning.characters.gunner.stats.speed, 0)
   })
 })

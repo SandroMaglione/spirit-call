@@ -15,7 +15,7 @@
  * immune body takes the damage but not the state, and no burst takes hold
  * of it.
  */
-import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { elementOf, elements } from "../content/elements.ts"
 import type { Affinity, StateId } from "../content/elements.ts"
@@ -212,11 +212,12 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
     damage: Game.System.writeEvent(Damage),
     reaction: Game.System.writeEvent(Reaction),
     zap: Game.System.writeEvent(Zap)
-  }
+  },
+  commands: Game.System.commands(Game.System.despawns(StateBurst))
 }, ({ queries, resources, events, commands }) => {
   const pending = queries.bursts.each()
   if (pending.length === 0) return
-  for (const { entity } of pending) commands.despawn(entity.id)
+  for (const { entity } of pending) commands.despawn(entity)
   const bursts = pending.map(({ data }) => data.burst.get())
   const tuning = resources.tuning.get()
   const rules = tuning.elements.bursts
@@ -299,11 +300,12 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
 export const ArcCharges = Game.System("Shooter/ArcCharges", {
   queries: { bodies: Reachable, arcs: Game.Query({ selection: { arc: Game.Query.read(Arc) } }) },
   resources: { tuning: Game.System.readResource(Tuning) },
-  events: { damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap), reaction: Game.System.writeEvent(Reaction) }
+  events: { damage: Game.System.writeEvent(Damage), zap: Game.System.writeEvent(Zap), reaction: Game.System.writeEvent(Reaction) },
+  commands: Game.System.commands(Game.System.despawns(Arc))
 }, ({ queries, resources, events, commands }) => {
   const pending = queries.arcs.each()
   if (pending.length === 0) return
-  for (const { entity } of pending) commands.despawn(entity.id)
+  for (const { entity } of pending) commands.despawn(entity)
   const arcs = pending.map(({ data }) => data.arc.get())
   const range = resources.tuning.get().elements.charged.arcRange
   const bodies = queries.bodies.each()

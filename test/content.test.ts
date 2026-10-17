@@ -14,10 +14,12 @@ describe("content", () => {
     const broken: Tuning = {
       ...defaultTuning,
       classes: { ...defaultTuning.classes, gun: { ...defaultTuning.classes.gun, plain: { ...defaultTuning.classes.gun.plain, combo: [] } } },
-      characters: { ...defaultTuning.characters, swordsman: { ...defaultTuning.characters.swordsman, class: "lance" as never } },
+      characters: { ...defaultTuning.characters, swordsman: { ...defaultTuning.characters.swordsman } },
       skills: { ...defaultTuning.skills, flareJump: { ...defaultTuning.skills.flareJump, cooldown: 0 } },
       challenges: { ...defaultTuning.challenges, gauntlet3: { ...defaultTuning.challenges.gauntlet3, objective: clearWaves(), waves: { ...defaultTuning.challenges.gauntlet3.waves, endless: { baseBudget: 6, budgetPerWave: 2, maxBudget: 16, championEvery: null, kinds: ["chaser"], elites: [] } } } }
     }
+    // A class the types cannot name, as broken content read from outside the code would hold.
+    Reflect.set(broken.characters.swordsman, "class", "lance")
     expect(validateContent(broken)).toEqual([
       "class gun plain aspect: the combo needs at least one move",
       "skill flareJump: needs a cooldown or an energy cost, or it can be spammed",
@@ -94,9 +96,11 @@ describe("content", () => {
       ...defaultTuning,
       tracks: {
         ...defaultTuning.tracks,
-        gauntlet: { ...gauntlet, tiers: [gauntlet.tiers[0]!, { ...gauntlet.tiers[0]!, rewards: { currencies: { gems: 5 } as never, unlocks: [] } }] }
+        gauntlet: { ...gauntlet, tiers: [gauntlet.tiers[0]!, { ...gauntlet.tiers[0]!, rewards: { currencies: {}, unlocks: [] } }] }
       }
     }
+    // A currency the types cannot name, as broken content read from outside the code would hold.
+    Reflect.set(broken.tracks.gauntlet.tiers[1]!.rewards.currencies, "gems", 5)
     expect(validateContent(broken)).toEqual(expect.arrayContaining([
       `track gauntlet tier 2: enemies must be a higher level than the tier before (${gauntlet.tiers[0]!.enemyLevel} after ${gauntlet.tiers[0]!.enemyLevel})`,
       "track gauntlet tier 2: unknown currency or material gems"
@@ -104,7 +108,9 @@ describe("content", () => {
   })
 
   it("reports discoveries that pay anything but gold", () => {
-    const broken = { ...defaultTuning, discoveries: { ...defaultTuning.discoveries, flare: { ...defaultTuning.discoveries.flare, rewards: { gold: 100, fireEssence: 5 } } } } as unknown as Tuning
+    const broken: Tuning = { ...defaultTuning, discoveries: { ...defaultTuning.discoveries, flare: { ...defaultTuning.discoveries.flare, rewards: { gold: 100 } } } }
+    // A reward the types do not allow on a discovery, as broken content read from outside the code would hold.
+    Reflect.set(broken.discoveries.flare.rewards, "fireEssence", 5)
     expect(validateContent(broken)).toEqual(["discovery flare: rewards must be gold only"])
   })
 

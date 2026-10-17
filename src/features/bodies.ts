@@ -9,7 +9,7 @@
  * the bench (her health and state) while her body moves to whoever is on
  * the field (see `features/team.ts`).
  */
-import { zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Affinities } from "../content/elements.ts"
 import type { Stats } from "../content/characters.ts"
 import {
@@ -53,6 +53,9 @@ export interface BodyMotion {
   readonly invulnerable: number
 }
 
+/** The components of `fighterParts`. */
+export const FighterParts = [Health, CombatStats, ElementState, ElementAffinities] as const
+
 /** A fighter at full health, in no state. */
 export const fighterParts = (spec: FighterSpec) => [
   [Health, { current: spec.stats.hp, max: spec.stats.hp }],
@@ -60,6 +63,9 @@ export const fighterParts = (spec: FighterSpec) => [
   [ElementState, { current: null }],
   [ElementAffinities, spec.affinities]
 ] as const
+
+/** The components of `bodyParts`. */
+export const BodyParts = [Position, PrevPosition, Velocity, Knockback, Body, Hurtbox, HitFlash, Invulnerable, Stunned, Disarmed] as const
 
 /** A body in the arena, with no push, flash, or stun on it. */
 export const bodyParts = (spec: BodySpec, motion: BodyMotion = { previous: spec.at, velocity: zero, invulnerable: 0 }) => [
@@ -74,6 +80,9 @@ export const bodyParts = (spec: BodySpec, motion: BodyMotion = { previous: spec.
   [Stunned, { remaining: 0 }],
   [Disarmed, { remaining: 0 }]
 ] as const
+
+/** The components of `makeBody`. */
+export const FighterBodyParts = [...FighterParts, ...BodyParts] as const
 
 /** A fighter with a body, at rest. */
 export const makeBody = (spec: FighterSpec & BodySpec) => Game.Command.spawn(...fighterParts(spec), ...bodyParts(spec))

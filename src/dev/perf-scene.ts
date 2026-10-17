@@ -17,13 +17,13 @@
  * steps, the aim circling the player, and every 120 steps a switch to the
  * next member, her special 30 steps later and her ultimate 70 steps later.
  */
-import type { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import type { Keyboard, Pointer } from "@typeonce/ritmo-browser"
+import * as Random from "@typeonce/ritmo-math/Random"
 
 import type { KeyBindings } from "../config/input.ts"
 import { tuningWith } from "../config/tuning.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { makeEnemy } from "../features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../features/enemies.ts"
 import { Enemy, Game, Health, Hit, Player, Position, PrevPosition, RunScope } from "../schema.ts"
 import type { BuildValue, EnemyKind, ViewportValue } from "../schema.ts"
 
@@ -110,7 +110,10 @@ const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number, 
   }
   const playerQuery = Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] })
 
-  const populate = Game.System("Perf/Populate", { queries: { player: playerQuery } }, ({ queries, commands }) => {
+  const populate = Game.System("Perf/Populate", {
+    queries: { player: playerQuery },
+    commands: Game.System.commands(Game.System.spawns(...EnemyParts))
+  }, ({ queries, commands }) => {
     const around = queries.player.each()[0]?.data.position.get() ?? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
     for (let index = 0; index < enemies; index++) commands.spawnIn(RunScope, next(around))
   })
@@ -119,7 +122,8 @@ const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number, 
     queries: {
       player: playerQuery,
       enemies: Game.Query({ selection: { position: Game.Query.write(Position), previous: Game.Query.write(PrevPosition), health: Game.Query.read(Health) }, with: [Enemy] })
-    }
+    },
+    commands: Game.System.commands(Game.System.spawns(...EnemyParts))
   }, ({ queries, commands }) => {
     steps += 1
     const around = queries.player.each()[0]?.data.position.get()

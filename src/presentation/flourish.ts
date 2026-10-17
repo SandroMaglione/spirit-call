@@ -18,7 +18,7 @@
  *   element, rings, and a long shake; and its shockwaves throwing up dust
  *   along their rings as they run out.
  */
-import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
 import { Airborne, Cast, Explosion, Facing, Game, Hitbox, Lobbed, Member, Player, Position, PrevPosition, RenderClock, RenderHost, Roused, Sounds, Tuning, UltimateCalled, UltimateMoment, Velocity } from "../schema.ts"

@@ -29,12 +29,13 @@ import { invitationSlots } from "../content/auditions.ts"
 import { materialRules, materials } from "../content/materials.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, chests, perfectRules, quests, rankRules } from "../content/quests.ts"
-import { skills } from "../content/skills.ts"
+import { skills, type SkillSpec } from "../content/skills.ts"
+import { step } from "./clock.ts"
 
 /** Fixed-step timing. Changing these needs a reload. */
 export const engine = {
-  /** Simulation step. Gameplay is identical at any display refresh rate. */
-  stepSeconds: 1 / 60,
+  /** Simulation step (`Clock.hz(60)`, see `config/clock.ts`); `step.dt` is its seconds. */
+  step,
   /** Longest host frame admitted into the simulation (tab switches, hitches). */
   maxFrameSeconds: 0.25,
   /**
@@ -319,7 +320,7 @@ export const defaultTuning = {
    */
   unstick: { after: 0.5, seconds: 0.8, progress: 0.3, reach: 4, memory: 1.5 },
 
-  /** How enemies find their way around walls to the player (see `FlowField` in @typeonce/bevy-ts-math). */
+  /** How enemies find their way around walls to the player (see `FlowField` in @typeonce/ritmo-math). */
   paths: {
     /** Size of the cells the way is found over. */
     cellSize: 30,
@@ -474,7 +475,14 @@ export const defaultTuning = {
   }
 }
 
-export type Tuning = typeof defaultTuning
+/**
+ * The tuning the simulation runs on: the shipped values' shape, except that a
+ * skill may carry any effect (a test or an experiment swaps one kind for
+ * another; the systems dispatch on `effect.kind`).
+ */
+export type Tuning = Omit<typeof defaultTuning, "skills"> & {
+  readonly skills: { readonly [Id in keyof typeof defaultTuning.skills]: SkillSpec }
+}
 
 type DeepPartial<T> = { [K in keyof T]?: DeepPartialValue<T[K]> }
 /** Distributes over unions, so nullable values (an enemy's `attack`) can be overridden with `null`. */

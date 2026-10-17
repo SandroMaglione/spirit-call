@@ -1,8 +1,8 @@
-import { NodeRegistry } from "@typeonce/bevy-ts-render"
+import { NodeRegistry } from "@typeonce/ritmo-render"
 import { BoxGeometry, Group, MeshLambertMaterial } from "three"
 import { expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
-import { makeEnemy } from "../src/features/enemies.ts"
+import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
 import { AnimateActors } from "../src/presentation/animate.ts"
 import { Batch, Instance } from "../src/presentation/batch.ts"
 import type { RenderNode } from "../src/presentation/host-types.ts"
@@ -15,14 +15,16 @@ it("raises and holds Warden's staff from its ward state, with attacks and stun t
   const nodes = NodeRegistry.make<RenderNode>({ attach() {}, detach() {} })
   const geometry = new BoxGeometry(), material = new MeshLambertMaterial()
   const batch = new Batch(new Group(), geometry, material)
-  const runtime = Game.Runtime.make({
+  const made = Game.Runtime.make({
     resources: initialResources(defaultTuning, { width: 390, height: 844 }),
     services: Game.Runtime.services(
       Game.Runtime.service(RenderNodes, nodes),
       Game.Runtime.service(RenderClock, { alpha: 0, frameSeconds: 1 / 60 })
     )
   })
-  const Spawn = Game.System("Test/SpawnWardModels", {}, ({ commands }) => {
+  if (!made.ok) throw new Error(JSON.stringify(made.error))
+  const runtime = made.value
+  const Spawn = Game.System("Test/SpawnWardModels", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
     commands.spawn(makeEnemy(defaultTuning, "warden", { x: 900, y: 900 }))
     commands.spawn(makeEnemy(defaultTuning, "chaser", { x: 960, y: 900 }))
   })

@@ -8,16 +8,16 @@
  * immediately; values copied at spawn (radius, HP) apply to entities spawned
  * afterwards, so restart the run to see them everywhere.
  */
-import { overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Random from "@typeonce/ritmo-math/Random"
 import { entryChampion, entryElite, entryKind } from "../content/challenges.ts"
 import type { WaveEntry } from "../content/challenges.ts"
-import { Descriptor } from "@typeonce/bevy-ts"
-import type { ReadonlyValue } from "@typeonce/bevy-ts/Query"
+import { Descriptor } from "@typeonce/ritmo"
+import type { ReadonlyValue } from "@typeonce/ritmo/Query"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { makeGroupSpawns } from "../features/enemies.ts"
+import { makeGroupSpawns, PendingSpawnParts } from "../features/enemies.ts"
 import { Walls, wallBoxes } from "../features/motion.ts"
 import { Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Tuning } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
@@ -81,7 +81,8 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
     walls: Walls
   },
   resources: { tuning: Game.System.writeResource(Tuning), rng: Game.System.writeResource(Rng) },
-  services: { commands: Game.System.service(DevCommands) }
+  services: { commands: Game.System.service(DevCommands) },
+  commands: Game.System.commands(Game.System.spawns(...PendingSpawnParts), Game.System.despawns(Enemy, PendingSpawn))
 }, ({ queries, resources, services, commands }) => {
   const queue = services.commands
   if (queue.crash) {
@@ -99,8 +100,8 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
 
   if (queue.clear) {
     queue.clear = false
-    for (const { entity } of queries.enemies.each()) commands.despawn(entity.id)
-    for (const { entity } of queries.pending.each()) commands.despawn(entity.id)
+    for (const { entity } of queries.enemies.each()) commands.despawn(entity)
+    for (const { entity } of queries.pending.each()) commands.despawn(entity)
   }
 
   if (queue.spawns.length > 0) {

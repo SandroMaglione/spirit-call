@@ -9,7 +9,7 @@
  * her feet as its splinters fly.
  */
 import { Vector3 } from "three"
-import { lerp, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { lerp, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
@@ -58,7 +58,7 @@ export const ShowSplinters = Game.System("Shooter/ShowSplinters", {
   for (const { entity, data } of queries.lobbed.each()) {
     const lobbed = data.lobbed.get()
     if (lobbed.splinter !== true) continue
-    const elapsed = lobbed.elapsed + services.clock.alpha * engine.stepSeconds
+    const elapsed = lobbed.elapsed + services.clock.alpha * engine.step.dt
     const t = Math.min(1, Math.max(0, elapsed / lobbed.effect.flightTime))
     const dx = lobbed.to.x - lobbed.from.x
     const dz = lobbed.to.y - lobbed.from.y

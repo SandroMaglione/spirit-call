@@ -6,7 +6,7 @@
  * gives a share of it back as health.
  */
 import { describe, expect, it } from "vitest"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { ElementState, Enemy, Energy, Game, Health, Member, Player } from "../src/schema.ts"

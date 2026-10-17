@@ -1,6 +1,6 @@
-import { NodeRegistry } from "@typeonce/bevy-ts-render"
+import { NodeRegistry } from "@typeonce/ritmo-render"
 import { DirectionalLight, Group, HemisphereLight, OrthographicCamera, Scene, WebGLRenderer } from "three"
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
 
 import { actionButtons, teamSlots } from "../config/input.ts"
 import type { ActionButton, PartyTaps } from "../config/input.ts"

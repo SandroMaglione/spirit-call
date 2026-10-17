@@ -17,7 +17,7 @@ import { poiseOf } from "../src/features/poise.ts"
 import { UiRequest, Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
 import { ReadFlow, plainEnemies, start } from "./helpers.ts"
 
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 const rules = defaultTuning.champions
 
 /** The default tuning with the swarm challenge replaced by `spec`. */
@@ -57,8 +57,8 @@ const Field = Game.Inspector("Test/Champions", {
 }))
 
 /** Removes every enemy but champions as soon as it appears; with `champions`, champions too. */
-const wipe = (champions: boolean) => Game.System("Test/Wipe", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) } }, ({ queries, commands }) => {
-  for (const { entity, data } of queries.enemies.each()) if (champions || !data.enemy.get().champion) commands.despawn(entity.id)
+const wipe = (champions: boolean) => Game.System("Test/Wipe", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
+  for (const { entity, data } of queries.enemies.each()) if (champions || !data.enemy.get().champion) commands.despawn(entity)
 })
 
 /** Keeps the player untouchable, so only the objective ends the run. */

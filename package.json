@@ -3,7 +3,6 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.17.1",
-  "bevyTsRelease": "0.5.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --pretty false",
     "lint": "oxlint src test tools/lint/plugin.mjs tools/progress tools/store",
     "test": "vitest run",
-    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "lint:game": "NODE_OPTIONS='--import tsx --import ./scripts/assets.ts' ritmo-devtools lint scripts/lint-target.ts",
+    "check": "pnpm typecheck && pnpm lint && pnpm lint:game && pnpm test",
     "debug": "node --import tsx --import ./scripts/assets.ts scripts/debug.ts",
     "lab": "node --import tsx --import ./scripts/assets.ts scripts/lab.ts",
     "calls": "node --import tsx --import ./scripts/assets.ts scripts/calls.ts",
@@ -26,7 +26,8 @@
     "app": "vite build && cap sync",
     "app:android": "pnpm app && cap open android",
     "app:ios": "pnpm app && cap open ios",
-    "app:assets": "capacitor-assets generate --android --ios --iconBackgroundColor '#072845' --iconBackgroundColorDark '#072845' --splashBackgroundColor '#0d1117' --splashBackgroundColorDark '#0d1117'"
+    "app:assets": "capacitor-assets generate --android --ios --iconBackgroundColor '#072845' --iconBackgroundColorDark '#072845' --splashBackgroundColor '#0d1117' --splashBackgroundColorDark '#0d1117'",
+    "engine:prepare": "node scripts/use-ritmo.ts"
   },
   "dependencies": {
     "@capacitor/android": "8.5.3",
@@ -41,10 +42,10 @@
     "@fontsource/alegreya-sans": "^5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
     "@preact/signals": "2.11.3",
-    "@typeonce/bevy-ts": "link:../../bevy-ts/packages/core",
-    "@typeonce/bevy-ts-browser": "link:../../bevy-ts/packages/browser",
-    "@typeonce/bevy-ts-math": "link:../../bevy-ts/packages/math",
-    "@typeonce/bevy-ts-render": "link:../../bevy-ts/packages/render",
+    "@typeonce/ritmo": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/core",
+    "@typeonce/ritmo-browser": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/browser",
+    "@typeonce/ritmo-math": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/math",
+    "@typeonce/ritmo-render": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/render",
     "effect": "4.0.2",
     "preact": "11.0.1",
     "three": "0.186.1"
@@ -53,7 +54,7 @@
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.5.3",
     "@effect/sql-sqlite-node": "4.0.2",
-    "@typeonce/bevy-ts-devtools": "link:../../bevy-ts/packages/devtools",
+    "@typeonce/ritmo-devtools": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/devtools",
     "@types/node": "25.5.0",
     "@types/three": "0.186.0",
     "oxlint": "1.87.0",
@@ -66,5 +67,7 @@
     "overrides": {
       "sharp": "0.34.5"
     }
-  }
+  },
+  "ritmoRelease": "0.7.0",
+  "ritmoSource": "1ec469fd865ae82d2f53a07f5f1662dd1363fe84"
 }

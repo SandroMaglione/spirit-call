@@ -6,7 +6,7 @@
  * and thrown back every tick (`UpdateBarriers`): off a wall to the side
  * they came from, out of a ring.
  */
-import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { Barrier, Cast, Damage, Game, Health, Hitbox, Hurtbox, Invulnerable, Position, RunScope, Time } from "../schema.ts"
 import type { BarrierValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"
@@ -45,7 +45,8 @@ export const barrierMeets = (barrier: BarrierValue, origin: Vec2, delta: Vec2, r
 
 /** Barriers cast: a wall across her aim, ahead of her; a ring around her, its gust throwing what is inside out to it. */
 export const CastBarriers = Game.System("Shooter/CastBarriers", {
-  events: { cast: Game.System.readEvent(Cast) }
+  events: { cast: Game.System.readEvent(Cast) },
+  commands: Game.System.commands(Game.System.spawns(Hitbox, Barrier))
 }, ({ events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -76,14 +77,15 @@ export const UpdateBarriers = Game.System("Shooter/UpdateBarriers", {
     bodies: Game.Query({ selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable) }, with: [Health] })
   },
   resources: { time: Game.System.readResource(Time) },
-  events: { damage: Game.System.writeEvent(Damage) }
+  events: { damage: Game.System.writeEvent(Damage) },
+  commands: Game.System.commands(Game.System.despawns(Barrier))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.barriers.each()) {
     const barrier = data.barrier.get()
     const remaining = barrier.remaining - dt
     if (remaining <= 0) {
-      commands.despawn(entity.id)
+      commands.despawn(entity)
       continue
     }
     let nextTick = barrier.nextTick - dt

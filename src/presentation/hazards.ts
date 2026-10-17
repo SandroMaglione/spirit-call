@@ -10,7 +10,7 @@
  */
 import { CircleGeometry, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from "three"
 import type { BufferGeometry, Material } from "three"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { view } from "../config/view.ts"
 import { Game, Ground, RenderNodes } from "../schema.ts"

@@ -20,7 +20,7 @@ import type { BuildValue, MoveContext } from "../src/schema.ts"
 import { cursorAt, placeDummies, start, testAspect, withAspect } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 
 const World = Game.Inspector("Test/Aspects", {
   queries: {

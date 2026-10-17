@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { distance } from "@typeonce/bevy-ts-math/Vec2"
+import { distance } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -21,10 +21,10 @@ describe("a character's dash", () => {
     const own = dashOf(defaultTuning, "tidecaller")
     expect(own.charges).toBe(3)
     const one = start({ build: { character: "tidecaller" }, keys: doubleTap("right", 0) })
-    one.step(2 + Math.ceil(own.duration / engine.stepSeconds))
+    one.step(2 + Math.ceil(own.duration / engine.step.dt))
     expect(distance(one.player().position, center)).toBeCloseTo(own.distance, 6)
     // Three in a row, where the reference body holds two.
-    const between = Math.ceil(own.duration / engine.stepSeconds) + 2
+    const between = Math.ceil(own.duration / engine.step.dt) + 2
     const run = start({ build: { character: "tidecaller" }, keys: [...doubleTap("right", 0), ...doubleTap("left", between), ...doubleTap("right", between * 2)] })
     run.step(3)
     expect(run.player().dash.charges).toBe(2)

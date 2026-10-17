@@ -2,7 +2,7 @@
  * Sounds for what happened since the last frame, panned by where it happened
  * on screen.
  */
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { AttackMove } from "../content/attacks.ts"
 import type { SkillEffect } from "../content/skills.ts"
 import { projection, viewZoom } from "../config/view.ts"
