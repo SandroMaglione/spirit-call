@@ -15,9 +15,9 @@
  * pipeline like everything else. A move's lunge
  * is an impulse on the player's knockback.
  */
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { sweepCircleBoxes, sweepCircleCircle } from "@typeonce/bevy-ts-math/Collide2"
-import { scale, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import { sweepCircleBoxes, sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
+import { scale, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import { lob } from "../content/skills.ts"

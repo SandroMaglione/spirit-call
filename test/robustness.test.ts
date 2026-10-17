@@ -1,6 +1,6 @@
-import { Descriptor } from "@typeonce/bevy-ts"
-import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
-import { NodeRegistry, RenderSync } from "@typeonce/bevy-ts-render"
+import { Descriptor } from "@typeonce/ritmo"
+import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
+import { NodeRegistry, RenderSync } from "@typeonce/ritmo-render"
 import { describe, expect, it } from "vitest"
 
 import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
@@ -39,7 +39,7 @@ describe("hit-stop", () => {
     run.step(2)
     expect(frozen()).toBe(true)
     const frozenPlayer = run.player()
-    run.step(Math.floor(0.1 / engine.stepSeconds) - 2)
+    run.step(Math.floor(0.1 / engine.step.dt) - 2)
     expect(frozen()).toBe(true)
     expect(run.player()).toEqual(frozenPlayer)
     run.step(3)
@@ -56,7 +56,7 @@ describe("hit-stop", () => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
-    run.step(Math.ceil(0.2 / engine.stepSeconds) + 6)
+    run.step(Math.ceil(0.2 / engine.step.dt) + 6)
     expect(run.player().dash.cooldown).toBeGreaterThan(0)
   })
 })
@@ -124,7 +124,7 @@ describe("render sync under multi-rate ticking", () => {
     }, ({ queries }) => queries.all.each().length)
 
     const tuning = stressTuning()
-    const runtime = Game.Runtime.make({
+    const made = Game.Runtime.make({
       services: Game.Runtime.services(
         Game.Runtime.service(KeyboardInput, Keyboard.scripted(keyBindings, [])),
         Game.Runtime.service(PointerInput, Pointer.scripted([])),
@@ -136,6 +136,8 @@ describe("render sync under multi-rate ticking", () => {
       resources: initialResources(tuning, defaultViewport),
       machines: initialMachines()
     })
+    if (!made.ok) throw new Error(JSON.stringify(made.error))
+    const runtime = made.value
     const stress = makeStress(tuning, { enemies: 20, projectiles: 300 })
     runtime.tick(setup)
     runtime.tick(Game.Schedule(stress.populate, stress.topUp, Game.Schedule.applyDeferred()))

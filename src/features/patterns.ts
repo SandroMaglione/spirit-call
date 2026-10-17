@@ -13,8 +13,8 @@
  *
  * And what a champion reads beyond the player: how hard it is pressed.
  */
-import { overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { AttackReleased, Elite, Enemy, Game, Health, Hit, Hitbox, Rampage, RunScope, Time, Tuning } from "../schema.ts"
 import { makeGroupSpawns, PendingSpawnParts } from "./enemies.ts"
 import { GroundParts, makeGround } from "./ground.ts"

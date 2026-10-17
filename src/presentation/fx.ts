@@ -10,7 +10,7 @@
  * ordinary play nothing comes near them.
  */
 import type { Group } from "three"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { Digits } from "./digits.ts"
 import { Particles } from "./particles.ts"

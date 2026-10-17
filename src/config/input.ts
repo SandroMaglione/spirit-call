@@ -1,5 +1,5 @@
-import { Keyboard } from "@typeonce/bevy-ts-browser"
-import type { Pointer, Touch } from "@typeonce/bevy-ts-browser"
+import { Keyboard } from "@typeonce/ritmo-browser"
+import type { Pointer, Touch } from "@typeonce/ritmo-browser"
 
 /**
  * Keyboard actions. The mouse aims and left click fires. Double-tapping a

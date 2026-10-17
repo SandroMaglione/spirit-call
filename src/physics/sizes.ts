@@ -1,4 +1,4 @@
-import * as Scalar from "@typeonce/bevy-ts-math/Scalar"
+import * as Scalar from "@typeonce/ritmo-math/Scalar"
 
 /**
  * A constant size the physics needs positive (a grid's cell size). Only

@@ -14,9 +14,9 @@
  * counts toward clearing a wave, but the plan is complete only once every
  * champion has fallen too.
  */
-import { overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Random from "@typeonce/ritmo-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { champion, elite, entryChampion, entryElite, entryKind, entryShield, shielded } from "../content/challenges.ts"
 import type { WaveEntry, WavePlan } from "../content/challenges.ts"

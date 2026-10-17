@@ -10,7 +10,7 @@ import { ReadFlow, start } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 import { noTally } from "../src/content/stars.ts"
 
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 
 /** The default tuning with the swarm challenge replaced by `spec`. */
 const withChallenge = (spec: Partial<ChallengeSpec>): Tuning => ({

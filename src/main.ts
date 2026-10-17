@@ -1,6 +1,6 @@
 import { effect, signal } from "@preact/signals"
-import { Result } from "@typeonce/bevy-ts"
-import { BrowserHostClock, FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
+import { Result } from "@typeonce/ritmo"
+import { BrowserHostClock, FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
 import { keyBindings, scriptedPartyTaps, touchButtons, touchLayout } from "./config/input.ts"
 import { defaultTuning, engine } from "./config/tuning.ts"
@@ -381,7 +381,7 @@ const start = async (mount: HTMLElement) => {
     }
   }
 
-  const runtime = Game.Runtime.make({
+  const madeRuntime = Game.Runtime.make({
     services: Game.Runtime.services(
       // `?perf` plays its script instead of the devices.
       Game.Runtime.service(KeyboardInput, perfScene === undefined ? keyboard : Keyboard.scripted(keyBindings, perfScene.keys)),
@@ -405,6 +405,8 @@ const start = async (mount: HTMLElement) => {
     // The debug handle costs nothing until a trace listener is attached.
     debug: { hostClock: BrowserHostClock.make(window) }
   })
+  if (!madeRuntime.ok) throw new Error(`Simulation resources are invalid: ${JSON.stringify(madeRuntime.error)}`)
+  const runtime = madeRuntime.value
   runtime.tick(setup)
   runtime.tick(Game.Schedule(perfScene?.populate ?? stress.populate, Game.Schedule.applyDeferred()))
   runtime.tick(frame)
@@ -454,7 +456,7 @@ const start = async (mount: HTMLElement) => {
   }
   const loop = FixedLoop.start({
     source: FixedLoop.animationFrames(window),
-    stepSeconds: engine.stepSeconds,
+    step: engine.step,
     maxFrameSeconds: engine.maxFrameSeconds,
     maxStepsPerFrame: engine.maxStepsPerFrame,
     update: () => {

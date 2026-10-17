@@ -5,7 +5,7 @@
  * first levels breathe.
  */
 import { describe, expect, it } from "vitest"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import * as Random from "@typeonce/ritmo-math/Random"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -59,7 +59,7 @@ describe("fewer, tougher enemies", () => {
   it("keeps at most a few on the field at once, the rest of a wave coming in as room opens", () => {
     const run = start({ tuning: crowded(4), waves: true, challenge: "swarm" })
     let most = 0
-    for (let step = 0; step < Math.ceil(4 / engine.stepSeconds); step++) {
+    for (let step = 0; step < Math.ceil(4 / engine.step.dt); step++) {
       run.step()
       most = Math.max(most, run.runtime.inspect(Count))
     }
@@ -67,7 +67,7 @@ describe("fewer, tougher enemies", () => {
     // With room for all, the wave comes in whole.
     const open = start({ tuning: crowded(20), waves: true, challenge: "swarm" })
     let all = 0
-    for (let step = 0; step < Math.ceil(4 / engine.stepSeconds); step++) {
+    for (let step = 0; step < Math.ceil(4 / engine.step.dt); step++) {
       open.step()
       all = Math.max(all, open.runtime.inspect(Count))
     }

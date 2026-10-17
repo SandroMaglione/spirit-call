@@ -17,7 +17,7 @@ import { poiseOf } from "../src/features/poise.ts"
 import { UiRequest, Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
 import { ReadFlow, plainEnemies, start } from "./helpers.ts"
 
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 const rules = defaultTuning.champions
 
 /** The default tuning with the swarm challenge replaced by `spec`. */

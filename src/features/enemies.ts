@@ -3,10 +3,10 @@
  * `PendingSpawn` first, whose warning marker is visible on the floor, so
  * nothing appears on top of the player unannounced.
  */
-import { clampLength, length, moveToward, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as FlowField from "@typeonce/bevy-ts-math/FlowField"
-import * as Scalar from "@typeonce/bevy-ts-math/Scalar"
-import * as SpatialGrid from "@typeonce/bevy-ts-math/SpatialGrid"
+import { clampLength, length, moveToward, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as FlowField from "@typeonce/ritmo-math/FlowField"
+import * as Scalar from "@typeonce/ritmo-math/Scalar"
+import * as SpatialGrid from "@typeonce/ritmo-math/SpatialGrid"
 import { trainingDummies } from "../content/arena.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { positive } from "../physics/sizes.ts"

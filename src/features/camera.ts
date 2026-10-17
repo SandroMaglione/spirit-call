@@ -1,4 +1,4 @@
-import { add, clampLength, scale, subtract, zero } from "@typeonce/bevy-ts-math/Vec2"
+import { add, clampLength, scale, subtract, zero } from "@typeonce/ritmo-math/Vec2"
 import { Camera, Controls, Game, Player, Position, Time, Tuning } from "../schema.ts"
 
 /**

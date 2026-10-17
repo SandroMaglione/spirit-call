@@ -11,7 +11,7 @@
  * holds a spot of its own when asked (see `Tuning.champions`). It goes on
  * until the team falls.
  */
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import * as Random from "@typeonce/ritmo-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { EliteElement } from "../content/challenges.ts"
 import type { EnemyKind } from "../content/enemies.ts"

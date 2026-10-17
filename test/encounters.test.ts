@@ -4,7 +4,7 @@
  * their hazards.
  */
 import { describe, expect, it } from "vitest"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import * as Random from "@typeonce/ritmo-math/Random"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { hazardBoxes } from "../src/features/arena.ts"
@@ -15,7 +15,7 @@ import { pickSpawnPoint, reinforceAfter } from "../src/features/waves.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
 import { center, ClearEnemies, cursorAt, start, plainAttack, plainEnemies } from "./helpers.ts"
 
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 const middleOf = (box: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number }) => ({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 })
 
 const World = Game.Inspector("Test/Encounters", {

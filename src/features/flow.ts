@@ -3,6 +3,7 @@
  * or the challenge is cleared (`Cleared`, see `CheckObjective`), a results
  * screen, and a restart that clears the run and starts over.
  */
+import { Clock } from "@typeonce/ritmo"
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
 import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Tutorial, tutorialStart, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
@@ -85,7 +86,7 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
   nextMachines: { flow: Game.System.nextState(Flow) }
 }, ({ queries, resources, nextMachines }) => {
   if (queries.members.each().some(({ data }) => data.health.get().current > 0)) return
-  const run = { ...resources.run.get(), endedAt: resources.time.get().elapsed }
+  const run = { ...resources.run.get(), endedAt: Clock.elapsed(resources.time.get()) }
   const challenge = resources.challenge.get()
   resources.run.set(run)
   resources.result.set(runResultOf(false, challenge, resources.tuning.get().challenges[challenge], run, resources.waves.get(), resources.stats.get(), resources.team.get()))
@@ -108,7 +109,7 @@ export const QueueRestart = Game.System("Shooter/QueueRestart", {
   when: [Game.Condition.or(Game.Condition.inState(Flow, "GameOver"), Game.Condition.inState(Flow, "Cleared"))]
 }, ({ resources, nextMachines }) => {
   const endedAt = resources.run.get().endedAt
-  if (endedAt === null || resources.time.get().elapsed - endedAt < resources.tuning.get().flow.restartDelay) return
+  if (endedAt === null || Clock.elapsed(resources.time.get()) - endedAt < resources.tuning.get().flow.restartDelay) return
   const keys = resources.keys.get()
   if (keys.restart.pressed) nextMachines.flow.set("Playing")
   else if (keys.menu.pressed) nextMachines.flow.set("Menu")

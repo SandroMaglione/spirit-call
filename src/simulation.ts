@@ -12,8 +12,8 @@
  * for (let step = 0; step < 60; step++) sim.runtime.tick(sim.fixedUpdate)
  * ```
  */
-import { HostClock } from "@typeonce/bevy-ts"
-import { Touch } from "@typeonce/bevy-ts-browser"
+import { HostClock } from "@typeonce/ritmo"
+import { Touch } from "@typeonce/ritmo-browser"
 import type { ChallengeId } from "./content/challenges.ts"
 
 import { scriptedPartyTaps, touchButtons } from "./config/input.ts"
@@ -60,7 +60,7 @@ export const createSimulation = (options: SimulationOptions) => {
   const tuning = options.tuning ?? defaultTuning
   const viewport = options.viewport ?? defaultViewport
   const hostClock = options.hostClock ?? HostClock.test()
-  const runtime = Game.Runtime.make({
+  const made = Game.Runtime.make({
     services: Game.Runtime.services(
       Game.Runtime.service(KeyboardInput, options.keyboard),
       Game.Runtime.service(PointerInput, options.pointer),
@@ -75,6 +75,8 @@ export const createSimulation = (options: SimulationOptions) => {
     machines: initialMachines(options.flow),
     debug: { hostClock }
   })
+  if (!made.ok) throw new Error(`Simulation resources are invalid: ${JSON.stringify(made.error)}`)
+  const runtime = made.value
   runtime.debug.nameSchedules({ setup, fixedUpdate })
   return { runtime, setup, fixedUpdate, hostClock }
 }

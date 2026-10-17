@@ -11,8 +11,8 @@
  * current entity counts.
  * Copy it and change the timelines, invariants, and questions.
  */
-import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
-import { Invariant, Session } from "@typeonce/bevy-ts-devtools"
+import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
+import { Invariant, Session } from "@typeonce/ritmo-devtools"
 
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"

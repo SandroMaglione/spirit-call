@@ -4,7 +4,7 @@
  * Bodies in a state (burning, soaked) are tinted toward its color.
  */
 import { Quaternion, Vector3 } from "three"
-import { lerp, normalizeOr } from "@typeonce/bevy-ts-math/Vec2"
+import { lerp, normalizeOr } from "@typeonce/ritmo-math/Vec2"
 
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"

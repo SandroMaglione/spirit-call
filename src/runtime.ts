@@ -1,4 +1,4 @@
-import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
+import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
 import { keyBindings, touchButtons } from "./config/input.ts"
 import type { Tuning } from "./config/tuning.ts"

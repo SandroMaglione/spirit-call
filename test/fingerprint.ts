@@ -8,8 +8,8 @@
  * reads back as the same number), and each sample is hashed (FNV-1a), so a
  * difference in the last bit of any of them shows.
  */
-import type { HostClock } from "@typeonce/bevy-ts"
-import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
+import type { HostClock } from "@typeonce/ritmo"
+import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
 import { keyBindings } from "../src/config/input.ts"
 import { KeepCharged } from "../src/dev/charged.ts"

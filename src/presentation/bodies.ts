@@ -5,7 +5,7 @@
  */
 import { Mesh, MeshLambertMaterial } from "three"
 import type { Object3D } from "three"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { projection } from "../config/view.ts"
 import { elevation } from "../math/iso.ts"

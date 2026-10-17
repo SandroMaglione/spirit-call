@@ -5,7 +5,7 @@
  * her pace and her dashes coming back are `ControlPlayer`'s, her blows'
  * element `UseBasicAttack`'s.
  */
-import { add, scale } from "@typeonce/bevy-ts-math/Vec2"
+import { add, scale } from "@typeonce/ritmo-math/Vec2"
 import { Cast, Dash, Explosion, Game, Hitbox, Member, Overcharged, Passives, Player, Position, RunScope, Time, Tuning, Zap } from "../schema.ts"
 import { dashOf, traitsIn } from "./build.ts"
 import { castBlow } from "./skills.ts"

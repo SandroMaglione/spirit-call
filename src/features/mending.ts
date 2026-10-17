@@ -8,8 +8,9 @@
  * Kindle's) heals every member still standing, more for each enemy around
  * it in its state as it goes off.
  */
-import type { WriteCell } from "@typeonce/bevy-ts/Query"
-import { normalizeOr, subtract } from "@typeonce/bevy-ts-math/Vec2"
+import { Clock } from "@typeonce/ritmo"
+import type { WriteCell } from "@typeonce/ritmo/Query"
+import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
 
 import type { SkillEffect, MarkSpec, StateHeal } from "../content/skills.ts"
 import { blow, Cast, Damage, ElementState, Enemy, Game, Heal, Health, Hit, Hurtbox, Marked, Member, Mending, Player, Position, Time, Tuning } from "../schema.ts"
@@ -34,7 +35,9 @@ export const MendFromMarks = Game.System("Shooter/MendFromMarks", {
   events: { hit: Game.System.readEvent(Hit), heal: Game.System.writeEvent(Heal) }
 }, ({ queries, resources, events }) => {
   const tuning = resources.tuning.get()
-  const { dt, elapsed } = resources.time.get()
+  const time = resources.time.get()
+  const dt = time.dt
+  const elapsed = Clock.elapsed(time)
   const marked = new Map(queries.marked.each().map(({ entity, data }) => [Game.Entity.handle(entity.id, Health), data.marked]))
   for (const mark of marked.values()) {
     const remaining = mark.get().remaining

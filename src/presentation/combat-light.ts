@@ -2,7 +2,7 @@
  * One bounded batch keeps repeated shots and ribbon segments cheap on phones. */
 import { AdditiveBlending, Color, CylinderGeometry, InstancedMesh, Matrix4, MeshBasicMaterial, Quaternion, Vector3 } from "three"
 import type { Object3D } from "three"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { showInstances } from "./uploads.ts"
 
 export type ShotLook = "round" | "spark" | "orb" | "enemy"

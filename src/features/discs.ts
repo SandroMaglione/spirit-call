@@ -7,8 +7,8 @@
  * on reaching them. Hits go through the combat pipeline (`Damage`) like
  * every other blow, tested like shots (see `features/targets.ts`).
  */
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { Damage, Disc, ElementState, Game, Health, Impact, Position, PrevPosition, Renderable, Time, Tuning } from "../schema.ts"
 import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"

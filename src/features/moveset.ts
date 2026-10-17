@@ -4,10 +4,10 @@
  * kind has one (see `content/champions.ts`), and what the player is doing
  * that its attacks answer (see `Read`).
  */
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import type * as Random from "@typeonce/bevy-ts-math/Random"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import type * as Random from "@typeonce/ritmo-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { AttackSpec, Behavior, Read } from "../content/enemies.ts"
 import type { AttackerValue, EnemyKind } from "../schema.ts"

@@ -15,7 +15,8 @@
  * goes off like a skill. The queue waits out a hit-stop, so an effect set off
  * by a kill is not lost to the freeze the kill starts.
  */
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { Clock } from "@typeonce/ritmo"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { StateId } from "../content/elements.ts"
 import type { HitCondition, MoveFilter, Passive, Trigger } from "../content/passives.ts"
 import {
@@ -143,7 +144,7 @@ export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
   events: { action: Game.System.readEvent(Action), hit: Game.System.readEvent(Hit), perfect: Game.System.readEvent(PerfectDodged), broke: Game.System.readEvent(Broke), triggered: Game.System.writeEvent(TriggeredEffects) },
   resources: { cooldowns: Game.System.writeResource(PassiveCooldowns), time: Game.System.readResource(Time) }
 }, ({ queries, events, resources }) => {
-  const now = resources.time.get().elapsed
+  const now = Clock.elapsed(resources.time.get())
   const cooldowns = { ...resources.cooldowns.get() }
   let waited = false
   const queued: Array<TriggeredEffectsValue> = []

@@ -1,4 +1,4 @@
-import { FixedLoop } from "@typeonce/bevy-ts-browser"
+import { FixedLoop } from "@typeonce/ritmo-browser"
 import { describe, expect, it } from "vitest"
 
 import { engine } from "../src/config/tuning.ts"
@@ -27,7 +27,7 @@ const runAt = (hz: number, steps: number) => {
       onTick = listener
       return { stop: () => (onTick = undefined) }
     }),
-    stepSeconds: engine.stepSeconds,
+    step: engine.step,
     maxFrameSeconds: engine.maxFrameSeconds,
     maxStepsPerFrame: engine.maxStepsPerFrame,
     update: () => {

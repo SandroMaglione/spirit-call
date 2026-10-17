@@ -6,7 +6,7 @@
  * done chimes, and the next one's words take its place.
  */
 import { CanvasTexture, LinearFilter, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace } from "three"
-import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { projection, view } from "../config/view.ts"
 import type { TutorialStep, TutorialStepKind } from "../content/tutorial.ts"

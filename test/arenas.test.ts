@@ -3,8 +3,8 @@
  * (a notch that traps a body or a shot), and no pool lies under a wall.
  */
 import { describe, expect, it } from "vitest"
-import { around, overlapsCircle, type Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
+import { around, overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { ArenaId } from "../src/content/arena.ts"

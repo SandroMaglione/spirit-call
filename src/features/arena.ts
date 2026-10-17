@@ -3,7 +3,7 @@
  * boundary walls, pillars, low walls, and hazards, spawned with each run (so
  * a run of another challenge stands in another arena).
  */
-import { around, type Box2 } from "@typeonce/bevy-ts-math/Box2"
+import { around, type Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { ArenaId } from "../content/arena.ts"
 import { Challenge, Game, Ground, LowWall, Position, Renderable, RunScope, Tuning, Wall } from "../schema.ts"

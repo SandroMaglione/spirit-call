@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Touch } from "@typeonce/bevy-ts-browser"
+import type { Touch } from "@typeonce/ritmo-browser"
 
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
@@ -17,7 +17,7 @@ const [first, second, third, finisher] = sword.combo as [MeleeMove, MeleeMove, M
 const slash = { ...sword, first, second, third, finisher }
 const firstArc = first.shape === "arc" ? first.arcDegrees : 0
 const hp = defaultTuning.enemies.dummy.hp
-const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
 
 const World = Game.Inspector("Test/Slash", {
   queries: {
@@ -242,14 +242,14 @@ describe("sword slash", () => {
       throw new Error("never hit")
     }
     const opening = hitStopOnHit(arena([at(0, 70)], 1, { tuning: noAssist }))
-    expect(opening).toBeGreaterThan(first.hitStop - 2 * engine.stepSeconds)
+    expect(opening).toBeGreaterThan(first.hitStop - 2 * engine.step.dt)
     expect(opening).toBeLessThanOrEqual(first.hitStop)
 
     // Only the finisher's spin reaches a dummy behind the player.
     const frames = [0]
     for (const move of [slash.first, slash.second, slash.third]) frames.push(frames.at(-1)! + steps(move.recovery) + 1)
     const finisher = hitStopOnHit(arena([at(180, 70)], 1, { tuning: noAssist, touch: frames.map((frame) => ({ frame, press: ["attack" as const], release: ["attack" as const] })) }))
-    expect(finisher).toBeGreaterThan(slash.finisher.hitStop - 2 * engine.stepSeconds)
+    expect(finisher).toBeGreaterThan(slash.finisher.hitStop - 2 * engine.step.dt)
     expect(slash.finisher.hitStop).toBeGreaterThan(first.hitStop)
   })
 })

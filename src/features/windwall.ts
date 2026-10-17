@@ -13,7 +13,7 @@
  *   off, and untouchable: shots pass under it, blows miss it), then falls,
  *   and the fall is its blow.
  */
-import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { Cast, Damage, Disarmed, Enemy, Game, Health, Hurtbox, Invulnerable, Lifted, Mantle, noMantle, Player, Position, Stunned, Time } from "../schema.ts"
 import type { Blow, Faction, MantleValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"

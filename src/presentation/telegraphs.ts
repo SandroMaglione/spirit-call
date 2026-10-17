@@ -3,7 +3,7 @@
  * shields, wards, armor, bursts about to go off, active hitboxes, lobbed skills,
  * whirls, totems, thrown discs, and spawn warnings.
  */
-import { lerp } from "@typeonce/bevy-ts-math/Vec2"
+import { lerp } from "@typeonce/ritmo-math/Vec2"
 import { engine } from "../config/tuning.ts"
 import { projection, view } from "../config/view.ts"
 import { toScreen } from "../math/iso.ts"
@@ -185,7 +185,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   for (const { data } of queries.lobbed.each()) {
     const lobbed = data.lobbed.get()
     const spec = lobbed.effect
-    const elapsed = lobbed.elapsed + services.clock.alpha * engine.stepSeconds
+    const elapsed = lobbed.elapsed + services.clock.alpha * engine.step.dt
     const color = spec.element === null ? view.playerArea : view.elements[spec.element]
     // A volley's shell waiting its turn: where it will land, marked from the start.
     if (elapsed < 0) {

@@ -46,7 +46,7 @@
  * Skills in `ownLook` are not drawn by the shared looks too (see
  * `presentation/effects.ts`).
  */
-import { lerp, normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { lerp, normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { projection, view } from "../config/view.ts"
 import { isMelee } from "../content/attacks.ts"
 import type { CompanionsEffect, CutEffect, EmberRingEffect, SkillId } from "../content/skills.ts"

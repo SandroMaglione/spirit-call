@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
@@ -8,7 +8,7 @@ import type { EnemyKind } from "../src/schema.ts"
 import { ClearEnemies, plainEnemies, start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
-const steps = (seconds: number) => Math.ceil(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 
 const World = Game.Inspector("Test/StrangeEnemies", {
   queries: {

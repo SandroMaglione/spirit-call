@@ -11,7 +11,7 @@
  * it), its attacks strike for her side (`UpdateAttacks`), and it and its old
  * side go for each other (`SteerEnemies`). Then it goes back.
  */
-import { normalizeOr, subtract } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
 import { elements } from "../content/elements.ts"
 import { Cast, Damage, Disarmed, Dome, ElementAffinities, ElementState, Enemy, Game, Health, Hitbox, Hurtbox, Invulnerable, Player, Position, Reaction, RunScope, Time, Stunned, Tuning, Turned, Zap } from "../schema.ts"
 import { afflict } from "./elements.ts"

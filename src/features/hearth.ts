@@ -8,7 +8,7 @@
  * The pyre stays where she cast it, burning what is inside again and again;
  * a share of what it deals heals the one on the field, up to a cap each time.
  */
-import { normalizeOr, subtract } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { elements } from "../content/elements.ts"
 import type { Affinity, ElementId } from "../content/elements.ts"

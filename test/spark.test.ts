@@ -323,7 +323,7 @@ describe("the dash strike", () => {
   })
 
   it("is a plain combo move when pressed long after the dash", () => {
-    const run = strike(Math.ceil((defaultTuning.dash.duration + defaultTuning.dash.attackWindow) / engine.stepSeconds) + 10)
+    const run = strike(Math.ceil((defaultTuning.dash.duration + defaultTuning.dash.attackWindow) / engine.step.dt) + 10)
     run.step(60)
     expect(run.runtime.inspect(DashWeapon).sinceDashStrike).toBe(Infinity)
     expect(run.runtime.inspect(DashWeapon).step).toBe(0)

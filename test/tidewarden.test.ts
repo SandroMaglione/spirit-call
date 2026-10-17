@@ -6,7 +6,7 @@
  * chain snaps, striking it and leaving it stunned (never a champion).
  */
 import { describe, expect, it } from "vitest"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"

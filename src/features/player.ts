@@ -2,7 +2,7 @@
  * The controlled character (the team member on the field, see
  * `features/team.ts`): running at her speed, aiming, facing, and dashing.
  */
-import { clampLength, length, moveToward, normalizeOr, scale, subtract } from "@typeonce/bevy-ts-math/Vec2"
+import { clampLength, length, moveToward, normalizeOr, scale, subtract } from "@typeonce/ritmo-math/Vec2"
 import { Action, Aim, Airborne, Arrival, CombatStats, Controls, Dash, Facing, Game, Invulnerable, Member, Overcharged, Passives, Player, Position, Raising, Time, Tuning, Velocity, BasicAttack } from "../schema.ts"
 import { charging } from "./basic-attack.ts"
 import { attackOf, dashOf, traitsIn } from "./build.ts"

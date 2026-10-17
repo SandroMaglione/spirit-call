@@ -9,7 +9,7 @@
  */
 import { Color, ConeGeometry, Euler, IcosahedronGeometry, InstancedMesh, Matrix4, MeshStandardMaterial, OctahedronGeometry, Quaternion, Vector3 } from "three"
 import type { BufferAttribute, BufferGeometry, Object3D } from "three"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { view } from "../config/view.ts"
 import { showInstances } from "./uploads.ts"

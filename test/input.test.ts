@@ -1,4 +1,4 @@
-import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
+import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 import { describe, expect, it } from "vitest"
 
 import { keyBindings } from "../src/config/input.ts"

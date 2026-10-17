@@ -9,9 +9,9 @@
  * enemy in range) and the Thunderclap (strikes the enemies around the
  * caster and heals the whole team, the bench too).
  */
-import type { EntityId } from "@typeonce/bevy-ts/Entity"
-import type { Query } from "@typeonce/bevy-ts/Query"
-import { normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { EntityId } from "@typeonce/ritmo/Entity"
+import type { Query } from "@typeonce/ritmo/Query"
+import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import {

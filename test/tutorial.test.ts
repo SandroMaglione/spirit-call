@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import type { Touch } from "@typeonce/bevy-ts-browser"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Touch } from "@typeonce/ritmo-browser"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"

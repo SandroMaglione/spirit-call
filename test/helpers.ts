@@ -1,6 +1,6 @@
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { ArenaId } from "../src/content/arena.ts"
-import { Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
+import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
 import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
 import type { Direction, PartyTap, TouchButton } from "../src/config/input.ts"
@@ -272,7 +272,7 @@ export const ClearEnemies = Game.System("Test/ClearEnemies", {
 export const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
 /** Fixed steps covering `seconds` (rounded up). */
-export const steps = (seconds: number): number => Math.ceil(seconds / engine.stepSeconds)
+export const steps = (seconds: number): number => Math.ceil(seconds / engine.step.dt)
 
 /** The cursor (screen) pointing at a world offset from the player at spawn, in the default viewport. */
 export const cursorAt = (offset: Vec2): Vec2 => {

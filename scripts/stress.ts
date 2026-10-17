@@ -9,8 +9,8 @@
  * also adds up the time spent in each system (traced, so slower overall:
  * compare systems with each other, and runs with `--systems` with each other).
  */
-import type { HostClock } from "@typeonce/bevy-ts"
-import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
+import type { HostClock } from "@typeonce/ritmo"
+import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
 import { keyBindings } from "../src/config/input.ts"
 import { engine } from "../src/config/tuning.ts"
@@ -26,7 +26,7 @@ const report = (title: string, times: Array<number>) => {
   times.sort((a, b) => a - b)
   const at = (q: number) => times[Math.floor(q * (times.length - 1))]!.toFixed(2)
   console.log(title)
-  console.log(`step ms: mean ${mean.toFixed(3)}, median ${at(0.5)}, p95 ${at(0.95)}, p99 ${at(0.99)}, max ${at(1)} (budget ${(engine.stepSeconds * 1000).toFixed(1)} per step)`)
+  console.log(`step ms: mean ${mean.toFixed(3)}, median ${at(0.5)}, p95 ${at(0.95)}, p99 ${at(0.99)}, max ${at(1)} (budget ${(engine.step.dt * 1000).toFixed(1)} per step)`)
 }
 
 const sceneAt = process.argv.indexOf("--scene")

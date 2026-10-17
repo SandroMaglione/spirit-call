@@ -3,8 +3,9 @@
  * snapshots are captured into resources once per fixed step, then turned
  * into world-space intent (`Controls`) that gameplay systems read.
  */
-import { InputCapture } from "@typeonce/bevy-ts-browser"
-import { length, normalizeOr, scale, zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { Clock } from "@typeonce/ritmo"
+import { InputCapture } from "@typeonce/ritmo-browser"
+import { length, normalizeOr, scale, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { directions, teamKeys, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PartyTap, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
@@ -149,7 +150,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   // Double tap to dash: a second press of the same movement key within the
   // window. The dash goes where the player is moving, so tapping D twice
   // while holding W dashes diagonally.
-  const now = resources.time.get().elapsed
+  const now = Clock.elapsed(resources.time.get())
   const window = resources.tuning.get().dash.doubleTapWindow
   let lastTap = previous.lastTap
   let dashPressed = false

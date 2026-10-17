@@ -112,7 +112,7 @@ describe("damage", () => {
     expect(world.stats.kills).toBe(1)
     expect(world.enemies).toHaveLength(trainingDummies.length - 1)
     expect(world.pending).toBe(1)
-    run.step(Math.ceil(tuning.enemies.dummy.respawnDelay / engine.stepSeconds) + 1)
+    run.step(Math.ceil(tuning.enemies.dummy.respawnDelay / engine.step.dt) + 1)
     world = run.runtime.inspect(World)
     expect(world.pending).toBe(0)
     expect(world.enemies).toHaveLength(trainingDummies.length)

@@ -1,4 +1,4 @@
-import { Keyboard } from "@typeonce/bevy-ts-browser"
+import { Keyboard } from "@typeonce/ritmo-browser"
 import { expect, it } from "vitest"
 import { createMenuInputHost } from "../src/presentation/menu-input.ts"
 

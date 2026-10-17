@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Touch } from "@typeonce/bevy-ts-browser"
+import type { Touch } from "@typeonce/ritmo-browser"
 
 import type { TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
@@ -14,7 +14,7 @@ import type { BuildValue } from "../src/schema.ts"
 import { ClearEnemies, gunner, start, swordsman, plainAttack, hitBy } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
-const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
 const hp = defaultTuning.enemies.dummy.hp
 const sword = plainAttack(defaultTuning, "blade")
 const swordPower = sword.power!
@@ -94,7 +94,7 @@ describe("power attack", () => {
     const before = run.world().player
     run.step(10)
     const after = run.world().player
-    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
+    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.step.dt)
     expect(speed).toBeCloseTo(swordsman.speed * swordPower.moveSpeedMultiplier, 0)
   })
 })
@@ -139,7 +139,7 @@ describe("stats in play", () => {
     const before = run.world().player
     run.step(10)
     const after = run.world().player
-    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.stepSeconds)
+    const speed = Math.hypot(after.x - before.x, after.y - before.y) / (10 * engine.step.dt)
     expect(speed).toBeCloseTo(defaultTuning.characters.gunner.stats.speed, 0)
   })
 })

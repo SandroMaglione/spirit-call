@@ -6,7 +6,7 @@
  * perfect dodges); once it is done, the next comes. The last clears the run
  * (see `CheckObjective`), and the app lets the player choose a quest or the menu.
  */
-import { distance, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { distance, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { TutorialStep } from "../content/tutorial.ts"
 import { Action, Cast, Challenge, Dash, Enemy, EnemyLevel, Energy, Game, Hit, Immortal, PendingSpawn, PerfectDodged, Player, Position, RunScope, Skills, SlowMotion, Time, Tuning, Tutorial, UltimateCalled } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"

@@ -2,13 +2,14 @@
  * The closed world: every component, resource, event, and service the game
  * uses. Gameplay data is in world coordinates (see `math/iso.ts`).
  */
-import { Descriptor, Schema } from "@typeonce/bevy-ts"
-import type * as Entity from "@typeonce/bevy-ts/Entity"
-import type { NodeRegistry } from "@typeonce/bevy-ts-render"
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { Clock, Descriptor, Schema } from "@typeonce/ritmo"
+import type * as Entity from "@typeonce/ritmo/Entity"
+import type { NodeRegistry } from "@typeonce/ritmo-render"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
+import { step } from "./config/clock.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackMove } from "./content/attacks.ts"
 import type { ArenaId } from "./content/arena.ts"
@@ -1153,15 +1154,12 @@ export const TriggeredEffects = Descriptor.Event<TriggeredEffectsValue>()("Shoot
  */
 export const PassiveCooldowns = Descriptor.Resource<{ readonly [key: string]: number }>()("Shooter/PassiveCooldowns")
 
-export interface TimeValue {
-  /** Fixed step length. */
-  readonly dt: number
-  /** Simulated seconds since the run started. */
-  readonly elapsed: number
-  /** Number of fixed steps simulated. */
-  readonly step: number
-}
-export const Time = Descriptor.Resource<TimeValue>()("Shooter/Time")
+/**
+ * Simulated time: fixed steps since the game started, at `step`'s rate
+ * (see `AdvanceTime`). `dt` is 0 on a paused step; seconds since the start
+ * are `Clock.elapsed(time)`.
+ */
+export const Time = Clock.resource("Shooter/Time", step)
 
 export const Keys = Descriptor.TransientResource<KeysSnapshot>()("Shooter/Keys")
 export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Shooter/PointerState")
@@ -1205,7 +1203,7 @@ export interface ControlsValue {
   readonly burstOnArrival: number | null
   /** Last non-zero movement direction, kept for the movement grace. */
   readonly lastMove: Vec2
-  /** The last movement key pressed and when (`Time.elapsed`), to detect a double tap. */
+  /** The last movement key pressed and when (`Clock.elapsed` of `Time`), to detect a double tap. */
   readonly lastTap: { readonly direction: Direction; readonly at: number } | null
   /** Time left in which released movement keeps going in `lastMove`. */
   readonly grace: number
@@ -1309,7 +1307,7 @@ export const tutorialStart: TutorialValue = { step: 0, count: 0, ready: -1, cele
 /** Deterministic random state (mulberry32), so runs replay exactly. */
 export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
 
-/** The current run: simulated time since it started, and when it ended (`Time.elapsed`). */
+/** The current run: simulated time since it started, and when it ended (`Clock.elapsed` of `Time`). */
 export interface RunValue {
   readonly time: number
   readonly endedAt: number | null

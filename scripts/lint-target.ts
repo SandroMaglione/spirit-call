@@ -10,7 +10,7 @@
  * import the presentation (see `tools/lint/plugin.mjs`), and the render
  * schedule needs the asset loader.
  */
-import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
+import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
 import { keyBindings } from "../src/config/input.ts"
 import { frame } from "../src/presentation/schedule.ts"

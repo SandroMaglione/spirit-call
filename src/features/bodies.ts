@@ -9,7 +9,7 @@
  * the bench (her health and state) while her body moves to whoever is on
  * the field (see `features/team.ts`).
  */
-import { zero, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { Affinities } from "../content/elements.ts"
 import type { Stats } from "../content/characters.ts"
 import {

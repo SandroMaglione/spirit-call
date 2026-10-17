@@ -4,6 +4,7 @@
  * (see `DetectGameOver`). Training (waves off, or the Training Ground) has
  * no objective; Enemy Practice goes on until the team falls.
  */
+import { Clock } from "@typeonce/ritmo"
 import type { ChallengeId, ChallengeSpec, Objective } from "../content/challenges.ts"
 import { Challenge, Flow, Game, Run, RunResult, Stats, Team, Time, Tuning, Tutorial, Waves } from "../schema.ts"
 import type { BuildValue, RunResultValue, RunValue, StatsValue, WavesValue } from "../schema.ts"
@@ -110,7 +111,7 @@ export const CheckObjective = Game.System("Shooter/CheckObjective", {
   if (!objectiveMet(spec.objective, resources.waves.get(), resources.tutorial.get().step)) return
   // Let the last perfect dodge and its floor message finish before covering the arena.
   if (spec.objective.kind === "tutorial" && resources.tutorial.get().celebrate > 0) return
-  const ended = { ...run, endedAt: resources.time.get().elapsed }
+  const ended = { ...run, endedAt: Clock.elapsed(resources.time.get()) }
   resources.run.set(ended)
   resources.result.set(runResultOf(true, challenge, spec, ended, resources.waves.get(), resources.stats.get(), resources.team.get()))
   nextMachines.flow.set("Cleared")

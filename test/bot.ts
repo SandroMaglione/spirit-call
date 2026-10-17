@@ -16,11 +16,11 @@
  * It sees nothing a player could not: an attack counts only once its
  * telegraph is up, and aimed shots where they aim now.
  */
-import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
-import type { Touch } from "@typeonce/bevy-ts-browser"
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { moveCircle } from "@typeonce/bevy-ts-math/Collide2"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
+import type { Touch } from "@typeonce/ritmo-browser"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import { moveCircle } from "@typeonce/ritmo-math/Collide2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import type { PartyTaps, TouchButton } from "../src/config/input.ts"
 import { keyBindings, touchButtons } from "../src/config/input.ts"
@@ -705,13 +705,13 @@ export const runBot = (run: BotRun): BotReport => {
   let pressed = 0
   const report = (elapsed: number, outcome: BotReport["outcome"]): BotReport => ({
     hits: run.mortal === true ? dealtHits : hits, damage: Math.round(run.mortal === true ? taken : damage), dashes,
-    pressure: pressed / Math.max(1, Math.round(elapsed / engine.stepSeconds)), clearedAt: outcome === "cleared" ? elapsed : null,
+    pressure: pressed / Math.max(1, Math.round(elapsed / engine.step.dt)), clearedAt: outcome === "cleared" ? elapsed : null,
     endedAt: elapsed, outcome, kills, specials, ultimates, breaks, healing: Math.round(healing),
     restored: healing / members.reduce((sum, member) => sum + member.health.max, 0), blocked,
     healthRemaining: members.reduce((sum, member) => sum + member.health.current, 0) / members.reduce((sum, member) => sum + member.health.max, 0),
     tally: sim.runtime.inspect(Tallied)
   })
-  const total = Math.ceil(run.seconds / engine.stepSeconds)
+  const total = Math.ceil(run.seconds / engine.step.dt)
   const style = run.style ?? dodger
   let move: Move = { direction: { x: 0, y: 0 }, dash: false, attack: false, target: null }
   let charging = 0
@@ -747,7 +747,7 @@ export const runBot = (run: BotRun): BotReport => {
     // Charging: pressed once, held through the charge, let go once full; a threat lets go early (the charge is lost).
     if (style.chargeEvery !== undefined && !(run.still === true)) {
       const spec = basicAttack(tuning.classes[tuning.characters[build.character].class], ((id) => id === null ? null : tuning.aspects[id])(aspectFor(tuning, build.character, build.aspect)))
-      sinceCharge += engine.stepSeconds
+      sinceCharge += engine.step.dt
       if (charging > 0) {
         if (move.dash || move.safe === false) charging = 0
         else charging -= 1
@@ -756,13 +756,13 @@ export const runBot = (run: BotRun): BotReport => {
         const target = field.enemies.find((enemy) => enemy.id === move.target)
         const reach = moveReach(spec.power.move) * (spec.power.move.shape === "shot" || spec.power.move.shape === "disc" ? 0.8 : 1)
         if (target !== undefined && Math.hypot(target.at.x - field.player.at.x, target.at.y - field.player.at.y) <= reach) {
-          charging = Math.ceil((spec.power.holdDelay + spec.power.chargeTime) / engine.stepSeconds) + 2
+          charging = Math.ceil((spec.power.holdDelay + spec.power.chargeTime) / engine.step.dt) + 2
           sinceCharge = 0
           move = { ...move, attack: true, hold: true }
         }
       }
     }
-    if (run.rotateEvery !== undefined && step > 0 && step % Math.max(1, Math.round(run.rotateEvery / engine.stepSeconds)) === 0) rotate = 1
+    if (run.rotateEvery !== undefined && step > 0 && step % Math.max(1, Math.round(run.rotateEvery / engine.step.dt)) === 0) rotate = 1
     touch.set(move)
     if (move.dash && move.closing !== true) dashes += 1
     if (move.direction.x !== 0 || move.direction.y !== 0) last = move.direction
@@ -776,8 +776,8 @@ export const runBot = (run: BotRun): BotReport => {
     }
     health = now
     const result = sim.runtime.inspect(Outcome)
-    if (run.mortal === true && result !== null) return report((step + 1) * engine.stepSeconds, result.cleared ? "cleared" : "defeated")
-    if (run.mortal !== true && sim.runtime.inspect(Progress) === "complete") return report((step + 1) * engine.stepSeconds, "cleared")
+    if (run.mortal === true && result !== null) return report((step + 1) * engine.step.dt, result.cleared ? "cleared" : "defeated")
+    if (run.mortal !== true && sim.runtime.inspect(Progress) === "complete") return report((step + 1) * engine.step.dt, "cleared")
   }
-  return report(total * engine.stepSeconds, "timeout")
+  return report(total * engine.step.dt, "timeout")
 }

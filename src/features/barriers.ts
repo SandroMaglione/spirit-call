@@ -6,7 +6,7 @@
  * and thrown back every tick (`UpdateBarriers`): off a wall to the side
  * they came from, out of a ring.
  */
-import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { Barrier, Cast, Damage, Game, Health, Hitbox, Hurtbox, Invulnerable, Position, RunScope, Time } from "../schema.ts"
 import type { BarrierValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"

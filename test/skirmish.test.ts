@@ -6,7 +6,7 @@ import { Enemy, EnemyMode, Game, Player, Position, RunScope } from "../src/schem
 import { ClearEnemies, start } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
-const steps = (seconds: number) => Math.round(seconds / engine.stepSeconds)
+const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
 
 const World = Game.Inspector("Test/Skirmish", {
   queries: {

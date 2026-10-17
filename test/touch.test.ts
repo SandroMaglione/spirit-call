@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { normalizeOr, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { skillSlots } from "../src/content/skills.ts"
 import { actionButtons, drawnShare, partyLayout, stickRest, touchButtons, touchLayout } from "../src/config/input.ts"
@@ -116,7 +116,7 @@ describe("touch controls", () => {
     it("a charged grenade, aimed at it while held, lands on it", () => {
       const power = plainAttack(defaultTuning, "gun").power!
       const full = power.holdDelay + power.chargeTime
-      const release = Math.round((full + 0.05) / engine.stepSeconds)
+      const release = Math.round((full + 0.05) / engine.step.dt)
       const run = alone(start({ build: gunner, touch: [{ frame: 0, press: ["attack"] }, { frame: release, release: ["attack"] }] }))
       run.step(release)
       // Held, the aim is the dummy itself (the opening shot pushed it), so what the cue shows is where it lands.

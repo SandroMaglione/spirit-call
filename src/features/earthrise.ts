@@ -9,8 +9,8 @@
  * raises its rocks down a line toward the aim; a quake (see `QuakeEffect`)
  * slams around the caster, each slam a rock under her, wider than the last.
  */
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { earthrise } from "../content/skills.ts"
 import type { EarthriseEffect, FaultEffect, QuakeEffect } from "../content/skills.ts"
 import { Cast, Damage, Elite, Enemy, Explosion, Game, Health, Hurtbox, Invulnerable, Poise, Position, Rock, RunScope, Stunned, Time, Tuning } from "../schema.ts"

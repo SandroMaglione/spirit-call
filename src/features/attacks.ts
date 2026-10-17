@@ -36,10 +36,10 @@
  * free, past the crowd's windups; then the phase's attacks join the others,
  * with shorter rests. Such a champion never waits for the crowd's windups.
  */
-import type { Box2 } from "@typeonce/bevy-ts-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { clampLength, normalizeOr, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as Random from "@typeonce/bevy-ts-math/Random"
+import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { clampLength, normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Random from "@typeonce/ritmo-math/Random"
 import { followUpsOf } from "../content/enemies.ts"
 import type { AttackSpec } from "../content/enemies.ts"
 import type { Area } from "../physics/areas.ts"

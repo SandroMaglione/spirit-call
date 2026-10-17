@@ -6,11 +6,12 @@
  * damage does: invulnerability, health, hit flash, knockback, death, and
  * the element it applies (see `features/elements.ts`).
  */
-import type { ReadCell, WriteCell } from "@typeonce/bevy-ts/Query"
-import { overlapsCircle } from "@typeonce/bevy-ts-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
-import * as SpatialGrid from "@typeonce/bevy-ts-math/SpatialGrid"
+import { Clock } from "@typeonce/ritmo"
+import type { ReadCell, WriteCell } from "@typeonce/ritmo/Query"
+import { overlapsCircle } from "@typeonce/ritmo-math/Box2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as SpatialGrid from "@typeonce/ritmo-math/SpatialGrid"
 import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
@@ -361,7 +362,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   const dead = new Set<number>()
   let kills = 0
   let energy = 0
-  const now = resources.time.get().elapsed
+  const now = Clock.elapsed(resources.time.get())
   const ledger = Object.fromEntries(Object.entries(resources.energyLedger.get()).filter(([, value]) => value.expires > now))
   let hitStop = 0
   for (const damage of events.damage.all()) {

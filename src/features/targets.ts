@@ -4,10 +4,10 @@
  * first, never the thrower's own side or an invulnerable body, and a
  * frontal shield facing the blow stops it.
  */
-import type { EntityId, Handle } from "@typeonce/bevy-ts/Entity"
-import type { Query } from "@typeonce/bevy-ts/Query"
-import { sweepCircleCircle } from "@typeonce/bevy-ts-math/Collide2"
-import type { Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import type { EntityId, Handle } from "@typeonce/ritmo/Entity"
+import type { Query } from "@typeonce/ritmo/Query"
+import { sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
+import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { Dash, Game, Health, Hurtbox, Invulnerable, Position, Shield } from "../schema.ts"
 import type { Faction, Root } from "../schema.ts"

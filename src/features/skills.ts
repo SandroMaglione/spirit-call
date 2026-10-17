@@ -19,8 +19,8 @@
  * that takes her off the ground (a plunge, a leap) keeps her in the air for
  * a moment (`Airborne`), acting on landing (`LandAirborne`).
  */
-import { sweepCircleBoxes } from "@typeonce/bevy-ts-math/Collide2"
-import { add, clampLength, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/bevy-ts-math/Vec2"
+import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { add, clampLength, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import {

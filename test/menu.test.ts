@@ -74,10 +74,10 @@ describe("the in-game menu", () => {
     run.runtime.tick(Game.Schedule(seed))
     const at = run.runtime.inspect(timers)
     run.step(120)
-    expect(run.runtime.inspect(timers)).toEqual(at)
+    expect(run.runtime.inspect(timers)).toEqual({ ...at, time: { ...at.time, dt: 0 } })
     run.runtime.send(UiRequest, { kind: "resume" })
     run.step(2)
-    expect(run.runtime.inspect(timers).time.elapsed).toBeGreaterThan(at.time.elapsed)
+    expect(run.runtime.inspect(timers).time.step).toBeGreaterThan(at.time.step)
     expect(run.runtime.inspect(timers).slow.remaining).toBeLessThan(at.slow.remaining)
   })
   it("pauses a run going on: the world stands still until it resumes", () => {

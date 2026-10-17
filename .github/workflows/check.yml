@@ -24,8 +24,8 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-      - name: Use the pinned or published bevy-ts
-        run: node scripts/use-published-bevy-ts.ts
+      - name: Use the pinned or published Ritmo
+        run: node scripts/use-ritmo.ts
       - name: Install
         run: pnpm install --no-frozen-lockfile
       - name: Typecheck, lint, and test
