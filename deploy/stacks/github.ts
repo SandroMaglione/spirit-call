@@ -17,7 +17,7 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Redacted from "effect/Redacted"
 
-const repository = { owner: "SandroMaglione", repository: "top-down-team-shooter" }
+const repository = { owner: "SandroMaglione", repository: "spirit-call" }
 
 export default Alchemy.Stack(
   "top-down-team-shooter-github",
