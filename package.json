@@ -27,6 +27,7 @@
     "app:android": "pnpm app && cap open android",
     "app:ios": "pnpm app && cap open ios",
     "app:assets": "capacitor-assets generate --android --ios --iconBackgroundColor '#072845' --iconBackgroundColorDark '#072845' --splashBackgroundColor '#0d1117' --splashBackgroundColorDark '#0d1117'",
+    "release": "pnpm --dir deploy release",
     "engine:prepare": "node scripts/use-ritmo.ts"
   },
   "dependencies": {

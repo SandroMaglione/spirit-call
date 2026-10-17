@@ -49,8 +49,8 @@ The build decides, in `vite.config.ts`:
 
 On Cloudflare (`deploy/alchemy.run.ts`), each stage is one or the other:
 
-- **`prod`, the release**: a release build, sending nothing; its Worker has
-  no key and refuses every run.
+- **`prod`, the release** (spirit-call.typeonce.dev): a release build,
+  sending nothing, deployed as static files alone: no `/api/`, no database.
 - **`playtest`, the testers' game**: a playtest build, its runs kept in the
   playtest database.
 - **A pull request's preview** (`pr-<n>`) or a laptop's own stage: a
@@ -121,7 +121,7 @@ its own origin: the server answers CORS for Capacitor's
 
 The testers' runs (the `playtest` stage's) go to the playtest database,
 its own Alchemy stack (`deploy/stacks/database.ts`, stage `shared`) that
-the stage binds to by reference (prod binds it too, and never writes).
+the stage binds to by reference (prod has no database at all).
 Every other stage (a pull request's preview, a laptop's deployed stage)
 makes a database of its own with the same migrations, destroyed with it,
 so only the `playtest` stage's runs are testers'.
@@ -171,8 +171,9 @@ Both take `--since 2d` (or a date), `--tester`, `--device`, `--build`, and
 The game is a finished release (`vision.md`): it changes only when its
 developer decides, and nothing changes it on its own.
 
-- **Prod and playtest deploy locally from main**: apply the playtest
-  database's new migrations, then deploy the chosen stage. See
+- **Prod and playtest deploy locally from main**: `pnpm release` deploys
+  prod; for playtest, apply the playtest database's new migrations, then
+  deploy it. See
   [local-workflows.md](local-workflows.md) for the commands. Merging to
   main deploys nothing; PR previews are created and removed locally too.
 - **bevy-ts stays at `ritmoRelease`**; moving it to a newer published
