@@ -1575,5 +1575,9 @@ export const whilePlaying = [Game.Condition.inState(Flow, "Playing"), Game.Condi
  */
 export const whileRunIsLive = [Game.Condition.inState(Flow, "Playing"), Game.Condition.not(paused)] as const
 
-/** Entities that belong to one run; despawned on restart. */
-export const RunScope = Game.EntityScope("Shooter/Run")
+/**
+ * Entities that belong to one run. Despawned whenever a run starts (entering
+ * `Playing`, a restart included), before `onEnter` spawns the next one; the
+ * result screens keep the finished run on screen behind them.
+ */
+export const RunScope = Game.EntityScope("Shooter/Run", { despawnOnEnter: [Flow, "Playing"] })

@@ -6,7 +6,7 @@
 import { Clock } from "@typeonce/ritmo"
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
-import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Tutorial, tutorialStart, Rng, Run, RunLog, RunResult, RunScope, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, PracticeField, Reaction, Tutorial, tutorialStart, Rng, Run, RunLog, RunResult, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { noGuard } from "./guard.ts"
 import { initialWaves } from "./waves.ts"
@@ -174,11 +174,4 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.paused.set({ paused: false })
   resources.practiceField.set({ spots: [], turn: 0 })
   resources.tutorial.set(tutorialStart)
-})
-
-/** Removes everything the previous run spawned (enemies, projectiles, hitboxes, spawn warnings). */
-export const ClearRun = Game.System("Shooter/ClearRun", {
-  commands: Game.System.commands(Game.System.despawnsScope(RunScope))
-}, ({ commands }) => {
-  commands.despawnScope(RunScope)
 })
