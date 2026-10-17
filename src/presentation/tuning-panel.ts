@@ -22,7 +22,7 @@ export const loadSavedTuning = (): Tuning => {
     const saved = localStorage.getItem(storageKey)
     if (saved === null) return defaultTuning
     const overrides = JSON.parse(saved) as ReadonlyArray<{ readonly path: TuningPath; readonly value: number | boolean }>
-    let tuning = defaultTuning
+    let tuning: Tuning = defaultTuning
     for (const { path, value } of overrides) {
       if (valueAt(defaultTuning, path) !== undefined) tuning = setAt(tuning, path, value)
     }

@@ -348,7 +348,7 @@ describe("ultimates (Shift)", () => {
   describe("an ultimate's moment", () => {
     // A shockwave for an ultimate (the Tide before the Tidal Echo): what it hits says when it went off.
     const tide = nova({ radius: 280, power: 50, element: "water", knockback: 950, active: 0.12, clearsProjectiles: true, hitStop: 0, heavy: true })
-    const novaTide = { ...sturdy, skills: { ...sturdy.skills, tide: { ...sturdy.skills.tide, effect: tide } } } as unknown as Tuning
+    const novaTide: Tuning = { ...sturdy, skills: { ...sturdy.skills, tide: { ...sturdy.skills.tide, effect: tide } } }
     const moment = defaultTuning.ultimate.moment
 
     it("stands the world still as she calls it up, then goes off where she called it", () => {

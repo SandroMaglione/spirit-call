@@ -3,13 +3,21 @@ import { atlasFrame } from "./animation-atlas.ts"
 import { advanceLocomotion, freshLocomotion } from "./animation.ts"
 import { Instance } from "./batch.ts"
 import type { ActorBody } from "./bodies.ts"
-import type { RenderAssets } from "./host-types.ts"
+import type { AnimationAtlas } from "./animation-atlas.ts"
+import type { Batch } from "./batch.ts"
 import type { BodyLook } from "./looks.ts"
+import type { ModelId, ModelSource } from "./models.ts"
+
+/** What an instanced body reads from the render assets (`RenderAssets` is one). */
+export interface BodyAssets {
+  animated(id: ModelId): { readonly batch: Batch; readonly atlas: Pick<AnimationAtlas, "clips"> }
+  model(id: ModelId): { readonly spec: Pick<ModelSource["spec"], "height"> }
+}
 
 let idlePhase = 0
 
 /** One transform and pose cursor per enemy; geometry, material and bones are shared. */
-export const instancedBody = (assets: RenderAssets, look: Extract<BodyLook, { kind: "model" }>, radius: number, height: number): ActorBody => {
+export const instancedBody = (assets: BodyAssets, look: Extract<BodyLook, { kind: "model" }>, radius: number, height: number): ActorBody => {
   const { batch, atlas } = assets.animated(look.model)
   const instance = new Instance(batch)
   const object = new Object3D()

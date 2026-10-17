@@ -66,7 +66,7 @@ export const plainAttack = (tuning: Tuning, cls: ClassId): BasicAttackSpec => at
 
 /** `tuning` with one more aspect, `id`: tests of aspects use made-up ones, so they hold whatever ships. */
 export const withAspect = (tuning: Tuning, id: string, spec: AspectSpec): Tuning =>
-  ({ ...tuning, aspects: { ...tuning.aspects, [id]: spec } }) as unknown as Tuning
+  ({ ...tuning, aspects: { ...tuning.aspects, [id]: spec } })
 
 /** `id` as an aspect's id (one added by `withAspect`). */
 export const aspectId = (id: string): AspectId => id as AspectId
@@ -77,7 +77,7 @@ export const testAspect = (tuning: Tuning, cls: ClassId, extra: Partial<AspectSp
 
 /** `tuning` with one more relic, `id`: tests of relics use made-up ones, so they hold whatever ships. */
 export const withRelic = (tuning: Tuning, id: string, spec: RelicSpec): Tuning =>
-  ({ ...tuning, relics: { ...tuning.relics, [id]: spec } }) as unknown as Tuning
+  ({ ...tuning, relics: { ...tuning.relics, [id]: spec } })
 
 /** `id` as a relic's id (one added by `withRelic`). */
 export const relicId = (id: string): RelicId => id as RelicId
@@ -100,14 +100,14 @@ export const windCut = cut({ length: 320, width: 120, power: 34, element: "wind"
 /** `tuning` with the Swordsman's special swapped for `windCut`. */
 export const withWindCut = (tuning: Tuning = defaultTuning): Tuning =>
   // The content types each skill by its effect; a test swaps one kind for another.
-  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Wind Cut", effect: windCut } } }) as unknown as Tuning
+  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Wind Cut", effect: windCut } } })
 
 /** The Barrage (the Gunner's ultimate before the Overdrive): fire shells lobbed one after the other around the cursor. */
 export const volley = barrage({ maxRange: 380, shells: 7, spread: 110, interval: 0.08, flightTime: 0.45, fuse: 0.15, radius: 70, power: 45, element: "fire", knockback: 260, hitStop: 0, heavy: false, leaves: { element: "fire", radius: 55, seconds: 3 } })
 
 /** `tuning` with the Gunner's ultimate swapped for `volley`. */
 export const withVolley = (tuning: Tuning = defaultTuning): Tuning =>
-  ({ ...tuning, skills: { ...tuning.skills, barrage: { ...tuning.skills.barrage, name: "Barrage", effect: volley } } }) as unknown as Tuning
+  ({ ...tuning, skills: { ...tuning.skills, barrage: { ...tuning.skills.barrage, name: "Barrage", effect: volley } } })
 
 /**
  * The Gale (the Swordsman's special before it became the Gust): a whirl at
@@ -118,7 +118,7 @@ export const gale = vortex({ maxRange: 0, radius: 270, seconds: 2.4, tick: 0.4, 
 
 /** `tuning` with the Swordsman's special swapped for `gale`. */
 export const withGale = (tuning: Tuning = defaultTuning): Tuning =>
-  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Gale", effect: gale } } }) as unknown as Tuning
+  ({ ...tuning, skills: { ...tuning.skills, bladeWave: { ...tuning.skills.bladeWave, name: "Gale", effect: gale } } })
 
 /** The Grenade (the Gunner's special before the Flare Jump): lobbed to the cursor, bursting in fire and leaving a fire pool. */
 export const grenadeSkill = {
@@ -147,20 +147,19 @@ export const splashSkill = {
  */
 export const withLobbedSpecials = (tuning: Tuning = defaultTuning): Tuning => {
   // Only the shipped ones are swapped: a test that set its own lob keeps it.
-  const skills = tuning.skills as Record<string, { readonly effect: { readonly kind: string } }>
-  return ({
+  return {
     ...tuning,
     skills: {
       ...tuning.skills,
-      flareJump: skills.flareJump!.effect.kind === "leap" ? grenadeSkill : skills.flareJump,
-      tidalWave: skills.tidalWave!.effect.kind === "plunge" ? splashSkill : skills.tidalWave
+      flareJump: tuning.skills.flareJump.effect.kind === "leap" ? grenadeSkill : tuning.skills.flareJump,
+      tidalWave: tuning.skills.tidalWave.effect.kind === "plunge" ? splashSkill : tuning.skills.tidalWave
     }
-  }) as unknown as Tuning
+  }
 }
 
 /** `tuning` (with the lobbed specials) whose Grenade is changed by `patch`. */
 export const withGrenade = (patch: Partial<typeof grenadeSkill.effect>, tuning: Tuning = defaultTuning): Tuning =>
-  ({ ...tuning, skills: { ...tuning.skills, flareJump: { ...grenadeSkill, effect: { ...grenadeSkill.effect, ...patch } } } }) as unknown as Tuning
+  ({ ...tuning, skills: { ...tuning.skills, flareJump: { ...grenadeSkill, effect: { ...grenadeSkill.effect, ...patch } } } })
 
 /** The gunner: the gun, the grenade as her special, and the Barrage as her ultimate. */
 export const gunner: BuildValue = { character: "gunner" }

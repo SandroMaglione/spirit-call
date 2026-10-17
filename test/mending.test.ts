@@ -27,7 +27,7 @@ const World = Game.Inspector("Test/Mending", {
 /** The Tidecaller with her shipped kit, sturdy dummies at `offsets`, aiming at `aim`. */
 const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: number; y: number }, options: StartOptions = {}, marking = false) => {
   const sturdy = tuningWith({ enemies: { dummy: { hp: 100_000 } } })
-  const tuning: Tuning = marking ? ({ ...sturdy, skills: { ...sturdy.skills, tidalWave: { ...sturdy.skills.tidalWave, effect: markingWave } } } as unknown as Tuning) : sturdy
+  const tuning: Tuning = marking ? { ...sturdy, skills: { ...sturdy.skills, tidalWave: { ...sturdy.skills.tidalWave, effect: markingWave } } } : sturdy
   const run = start({ tuning, kits: "shipped", build: tidecaller, ...options, pointer: [{ frame: 0, move: cursorAt(aim) }] })
   run.runtime.tick(placeDummies(offsets, tuning))
   const world = () => run.runtime.inspect(World)

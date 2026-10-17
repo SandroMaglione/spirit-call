@@ -29,7 +29,7 @@ import { invitationSlots } from "../content/auditions.ts"
 import { materialRules, materials } from "../content/materials.ts"
 import { progression } from "../content/progression.ts"
 import { chapters, chests, perfectRules, quests, rankRules } from "../content/quests.ts"
-import { skills } from "../content/skills.ts"
+import { skills, type SkillSpec } from "../content/skills.ts"
 
 /** Fixed-step timing. Changing these needs a reload. */
 export const engine = {
@@ -474,7 +474,14 @@ export const defaultTuning = {
   }
 }
 
-export type Tuning = typeof defaultTuning
+/**
+ * The tuning the simulation runs on: the shipped values' shape, except that a
+ * skill may carry any effect (a test or an experiment swaps one kind for
+ * another; the systems dispatch on `effect.kind`).
+ */
+export type Tuning = Omit<typeof defaultTuning, "skills"> & {
+  readonly skills: { readonly [Id in keyof typeof defaultTuning.skills]: SkillSpec }
+}
 
 type DeepPartial<T> = { [K in keyof T]?: DeepPartialValue<T[K]> }
 /** Distributes over unions, so nullable values (an enemy's `attack`) can be overridden with `null`. */

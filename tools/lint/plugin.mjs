@@ -10,6 +10,9 @@
  *   never from a package root (`effect`), which pulls in far more code.
  * - `shooter/deterministic-simulation`: no wall clocks, timers, or
  *   `Math.random` in the simulation, so a run replays exactly (use `Rng`).
+ * - `shooter/no-cast-escape`: no `as never` and no `as unknown as`, anywhere.
+ *   Both switch the type checker off for a value. Build the value with its
+ *   real type instead; if a library API cannot express it, fix the library.
  */
 import path from "node:path"
 
@@ -128,11 +131,27 @@ const deterministicSimulation = {
   }
 }
 
+const noCastEscape = {
+  meta: { type: "problem", docs: { description: "No `as never` and no `as unknown as`." } },
+  create(context) {
+    return {
+      TSAsExpression(node) {
+        if (node.typeAnnotation.type === "TSNeverKeyword") {
+          context.report({ node, message: "`as never` switches type checking off for this value: give it its real type (if a library API cannot take it, fix the library)." })
+        } else if (node.expression.type === "TSAsExpression" && node.expression.typeAnnotation.type === "TSUnknownKeyword") {
+          context.report({ node, message: "`as unknown as` switches type checking off for this value: build it with its real type (if a library API cannot express it, fix the library)." })
+        }
+      }
+    }
+  }
+}
+
 export default {
   meta: { name: "shooter" },
   rules: {
     "layer-boundaries": layerBoundaries,
     "no-effect-barrel": noEffectBarrel,
-    "deterministic-simulation": deterministicSimulation
+    "deterministic-simulation": deterministicSimulation,
+    "no-cast-escape": noCastEscape
   }
 }

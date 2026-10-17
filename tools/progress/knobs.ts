@@ -115,7 +115,7 @@ export type Values = { readonly [id: string]: number }
 /** The patch the changed knobs make, and the tuning it gives. */
 export const tuningFor = (values: Values): { readonly patch: Loose; readonly tuning: Tuning } => {
   let patch: Loose = {}
-  let tuning = defaultTuning
+  let tuning: Tuning = defaultTuning
   for (const knob of knobs) {
     const value = values[knob.id]
     if (value === undefined || value === knob.read(defaultTuning)) continue

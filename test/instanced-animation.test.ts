@@ -1,8 +1,7 @@
 import { BufferGeometry, Group, MeshLambertMaterial } from "three"
 import { describe, expect, it } from "vitest"
 import { Batch } from "../src/presentation/batch.ts"
-import { instancedBody } from "../src/presentation/instanced-body.ts"
-import type { RenderAssets } from "../src/presentation/host-types.ts"
+import { instancedBody, type BodyAssets } from "../src/presentation/instanced-body.ts"
 import type { BodyLook } from "../src/presentation/looks.ts"
 
 const body = (transitionSeconds?: number, timeBased = false) => {
@@ -14,7 +13,7 @@ const body = (transitionSeconds?: number, timeBased = false) => {
     ["Active", { offset: 153, frames: 13, seconds: .4, loop: false }],
     ["Recovery", { offset: 166, frames: 22, seconds: .7, loop: false }]
   ])
-  const assets = { animated: () => ({ batch, atlas: { clips } }), model: () => ({ spec: { height: 1 } }) } as unknown as RenderAssets
+  const assets: BodyAssets = { animated: () => ({ batch, atlas: { clips } }), model: () => ({ spec: { height: 1 } }) }
   const look: Extract<BodyLook, { kind: "model" }> = {
     kind: "model", model: "enemyGaleCaster", widthFactor: 1, heightFactor: 1,
     ...(transitionSeconds === undefined ? {} : { transitionSeconds }),
