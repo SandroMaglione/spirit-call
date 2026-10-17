@@ -314,7 +314,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     wards: Game.Query({ selection: { ward: Game.Query.read(Ward), enemy: Game.Query.read(Enemy) } })
   },
   events: {
-    damage: Game.System.readEvent(Damage),
+    damage: Game.System.thisTick(Game.System.readEvent(Damage)),
     hit: Game.System.writeEvent(Hit),
     death: Game.System.writeEvent(Death),
     reaction: Game.System.writeEvent(Reaction),
