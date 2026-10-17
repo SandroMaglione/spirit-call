@@ -27,6 +27,9 @@ import * as Layer from "effect/Layer"
 // The game's root: Alchemy builds it with the game's own Vite and config
 const rootDir = fileURLToPath(new URL("..", import.meta.url))
 
+// The stacks and their Cloudflare resources keep the game's working name
+// (top-down-team-shooter): renaming them would make new ones, and a new,
+// empty playtest database
 export default Alchemy.Stack(
   "top-down-team-shooter",
   {
