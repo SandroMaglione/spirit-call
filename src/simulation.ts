@@ -12,6 +12,7 @@
  * for (let step = 0; step < 60; step++) sim.runtime.tick(sim.fixedUpdate)
  * ```
  */
+import { HostClock } from "@typeonce/bevy-ts"
 import { Touch } from "@typeonce/bevy-ts-browser"
 import type { ChallengeId } from "./content/challenges.ts"
 
@@ -49,6 +50,8 @@ export interface SimulationOptions {
   readonly viewport?: ViewportValue
   /** What the controls start as (a phone's browser starts as touch); defaults to desktop. */
   readonly device?: "desktop" | "touch"
+  /** The clock the debug handle times systems with. Defaults to `HostClock.test()` (every timing 0, deterministic output). */
+  readonly hostClock?: HostClock.HostClock
 }
 
 export const defaultViewport: ViewportValue = { width: 1280, height: 720 }
@@ -56,6 +59,7 @@ export const defaultViewport: ViewportValue = { width: 1280, height: 720 }
 export const createSimulation = (options: SimulationOptions) => {
   const tuning = options.tuning ?? defaultTuning
   const viewport = options.viewport ?? defaultViewport
+  const hostClock = options.hostClock ?? HostClock.test()
   const runtime = Game.Runtime.make({
     services: Game.Runtime.services(
       Game.Runtime.service(KeyboardInput, options.keyboard),
@@ -69,8 +73,8 @@ export const createSimulation = (options: SimulationOptions) => {
       Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }, options.device)
     },
     machines: initialMachines(options.flow),
-    debug: true
+    debug: { hostClock }
   })
   runtime.debug.nameSchedules({ setup, fixedUpdate })
-  return { runtime, setup, fixedUpdate }
+  return { runtime, setup, fixedUpdate, hostClock }
 }

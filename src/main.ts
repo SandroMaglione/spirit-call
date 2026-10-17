@@ -1,6 +1,6 @@
 import { effect, signal } from "@preact/signals"
 import { Result } from "@typeonce/bevy-ts"
-import { FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
+import { BrowserHostClock, FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings, scriptedPartyTaps, touchButtons, touchLayout } from "./config/input.ts"
 import { defaultTuning, engine } from "./config/tuning.ts"
@@ -403,7 +403,7 @@ const start = async (mount: HTMLElement) => {
     },
     machines: initialMachines(flow),
     // The debug handle costs nothing until a trace listener is attached.
-    debug: true
+    debug: { hostClock: BrowserHostClock.make(window) }
   })
   runtime.tick(setup)
   runtime.tick(Game.Schedule(perfScene?.populate ?? stress.populate, Game.Schedule.applyDeferred()))

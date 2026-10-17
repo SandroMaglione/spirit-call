@@ -30,6 +30,7 @@ export const attachMonitor = <S extends Schema.Any, Root>(
   }
   return Monitor.attach(runtime, {
     schedules,
+    host: window,
     pick: (event) => {
       let best: number | undefined
       let bestDistance = pickRadius

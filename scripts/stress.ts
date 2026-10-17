@@ -9,6 +9,7 @@
  * also adds up the time spent in each system (traced, so slower overall:
  * compare systems with each other, and runs with `--systems` with each other).
  */
+import type { HostClock } from "@typeonce/bevy-ts"
 import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings } from "../src/config/input.ts"
@@ -35,6 +36,8 @@ if (sceneAt !== -1) {
   const count = Number(process.argv[sceneAt + 2])
   const enemies = Number.isFinite(count) && count > 0 ? count : 30
   const systems = process.argv.includes("--systems") ? new Map<string, number>() : undefined
+  // `--systems` sums per-system timings: a sub-millisecond clock, not `Date.now`.
+  const hostClock: HostClock.HostClock = { now: () => performance.now() }
   // Played several times: the first warms the JIT up, the rest are timed.
   const rounds = 4
   const times: Array<number> = []
@@ -50,7 +53,7 @@ if (sceneAt !== -1) {
       }
       if (round > 0) times.push(performance.now() - started)
       started = performance.now()
-    })
+    }, undefined, hostClock)
     hits = scene.hits()
   }
   report(`${name}: ${enemies} enemies, ${rounds - 1} × ${times.length / (rounds - 1)} steps, ${hits} hits each`, times)

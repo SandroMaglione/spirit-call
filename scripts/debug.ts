@@ -50,7 +50,8 @@ const InsideArena = Invariant.fromInspector(Game.Inspector("player inside arena"
 const session = Session.make(sim.runtime, {
   schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
   describe: { frame },
-  invariants: [InsideArena]
+  invariants: [InsideArena],
+  hostClock: sim.hostClock
 })
 
 console.log(session.run("setup"))

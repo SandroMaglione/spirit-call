@@ -8,6 +8,7 @@
  * reads back as the same number), and each sample is hashed (FNV-1a), so a
  * difference in the last bit of any of them shows.
  */
+import type { HostClock } from "@typeonce/bevy-ts"
 import { Keyboard, Pointer } from "@typeonce/bevy-ts-browser"
 
 import { keyBindings } from "../src/config/input.ts"
@@ -114,12 +115,13 @@ export const botProbe = (probe: ReturnType<typeof makeProbe>): BotProbe => ({ sy
  * upkeep, the team's energy kept full, and its count of hits. `onStep`
  * runs after every step.
  */
-export const playPerfScene = (scene: PerfScene, onStep: (runtime: ReturnType<typeof createSimulation>["runtime"], step: number) => void = () => undefined, extra?: ProbeSystem) => {
+export const playPerfScene = (scene: PerfScene, onStep: (runtime: ReturnType<typeof createSimulation>["runtime"], step: number) => void = () => undefined, extra?: ProbeSystem, hostClock?: HostClock.HostClock) => {
   const sim = createSimulation({
     keyboard: Keyboard.scripted(keyBindings, scene.keys),
     pointer: Pointer.scripted(scene.pointer),
     tuning: scene.tuning,
-    team: scene.team
+    team: scene.team,
+    ...(hostClock === undefined ? {} : { hostClock })
   })
   sim.runtime.tick(sim.setup)
   sim.runtime.tick(Game.Schedule(scene.populate, Game.Schedule.applyDeferred()))
