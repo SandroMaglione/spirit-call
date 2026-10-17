@@ -34,11 +34,12 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
     discs: Game.Query({ selection: { position: Game.Query.write(Position), disc: Game.Query.write(Disc) } }),
     targets: Targets,
     states: Game.Query({ selection: { state: Game.Query.read(ElementState) }, with: [Health] }),
-    walls: Walls
+    walls: Walls,
+    throwers: Throwers
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning) },
   events: { damage: Game.System.writeEvent(Damage), impact: Game.System.writeEvent(Impact) }
-}, ({ queries, resources, events, lookup, commands }) => {
+}, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const boxes = wallBoxes(queries.walls.each())
   const targets = queries.targets.each().map(({ entity, data }) => targetOf(entity.id, data))
@@ -122,7 +123,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         break
       }
       case "back": {
-        const thrower = lookup.getHandle(disc.thrower, Throwers)
+        const thrower = queries.throwers.getHandle(disc.thrower)
         const back = disc.back + dt
         if (!thrower.ok || back > maxBackSeconds) {
           commands.despawn(entity.id)

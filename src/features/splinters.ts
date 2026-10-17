@@ -41,16 +41,17 @@ const splintersFrom = (random: Random.Random, from: Vec2, faction: Faction, effe
 
 /** Splinters cast: taken up for a while (casting again starts it over), or burst out around her at once. */
 export const CastSplinters = Game.System("Shooter/CastSplinters", {
+  queries: { wielders: Wielders },
   resources: { rng: Game.System.writeResource(Rng) },
   events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
-}, ({ resources, events, lookup, commands }) => {
+}, ({ queries, resources, events, commands }) => {
   let random: Random.Random | undefined
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "splinters") continue
     const blow = castBlow(cast, effect)
     if (effect.seconds > 0) {
-      const wielder = lookup.getHandle(cast.caster, Wielders)
+      const wielder = queries.wielders.getHandle(cast.caster)
       if (wielder.ok) commands.insert(wielder.value.entity.id, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
       continue
     }

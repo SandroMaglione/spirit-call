@@ -29,12 +29,13 @@ const Callers = Game.Query({ selection: { position: Game.Query.read(Position), m
 
 /** Companions: called up behind the caster, in her likeness; they act one after the other, the first a moment after the call. */
 export const CastCompanions = Game.System("Shooter/CastCompanions", {
+  queries: { callers: Callers },
   events: { cast: Game.System.readEvent(Cast) }
-}, ({ events, lookup, commands }) => {
+}, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "companions") continue
-    const caller = lookup.getHandle(cast.caster, Callers)
+    const caller = queries.callers.getHandle(cast.caster)
     if (!caller.ok) continue
     const character = caller.value.data.member.get().character
     const blow = castBlow(cast, effect)

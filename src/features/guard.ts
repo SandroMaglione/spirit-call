@@ -21,8 +21,9 @@ const Casters = Game.Query({ selection: { position: Game.Query.read(Position) },
 
 /** Guards cast: a ring of stone bursts out around the caster, throwing back what crowds her, and she starts raising (casting again while raising starts over). */
 export const CastGuards = Game.System("Shooter/CastGuards", {
+  queries: { casters: Casters },
   events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
-}, ({ events, lookup, commands }) => {
+}, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "guard") continue
@@ -35,7 +36,7 @@ export const CastGuards = Game.System("Shooter/CastGuards", {
       hit: []
     }]))
     events.explosion.emit({ at: cast.from, radius: shove.radius, faction: cast.faction, kind: "upheaval", heavy: effect.heavy, element: effect.element })
-    const caster = lookup.getHandle(cast.caster, Casters)
+    const caster = queries.casters.getHandle(cast.caster)
     if (!caster.ok) continue
     commands.insert(caster.value.entity.id, [Raising, { remaining: effect.raise, effect, atk: cast.atk, charges: cast.charges }])
   }
@@ -80,10 +81,10 @@ const Breakable = Game.Query({ selection: { position: Game.Query.read(Position),
 
 /** Plates shattering: their blow lands around where they broke, and the attacker's break bar fills (a full one breaks, see `BuildPoise`). */
 export const ShatterPlates = Game.System("Shooter/ShatterPlates", {
-  queries: { shatters: Game.Query({ selection: { shatter: Game.Query.read(PlateShatter) } }) },
+  queries: { shatters: Game.Query({ selection: { shatter: Game.Query.read(PlateShatter) } }), breakable: Breakable },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { guarded: Game.System.writeEvent(Guarded) }
-}, ({ queries, resources, events, lookup, commands }) => {
+}, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   for (const { entity, data } of queries.shatters.each()) {
     commands.despawn(entity.id)
@@ -104,7 +105,7 @@ export const ShatterPlates = Game.System("Shooter/ShatterPlates", {
     }]))
     events.guarded.emit({ at, kind: "shattered" })
     if (attacker === null || effect.breakFill <= 0) continue
-    const struck = lookup.getHandle(attacker, Breakable)
+    const struck = queries.breakable.getHandle(attacker)
     if (!struck.ok) continue
     const { enemy, health, poise } = struck.value.data
     const bar = poiseOf(tuning, enemy.get().kind, health.get().max, enemy.get().champion)

@@ -14,12 +14,13 @@ const Wielders = Game.Query({ selection: { position: Game.Query.read(Position) }
 
 /** Overcharges cast: she takes it up (casting again starts it over), thunder bursting out around her. */
 export const CastOvercharges = Game.System("Shooter/CastOvercharges", {
+  queries: { wielders: Wielders },
   events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
-}, ({ events, lookup, commands }) => {
+}, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "overcharge") continue
-    const wielder = lookup.getHandle(cast.caster, Wielders)
+    const wielder = queries.wielders.getHandle(cast.caster)
     if (!wielder.ok) continue
     const strike = castBlow(cast, { ...effect, power: effect.dashStrike.power, knockback: effect.dashStrike.knockback, hitStop: 0.03, heavy: false })
     commands.insert(wielder.value.entity.id, [Overcharged, { remaining: effect.seconds, effect, blow: strike, skill: cast.skill }])

@@ -448,11 +448,13 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     targets: Game.Query({
       selection: { position: Game.Query.read(Position), hurtbox: Game.Query.read(Hurtbox), invulnerable: Game.Query.optional(Invulnerable), dash: Game.Query.optional(Dash) },
       with: [Health]
-    })
+    }),
+    dodgeAttackers: DodgeAttackers,
+    holders: Holders
   },
   resources: { time: Game.System.readResource(Time), tuning: Game.System.readResource(Tuning), slowMotion: Game.System.readResource(SlowMotion) },
   events: { damage: Game.System.writeEvent(Damage), dodged: Game.System.writeEvent(Dodged), explosion: Game.System.writeEvent(Explosion) }
-}, ({ queries, resources, events, commands, lookup }) => {
+}, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const slow = resources.slowMotion.get()
   const tuning = resources.tuning.get()
@@ -460,7 +462,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
   for (const { entity, data } of queries.hitboxes.each()) {
     let hitbox = data.hitbox.get()
     const sourceAttacker = hitbox.blow.source?.attacker
-    const dodgedEnemy = sourceAttacker === undefined ? undefined : lookup.getHandle(sourceAttacker, DodgeAttackers)
+    const dodgedEnemy = sourceAttacker === undefined ? undefined : queries.dodgeAttackers.getHandle(sourceAttacker)
     const window = dodgeWindowOf(tuning, dodgedEnemy?.ok === true ? dodgedEnemy.value.data.enemy.get() : undefined)
     // Not down yet (a hammer's windup): it strikes nothing meanwhile, and goes off as it comes down.
     if (hitbox.delay !== undefined && hitbox.delay > 0) {
@@ -476,7 +478,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
     }
     // A blow that moves with its attacker goes where the attacker was pushed (see `HitboxValue.follows`).
     const source = hitbox.follows === undefined ? undefined : hitbox.blow.source?.attacker
-    const holder = source === undefined ? undefined : lookup.getHandle(source, Holders)
+    const holder = source === undefined ? undefined : queries.holders.getHandle(source)
     if (hitbox.follows !== undefined && holder?.ok === true) {
       const at = holder.value.data.position.get()
       const offset = { x: at.x - hitbox.follows.x, y: at.y - hitbox.follows.y }

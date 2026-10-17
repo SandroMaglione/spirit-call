@@ -120,12 +120,12 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
   queries: { rocks: Game.Query({ selection: { rock: Game.Query.write(Rock) } }), bodies: Struck, holdable: Holdable },
   resources: { tuning: Game.System.readResource(Tuning), time: Game.System.readResource(Time) },
   events: { damage: Game.System.writeEvent(Damage), explosion: Game.System.writeEvent(Explosion) }
-}, ({ queries, resources, events, lookup, commands }) => {
+}, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
   for (const { entity, data } of queries.rocks.each()) {
     const rock = data.rock.get()
-    const followed = rock.target === null ? undefined : lookup.getHandle(rock.target, Struck)
+    const followed = rock.target === null ? undefined : queries.bodies.getHandle(rock.target)
     const at = followed?.ok === true ? followed.value.data.position.get() : rock.at
     const remaining = rock.remaining - dt
     if (remaining > 1e-9) {

@@ -139,10 +139,10 @@ export const PassiveHolders = Game.Query({ selection: { position: Game.Query.rea
  * live, even during hit-stop, so no kill is missed.
  */
 export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
-  queries: { players: Game.Query({ selection: { position: Game.Query.read(Position), passives: Game.Query.read(Passives) }, with: [Player] }) },
+  queries: { players: Game.Query({ selection: { position: Game.Query.read(Position), passives: Game.Query.read(Passives) }, with: [Player] }), holders: PassiveHolders },
   events: { action: Game.System.readEvent(Action), hit: Game.System.readEvent(Hit), perfect: Game.System.readEvent(PerfectDodged), broke: Game.System.readEvent(Broke), triggered: Game.System.writeEvent(TriggeredEffects) },
   resources: { cooldowns: Game.System.writeResource(PassiveCooldowns), time: Game.System.readResource(Time) }
-}, ({ queries, events, resources, lookup }) => {
+}, ({ queries, events, resources }) => {
   const now = resources.time.get().elapsed
   const cooldowns = { ...resources.cooldowns.get() }
   let waited = false
@@ -176,7 +176,7 @@ export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
   }
   for (const hit of events.hit.all()) {
     if (!hit.killed || hit.source === null) continue
-    const found = lookup.getHandle(hit.source.attacker, PassiveHolders)
+    const found = queries.holders.getHandle(hit.source.attacker)
     if (!found.ok) continue
     fire(hit.source.attacker, found.value.data.passives.get(), (trigger) => trigger.kind === "kill" && killMatches(trigger.state, hit.state), hit.at)
   }
@@ -207,14 +207,15 @@ const Wielders = Game.Query({
  * dropped.
  */
 export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects", {
+  queries: { wielders: Wielders, dashers: Dashers },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { triggered: Game.System.readEvent(TriggeredEffects), cast: Game.System.writeEvent(Cast), heal: Game.System.writeEvent(Heal) }
-}, ({ resources, events, lookup, commands }) => {
+}, ({ queries, resources, events, commands }) => {
   const queue = events.triggered.all()
   if (queue.length === 0) return
   const tuning = resources.tuning.get()
   for (const { holder, effect, there } of queue) {
-    const found = lookup.getHandle(holder, Wielders)
+    const found = queries.wielders.getHandle(holder)
     if (!found.ok) continue
     const { data } = found.value
     const self = data.position.get()
@@ -228,7 +229,7 @@ export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects"
         break
       }
       case "dashCharge": {
-        const dasher = lookup.getHandle(holder, Dashers)
+        const dasher = queries.dashers.getHandle(holder)
         if (!dasher.ok) break
         // A whole charge back; all of them back stops the wait for the next.
         const most = dashOf(tuning, dasher.value.data.member.get().character, traitsIn(dasher.value.data.passives)).charges

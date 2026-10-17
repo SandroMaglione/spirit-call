@@ -319,13 +319,17 @@ export const castBlow = (cast: CastValue, effect: SkillEffect): Blow =>
 /** Casters that turn toward what they cut (facing it a moment too). */
 const Turning = Game.Query({ selection: { position: Game.Query.read(Position), aim: Game.Query.write(Aim) } })
 const Facers = Game.Query({ selection: { position: Game.Query.read(Position), facing: Game.Query.write(Facing) } })
+/** Casters thrown along (a leap back, a dart), bodies that hop over low walls, and team members (who take to the air). */
+const Leapers = Game.Query({ selection: { position: Game.Query.read(Position), knockback: Game.Query.write(Knockback) } })
+const Hoppers = Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) } })
+const TeamMembers = Game.Query({ selection: { position: Game.Query.read(Position), member: Game.Query.read(Member) } })
 
 /** Cuts: a lane toward the aim that hits everything along it once, shortened by walls. */
 export const CastCuts = Game.System("Shooter/CastCuts", {
-  queries: { walls: Walls },
+  queries: { walls: Walls, turning: Turning, facers: Facers, leapers: Leapers },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { cast: Game.System.readEvent(Cast) }
-}, ({ queries, resources, events, lookup, commands }) => {
+}, ({ queries, resources, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "cut") continue
@@ -347,13 +351,13 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
       hit: [],
       pushAlong: direction
     }]))
-    const caster = lookup.getHandle(cast.caster, Turning)
+    const caster = queries.turning.getHandle(cast.caster)
     if (caster.ok) caster.value.data.aim.set(direction)
-    const facer = lookup.getHandle(cast.caster, Facers)
+    const facer = queries.facers.getHandle(cast.caster)
     if (facer.ok) facer.value.data.facing.set({ direction, hold: effect.active + 0.2 })
     // A dart: she is carried along it (a push, as a lunge is), as far as the cut reaches before a wall.
     const carried = Math.min(effect.carries, Math.max(0, length - effect.width / 4))
-    const pushed = carried > 0 ? lookup.getHandle(cast.caster, Leapers) : undefined
+    const pushed = carried > 0 ? queries.leapers.getHandle(cast.caster) : undefined
     if (pushed?.ok === true) {
       const push = scale(direction, carried * resources.tuning.get().knockback.decay)
       pushed.value.data.knockback.update((knockback) => ({ x: knockback.x + push.x, y: knockback.y + push.y }))
@@ -363,8 +367,9 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
 
 /** Blasts: a cone fanning out from the caster toward the aim, driving what it hits away from her; she turns that way. */
 export const CastBlasts = Game.System("Shooter/CastBlasts", {
+  queries: { turning: Turning, facers: Facers },
   events: { cast: Game.System.readEvent(Cast) }
-}, ({ events, lookup, commands }) => {
+}, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "blast") continue
@@ -376,9 +381,9 @@ export const CastBlasts = Game.System("Shooter/CastBlasts", {
       remaining: effect.active,
       hit: []
     }]))
-    const caster = lookup.getHandle(cast.caster, Turning)
+    const caster = queries.turning.getHandle(cast.caster)
     if (caster.ok) caster.value.data.aim.set(direction)
-    const facer = lookup.getHandle(cast.caster, Facers)
+    const facer = queries.facers.getHandle(cast.caster)
     if (facer.ok) facer.value.data.facing.set({ direction, hold: effect.active + 0.2 })
   }
 })
@@ -390,9 +395,9 @@ export const CastBlasts = Game.System("Shooter/CastBlasts", {
  * she keeps facing that way.
  */
 export const CastPlunges = Game.System("Shooter/CastPlunges", {
-  queries: { walls: Walls },
+  queries: { walls: Walls, facers: Facers, hoppers: Hoppers },
   events: { cast: Game.System.readEvent(Cast) }
-}, ({ queries, events, lookup, commands }) => {
+}, ({ queries, events, commands }) => {
   const walls = queries.walls.each()
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -401,12 +406,12 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
     const landing = lands === null
       ? blast({ radius, arcDegrees: 360, active, power, element, knockback, hitStop, heavy })
       : nova({ radius, active, power, element, knockback, hitStop, heavy, clearsProjectiles: lands.clearsProjectiles, heals: lands.heals })
-    const caster = lookup.getHandle(cast.caster, Facers)
+    const caster = queries.facers.getHandle(cast.caster)
     if (!caster.ok) continue
     const seconds = rise + dive
     caster.value.data.facing.set({ direction: cast.direction, hold: seconds + active + 0.2 })
     // Where she comes down: over low walls in her way, never past a tall one or the arena's edge.
-    const body = lookup.getHandle(cast.caster, Hoppers)
+    const body = queries.hoppers.getHandle(cast.caster)
     const to = body.ok
       ? hopLanding(cast.from, cast.direction, distance, body.value.data.body.get().radius, tallWallBoxes(walls), wallBoxes(walls.filter((wall) => wall.data.low.present)))
       : add(cast.from, scale(cast.direction, distance))
@@ -427,14 +432,11 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
  * faces (a push that carries her `distance`, see `Tuning.knockback`), in
  * the air meanwhile.
  */
-const Leapers = Game.Query({ selection: { position: Game.Query.read(Position), knockback: Game.Query.write(Knockback) } })
-const Hoppers = Game.Query({ selection: { position: Game.Query.read(Position), body: Game.Query.read(Body) } })
-const TeamMembers = Game.Query({ selection: { position: Game.Query.read(Position), member: Game.Query.read(Member) } })
-
 export const CastLeaps = Game.System("Shooter/CastLeaps", {
+  queries: { leapers: Leapers, teamMembers: TeamMembers, facers: Facers },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) }
-}, ({ resources, events, lookup, commands }) => {
+}, ({ queries, resources, events, commands }) => {
   const decay = resources.tuning.get().knockback.decay
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -449,13 +451,13 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
     }]))
     if (effect.leaves !== null) commands.spawnIn(RunScope, makeGround(effect.leaves, at, cast.atk, cast.charges))
     events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
-    const caster = lookup.getHandle(cast.caster, Leapers)
+    const caster = queries.leapers.getHandle(cast.caster)
     if (caster.ok) {
       const away = scale(cast.direction, -effect.distance * decay)
       caster.value.data.knockback.update((push) => ({ x: push.x + away.x, y: push.y + away.y }))
-      if (effect.air > 0 && lookup.getHandle(cast.caster, TeamMembers).ok) commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, glide: null, landing: [] }])
+      if (effect.air > 0 && queries.teamMembers.getHandle(cast.caster).ok) commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, glide: null, landing: [] }])
       // She keeps facing the way she was as she flies back.
-      const facer = lookup.getHandle(cast.caster, Facers)
+      const facer = queries.facers.getHandle(cast.caster)
       if (facer.ok) facer.value.data.facing.set({ direction: cast.direction, hold: effect.air + 0.1 })
     }
   }
@@ -504,13 +506,14 @@ export const CastBarrages = Game.System("Shooter/CastBarrages", {
  * her up into the air above it, to glide down where she steers.
  */
 export const CastVortices = Game.System("Shooter/CastVortices", {
+  queries: { teamMembers: TeamMembers },
   events: { cast: Game.System.readEvent(Cast) }
-}, ({ events, lookup, commands }) => {
+}, ({ queries, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "vortex") continue
     const soar = effect.soar
-    const rider = soar !== null && cast.skill !== null && cast.landing !== true ? lookup.getHandle(cast.caster, TeamMembers) : undefined
+    const rider = soar !== null && cast.skill !== null && cast.landing !== true ? queries.teamMembers.getHandle(cast.caster) : undefined
     if (soar !== null && rider?.ok === true) {
       const seconds = soar.rise + soar.hang + soar.glide
       commands.insert(rider.value.entity.id, [Airborne, { remaining: seconds, seconds, kind: "soar", dive: null, glide: { rise: soar.rise, seconds: soar.glide, speed: soar.speed }, landing: [] }])

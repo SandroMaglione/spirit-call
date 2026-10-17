@@ -381,14 +381,15 @@ const Feeders = Game.Query({ selection: { position: Game.Query.read(Position), b
  * hit-stop must not drop them).
  */
 export const FeedDash = Game.System("Shooter/FeedDash", {
+  queries: { feeders: Feeders },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { hit: Game.System.readEvent(Hit) }
-}, ({ resources, events, lookup }) => {
+}, ({ queries, resources, events }) => {
   const tuning = resources.tuning.get()
   for (const hit of events.hit.all()) {
     const move = hit.source?.move
     if (hit.faction !== "enemy" || hit.periodic || move === undefined || move.dash || hit.source === null) continue
-    const found = lookup.getHandle(hit.source.attacker, Feeders)
+    const found = queries.feeders.getHandle(hit.source.attacker)
     if (!found.ok) continue
     const attack = found.value.data.basicAttack.get()
     const feed = attackOf(tuning, attack.attack).dashFeed
