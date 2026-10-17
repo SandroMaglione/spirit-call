@@ -15,14 +15,14 @@
  */
 import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import { AttackReleased, Elite, Enemy, Game, Health, Hit, Hitbox, Rampage, RunScope, Time, Tuning } from "../schema.ts"
-import { makeGroupSpawns, PendingSpawnParts } from "./enemies.ts"
-import { GroundParts, makeGround } from "./ground.ts"
+import { AttackReleased, Elite, Enemy, Game, Health, Hit, Hitbox, Rampage, RunScope, Time, Tuning, Ground, PendingSpawn } from "../schema.ts"
+import { makeGroupSpawns } from "./enemies.ts"
+import { makeGround } from "./ground.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 
 export const LeavePools = Game.System("Shooter/LeavePools", {
   events: { released: Game.System.readEvent(AttackReleased) },
-  commands: Game.System.commands(Game.System.spawns(...GroundParts))
+  commands: Game.System.commands(Game.System.spawns(Ground))
 }, ({ events, commands }) => {
   for (const released of events.released.all()) {
     const spec = released.attack
@@ -64,7 +64,7 @@ export const CallSupport = Game.System("Shooter/CallSupport", {
   queries: { walls: Walls, elites: Game.Query({ selection: { elite: Game.Query.read(Elite) }, with: [Enemy] }) },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { released: Game.System.readEvent(AttackReleased) },
-  commands: Game.System.commands(Game.System.spawns(...PendingSpawnParts))
+  commands: Game.System.commands(Game.System.spawns(PendingSpawn))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   for (const released of events.released.all()) {

@@ -5,8 +5,8 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { elements } from "../src/content/elements.ts"
 import type { ElementId, StateId } from "../src/content/elements.ts"
 import { afflict, affinityDamage, burnDps, stateDamage } from "../src/features/elements.ts"
-import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
-import { GroundParts, makeGround } from "../src/features/ground.ts"
+import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
+import { makeGround } from "../src/features/ground.ts"
 import { Attacker, blow, Damage, Disarmed, ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Knockback, Player, Poise, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
 import { center, cursorAt, grenadeSkill, gunner, withGrenade, placeDummies, start, steps, withWindCut } from "./helpers.ts"
@@ -117,7 +117,7 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
   }
   /** Leaves pools of `element` at offsets from the player. */
   const pour = (pools: ReadonlyArray<{ readonly element: ElementId; readonly at: Vec2; readonly radius?: number; readonly seconds?: number }>) => {
-    const Pour = Game.System("Test/Pour", { commands: Game.System.commands(Game.System.spawns(...GroundParts)) }, ({ commands }) => {
+    const Pour = Game.System("Test/Pour", { commands: Game.System.commands(Game.System.spawns(Ground)) }, ({ commands }) => {
       for (const pool of pools) {
         commands.spawnIn(RunScope, makeGround({ element: pool.element, radius: pool.radius ?? 80, seconds: pool.seconds ?? 5 }, { x: center.x + pool.at.x, y: center.y + pool.at.y }, 100, true))
       }
@@ -450,7 +450,7 @@ describe("swept", () => {
 
   it("leaves a stunned enemy's attack on hold", () => {
     const run = range([], { x: 200, y: 0 })
-    const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 200, y: center.y }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
@@ -465,7 +465,7 @@ describe("swept", () => {
 
   it("cuts a disarmed enemy's windup and starts no attack, while it still moves; armed again, it attacks", () => {
     const run = range([], { x: 200, y: 0 })
-    const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 70, y: center.y }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))

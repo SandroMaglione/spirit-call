@@ -7,10 +7,10 @@ import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/inpu
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands, setAt } from "../src/dev/commands.ts"
 import { makeStress, stressTuning } from "../src/dev/stress.ts"
-import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
+import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
-import { Dash, FrameContext, Game, HitStop, KeyboardInput, PartyInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning } from "../src/schema.ts"
+import { Dash, FrameContext, Game, HitStop, KeyboardInput, PartyInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning, Enemy } from "../src/schema.ts"
 import { defaultViewport } from "../src/simulation.ts"
 import { ReadFlow, doubleTap, gunner, start, withGun } from "./helpers.ts"
 
@@ -28,7 +28,7 @@ describe("hit-stop", () => {
     const tuning = withGun(tuningWith({ feedback: { hitStopOnKill: 0.1 } }), { power: 1000, speed: 1_000_000, range: 100_000 })
     // A dummy right in front of the player dies to the first shot.
     const run = start({ tuning, build: gunner, pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }] })
-    const Spawn = Game.System("Test/SpawnTarget", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnTarget", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
@@ -52,7 +52,7 @@ describe("hit-stop", () => {
       pointer: [{ frame: 0, move: { x: 900, y: 360 }, press: ["primary"], release: ["primary"] }],
       keys: doubleTap("right", 2)
     })
-    const Spawn = Game.System("Test/SpawnTarget", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnTarget", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
@@ -159,7 +159,7 @@ describe("hit-stop and game over", () => {
     // Game-over detection must not be skipped by it, or the Death event is lost.
     const tuning = tuningWith({ characters: { swordsman: { stats: { hp: 5 } } }, feedback: { hitStopOnPlayerHit: 0.2 } })
     const run = start({ tuning })
-    const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+    const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: 1000, y: 900 }))
     })
     run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))

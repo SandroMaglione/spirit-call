@@ -6,9 +6,9 @@
 import * as Random from "@typeonce/ritmo-math/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { tuningWith } from "../config/tuning.ts"
-import { makeProjectile, ProjectileParts } from "../features/combat.ts"
-import { EnemyParts, makeEnemy } from "../features/enemies.ts"
-import { blow, Game, Invulnerable, Player, Projectile, RunScope } from "../schema.ts"
+import { makeProjectile } from "../features/combat.ts"
+import { EnemyOptionalParts, makeEnemy } from "../features/enemies.ts"
+import { blow, Game, Invulnerable, Player, Projectile, RunScope, Enemy } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
 
 export interface StressLoad {
@@ -35,7 +35,7 @@ export const makeStress = (tuning: TuningValue, load: StressLoad) => {
   const inArena = () => ({ x: random.range(80, tuning.arena.width - 80), y: random.range(80, tuning.arena.height - 80) })
 
   const populate = Game.System("Stress/Populate", {
-    commands: Game.System.commands(Game.System.spawns(...EnemyParts, Invulnerable))
+    commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts, Invulnerable))
   }, ({ commands }) => {
     for (let index = 0; index < load.enemies; index++) {
       const kind = load.mixed ? kinds[index % kinds.length]! : "dummy"
@@ -50,7 +50,7 @@ export const makeStress = (tuning: TuningValue, load: StressLoad) => {
       projectiles: Game.Query({ selection: { projectile: Game.Query.read(Projectile) } }),
       player: Game.Query({ selection: { invulnerable: Game.Query.write(Invulnerable) }, with: [Player] })
     },
-    commands: Game.System.commands(Game.System.spawns(...ProjectileParts))
+    commands: Game.System.commands(Game.System.spawns(Projectile))
   }, ({ queries, commands }) => {
     if (load.mixed) for (const { data } of queries.player.each()) data.invulnerable.set({ remaining: 1e9 })
     for (let count = queries.projectiles.each().length; count < load.projectiles; count++) {

@@ -109,7 +109,7 @@ export const CastLifts = Game.System("Shooter/CastLifts", {
       data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
       // Out of the fight while up: the team cannot touch it either.
       data.invulnerable.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
-      commands.insert(entity.id, [Lifted, { remaining: effect.seconds, seconds: effect.seconds, rise: effect.rise, blow }])
+      commands.insert(entity, [Lifted, { remaining: effect.seconds, seconds: effect.seconds, rise: effect.rise, blow }])
     }
   }
 })
@@ -129,7 +129,7 @@ export const UpdateLifted = Game.System("Shooter/UpdateLifted", {
       data.lifted.set({ ...lifted, remaining })
       continue
     }
-    commands.remove(entity.id, Lifted)
+    commands.remove(entity, Lifted)
     // Back in the fight as it lands: its fall lands on it.
     data.invulnerable.set({ remaining: 0 })
     events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "player", direction: { x: 0, y: 1 }, blow: lifted.blow })

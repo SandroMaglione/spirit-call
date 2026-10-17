@@ -2,7 +2,7 @@ import { NodeRegistry } from "@typeonce/ritmo-render"
 import { BoxGeometry, Group, MeshLambertMaterial } from "three"
 import { expect, it } from "vitest"
 import { defaultTuning } from "../src/config/tuning.ts"
-import { EnemyParts, makeEnemy } from "../src/features/enemies.ts"
+import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { AnimateActors } from "../src/presentation/animate.ts"
 import { Batch, Instance } from "../src/presentation/batch.ts"
 import type { RenderNode } from "../src/presentation/host-types.ts"
@@ -24,7 +24,7 @@ it("raises and holds Warden's staff from its ward state, with attacks and stun t
   })
   if (!made.ok) throw new Error(JSON.stringify(made.error))
   const runtime = made.value
-  const Spawn = Game.System("Test/SpawnWardModels", { commands: Game.System.commands(Game.System.spawns(...EnemyParts)) }, ({ commands }) => {
+  const Spawn = Game.System("Test/SpawnWardModels", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     commands.spawn(makeEnemy(defaultTuning, "warden", { x: 900, y: 900 }))
     commands.spawn(makeEnemy(defaultTuning, "chaser", { x: 960, y: 900 }))
   })

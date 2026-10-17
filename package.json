@@ -43,10 +43,10 @@
     "@fontsource/alegreya-sans": "^5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
     "@preact/signals": "2.11.3",
-    "@typeonce/ritmo": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/core",
-    "@typeonce/ritmo-browser": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/browser",
-    "@typeonce/ritmo-math": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/math",
-    "@typeonce/ritmo-render": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/render",
+    "@typeonce/ritmo": "0.8.0",
+    "@typeonce/ritmo-browser": "0.8.0",
+    "@typeonce/ritmo-math": "0.8.0",
+    "@typeonce/ritmo-render": "0.8.0",
     "effect": "4.0.2",
     "preact": "11.0.1",
     "three": "0.186.1"
@@ -55,7 +55,7 @@
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.5.3",
     "@effect/sql-sqlite-node": "4.0.2",
-    "@typeonce/ritmo-devtools": "link:.repos/ritmo-preview/1ec469fd865ae82d2f53a07f5f1662dd1363fe84/packages/devtools",
+    "@typeonce/ritmo-devtools": "0.8.0",
     "@types/node": "25.5.0",
     "@types/three": "0.186.0",
     "oxlint": "1.87.0",
@@ -69,6 +69,5 @@
       "sharp": "0.34.5"
     }
   },
-  "ritmoRelease": "0.7.0",
-  "ritmoSource": "1ec469fd865ae82d2f53a07f5f1662dd1363fe84"
+  "ritmoRelease": "0.8.0"
 }

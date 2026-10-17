@@ -14,9 +14,6 @@ import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
 import { shieldBlocks, sweepTargets, targetOf, Targets } from "./targets.ts"
 
-/** The components of `makeDisc`. */
-export const DiscParts = [Position, PrevPosition, Disc, Renderable] as const
-
 /** A disc leaving `at`, rendered like a projectile. */
 export const makeDisc = (at: Vec2, disc: DiscValue) =>
   Game.Command.spawn(

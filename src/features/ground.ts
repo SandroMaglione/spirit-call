@@ -14,9 +14,6 @@ import { elements } from "../content/elements.ts"
 import { ElementAffinities, ElementState, Game, Ground, Health, Hurtbox, Invulnerable, Position, Reaction, Time, Tuning } from "../schema.ts"
 import { afflict } from "./elements.ts"
 
-/** The components of `makeGround`. */
-export const GroundParts = [Ground] as const
-
 /** A pool of `spec`'s element around `center`, its burns from `atk`; `charges`: left by the player. */
 export const makeGround = (spec: GroundSpec, center: Vec2, atk: number, charges: boolean) =>
   Game.Command.spawn([Ground, { element: spec.element, center, radius: spec.radius, remaining: spec.seconds, duration: spec.seconds, atk, charges, permanent: false, half: null, out: 0 }])

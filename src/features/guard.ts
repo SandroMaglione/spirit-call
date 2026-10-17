@@ -39,7 +39,7 @@ export const CastGuards = Game.System("Shooter/CastGuards", {
     events.explosion.emit({ at: cast.from, radius: shove.radius, faction: cast.faction, kind: "upheaval", heavy: effect.heavy, element: effect.element })
     const caster = queries.casters.getHandle(cast.caster)
     if (!caster.ok) continue
-    commands.insert(caster.value.entity.id, [Raising, { remaining: effect.raise, effect, atk: cast.atk, charges: cast.charges }])
+    commands.insert(caster.value.entity, [Raising, { remaining: effect.raise, effect, atk: cast.atk, charges: cast.charges }])
   }
 })
 
@@ -64,7 +64,7 @@ export const RaiseGuards = Game.System("Shooter/RaiseGuards", {
     const raising = data.raising.get()
     const lost = !data.player.present || !data.position.present
     const remaining = raising.remaining - dt
-    if (lost || remaining <= 1e-9) commands.remove(entity.id, Raising)
+    if (lost || remaining <= 1e-9) commands.remove(entity, Raising)
     if (lost) continue
     if (remaining > 1e-9) {
       data.raising.set({ ...raising, remaining })

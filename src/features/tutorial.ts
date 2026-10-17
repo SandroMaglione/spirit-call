@@ -11,7 +11,7 @@ import type { TutorialStep } from "../content/tutorial.ts"
 import { Action, Cast, Challenge, Dash, Enemy, EnemyLevel, Energy, Game, Hit, Immortal, PendingSpawn, PerfectDodged, Player, Position, RunScope, Skills, SlowMotion, Time, Tuning, Tutorial, UltimateCalled } from "../schema.ts"
 import type { SkillsValue } from "../schema.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { EnemyParts, makeEnemy } from "./enemies.ts"
+import { EnemyOptionalParts, makeEnemy } from "./enemies.ts"
 
 /** How close to a move step's spot counts as there (world units). */
 export const tutorialSpotRadius = 70
@@ -58,7 +58,7 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
     called: Game.System.readEvent(UltimateCalled),
     perfect: Game.System.readEvent(PerfectDodged)
   },
-  commands: Game.System.commands(Game.System.spawns(...EnemyParts, Immortal), Game.System.despawns(Enemy, PendingSpawn))
+  commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts, Immortal), Game.System.despawns(Enemy, PendingSpawn))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const objective = tuning.challenges[resources.challenge.get()].objective

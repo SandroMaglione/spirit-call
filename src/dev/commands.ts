@@ -17,7 +17,7 @@ import { Descriptor } from "@typeonce/ritmo"
 import type { ReadonlyValue } from "@typeonce/ritmo/Query"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { makeGroupSpawns, PendingSpawnParts } from "../features/enemies.ts"
+import { makeGroupSpawns } from "../features/enemies.ts"
 import { Walls, wallBoxes } from "../features/motion.ts"
 import { Enemy, Game, PendingSpawn, Player, Position, Rng, RunScope, Tuning } from "../schema.ts"
 import type { EnemyKind } from "../schema.ts"
@@ -82,7 +82,7 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
   },
   resources: { tuning: Game.System.writeResource(Tuning), rng: Game.System.writeResource(Rng) },
   services: { commands: Game.System.service(DevCommands) },
-  commands: Game.System.commands(Game.System.spawns(...PendingSpawnParts), Game.System.despawns(Enemy, PendingSpawn))
+  commands: Game.System.commands(Game.System.spawns(PendingSpawn), Game.System.despawns(Enemy, PendingSpawn))
 }, ({ queries, resources, services, commands }) => {
   const queue = services.commands
   if (queue.crash) {

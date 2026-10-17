@@ -23,7 +23,7 @@ import * as Random from "@typeonce/ritmo-math/Random"
 import type { KeyBindings } from "../config/input.ts"
 import { tuningWith } from "../config/tuning.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { EnemyParts, makeEnemy } from "../features/enemies.ts"
+import { EnemyOptionalParts, makeEnemy } from "../features/enemies.ts"
 import { Enemy, Game, Health, Hit, Player, Position, PrevPosition, RunScope } from "../schema.ts"
 import type { BuildValue, EnemyKind, ViewportValue } from "../schema.ts"
 
@@ -112,7 +112,7 @@ const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number, 
 
   const populate = Game.System("Perf/Populate", {
     queries: { player: playerQuery },
-    commands: Game.System.commands(Game.System.spawns(...EnemyParts))
+    commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts))
   }, ({ queries, commands }) => {
     const around = queries.player.each()[0]?.data.position.get() ?? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
     for (let index = 0; index < enemies; index++) commands.spawnIn(RunScope, next(around))
@@ -123,7 +123,7 @@ const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number, 
       player: playerQuery,
       enemies: Game.Query({ selection: { position: Game.Query.write(Position), previous: Game.Query.write(PrevPosition), health: Game.Query.read(Health) }, with: [Enemy] })
     },
-    commands: Game.System.commands(Game.System.spawns(...EnemyParts))
+    commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts))
   }, ({ queries, commands }) => {
     steps += 1
     const around = queries.player.each()[0]?.data.position.get()

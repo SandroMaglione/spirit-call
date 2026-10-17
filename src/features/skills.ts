@@ -24,33 +24,32 @@ import { add, clampLength, normalizeOr, rotate, scale, subtract, type Vec2 } fro
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import {
-  Challenge,
   Aim,
   Airborne,
   Arrival,
-  Body,
-  Facing,
-  HitStop,
-  Member,
-  UltimateCalled,
-  UltimateMoment,
-  noUltimateMoment,
   blow,
+  Body,
   Cast,
+  Challenge,
   CombatStats,
   Controls,
   Damage,
   Enemy,
   Energy,
   Explosion,
+  Facing,
   Game,
+  Ground,
   Health,
   Hitbox,
+  HitStop,
   Hurtbox,
   Impact,
   Invulnerable,
   Knockback,
   Lobbed,
+  Member,
+  noUltimateMoment,
   Player,
   Position,
   Projectile,
@@ -59,11 +58,13 @@ import {
   SlowMotion,
   Time,
   Tuning,
+  UltimateCalled,
+  UltimateMoment,
   Vortex
 } from "../schema.ts"
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
-import { GroundParts, makeGround } from "./ground.ts"
+import { makeGround } from "./ground.ts"
 import { hopLanding, knockbackTaken, tallWallBoxes, Walls, wallBoxes } from "./motion.ts"
 import { paceOf } from "./time.ts"
 
@@ -297,7 +298,7 @@ export const LandAirborne = Game.System("Shooter/LandAirborne", {
     }
     // Landed: no more flying this step (see `ControlPlayer`).
     data.airborne.set({ ...airborne, remaining: 0 })
-    commands.remove(entity.id, Airborne)
+    commands.remove(entity, Airborne)
     if (!data.player.present || !data.position.present) continue
     const at = data.position.get()
     for (const cast of airborne.landing) events.cast.emit({ ...cast, from: at, at: { x: at.x + cast.direction.x, y: at.y + cast.direction.y }, landing: true })
@@ -330,7 +331,7 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
   queries: { walls: Walls, turning: Turning, facers: Facers, leapers: Leapers },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { cast: Game.System.readEvent(Cast) },
-  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox))
+  commands: Game.System.commands(Game.System.spawns(Ground, Hitbox))
 }, ({ queries, resources, events, commands }) => {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
@@ -419,7 +420,7 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
     const to = body.ok
       ? hopLanding(cast.from, cast.direction, distance, body.value.data.body.get().radius, tallWallBoxes(walls), wallBoxes(walls.filter((wall) => wall.data.low.present)))
       : add(cast.from, scale(cast.direction, distance))
-    commands.insert(caster.value.entity.id, [Airborne, {
+    commands.insert(caster.value.entity, [Airborne, {
       remaining: seconds,
       seconds,
       kind: "plunge",
@@ -440,7 +441,7 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
   queries: { leapers: Leapers, teamMembers: TeamMembers, facers: Facers },
   resources: { tuning: Game.System.readResource(Tuning) },
   events: { cast: Game.System.readEvent(Cast), explosion: Game.System.writeEvent(Explosion) },
-  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox), Game.System.inserts(Airborne))
+  commands: Game.System.commands(Game.System.spawns(Ground, Hitbox), Game.System.inserts(Airborne))
 }, ({ queries, resources, events, commands }) => {
   const decay = resources.tuning.get().knockback.decay
   for (const cast of events.cast.all()) {
@@ -460,7 +461,7 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
     if (caster.ok) {
       const away = scale(cast.direction, -effect.distance * decay)
       caster.value.data.knockback.update((push) => ({ x: push.x + away.x, y: push.y + away.y }))
-      if (effect.air > 0 && queries.teamMembers.getHandle(cast.caster).ok) commands.insert(caster.value.entity.id, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, glide: null, landing: [] }])
+      if (effect.air > 0 && queries.teamMembers.getHandle(cast.caster).ok) commands.insert(caster.value.entity, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, glide: null, landing: [] }])
       // She keeps facing the way she was as she flies back.
       const facer = queries.facers.getHandle(cast.caster)
       if (facer.ok) facer.value.data.facing.set({ direction: cast.direction, hold: effect.air + 0.1 })
@@ -524,7 +525,7 @@ export const CastVortices = Game.System("Shooter/CastVortices", {
     const rider = soar !== null && cast.skill !== null && cast.landing !== true ? queries.teamMembers.getHandle(cast.caster) : undefined
     if (soar !== null && rider?.ok === true) {
       const seconds = soar.rise + soar.hang + soar.glide
-      commands.insert(rider.value.entity.id, [Airborne, { remaining: seconds, seconds, kind: "soar", dive: null, glide: { rise: soar.rise, seconds: soar.glide, speed: soar.speed }, landing: [] }])
+      commands.insert(rider.value.entity, [Airborne, { remaining: seconds, seconds, kind: "soar", dive: null, glide: { rise: soar.rise, seconds: soar.glide, speed: soar.speed }, landing: [] }])
     }
     commands.spawnIn(RunScope, Game.Command.spawn([Vortex, {
       center: lobTarget(effect, cast.from, cast.at),
@@ -602,7 +603,7 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
   queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.write(Lobbed) } }) },
   resources: { time: Game.System.readResource(Time), slowMotion: Game.System.readResource(SlowMotion) },
   events: { explosion: Game.System.writeEvent(Explosion) },
-  commands: Game.System.commands(Game.System.spawns(...GroundParts, Hitbox), Game.System.despawns(Lobbed))
+  commands: Game.System.commands(Game.System.spawns(Ground, Hitbox), Game.System.despawns(Lobbed))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   for (const { entity, data } of queries.lobbed.each()) {

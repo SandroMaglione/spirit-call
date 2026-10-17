@@ -41,7 +41,7 @@ import { CastEarthrise, CastFaults, CastQuakes, UpdateRocks } from "./features/e
 import { ProcessPendingSpawns, SpawnTrainingDummies, SteerEnemies } from "./features/enemies.ts"
 import { CheckObjective } from "./features/challenges.ts"
 import { RecordRunLog } from "./features/run-log.ts"
-import { ClearRun, DetectGameOver, PauseWithKey, QueueRestart, RecordReactions, RecordTally, ResetRun, TrackRun } from "./features/flow.ts"
+import { DetectGameOver, PauseWithKey, QueueRestart, RecordReactions, RecordTally, ResetRun, TrackRun } from "./features/flow.ts"
 import { ApplyUiRequests } from "./features/menu.ts"
 import { RunTutorial } from "./features/tutorial.ts"
 import { CaptureKeys, CaptureParty, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
@@ -69,11 +69,9 @@ export const setup = Game.Schedule(
   startRun
 )
 
-/** Clears the previous run and starts a new one. */
+/** Starts a new run; the previous run's entities are already gone (`RunScope` despawns on entering `Playing`). */
 const restart = Game.Schedule(
   ResetRun,
-  ClearRun,
-  Game.Schedule.applyDeferred(),
   startRun
 )
 

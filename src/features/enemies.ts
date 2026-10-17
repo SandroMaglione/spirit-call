@@ -10,7 +10,7 @@ import * as SpatialGrid from "@typeonce/ritmo-math/SpatialGrid"
 import { trainingDummies } from "../content/arena.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { positive } from "../physics/sizes.ts"
-import { FighterBodyParts, makeBody } from "./bodies.ts"
+import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
 import { behaviorOf, currentAttack, hasLineOfSight } from "./moveset.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -101,9 +101,6 @@ export const restOf = (tuning: TuningValue, level: number, champion: boolean): n
   return early * (champion ? championPower(tuning, level).cooldown : 1)
 }
 
-/** Every component `makeEnemy` may give an enemy. */
-export const EnemyParts = [...FighterBodyParts, Enemy, Attacker, Marked, AttackPhase, Brain, EnemyMode, Poise, Renderable, Elite, Rampage, Shield, Ward] as const
-
 /**
  * An enemy of `kind` at `level` (see `EnemyLevel`); an elite one (see
  * `Tuning.elites`) when `elite` names its element: bigger, tougher, immune
@@ -111,6 +108,9 @@ export const EnemyParts = [...FighterBodyParts, Enemy, Attacker, Marked, AttackP
  * bigger still, much tougher, stronger, and faster; carrying a frontal
  * shield (see `Tuning.shields`) when `shield`.
  */
+/** The components `makeEnemy` adds only to some enemies: elites, champions, shields, warders. */
+export const EnemyOptionalParts = [Elite, Rampage, Shield, Ward] as const
+
 export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe: 1 | -1 = 1, level = 1, elite: EliteElement | null = null, champion = false, shield = false) => {
   const stats = tuning.enemies[kind]
   const base = enemyStats(tuning, kind, level)
@@ -164,9 +164,6 @@ export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, 
   })
 }
 
-/** The components of `makePendingSpawn`. */
-export const PendingSpawnParts = [PendingSpawn] as const
-
 /**
  * A spawn warning that becomes an enemy of `kind` (an elite, when `elite`
  * names its element; a champion, when `champion` too; shielded, when
@@ -189,7 +186,7 @@ export const respawnOf = (kind: EnemyKind, respawns: { readonly at: Vec2; readon
  */
 export const SpawnTrainingDummies = Game.System("Shooter/SpawnTrainingDummies", {
   resources: { tuning: Game.System.readResource(Tuning), challenge: Game.System.readResource(Challenge), level: Game.System.readResource(EnemyLevel) },
-  commands: Game.System.commands(Game.System.spawns(...EnemyParts, Immortal, Respawns))
+  commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts, Immortal, Respawns))
 }, ({ resources, commands }) => {
   const tuning = resources.tuning.get()
   const objective = tuning.challenges[resources.challenge.get()].objective
@@ -218,7 +215,7 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
     waves: Game.System.readResource(Waves),
     challenge: Game.System.readResource(Challenge)
   },
-  commands: Game.System.commands(Game.System.spawns(...EnemyParts, PracticeUnit, Respawns), Game.System.despawns(PendingSpawn))
+  commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts, PracticeUnit, Respawns), Game.System.despawns(PendingSpawn))
 }, ({ queries, resources, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
