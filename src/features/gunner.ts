@@ -22,7 +22,7 @@ export const CastOverdrives = Game.System("Shooter/CastOverdrives", {
     const wielder = queries.wielders.getHandle(cast.caster)
     if (!wielder.ok) continue
     const blast = castBlow(cast, { ...effect, power: effect.blast.power, knockback: 160, hitStop: 0, heavy: false })
-    commands.insert(wielder.value.entity.id, [Overdriven, { remaining: effect.seconds, effect, blast, skill: cast.skill }])
+    commands.insert(wielder.value.entity, [Overdriven, { remaining: effect.seconds, effect, blast, skill: cast.skill }])
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: cast.from, radius: effect.radius },
       faction: cast.faction,
@@ -44,7 +44,7 @@ export const TickOverdrives = Game.System("Shooter/TickOverdrives", {
   for (const { entity, data } of queries.overdriven.each()) {
     const overdriven = data.overdriven.get()
     const remaining = overdriven.remaining - dt
-    if (remaining <= 1e-9 || !data.player.present) commands.remove(entity.id, Overdriven)
+    if (remaining <= 1e-9 || !data.player.present) commands.remove(entity, Overdriven)
     else data.overdriven.set({ ...overdriven, remaining })
   }
 })

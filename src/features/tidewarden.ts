@@ -63,7 +63,7 @@ export const CastTidewarden = Game.System("Shooter/CastTidewarden", {
     events.damage.emit({ target: Game.Entity.handle(chosen.entity.id, Health), faction: cast.faction, direction: normalizeOr(subtract(at, cast.from), { x: 1, y: 0 }), blow: castBlow(cast, effect) })
     events.zap.emit({ path: [cast.from, at], heal: false, skill: cast.skill })
     const snap = castBlow(cast, { ...effect, power: effect.snap.power, knockback: effect.snap.knockback, hitStop: 0.12, heavy: true })
-    commands.insert(chosen.entity.id, [Turned, { faction: cast.faction, effect, remaining: effect.seconds, snap: { ...snap, charges: false, energyAction: undefined }, skill: cast.skill }])
+    commands.insert(chosen.entity, [Turned, { faction: cast.faction, effect, remaining: effect.seconds, snap: { ...snap, charges: false, energyAction: undefined }, skill: cast.skill }])
     chosen.data.hurtbox.update((hurtbox) => ({ ...hurtbox, faction: cast.faction }))
     // The lash cuts off what it was winding up at her (see `UpdateAttacks`): it turns from a standstill.
     chosen.data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, 0.35) }))
@@ -150,7 +150,7 @@ export const UpdateTurned = Game.System("Shooter/UpdateTurned", {
       data.turned.set({ ...turned, remaining })
       continue
     }
-    commands.remove(entity.id, Turned)
+    commands.remove(entity, Turned)
     data.hurtbox.update((hurtbox) => ({ ...hurtbox, faction: "enemy" }))
     const at = data.position.get()
     const from = field === undefined ? at : field.data.position.get()

@@ -24,7 +24,7 @@ export const CastOvercharges = Game.System("Shooter/CastOvercharges", {
     const wielder = queries.wielders.getHandle(cast.caster)
     if (!wielder.ok) continue
     const strike = castBlow(cast, { ...effect, power: effect.dashStrike.power, knockback: effect.dashStrike.knockback, hitStop: 0.03, heavy: false })
-    commands.insert(wielder.value.entity.id, [Overcharged, { remaining: effect.seconds, effect, blow: strike, skill: cast.skill }])
+    commands.insert(wielder.value.entity, [Overcharged, { remaining: effect.seconds, effect, blow: strike, skill: cast.skill }])
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: cast.from, radius: effect.radius },
       faction: cast.faction,
@@ -56,7 +56,7 @@ export const TickOvercharges = Game.System("Shooter/TickOvercharges", {
     const overcharged = data.overcharged.get()
     const remaining = overcharged.remaining - dt
     if (remaining <= 1e-9 || !data.player.present) {
-      commands.remove(entity.id, Overcharged)
+      commands.remove(entity, Overcharged)
       continue
     }
     data.overcharged.set({ ...overcharged, remaining })

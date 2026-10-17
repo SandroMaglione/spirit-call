@@ -53,7 +53,7 @@ export const CastSplinters = Game.System("Shooter/CastSplinters", {
     const blow = castBlow(cast, effect)
     if (effect.seconds > 0) {
       const wielder = queries.wielders.getHandle(cast.caster)
-      if (wielder.ok) commands.insert(wielder.value.entity.id, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
+      if (wielder.ok) commands.insert(wielder.value.entity, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
       continue
     }
     random ??= Random.make(resources.rng.get().state)
@@ -86,7 +86,7 @@ export const ThrowSplinters = Game.System("Shooter/ThrowSplinters", {
     const splintering = data.splintering.get()
     const remaining = splintering.remaining - dt
     if (remaining <= 1e-9 || !data.player.present) {
-      commands.remove(entity.id, Splintering)
+      commands.remove(entity, Splintering)
       continue
     }
     data.splintering.set({ ...splintering, remaining })

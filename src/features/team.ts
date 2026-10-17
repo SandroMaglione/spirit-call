@@ -222,10 +222,10 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   }
   // The body leaves the one on the field (the same components any body has), and her attack is interrupted.
   const outgoing = field.data.member.get()
-  for (const [component] of fieldParts(tuning, outgoing, at, carried)) commands.remove(field.entity.id, component)
+  commands.remove(field.entity, ...FieldParts)
   if (fell) events.action.emit({ kind: "fall", at, character: outgoing.character, facing: carried.facing })
   if (incoming === undefined) return
-  commands.insert(field.entity.id, [BasicAttack, initialBasicAttack({ attack: field.data.basicAttack.get().attack })])
+  commands.insert(field.entity, [BasicAttack, initialBasicAttack({ attack: field.data.basicAttack.get().attack })])
   commands.insert(incoming.entity, ...fieldParts(tuning, incoming, at, carried))
   resources.teamSwitch.set({ cooldown: tuning.team.switchCooldown })
   // After a fall, a beat: the enemies slow to a crawl while the one who fell goes down, and the one coming in stands held.
