@@ -35,7 +35,8 @@ export const FollowCamera = Game.System("Shooter/FollowCamera", {
 
 /** Snaps the camera onto the player, e.g. after spawning. */
 export const SnapCamera = Game.System("Shooter/SnapCamera", {
-  queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) },
+  // The team this run just spawned: SpawnTeam must run first, with an applyDeferred() in between.
+  queries: { player: Game.System.thisTick(Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] })) },
   resources: { camera: Game.System.writeResource(Camera) }
 }, ({ queries, resources }) => {
   const player = queries.player.singleOptional()
