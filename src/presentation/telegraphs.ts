@@ -57,9 +57,9 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   for (const { data } of queries.pools.each()) {
     const pool = data.ground.get()
     // An arena hazard is a place of its own, laid into the floor (see `presentation/hazards.ts`).
-    if (pool.permanent) continue
+    if (pool.timer === null) continue
     const color = view.elements[pool.element]
-    const fade = Math.min(1, pool.remaining / view.pools.fadeSeconds)
+    const fade = Math.min(1, pool.timer.remaining / view.pools.fadeSeconds)
     const pulse = pool.element === "fire" ? 0.75 + 0.25 * Math.sin(now * 13 + pool.center.x) * Math.sin(now * 7.3 + pool.center.y) : 1
     g.fillCircle(pool.center.x, pool.center.y, pool.radius, color, view.pools.fill * pulse * fade)
     g.strokeCircle(pool.center.x, pool.center.y, pool.radius, 3, color, view.pools.outline * fade)

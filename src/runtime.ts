@@ -35,6 +35,7 @@ export const initialResources = (
   EnemyLevel: enemyLevel,
   Twist: twist,
   PassiveCooldowns: {},
+  SecondWinds: [],
   Mending: { ready: 0 },
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),

@@ -501,7 +501,7 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
       if (!areaTouchesCircle(hitbox.area, position, hurtbox.radius)) {
         // Not in its way any more, but it lands where she stood when she dashed, just now: dodged.
         const dash = target.data.dash.present ? target.data.dash.get() : undefined
-        if (dash !== undefined && dash.since <= window && areaTouchesCircle(hitbox.area, dash.from, hurtbox.radius)) {
+        if (dash !== undefined && dash.since !== null && dash.since <= window && areaTouchesCircle(hitbox.area, dash.from, hurtbox.radius)) {
           events.dodged.emit({ target: Game.Entity.handle(target.entity.id, Health), at: position, attacker })
         }
         continue

@@ -221,7 +221,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
       ? { kind: "circle", center: pool.center, radius: pool.radius }
       : { kind: "lane", origin: { x: pool.center.x - pool.half.x, y: pool.center.y }, direction: { x: 1, y: 0 }, length: pool.half.x * 2, halfWidth: pool.half.y }
     // A cost to walk through (it burns), not a wall: see `playOut`.
-    threats.push({ kind: "area", area, from: 0, to: pool.remaining, seen: Infinity, soft: true })
+    threats.push({ kind: "area", area, from: 0, to: pool.timer === null ? Infinity : pool.timer.remaining, seen: Infinity, soft: true })
   }
   for (const { data } of queries.hitboxes.each()) {
     const hitbox = data.hitbox.get()

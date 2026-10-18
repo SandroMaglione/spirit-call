@@ -15,7 +15,6 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "skipLibCheck": true,
-    "noErrorTruncation": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "types": ["node", "vite/client"]

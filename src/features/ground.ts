@@ -16,7 +16,7 @@ import { afflict } from "./elements.ts"
 
 /** A pool of `spec`'s element around `center`, its burns from `atk`; `charges`: left by the player. */
 export const makeGround = (spec: GroundSpec, center: Vec2, atk: number, charges: boolean) =>
-  Game.Command.spawn([Ground, { element: spec.element, center, radius: spec.radius, remaining: spec.seconds, duration: spec.seconds, atk, charges, permanent: false, half: null, out: 0 }])
+  Game.Command.spawn([Ground, { element: spec.element, center, radius: spec.radius, timer: { remaining: spec.seconds, duration: spec.seconds }, atk, charges, half: null, out: 0 }])
 
 /** Whether a pool does anything now: an arena pool put out does not, until it is back. */
 export const active = (pool: { readonly out: number }): boolean => pool.out <= 0
@@ -28,8 +28,8 @@ export const inPool = (pool: { readonly center: Vec2; readonly radius: number; r
     : Math.abs(at.x - pool.center.x) <= pool.half.x + hurtbox / 2 && Math.abs(at.y - pool.center.y) <= pool.half.y + hurtbox / 2
 
 /** How long a pool has been down (an arena's: always, so any newer one wins over it). */
-const age = (pool: { readonly permanent: boolean; readonly duration: number; readonly remaining: number }): number =>
-  pool.permanent ? Infinity : pool.duration - pool.remaining
+const age = (pool: { readonly timer: { readonly remaining: number; readonly duration: number } | null }): number =>
+  pool.timer === null ? Infinity : pool.timer.duration - pool.timer.remaining
 
 /**
  * Runs pools down, puts out the older of two pools of different elements
@@ -62,17 +62,17 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
   for (const pool of pools) {
     const ground = pool.data.ground.get()
     // An arena pool stays where it is, for good; one put out comes back in a while.
-    if (ground.permanent) {
+    if (ground.timer === null) {
       if (ground.out > 0) pool.data.ground.set({ ...ground, out: Math.max(0, ground.out - dt) })
       live.push(pool)
       continue
     }
-    const remaining = ground.remaining - dt
+    const remaining = ground.timer.remaining - dt
     if (remaining <= 0) {
       commands.despawn(pool.entity)
       continue
     }
-    pool.data.ground.set({ ...ground, remaining })
+    pool.data.ground.set({ ...ground, timer: { ...ground.timer, remaining } })
     live.push(pool)
   }
 
@@ -84,12 +84,12 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
     const newer = live.some((other) => {
       const there = other.data.ground.get()
       if (other === pool || there.element === ground.element || !active(there) || out.has(other.entity.id)) return false
-      if (there.permanent || age(there) >= age(ground)) return false
+      if (there.timer === null || age(there) >= age(ground)) return false
       return Math.hypot(there.center.x - ground.center.x, there.center.y - ground.center.y) < there.radius + ground.radius
     })
     if (!newer) continue
     out.add(pool.entity.id)
-    if (ground.permanent) pool.data.ground.set({ ...ground, out: tuning.hazards.relightSeconds })
+    if (ground.timer === null) pool.data.ground.set({ ...ground, out: tuning.hazards.relightSeconds })
     else commands.despawn(pool.entity)
     events.reaction.emit({ at: ground.center, kind: "out", state: elements[ground.element].state, faction: null })
   }

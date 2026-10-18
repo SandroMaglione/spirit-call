@@ -44,7 +44,7 @@ export const initialBasicAttack = (build: { readonly attack: AttackRef }): Basic
   slowed: 1,
   spent: 0,
   reloading: 0,
-  sinceDashStrike: Infinity,
+  sinceDashStrike: null,
   fed: -1
 })
 
@@ -193,8 +193,8 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     const ready = cooldown <= 0 && reloading <= 0 && !data.raising.present && grounded
     // A press during a dash, or just after it, is the dash strike: once per dash, cutting a recovery short.
     const dash = data.dash.get()
-    const sinceDashStrike = current.sinceDashStrike + dt
-    const dashing = dash.since <= tuning.dash.duration + tuning.dash.attackWindow && sinceDashStrike > dash.since
+    const sinceDashStrike = current.sinceDashStrike === null ? null : current.sinceDashStrike + dt
+    const dashing = dash.since !== null && dash.since <= tuning.dash.duration + tuning.dash.attackWindow && (sinceDashStrike === null || sinceDashStrike > dash.since)
 
     // Charging: the hold counts from the press; releasing at full charge queues the power move.
     let powerQueued = current.powerQueued

@@ -47,7 +47,7 @@ import {
   Knockback,
   Mantle,
   Member,
-  PassiveCooldowns,
+  SecondWinds,
   Passives,
   Paused,
   PendingSpawn,
@@ -333,7 +333,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     tuning: Game.System.readResource(Tuning),
     stats: Game.System.writeResource(Stats),
     energyLedger: Game.System.writeResource(EnergyLedger),
-    passiveCooldowns: Game.System.writeResource(PassiveCooldowns),
+    secondWinds: Game.System.writeResource(SecondWinds),
     time: Game.System.readResource(Time),
     hitStop: Game.System.writeResource(HitStop),
     challenge: Game.System.readResource(Challenge),
@@ -419,12 +419,12 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       : training && data.player.present ? Math.max(Math.min(1, health.current), health.current - amount) : Math.max(0, health.current - amount)
     // A second wind (the Survival slot's): once a run, a blow that would fell her leaves her standing, untouchable a moment.
     const wind = data.player.present && data.member.present && data.passives.present ? secondWindPercent(data.passives.get()) : null
-    const windKey = data.member.present ? `secondWind/${data.member.get().slot}` : ""
+    const slot = data.member.present ? data.member.get().slot : -1
     let caught = false
-    if (current <= 0 && wind !== null && resources.passiveCooldowns.get()[windKey] === undefined) {
+    if (current <= 0 && wind !== null && !resources.secondWinds.get().includes(slot)) {
       current = Math.max(1, (health.max * wind) / 100)
       caught = true
-      resources.passiveCooldowns.set({ ...resources.passiveCooldowns.get(), [windKey]: Infinity })
+      resources.secondWinds.set([...resources.secondWinds.get(), slot])
       events.heal.emit({ at: data.position.get(), amount: current })
     }
     // Only landed attacks and specials charge energy; damage and level do not set the award.

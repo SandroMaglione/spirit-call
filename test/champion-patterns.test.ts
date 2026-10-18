@@ -246,7 +246,7 @@ describe("champion movesets", () => {
     let fire = 0
     for (let step = 0; step < steps(3) && fire === 0; step++) {
       run.step()
-      fire = run.runtime.inspect(Pools).filter((pool) => pool.element === "fire" && !pool.permanent).length
+      fire = run.runtime.inspect(Pools).filter((pool) => pool.element === "fire" && pool.timer !== null).length
     }
     expect(fire).toBeGreaterThan(0)
   })

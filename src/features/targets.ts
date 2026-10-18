@@ -23,7 +23,7 @@ export interface Target {
   /** A frontal shield, if any: blows arriving within `cosHalfAngle` of `facing` are blocked. */
   readonly shield: { readonly facing: Vec2; readonly cosHalfAngle: number } | undefined
   /** Where its last dash started and how long ago (the player), for perfect dodges; `undefined` for a body that does not dash. */
-  readonly dashed: { readonly from: Vec2; readonly since: number } | undefined
+  readonly dashed: { readonly from: Vec2; readonly since: number | null } | undefined
 }
 
 /** Bodies a thing in flight can hit. */
@@ -108,7 +108,7 @@ export const sweepDodgers = (
   }
   for (const target of candidates) {
     if (target.faction === faction || hit.includes(target.id)) continue
-    const fresh = target.dashed !== undefined && target.dashed.since <= window
+    const fresh = target.dashed !== undefined && target.dashed.since !== null && target.dashed.since <= window
     if ((target.invulnerable && touches(target.at, target.radius)) || (fresh && touches(target.dashed!.from, target.radius))) dodgers.push(target)
   }
   return dodgers

@@ -30,7 +30,7 @@ const splintersFrom = (random: Random.Random, from: Vec2, faction: Faction, effe
       from,
       to: { x: from.x + Math.cos(angle) * distance, y: from.y + Math.sin(angle) * distance },
       faction,
-      effect: lob({ power, element, knockback, hitStop, heavy, radius, flightTime: flight, fuse, leaves: null, maxRange: Infinity }),
+      effect: lob({ power, element, knockback, hitStop, heavy, radius, flightTime: flight, fuse, leaves: null, maxRange: distance }),
       blow,
       elapsed: 0,
       splinter: true,

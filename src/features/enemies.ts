@@ -291,8 +291,8 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
     const boxes = wallBoxes(queries.walls.each())
     // Pools enemies keep out of: fire anywhere, and the arena's basins (each enemy minds those it is not immune to).
     // The arena's hazards they also path around, as if walls (they are not: a push still sends them in).
-    const pools = queries.pools.each().map(({ data }) => data.ground.get()).filter((pool) => active(pool) && (pool.element === "fire" || pool.permanent))
-    const laid = pools.flatMap((pool) => (pool.permanent && pool.half !== null
+    const pools = queries.pools.each().map(({ data }) => data.ground.get()).filter((pool) => active(pool) && (pool.element === "fire" || pool.timer === null))
+    const laid = pools.flatMap((pool) => (pool.timer === null && pool.half !== null
       ? [{ minX: pool.center.x - pool.half.x, minY: pool.center.y - pool.half.y, maxX: pool.center.x + pool.half.x, maxY: pool.center.y + pool.half.y }]
       : []))
     const avoided = laid.length === 0 ? boxes : [...boxes, ...laid]
@@ -438,7 +438,7 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
           const obstacles = wants > 1
             ? [
               ...boxes.map((box) => ({ box, reach: rules.reach })),
-              ...minded.flatMap((pool) => (pool.permanent && pool.half !== null
+              ...minded.flatMap((pool) => (pool.timer === null && pool.half !== null
                 ? [{ box: { minX: pool.center.x - pool.half.x, minY: pool.center.y - pool.half.y, maxX: pool.center.x + pool.half.x, maxY: pool.center.y + pool.half.y }, reach: tuning.crowd.hazardMargin + rules.reach }]
                 : []))
             ]

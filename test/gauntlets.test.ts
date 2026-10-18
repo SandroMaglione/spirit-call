@@ -56,7 +56,8 @@ describe("the Gauntlets", () => {
       const opened = run.state().step
       // The second press comes out of a dash: the dash strike.
       run.runtime.tick(Game.Schedule(setDash({ since: 0.02 })))
-      for (let i = 0; i < 8 && run.state().sinceDashStrike > 0.1; i++) run.step(1)
+      const struckJustNow = () => { const since = run.state().sinceDashStrike; return since !== null && since <= 0.1 }
+      for (let i = 0; i < 8 && !struckJustNow(); i++) run.step(1)
       // It was the dash strike.
       expect(run.state().sinceDashStrike).toBeLessThan(0.1)
       const struck = run.state().step

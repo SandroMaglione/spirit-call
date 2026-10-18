@@ -20,7 +20,7 @@
  * a moment (`Airborne`), acting on landing (`LandAirborne`).
  */
 import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
-import { add, clampLength, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import { add, clampLength, length as lengthOf, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import {
@@ -500,9 +500,10 @@ export const CastBarrages = Game.System("Shooter/CastBarrages", {
     const effect = cast.effect
     if (effect.kind !== "barrage") continue
     const { power, element, knockback, hitStop, heavy, flightTime, fuse, radius, leaves } = effect
-    const shell = lob({ power, element, knockback, hitStop, heavy, flightTime, fuse, radius, leaves, maxRange: Infinity })
     const blow = castBlow(cast, effect)
     barrageTargets(effect, lobTarget(effect, cast.from, cast.at), cast.direction).forEach((to, index) => {
+      // Each shell is already aimed: its range is just how far it flies.
+      const shell = lob({ power, element, knockback, hitStop, heavy, flightTime, fuse, radius, leaves, maxRange: lengthOf(subtract(to, cast.from)) })
       commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, { from: cast.from, to, faction: cast.faction, effect: shell, blow, elapsed: -index * effect.interval }]))
     })
   }

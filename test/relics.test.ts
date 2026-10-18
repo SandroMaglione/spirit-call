@@ -31,7 +31,7 @@ const World = Game.Inspector("Test/Relics", {
 }, ({ queries }) => ({
   enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current, state: data.state.get().current?.id ?? null })),
   dash: queries.player.each()[0]!.data.dash.get(),
-  ground: queries.ground.each().map(({ data }) => data.ground.get()).filter((pool) => !pool.permanent),
+  ground: queries.ground.each().map(({ data }) => data.ground.get()).filter((pool) => pool.timer !== null),
   vortices: queries.vortices.each().length,
   rocks: queries.rocks.each().length
 }))

@@ -175,7 +175,7 @@ describe("arenas", () => {
     const run = start({ arena: "kilnworks" })
     const world = run.runtime.inspect(World)
     const spec = defaultTuning.arenas.kilnworks
-    expect(world.pools.filter((pool) => pool.permanent && pool.element === "fire")).toHaveLength(spec.hazards.length)
+    expect(world.pools.filter((pool) => pool.timer === null && pool.element === "fire")).toHaveLength(spec.hazards.length)
     expect(world.walls).toBe(4 + spec.pillars.length + (spec.props?.length ?? 0) + spec.walls.length + 2 * spec.hazards.length)
   })
 
@@ -187,11 +187,11 @@ describe("arenas", () => {
     })
     run.runtime.tick(Game.Schedule(Douse, Game.Schedule.applyDeferred()))
     run.step(3)
-    const doused = () => run.runtime.inspect(World).pools.find((pool) => pool.permanent && pool.center.x === at.x && pool.center.y === at.y)!
+    const doused = () => run.runtime.inspect(World).pools.find((pool) => pool.timer === null && pool.center.x === at.x && pool.center.y === at.y)!
     expect(doused().out).toBeGreaterThan(0)
     run.step(steps(defaultTuning.hazards.relightSeconds) + 2)
     expect(doused().out).toBe(0)
-    expect(run.runtime.inspect(World).pools.filter((pool) => pool.permanent)).toHaveLength(defaultTuning.arenas.kilnworks.hazards.length)
+    expect(run.runtime.inspect(World).pools.filter((pool) => pool.timer === null)).toHaveLength(defaultTuning.arenas.kilnworks.hazards.length)
   })
 
   it("burn whoever walks into a fire trench", () => {
