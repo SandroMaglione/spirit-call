@@ -15,10 +15,11 @@
  * to `.data/determinism/` (not committed), and a failing run writes its own
  * to `.data/determinism/current/`, to compare.
  *
- * The fingerprints are CI's (Linux, x64): record them there (a `node:24`
- * container with `--platform linux/amd64` will do). A Mac with Apple silicon
- * plays `bot:stormFront` a last bit differently, so that one fight fails
- * there even on an unchanged commit.
+ * The same fingerprints hold on every platform (checked on Linux x64, Linux
+ * arm64, and macOS on Apple silicon): the simulation's math goes through
+ * Ritmo's `Ops`, which returns the same bits on every engine and CPU, and the
+ * `ritmo/use-ops-for-math` lint keeps engine-dependent `Math` out of it. CI
+ * runs on Linux x64; record there or locally, either gives the same file.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
