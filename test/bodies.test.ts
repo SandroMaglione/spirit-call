@@ -7,7 +7,7 @@ import { bodyRules, bodyScore, dashScore } from "../src/content/characters.ts"
 import { dashOf } from "../src/features/build.ts"
 import { knockbackTaken } from "../src/features/motion.ts"
 import { Enemy, Game, Poise } from "../src/schema.ts"
-import { center, cursorAt, doubleTap, placeDummies, start } from "./helpers.ts"
+import { center, cursorAt, doubleTap, placeDummies, start, expectOk } from "./helpers.ts"
 
 describe("a character's dash", () => {
   it("is the reference dash with what her body changes in it", () => {
@@ -53,7 +53,7 @@ describe("a character's impact", () => {
     const tuning: Tuning = tuningWith({ enemies: { dummy: { hp: 100_000, poise: 0.5 } }, characters: { swordsman: { impact } } })
     const target = { x: 60, y: 0 }
     const run = start({ tuning, pointer: [{ frame: 0, move: cursorAt(target), press: ["primary"], release: ["primary"] }] })
-    run.runtime.tick(placeDummies([target], tuning))
+    expectOk(run.runtime.tick(placeDummies([target], tuning)))
     run.step(6)
     return run.runtime.inspect(Bars)[0]!
   }

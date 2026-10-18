@@ -16,9 +16,9 @@ import { Invariant, Session } from "@typeonce/ritmo-devtools"
 
 import { keyBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
-import { frame } from "../src/presentation/schedule.ts"
 import { Game, Player, Position } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
+import { hostSide } from "./lint-target.ts"
 
 // Timeline frame n is read by fixed step n + 1 (setup is frame 1 of the session).
 const sim = createSimulation({
@@ -45,11 +45,11 @@ const InsideArena = Invariant.fromInspector(Game.Inspector("player inside arena"
   return undefined
 }))
 
-// The render schedule needs renderer services the headless runtime lacks: describe it
-// (so its event reads count in lints) without running it.
+// The render schedule and the dev panel need services the headless runtime lacks: describe
+// them (so their reads count in lints) without running them, as `pnpm lint:game` does.
 const session = Session.make(sim.runtime, {
   schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
-  describe: { frame },
+  ...hostSide,
   invariants: [InsideArena],
   hostClock: sim.hostClock
 })

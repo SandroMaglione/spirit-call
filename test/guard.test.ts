@@ -8,7 +8,7 @@ import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { blow, Damage, ElementState, Enemy, Energy, Game, Guard, Health, Invulnerable, Knockback, Player, Poise, Position } from "../src/schema.ts"
-import { center, cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
+import { center, cursorAt, doubleTap, placeDummies, start, steps, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const effect = defaultTuning.skills.stoneGuard.effect
@@ -43,8 +43,8 @@ const World = Game.Inspector("Test/Guard", {
 const field = (dummies: ReadonlyArray<Vec2>, options: StartOptions = {}) => {
   const tuning = tuningWith({ enemies: { dummy: { hp: 100_000, poise: 0.5 } } })
   const run = start({ tuning, build: bastion, pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }) }], ...options })
-  run.runtime.tick(placeDummies(dummies, tuning))
-  run.runtime.tick(Game.Schedule(FillEnergy))
+  expectOk(run.runtime.tick(placeDummies(dummies, tuning)))
+  expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
   const world = () => run.runtime.inspect(World)
   /** A blow on the player from the dummy at `from` (its attacker), or from no one; `periodic`: a burn. */
   const strike = (from: Vec2 | null, damage: number, periodic = false) => {
@@ -65,7 +65,7 @@ const field = (dummies: ReadonlyArray<Vec2>, options: StartOptions = {}) => {
         })
       }
     })
-    run.runtime.tick(Game.Schedule(Strike))
+    expectOk(run.runtime.tick(Game.Schedule(Strike)))
   }
   /** Replaces the dummies with ones at `offsets`. */
   const place = (offsets: ReadonlyArray<Vec2>) => run.runtime.tick(placeDummies(offsets, tuning))

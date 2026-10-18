@@ -9,7 +9,7 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { earthriseTargets } from "../src/features/earthrise.ts"
 import type { RockTarget } from "../src/features/earthrise.ts"
 import { ElementState, Enemy, Game, Health, Poise, Position, Rock, Stunned } from "../src/schema.ts"
-import { center, cursorAt, placeDummies, start, steps } from "./helpers.ts"
+import { center, cursorAt, placeDummies, start, steps, expectOk } from "./helpers.ts"
 
 const effect = defaultTuning.skills.stoneRise.effect
 const from = { x: 0, y: 0 }
@@ -71,7 +71,7 @@ describe("Bastion's Earthrise", () => {
     const offsets = [{ x: 150, y: 0 }, { x: -120, y: 90 }, { x: 900, y: 0 }]
     expect(defaultTuning.characters.bastion.skills.special).toBe("stoneRise")
     const run = start({ tuning, build: { character: "bastion" }, kits: "shipped", pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 1, press: ["special"], release: ["special"] }] })
-    run.runtime.tick(placeDummies(offsets, tuning))
+    expectOk(run.runtime.tick(placeDummies(offsets, tuning)))
     run.step(4)
     // The cracks are out; nothing has erupted yet.
     expect(run.runtime.inspect(World).rocks).toBe(effect.rocks)

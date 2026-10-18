@@ -9,7 +9,7 @@ import { screenDirectionToWorld } from "../src/math/iso.ts"
 import type { LobMove } from "../src/content/attacks.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { Controls, Enemy, Energy, Game, Lobbed, Player, Position, Projectile, RunScope, Velocity } from "../src/schema.ts"
-import { ClearEnemies, gunner, plainAttack, start, swordsman, tidecaller, withWindCut, grenadeSkill, volley, withVolley } from "./helpers.ts"
+import { ClearEnemies, gunner, plainAttack, start, swordsman, tidecaller, withWindCut, grenadeSkill, volley, withVolley, expectOk } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 /** A screen direction (y down) as the unit world direction the game uses. */
@@ -109,7 +109,7 @@ describe("touch controls", () => {
       const Spawn = Game.System("Test/SpawnDummy", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
         commands.spawnIn(RunScope, makeEnemy(defaultTuning, "dummy", dummy))
       })
-      run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+      expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
       return run
     }
 
@@ -148,21 +148,21 @@ describe("touch controls", () => {
     expect(dash.direction.y).toBeCloseTo(right.y, 6)
 
     const tide = start({ build: tidecaller, touch: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
-    tide.runtime.tick(Game.Schedule(Charge))
+    expectOk(tide.runtime.tick(Game.Schedule(Charge)))
     tide.step(2)
     expect(tide.player().invulnerable).toBeCloseTo(defaultTuning.skills.tide.invulnerability, 6)
   })
 
   it("uses each button's skill by its kind: the Tide goes off on touch, the Barrage on release", () => {
     const tide = start({ build: tidecaller, touch: [{ frame: 1, press: ["ultimate"] }] })
-    tide.runtime.tick(Game.Schedule(Charge))
+    expectOk(tide.runtime.tick(Game.Schedule(Charge)))
     tide.step(2)
     expect(tide.player().invulnerable).toBeCloseTo(defaultTuning.skills.tide.invulnerability, 6)
 
     // A volley (the Barrage before the Overdrive) for an ultimate aimed at a point.
     const spec = volley
     const thrown = start({ tuning: withVolley(tuningWith({ touch: { assist: { enabled: false } } })), build: gunner, touch: [{ frame: 0, press: ["ultimate"] }, { frame: 2, release: ["ultimate"] }] })
-    thrown.runtime.tick(Game.Schedule(Charge))
+    expectOk(thrown.runtime.tick(Game.Schedule(Charge)))
     thrown.step(2)
     expect(thrown.runtime.inspect(World).grenades).toEqual([])
     thrown.step(1)
@@ -263,7 +263,7 @@ describe("touch controls", () => {
     const Remove = Game.System("Test/RemovePlayer", { queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) }, commands: Game.System.commands(Game.System.despawns(Player)) }, ({ queries, commands }) => {
       for (const { entity } of queries.player.each()) commands.despawn(entity)
     })
-    run.runtime.tick(Game.Schedule(Remove, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Remove, Game.Schedule.applyDeferred())))
     const AimPoint = Game.Inspector("Test/AimPoint", { resources: { controls: Game.System.readResource(Controls) } }, ({ resources }) => resources.controls.get())
     const before = run.runtime.inspect(AimPoint).aimPoint
     run.step(30)

@@ -17,7 +17,7 @@ import { dashOf } from "../src/features/build.ts"
 import { damageBonusPercent } from "../src/features/passives.ts"
 import { blow, Damage, Game, Health, Player } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { center, doubleTap, start, testRelic, withRelic } from "./helpers.ts"
+import { center, doubleTap, start, testRelic, withRelic, expectOk } from "./helpers.ts"
 
 const relic = (id: RelicId, tier: 1 | 2 | 3 = 1) => ({ id, tier })
 
@@ -36,7 +36,7 @@ const alone = (build: BuildValue, keys: Parameters<typeof start>[0] extends infe
         events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "enemy", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0, element: null }) })
       }
     })
-    run.runtime.tick(Game.Schedule(Strike))
+    expectOk(run.runtime.tick(Game.Schedule(Strike)))
     // Past the blow, its hit-stop, and the untouchable moment after it.
     run.step(Math.ceil(3 / engine.step.dt))
   }

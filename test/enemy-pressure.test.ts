@@ -9,7 +9,7 @@ import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { aimPoint } from "../src/features/moveset.ts"
 import { Attacker, AttackPhase, ElementState, Enemy, Game, Health, Player, RunScope, Stats, Velocity } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { center, ClearEnemies, start, steps } from "./helpers.ts"
+import { center, ClearEnemies, start, steps, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Pressure", {
@@ -31,7 +31,7 @@ const arena = (kind: EnemyKind, offsets: ReadonlyArray<Vec2>, tuning: Tuning, op
   const Spawn = Game.System("Test/SpawnPressure", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(sturdy, kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -55,7 +55,7 @@ describe("enemy elements", () => {
     const Soak = Game.System("Test/Soak", { queries: { player: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Player] }) } }, ({ queries }) => {
       for (const { data } of queries.player.each()) data.state.set({ current: { id: "soaked", remaining: 30, atk: 0, nextTick: 0, charges: false } })
     })
-    run.runtime.tick(Game.Schedule(Soak))
+    expectOk(run.runtime.tick(Game.Schedule(Soak)))
     const before = run.world().player!.health
     for (let step = 0; step < steps(4) && run.world().player!.health === before; step++) run.step()
     expect(run.world().player!.health).toBeLessThan(before)

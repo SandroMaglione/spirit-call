@@ -84,7 +84,7 @@ const fresh = (tuning: TuningValue, character: CharacterId, passives: ReadonlyAr
   motion: { previous: at, velocity: { x: 0, y: 0 }, invulnerable: 0 },
   aim: { x: 1, y: 0 },
   facing: { x: 1, y: 0 },
-  dash: { remaining: 0, charges: dashOf(tuning, character, traitsOf(passives)).charges, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: Infinity, perfect: false, from: { x: 0, y: 0 } }
+  dash: { remaining: 0, charges: dashOf(tuning, character, traitsOf(passives)).charges, cooldown: 0, buffered: 0, direction: { x: 1, y: 0 }, since: null, perfect: false, from: { x: 0, y: 0 } }
 })
 
 /** The components of `fieldParts`. */

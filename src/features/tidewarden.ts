@@ -12,6 +12,7 @@
  * side go for each other (`SteerEnemies`). Then it goes back.
  */
 import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { elements } from "../content/elements.ts"
 import { Cast, Damage, Disarmed, Dome, ElementAffinities, ElementState, Enemy, Game, Health, Hitbox, Hurtbox, Invulnerable, Player, Position, Reaction, RunScope, Time, Stunned, Tuning, Turned, Zap } from "../schema.ts"
 import { afflict } from "./elements.ts"
@@ -51,7 +52,7 @@ export const CastTidewarden = Game.System("Shooter/CastTidewarden", {
       const at = data.position.get()
       // Never a champion: it is the fight's own.
       return !data.turned.present && !data.enemy.get().champion && hurtbox.faction !== cast.faction && data.health.get().current > 0 &&
-        Math.hypot(at.x - cast.from.x, at.y - cast.from.y) - hurtbox.radius <= effect.radius
+        Ops.hypot(at.x - cast.from.x, at.y - cast.from.y) - hurtbox.radius <= effect.radius
     })
     const chosen = candidates.reduce<(typeof candidates)[number] | undefined>(
       (best, candidate) => best === undefined || candidate.data.health.get().current > best.data.health.get().current ? candidate : best,
@@ -111,7 +112,7 @@ export const UpdateDomes = Game.System("Shooter/UpdateDomes", {
       const hurtbox = body.data.hurtbox.get()
       if (hurtbox.faction === dome.faction) continue
       const at = body.data.position.get()
-      if (Math.hypot(at.x - center.x, at.y - center.y) > dome.effect.radius + hurtbox.radius) continue
+      if (Ops.hypot(at.x - center.x, at.y - center.y) > dome.effect.radius + hurtbox.radius) continue
       inside.push(body.entity.id)
       if (element === null || (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0)) continue
       // Like a pool: given to a body in none, kept on one in it, never bursting another.

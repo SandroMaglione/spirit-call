@@ -9,6 +9,7 @@
  */
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as Random from "@typeonce/ritmo-math/Random"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { lob } from "../content/skills.ts"
 import type { SkillId, SplintersEffect } from "../content/skills.ts"
 import { isMelee } from "../content/attacks.ts"
@@ -28,9 +29,9 @@ const splintersFrom = (random: Random.Random, from: Vec2, faction: Faction, effe
     const fuse = random.range(effect.fuse.first, effect.fuse.last)
     return {
       from,
-      to: { x: from.x + Math.cos(angle) * distance, y: from.y + Math.sin(angle) * distance },
+      to: { x: from.x + Ops.cos(angle) * distance, y: from.y + Ops.sin(angle) * distance },
       faction,
-      effect: lob({ power, element, knockback, hitStop, heavy, radius, flightTime: flight, fuse, leaves: null, maxRange: Infinity }),
+      effect: lob({ power, element, knockback, hitStop, heavy, radius, flightTime: flight, fuse, leaves: null, maxRange: distance }),
       blow,
       elapsed: 0,
       splinter: true,
@@ -56,11 +57,10 @@ export const CastSplinters = Game.System("Shooter/CastSplinters", {
       if (wielder.ok) commands.insert(wielder.value.entity, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
       continue
     }
-    random ??= Random.make(resources.rng.get().state)
+    random ??= Random.draw(resources.rng)
     for (const splinter of splintersFrom(random, cast.from, cast.faction, effect, blow, cast.skill)) commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, splinter]))
     events.explosion.emit({ at: cast.from, radius: effect.near, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
   }
-  if (random !== undefined) resources.rng.set({ state: random.state })
 })
 
 const Throwers = Game.Query({
@@ -99,10 +99,9 @@ export const ThrowSplinters = Game.System("Shooter/ThrowSplinters", {
       landed.push({ x: action.at.x + action.direction.x * action.move.reach, y: action.at.y + action.direction.y * action.move.reach })
     }
     if (landed.length === 0) continue
-    random ??= Random.make(resources.rng.get().state)
+    random ??= Random.draw(resources.rng)
     for (const at of landed) {
       for (const splinter of splintersFrom(random, at, "player", splintering.effect, splintering.blow, splintering.skill)) commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, splinter]))
     }
   }
-  if (random !== undefined) resources.rng.set({ state: random.state })
 })

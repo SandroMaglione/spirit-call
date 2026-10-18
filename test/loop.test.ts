@@ -1,4 +1,4 @@
-import { FixedLoop } from "@typeonce/ritmo-browser"
+import { FixedLoop } from "@typeonce/ritmo"
 import { describe, expect, it } from "vitest"
 
 import { engine } from "../src/config/tuning.ts"

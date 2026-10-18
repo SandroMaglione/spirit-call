@@ -9,6 +9,7 @@
  * pace, and stand still in a hit-stop.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { areaTouchesCircle } from "../physics/areas.ts"
 import { Enemy, Game, Health, Hit, HitStop, Hurtbox, Player, Poise, Position, SlowMotion, Stunned, Time, Tuning, Ward } from "../schema.ts"
@@ -20,7 +21,7 @@ const slack = 1.25
 
 /** Whether a body of `radius` at `at` touches the tether from `from` to `to`. */
 export const crossesTether = (from: Vec2, to: Vec2, at: Vec2, radius: number): boolean => {
-  const length = Math.hypot(to.x - from.x, to.y - from.y)
+  const length = Ops.hypot(to.x - from.x, to.y - from.y)
   if (length <= 0) return false
   return areaTouchesCircle({ kind: "lane", origin: from, direction: normalizeOr(subtract(to, from), { x: 1, y: 0 }), length, halfWidth: 2 }, at, radius)
 }
@@ -80,7 +81,7 @@ export const UpdateWards = Game.System("Shooter/UpdateWards", {
         struck.has(Game.Entity.handle(entity.id, Health)) ||
         data.stunned.get().remaining > 0 ||
         data.poise.get().broken > 0 ||
-        Math.hypot(ally.at.x - at.x, ally.at.y - at.y) > spec.range * slack ||
+        Ops.hypot(ally.at.x - at.x, ally.at.y - at.y) > spec.range * slack ||
         (her !== undefined && crossesTether(at, ally.at, her.at, her.radius))
       if (cut) {
         taken.delete(ward.ally.id)
@@ -96,9 +97,9 @@ export const UpdateWards = Game.System("Shooter/UpdateWards", {
       continue
     }
     // The ally nearest her within its range: the one she is fighting. Never itself, nor one warded already.
-    const reach = allies.filter((ally) => ally.id !== entity.id && !taken.has(ally.id) && Math.hypot(ally.at.x - at.x, ally.at.y - at.y) <= spec.range)
+    const reach = allies.filter((ally) => ally.id !== entity.id && !taken.has(ally.id) && Ops.hypot(ally.at.x - at.x, ally.at.y - at.y) <= spec.range)
     const chosen = reach.reduce<(typeof reach)[number] | undefined>((best, ally) => {
-      const away = (candidate: { readonly at: Vec2 }) => Math.hypot(candidate.at.x - her.at.x, candidate.at.y - her.at.y)
+      const away = (candidate: { readonly at: Vec2 }) => Ops.hypot(candidate.at.x - her.at.x, candidate.at.y - her.at.y)
       return best === undefined || away(ally) < away(best) ? ally : best
     }, undefined)
     if (chosen === undefined) {

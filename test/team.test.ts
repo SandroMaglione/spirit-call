@@ -5,7 +5,7 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { nextAlive } from "../src/features/team.ts"
 import { Disc, ElementState, Energy, Game, Health, Invulnerable, Member, Player, Position, Skills, SlowMotion, Stats, TeamSwitch, BasicAttack } from "../src/schema.ts"
 import type { ActiveState, BuildValue } from "../src/schema.ts"
-import { ReadFlow, cursorAt, doubleTap, placeDummies, start, steps, plainAttack } from "./helpers.ts"
+import { ReadFlow, cursorAt, doubleTap, placeDummies, start, steps, plainAttack, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
@@ -40,7 +40,7 @@ const TeamState = Game.Inspector("Test/Team", {
       special: data.skills.get().special.cooldown,
       state: data.state.get().current,
       step: data.basicAttack.get().step,
-      position: data.position.present ? data.position.get() : undefined,
+      position: data.position.value(),
       invulnerable: data.invulnerable.present ? data.invulnerable.get().remaining : undefined,
       onField: data.player.present
     }))
@@ -156,7 +156,7 @@ describe("switching", () => {
 
   it("switches in and uses her ultimate at once from a tap on its icon, as Genshin's party list", () => {
     const team = run([swordsman, gunner], { party: [{ frame: 1, slot: 1, ultimate: true }] })
-    team.runtime.tick(Game.Schedule(ChargeTeam))
+    expectOk(team.runtime.tick(Game.Schedule(ChargeTeam)))
     team.step(1)
     expect(team.world().members[1]!.energy).toBe(tuning.energy.max)
     team.step(3)
@@ -168,7 +168,7 @@ describe("switching", () => {
 
   it("drops the ultimate when the switch has to wait, so it never goes off later on its own", () => {
     const team = run([swordsman, gunner], { party: [{ frame: 0, slot: 1, ultimate: false }, { frame: 3, slot: 0, ultimate: true }] })
-    team.runtime.tick(Game.Schedule(ChargeTeam))
+    expectOk(team.runtime.tick(Game.Schedule(ChargeTeam)))
     team.step(steps(tuning.team.switchCooldown) + 10)
     expect(team.field()?.character).toBe("gunner")
     expect(team.world().members[0]!.energy).toBe(tuning.energy.max)
@@ -190,7 +190,7 @@ describe("the bench", () => {
 
   it("gains a share of the energy the one on the field earns", () => {
     const team = run([swordsman, gunner], { pointer: [{ frame: 0, move: cursorAt({ x: 50, y: 0 }) }, { frame: 2, press: ["primary"], release: ["primary"] }] })
-    team.runtime.tick(placeDummies([{ x: 50, y: 0 }]))
+    expectOk(team.runtime.tick(placeDummies([{ x: 50, y: 0 }])))
     team.step(40)
     const [field, bench] = team.world().members
     expect(field!.energy).toBeGreaterThan(0)
@@ -200,7 +200,7 @@ describe("the bench", () => {
   it("keeps a character's state: a fire she carries off keeps burning, and can make her fall there", () => {
     const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["team2"], release: ["team2"] }] })
     team.step()
-    team.runtime.tick(putIn(0, fire(40)))
+    expectOk(team.runtime.tick(putIn(0, fire(40))))
     team.step(30)
     const burning = team.world().members[0]!
     expect(burning.onField).toBe(false)
@@ -218,7 +218,7 @@ describe("the bench", () => {
   it("can't bring a fallen character back in", () => {
     const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["team2"], release: ["team2"] }, { frame: 600, press: ["team1"], release: ["team1"] }] })
     team.step()
-    team.runtime.tick(putIn(0, fire(400)))
+    expectOk(team.runtime.tick(putIn(0, fire(400))))
     team.step(605)
     expect(team.world().members[0]!.health).toBe(0)
     expect(team.field()?.slot).toBe(1)
@@ -230,7 +230,7 @@ const Beat = Game.Inspector("Test/Beat", { resources: { slow: Game.System.readRe
 describe("falling", () => {
   it("brings in the next one alive in order, protected for a moment; the run is lost when the whole team has fallen", () => {
     const team = run([swordsman, gunner, tidecaller])
-    team.runtime.tick(putIn(0, fire(400)))
+    expectOk(team.runtime.tick(putIn(0, fire(400))))
     let guard = 0
     while (team.world().members[0]!.health > 0 && guard++ < 600) team.step()
     team.step()
@@ -241,8 +241,8 @@ describe("falling", () => {
     expect(team.runtime.inspect(Beat)).toBeGreaterThan(0)
     expect(flowOf(team)).toBe("Playing")
 
-    team.runtime.tick(putIn(1, fire(400)))
-    team.runtime.tick(putIn(2, fire(400)))
+    expectOk(team.runtime.tick(putIn(1, fire(400))))
+    expectOk(team.runtime.tick(putIn(2, fire(400))))
     guard = 0
     while (flowOf(team) === "Playing" && guard++ < 1200) team.step()
     expect(flowOf(team)).toBe("GameOver")
@@ -251,7 +251,7 @@ describe("falling", () => {
 
   it("tallies for stars each one who falls and the team's health left (fallen members count none), and each ultimate used", () => {
     const team = run([swordsman, gunner])
-    team.runtime.tick(putIn(0, fire(400)))
+    expectOk(team.runtime.tick(putIn(0, fire(400))))
     let guard = 0
     while (team.world().members[0]!.health > 0 && guard++ < 600) team.step()
     team.step()
@@ -261,7 +261,7 @@ describe("falling", () => {
     expect(team.runtime.inspect(Tallied)).toMatchObject({ falls: 1, hitsTaken: 0, healthLeft: Math.floor((left / max) * 100), ultimates: 0 })
 
     const ultimate = run([swordsman, gunner], { party: [{ frame: 1, slot: 1, ultimate: true }] })
-    ultimate.runtime.tick(Game.Schedule(ChargeTeam))
+    expectOk(ultimate.runtime.tick(Game.Schedule(ChargeTeam)))
     ultimate.step(4)
     expect(ultimate.runtime.inspect(Tallied)).toMatchObject({ ultimates: 1, falls: 0, healthLeft: 100 })
   })
@@ -269,7 +269,7 @@ describe("falling", () => {
   it("holds the one coming in while the one who fell goes down, the enemies crawling; her protection counts from when she steps in", () => {
     // She holds a direction from the start: she stands still all the same until the beat is over.
     const team = run([swordsman, gunner], { keys: [{ frame: 0, press: ["right"] }] })
-    team.runtime.tick(putIn(0, fire(400)))
+    expectOk(team.runtime.tick(putIn(0, fire(400))))
     let guard = 0
     while (team.world().members[0]!.health > 0 && guard++ < 600) team.step()
     team.step()

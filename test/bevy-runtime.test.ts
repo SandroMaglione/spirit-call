@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { Game, Health, Paused, Player, Position, TriggeredEffects, UiRequest } from "../src/schema.ts"
-import { ReadFlow, start } from "./helpers.ts"
+import { ReadFlow, start, expectOk } from "./helpers.ts"
 
 const Wielder = Game.Inspector("Test/RuntimeWielder", {
   queries: { player: Game.Query({ selection: { health: Game.Query.read(Health), position: Game.Query.read(Position) }, with: [Player] }) },
@@ -17,7 +17,7 @@ describe("bevy-ts runtime integration", () => {
   it("holds a passive event while paused and applies it once after resuming", () => {
     const run = start()
     run.step()
-    run.runtime.tick(Game.Schedule(Wound))
+    expectOk(run.runtime.tick(Game.Schedule(Wound)))
     run.runtime.send(UiRequest, { kind: "pause" })
     run.step()
     const before = run.runtime.inspect(Wielder)
@@ -44,7 +44,7 @@ describe("bevy-ts runtime integration", () => {
     expect(run.runtime.inspect(ReadFlow)).toBe("Menu")
     run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "firstBlood", enemyLevel: 1 })
     run.step()
-    run.runtime.tick(Game.Schedule(Wound))
+    expectOk(run.runtime.tick(Game.Schedule(Wound)))
     const before = run.runtime.inspect(Wielder)
     expect(before.holder).not.toBe(previous.holder)
     run.step(3)

@@ -19,12 +19,17 @@ import { frame } from "../src/presentation/schedule.ts"
 import { Game, UiRequest } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
+/** The schedules described without running, and the events the host sends: shared with `scripts/debug.ts`, so its lints match. */
+export const hostSide = {
+  describe: { frame, dev: Game.Schedule(ApplyDevCommands) },
+  hostEvents: [UiRequest]
+}
+
 export const lintTarget = () => {
   const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: Pointer.scripted([]) })
   return {
     runtime: sim.runtime,
     schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
-    describe: { frame, dev: Game.Schedule(ApplyDevCommands) },
-    hostEvents: [UiRequest]
+    ...hostSide
   }
 }

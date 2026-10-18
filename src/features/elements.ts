@@ -16,6 +16,7 @@
  * of it.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { elementOf, elements } from "../content/elements.ts"
 import type { Affinity, StateId } from "../content/elements.ts"
@@ -229,7 +230,7 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
     // The bodies of its side in reach, nearest first (the struck one is at the center).
     const around = bodies
       .filter(({ data }) => data.hurtbox.get().faction === side && (data.player.present || !(data.invulnerable.present && data.invulnerable.get().remaining > 0)))
-      .map((body) => ({ body, gap: Math.hypot(body.data.position.get().x - at.x, body.data.position.get().y - at.y) - body.data.hurtbox.get().radius }))
+      .map((body) => ({ body, gap: Ops.hypot(body.data.position.get().x - at.x, body.data.position.get().y - at.y) - body.data.hurtbox.get().radius }))
       .filter(({ gap }) => gap <= reach)
       .sort((left, right) => left.gap - right.gap)
     // On the team a burst is part of the blow that set it off: it lands through the moment she is untouchable after it, as a burn does.
@@ -316,7 +317,7 @@ export const ArcCharges = Game.System("Shooter/ArcCharges", {
       if (body.entity.id === arc.from || body.data.hurtbox.get().faction !== arc.side) continue
       if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
       const there = body.data.position.get()
-      const gap = Math.hypot(there.x - arc.at.x, there.y - arc.at.y) - body.data.hurtbox.get().radius
+      const gap = Ops.hypot(there.x - arc.at.x, there.y - arc.at.y) - body.data.hurtbox.get().radius
       if (gap <= range && gap < nearest) {
         next = body
         nearest = gap

@@ -11,6 +11,7 @@
 import { Clock } from "@typeonce/ritmo"
 import type { WriteCell } from "@typeonce/ritmo/Query"
 import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 
 import type { SkillEffect, MarkSpec, StateHeal } from "../content/skills.ts"
 import { blow, Cast, Damage, ElementState, Enemy, Game, Heal, Health, Hit, Hurtbox, Marked, Member, Mending, Player, Position, Time, Tuning } from "../schema.ts"
@@ -110,7 +111,7 @@ export const HealFromStates = Game.System("Shooter/HealFromStates", {
     const heals = effect.heals
     const held = queries.enemies.each().filter(({ data }) => {
       const at = data.position.get()
-      return data.state.get().current?.id === heals.state && Math.hypot(at.x - cast.from.x, at.y - cast.from.y) - data.hurtbox.get().radius <= effect.radius
+      return data.state.get().current?.id === heals.state && Ops.hypot(at.x - cast.from.x, at.y - cast.from.y) - data.hurtbox.get().radius <= effect.radius
     })
     if (heals.consumes) for (const { entity, data } of held) {
       const state = data.state.get().current!

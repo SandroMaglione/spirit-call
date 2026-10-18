@@ -5,7 +5,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { Facing, Game, Player } from "../src/schema.ts"
-import { doubleTap, start } from "./helpers.ts"
+import { doubleTap, start, expectOk } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
@@ -132,7 +132,7 @@ describe("dash", () => {
     const FaceNorth = Game.System("Test/FaceNorth", { queries: { player: Game.Query({ selection: { facing: Game.Query.write(Facing) }, with: [Player] }) } }, ({ queries }) => {
       for (const { data } of queries.player.each()) data.facing.set({ direction: { x: 0, y: -1 }, hold: 10 })
     })
-    run.runtime.tick(Game.Schedule(FaceNorth))
+    expectOk(run.runtime.tick(Game.Schedule(FaceNorth)))
     run.step(12)
     const { position } = run.player()
     const pillarBottom = 0.16 * tuning.arena.height + 25

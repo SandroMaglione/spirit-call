@@ -8,8 +8,11 @@
  *   account (it may use the account's pure rules).
  * - `shooter/no-effect-barrel`: import Effect by module (`effect/Schema`),
  *   never from a package root (`effect`), which pulls in far more code.
- * - `shooter/deterministic-simulation`: no wall clocks, timers, or
- *   `Math.random` in the simulation, so a run replays exactly (use `Rng`).
+ *
+ * Determinism (no wall clocks, timers, `Math.random`, or engine-dependent
+ * math in the simulation) is checked by `@typeonce/oxlint-plugin-ritmo`'s
+ * `ritmo/*` rules, turned on for the simulation and content parts in
+ * `.oxlintrc.json`.
  * - `shooter/no-cast-escape`: no `as never` and no `as unknown as`, anywhere.
  *   Both switch the type checker off for a value. Build the value with its
  *   real type instead; if a library API cannot express it, fix the library.
@@ -22,7 +25,8 @@ import path from "node:path"
  * names the part.
  */
 const layers = [
-  { name: "content", paths: ["src/content/"], parts: ["content"], packages: [] },
+  // Content is data; its curves use Ops, so they compute the same on every device.
+  { name: "content", paths: ["src/content/"], parts: ["content"], packages: ["@typeonce/ritmo-math/Ops"] },
   {
     name: "simulation",
     paths: ["src/features/", "src/physics/", "src/math/", "src/config/", "src/schema.ts", "src/schedules.ts", "src/simulation.ts", "src/runtime.ts"],
@@ -47,8 +51,6 @@ const layers = [
   { name: "entry", paths: ["src/main.ts"], parts: "*", packages: "*" }
 ]
 
-/** Parts where time and randomness must come from the world (`Time`, `Rng`). */
-const deterministic = new Set(["simulation", "content"])
 
 const toPosix = (file) => file.split(path.sep).join("/")
 
@@ -109,28 +111,6 @@ const noEffectBarrel = {
   }
 }
 
-const deterministicSimulation = {
-  meta: { type: "problem", docs: { description: "No wall clocks, timers, or Math.random in the simulation." } },
-  create(context) {
-    const layer = layerOf(context.filename)
-    if (layer === undefined || !deterministic.has(layer.name)) return {}
-    const banned = { Math: ["random"], Date: ["now"], performance: ["now"], crypto: ["getRandomValues", "randomUUID"] }
-    const report = (node, what) => context.report({ node, message: `${what} makes the simulation non-deterministic: use the world's Time and Rng resources.` })
-    return {
-      MemberExpression(node) {
-        if (node.object.type !== "Identifier" || node.property.type !== "Identifier") return
-        if (banned[node.object.name]?.includes(node.property.name)) report(node, `${node.object.name}.${node.property.name}`)
-      },
-      NewExpression(node) {
-        if (node.callee.type === "Identifier" && node.callee.name === "Date") report(node, "new Date()")
-      },
-      CallExpression(node) {
-        if (node.callee.type === "Identifier" && ["setTimeout", "setInterval", "requestAnimationFrame"].includes(node.callee.name)) report(node, `${node.callee.name}()`)
-      }
-    }
-  }
-}
-
 const noCastEscape = {
   meta: { type: "problem", docs: { description: "No `as never` and no `as unknown as`." } },
   create(context) {
@@ -151,7 +131,6 @@ export default {
   rules: {
     "layer-boundaries": layerBoundaries,
     "no-effect-barrel": noEffectBarrel,
-    "deterministic-simulation": deterministicSimulation,
     "no-cast-escape": noCastEscape
   }
 }

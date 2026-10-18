@@ -4,7 +4,7 @@ import { defaultTuning } from "../src/config/tuning.ts"
 import { UiRequest, Challenge, CombatStats, Game, HitStop, Paused, Player, Run, SlowMotion, Team, Time, Waves } from "../src/schema.ts"
 import { attackElements, describeObjective, describePassive, describeSkill } from "../src/ui/describe.ts"
 import { answers, aspectsFor, elementOf, equipInDraft, equipRelicInDraft, relicsFor, placeInTeam, removeFromTeam, startingWith } from "../src/ui/draft.ts"
-import { ReadFlow, start, aspectId } from "./helpers.ts"
+import { ReadFlow, start, aspectId, expectOk } from "./helpers.ts"
 import { cast, damageBonus, doing, finisher, heal, kill, on, targetHealthBelow } from "../src/content/passives.ts"
 import { nova } from "../src/content/skills.ts"
 
@@ -43,7 +43,7 @@ describe("menu requests", () => {
     const Complete = Game.System("Test/CompleteWaves", { resources: { waves: Game.System.writeResource(Waves) } }, ({ resources }) => {
       resources.waves.update((waves) => ({ ...waves, phase: "complete" }))
     })
-    run.runtime.tick(Game.Schedule(Complete))
+    expectOk(run.runtime.tick(Game.Schedule(Complete)))
     run.step()
     expect(flowOf(run)).toBe("Cleared")
     run.runtime.send(UiRequest, { kind: "menu" })
@@ -71,7 +71,7 @@ describe("the in-game menu", () => {
     const run = start({ waves: true })
     run.runtime.send(UiRequest, { kind: "pause" })
     run.step()
-    run.runtime.tick(Game.Schedule(seed))
+    expectOk(run.runtime.tick(Game.Schedule(seed)))
     const at = run.runtime.inspect(timers)
     run.step(120)
     expect(run.runtime.inspect(timers)).toEqual({ ...at, time: { ...at.time, dt: 0 } })

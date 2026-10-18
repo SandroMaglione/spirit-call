@@ -9,7 +9,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { enemyStats, EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { UiRequest, Attacker, AttackPhase, CombatStats, Enemy, Game, RunResult, Health, Invulnerable, Knockback, PendingSpawn, Player, Position, RunScope, Stats, Waves } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ReadFlow, doubleTap, plainEnemies, playerLoss, start, swordsman } from "./helpers.ts"
+import { ReadFlow, doubleTap, plainEnemies, playerLoss, start, swordsman, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 import { noTally } from "../src/content/stars.ts"
 
@@ -56,7 +56,7 @@ const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}) => {
   const Spawn = Game.System("Test/Spawn", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
-  run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -103,7 +103,7 @@ describe("telegraphed attacks", () => {
     const Push = Game.System("Test/Push", { queries: { enemies: Game.Query({ selection: { knockback: Game.Query.write(Knockback) }, with: [Enemy] }) } }, ({ queries }) => {
       for (const { data } of queries.enemies.each()) data.knockback.set({ x: 1500, y: 0 })
     })
-    run.runtime.tick(Game.Schedule(Push))
+    expectOk(run.runtime.tick(Game.Schedule(Push)))
     run.step(Math.ceil(swipe.windup / engine.step.dt) + Math.ceil(swipe.active / engine.step.dt) + 4)
     const world = run.world()
     expect(world.player!.health).toBe(swordsman.hp)
@@ -156,7 +156,7 @@ describe("enemy stats", () => {
     const Slow = Game.System("Test/Slow", { queries: { enemies: Game.Query({ selection: { stats: Game.Query.write(CombatStats) }, with: [Enemy] }) } }, ({ queries }) => {
       for (const { data } of queries.enemies.each()) data.stats.update((stats) => ({ ...stats, speed: stats.speed / 2 }))
     })
-    run.runtime.tick(Game.Schedule(Slow))
+    expectOk(run.runtime.tick(Game.Schedule(Slow)))
     run.step(40)
     const before = run.world().enemies[0]!.position
     run.step(10)
@@ -250,7 +250,7 @@ describe("waves", () => {
     const Clear = Game.System("Test/ClearWave", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
       for (const { entity } of queries.enemies.each()) commands.despawn(entity)
     })
-    run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred())))
     stepUntil(run, () => world().waves.number === 2)
     stepUntil(run, () => world().waves.phase === "fighting")
     const wave = [...world().pending.map((pending) => pending.kind), ...world().enemies.map((enemy) => enemy.kind)]

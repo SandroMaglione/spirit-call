@@ -20,7 +20,8 @@
  * a moment (`Airborne`), acting on landing (`LandAirborne`).
  */
 import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
-import { add, clampLength, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import { add, clampLength, length as lengthOf, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import {
@@ -500,9 +501,10 @@ export const CastBarrages = Game.System("Shooter/CastBarrages", {
     const effect = cast.effect
     if (effect.kind !== "barrage") continue
     const { power, element, knockback, hitStop, heavy, flightTime, fuse, radius, leaves } = effect
-    const shell = lob({ power, element, knockback, hitStop, heavy, flightTime, fuse, radius, leaves, maxRange: Infinity })
     const blow = castBlow(cast, effect)
     barrageTargets(effect, lobTarget(effect, cast.from, cast.at), cast.direction).forEach((to, index) => {
+      // Each shell is already aimed: its range is just how far it flies.
+      const shell = lob({ power, element, knockback, hitStop, heavy, flightTime, fuse, radius, leaves, maxRange: lengthOf(subtract(to, cast.from)) })
       commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, { from: cast.from, to, faction: cast.faction, effect: shell, blow, elapsed: -index * effect.interval }]))
     })
   }
@@ -582,7 +584,7 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
         const invulnerable = target.data.invulnerable
         if (invulnerable.present && invulnerable.get().remaining > 0) continue
         const at = target.data.position.get()
-        const distance = Math.hypot(center.x - at.x, center.y - at.y)
+        const distance = Ops.hypot(center.x - at.x, center.y - at.y)
         if (distance > effect.radius + hurtbox.radius) continue
         const direction = normalizeOr(subtract(center, at), { x: 0, y: 0 })
         const enemy = target.data.enemy.present ? target.data.enemy.get().kind : undefined

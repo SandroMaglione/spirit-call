@@ -12,7 +12,7 @@ import { projection } from "../src/config/view.ts"
 import { hopLanding } from "../src/features/motion.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { Airborne, Energy, Game, LowWall, Player, Position, RunScope, Vortex, Wall } from "../src/schema.ts"
-import { center, cursorAt, start, steps } from "./helpers.ts"
+import { center, cursorAt, start, steps, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const World = Game.Inspector("Test/WindKit", {
@@ -87,7 +87,7 @@ describe("the Gust over walls", () => {
     run.step(8)
     const from = run.world().at
     const wall = across(from, gust.distance)
-    run.runtime.tick(placeWall(wall, true))
+    expectOk(run.runtime.tick(placeWall(wall, true)))
     run.step(steps(gust.rise + gust.dive) + 10)
     const { at, airborne } = run.world()
     expect(airborne).toBe(false)
@@ -101,7 +101,7 @@ describe("the Gust over walls", () => {
     run.step(8)
     const from = run.world().at
     const wall = across(from, gust.distance * 0.6)
-    run.runtime.tick(placeWall(wall, false))
+    expectOk(run.runtime.tick(placeWall(wall, false)))
     run.step(steps(gust.rise + gust.dive) + 10)
     const { at } = run.world()
     expect(at.x).toBeLessThan(wall.minX)
@@ -131,7 +131,7 @@ describe("the Cyclone's soar", () => {
 
   it("carries her up over the whirl, untouchable, to hang there before she glides", () => {
     const run = field({ keys: [ultimate, { frame: 3, press: ["right" as const] }] })
-    run.runtime.tick(Game.Schedule(FillEnergy))
+    expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
     run.step(2)
     const from = run.world().at
     run.step(steps(soar.rise + soar.hang) - 2)
@@ -144,7 +144,7 @@ describe("the Cyclone's soar", () => {
 
   it("glides down where she steers, out of the middle of the whirl", () => {
     const run = field({ keys: [ultimate, { frame: 3, press: ["right" as const] }] })
-    run.runtime.tick(Game.Schedule(FillEnergy))
+    expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
     run.step(steps(soar.rise + soar.hang + soar.glide) + 4)
     const { at, airborne } = run.world()
     expect(airborne).toBe(false)
@@ -153,7 +153,7 @@ describe("the Cyclone's soar", () => {
 
   it("lands where the whirl is if she does not steer", () => {
     const run = field({ keys: [ultimate] })
-    run.runtime.tick(Game.Schedule(FillEnergy))
+    expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
     run.step(steps(soar.rise + soar.hang + soar.glide) + 4)
     expect(run.world().at).toEqual(center)
     expect(run.world().airborne).toBe(false)

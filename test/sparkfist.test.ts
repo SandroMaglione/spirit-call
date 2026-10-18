@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { Dash, ElementState, Enemy, Energy, Game, Health, Overcharged, Player, Position } from "../src/schema.ts"
-import { center, cursorAt, doubleTap, placeDummies, start, steps } from "./helpers.ts"
+import { center, cursorAt, doubleTap, placeDummies, start, steps, expectOk } from "./helpers.ts"
 
 const sparkStep = defaultTuning.skills.sparkStep.effect
 const overcharge = defaultTuning.skills.stormFlurry.effect
@@ -33,8 +33,8 @@ const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Quer
 
 const arena = (dummies: ReadonlyArray<{ x: number; y: number }>, slot: "special" | "ultimate") => {
   const run = start({ tuning: sturdy, kits: "shipped", build: sparkfist, pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys: [{ frame: 2, press: [slot], release: [slot] }] })
-  run.runtime.tick(placeDummies(dummies, sturdy))
-  run.runtime.tick(Game.Schedule(FillEnergy))
+  expectOk(run.runtime.tick(placeDummies(dummies, sturdy)))
+  expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -60,8 +60,8 @@ describe("Sparkfist's kit", () => {
     const run = start({ tuning: quiet, kits: "shipped", build: sparkfist, keys: [{ frame: 2, press: ["ultimate"], release: ["ultimate"] }, ...doubleTap("right", after)] })
     // Screen right is world (1, -1): two dummies along the dash, one well aside.
     const along = (distance: number) => ({ x: distance * Math.SQRT1_2, y: -distance * Math.SQRT1_2 })
-    run.runtime.tick(placeDummies([along(50), along(110), { x: -200, y: -200 }], quiet))
-    run.runtime.tick(Game.Schedule(FillEnergy))
+    expectOk(run.runtime.tick(placeDummies([along(50), along(110), { x: -200, y: -200 }], quiet)))
+    expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
     run.step(after)
     expect(run.runtime.inspect(Surge)).toBe(true)
     run.step(steps(0.6))

@@ -1,3 +1,4 @@
+import * as Random from "@typeonce/ritmo-math/Random"
 import { Descriptor } from "@typeonce/ritmo"
 import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 import { NodeRegistry, RenderSync } from "@typeonce/ritmo-render"
@@ -12,7 +13,7 @@ import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
 import { Dash, FrameContext, Game, HitStop, KeyboardInput, PartyInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning, Enemy } from "../src/schema.ts"
 import { defaultViewport } from "../src/simulation.ts"
-import { ReadFlow, doubleTap, gunner, start, withGun } from "./helpers.ts"
+import { ReadFlow, doubleTap, gunner, start, withGun, expectOk } from "./helpers.ts"
 
 const HitStopState = Game.Inspector("Test/HitStopState", {
   resources: { hitStop: Game.System.readResource(HitStop), time: Game.System.readResource(Time) },
@@ -31,7 +32,7 @@ describe("hit-stop", () => {
     const Spawn = Game.System("Test/SpawnTarget", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
-    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred())))
     const frozen = () => run.runtime.inspect(HitStopState).hitStop > 1e-9
 
     // Step 1 fires, step 2 hits and kills: the freeze starts in that same step
@@ -55,7 +56,7 @@ describe("hit-stop", () => {
     const Spawn = Game.System("Test/SpawnTarget", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: 1000, y: 800 }))
     })
-    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred())))
     run.step(Math.ceil(0.2 / engine.step.dt) + 6)
     expect(run.player().dash.cooldown).toBeGreaterThan(0)
   })
@@ -65,12 +66,14 @@ describe("live tuning", () => {
   it("applies queued edits to the Tuning resource", () => {
     const queue = emptyDevCommands()
     queue.edits.push({ path: ["dash", "distance"], value: 999 }, { path: ["waves", "enabled"], value: false })
-    const runtime = Game.Runtime.make({
+    const made = Game.Runtime.make({
       services: Game.Runtime.services(Game.Runtime.service(DevCommands, queue)),
-      resources: { Tuning: defaultTuning, Rng: { state: 1 } }
+      resources: { Tuning: defaultTuning, Rng: Random.seed(1) }
     })
+    if (!made.ok) throw new Error("the random seed did not validate")
+    const runtime = made.value
     const ReadTuning = Game.Inspector("Test/Tuning", { resources: { tuning: Game.System.readResource(Tuning) } }, ({ resources }) => resources.tuning.get())
-    runtime.tick(Game.Schedule(ApplyDevCommands))
+    expectOk(runtime.tick(Game.Schedule(ApplyDevCommands)))
     const tuning = runtime.inspect(ReadTuning)
     expect(tuning.dash.distance).toBe(999)
     expect(tuning.waves.enabled).toBe(false)
@@ -139,15 +142,15 @@ describe("render sync under multi-rate ticking", () => {
     if (!made.ok) throw new Error(JSON.stringify(made.error))
     const runtime = made.value
     const stress = makeStress(tuning, { enemies: 20, projectiles: 300 })
-    runtime.tick(setup)
-    runtime.tick(Game.Schedule(stress.populate, stress.topUp, Game.Schedule.applyDeferred()))
+    expectOk(runtime.tick(setup))
+    expectOk(runtime.tick(Game.Schedule(stress.populate, stress.topUp, Game.Schedule.applyDeferred())))
     const step = Game.Schedule(fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
     const render = Game.Schedule(Sync)
 
     // 1 to 5 fixed steps per rendered frame, like a slow display catching up.
     for (let frame = 0; frame < 120; frame++) {
-      for (let fixed = 0; fixed <= frame % 5; fixed++) runtime.tick(step)
-      runtime.tick(render)
+      for (let fixed = 0; fixed <= frame % 5; fixed++) expectOk(runtime.tick(step))
+      expectOk(runtime.tick(render))
       expect(registry.size).toBe(runtime.inspect(Count))
     }
   })
@@ -162,7 +165,7 @@ describe("hit-stop and game over", () => {
     const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: 1000, y: 900 }))
     })
-    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred())))
     const flow = () => run.runtime.inspect(ReadFlow)
     for (let step = 0; step < 300 && flow() === "Playing"; step++) run.step()
     expect(flow()).toBe("GameOver")

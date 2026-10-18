@@ -9,7 +9,7 @@ import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { ElementState, Enemy, Energy, Game, Health, Player, Stunned } from "../src/schema.ts"
-import { cursorAt, placeDummies, start, steps } from "./helpers.ts"
+import { cursorAt, placeDummies, start, steps, expectOk } from "./helpers.ts"
 
 const plain = defaultTuning.classes.hammer.plain
 const sturdy = { enemies: { dummy: { hp: 100_000, knockbackTaken: 0 } } } as const
@@ -29,8 +29,8 @@ const World = Game.Inspector("Test/Hammer", {
 /** A run with dummies at `dummies` (offsets from her), aiming right. */
 const arena = (tuning: Tuning, build: { readonly character: "swordsman" | "quarry" }, dummies: ReadonlyArray<Vec2>, options: Parameters<typeof start>[0] = {}) => {
   const run = start({ tuning, kits: "shipped", build, pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], ...options })
-  run.runtime.tick(placeDummies(dummies, tuning))
-  run.runtime.tick(Game.Schedule(FillEnergy))
+  expectOk(run.runtime.tick(placeDummies(dummies, tuning)))
+  expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 

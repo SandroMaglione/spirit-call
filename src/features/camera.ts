@@ -1,4 +1,5 @@
 import { add, clampLength, scale, subtract, zero } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { Camera, Controls, Game, Player, Position, Time, Tuning } from "../schema.ts"
 
 /**
@@ -24,7 +25,7 @@ export const FollowCamera = Game.System("Shooter/FollowCamera", {
   const lead = controls.device === "touch" ? zero : clampLength(scale(subtract(controls.aimPoint, position), tuning.aimLead), tuning.maxAimLead)
   const target = add(position, lead)
   const camera = resources.camera.get()
-  const follow = 1 - Math.exp(-tuning.followRate * resources.time.get().dt)
+  const follow = 1 - Ops.exp(-tuning.followRate * resources.time.get().dt)
   resources.camera.set({
     x: camera.x + (target.x - camera.x) * follow,
     y: camera.y + (target.y - camera.y) * follow,

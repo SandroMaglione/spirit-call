@@ -121,11 +121,13 @@ keeps them, and releasing).
   currencies, and rewards live in the account and the shell, never in the
   simulation.
 - Simulation (`src/features/`, `src/schema.ts`, `src/schedules.ts`, physics,
-  math, config): the ECS. Deterministic (time and randomness come from the
-  world's `Time` and `Rng`), headless, and tested without a browser.
-  Vectors, swept collision, the spatial grid, the flow field, and random
-  numbers come from `@typeonce/ritmo-math` (`Vec2`, `Box2`, `Collide2`,
-  `SpatialGrid`, `FlowField`, `Random`).
+  math, config): the ECS. Deterministic (time comes from the world's `Time`,
+  randomness from `Random.draw(resources.rng)`, and trigonometry, `exp`,
+  `pow`, `hypot`, and `a ** b` from `Ops`, which returns the same bits on
+  every device), headless, and tested without a browser. Vectors, swept
+  collision, the spatial grid, the flow field, random numbers, and that math
+  come from `@typeonce/ritmo-math` (`Vec2`, `Box2`, `Collide2`, `SpatialGrid`,
+  `FlowField`, `Random`, `Ops`); content (`src/content/`) may import `Ops`.
 - `src/presentation/`: rendering (Three.js), sounds, effects, and the in-arena
   HUD (plain DOM). The world is 3D (low-poly), seen by an orthographic
   camera whose view of the floor is exactly `src/math/iso.ts`'s projection
@@ -152,8 +154,12 @@ keeps them, and releasing).
   `docs/playtest.md`). A release build contains none of it.
 
 `tools/lint/plugin.mjs` enforces these boundaries (which part may import
-which, Effect imported by module, no clocks or `Math.random` in the
-simulation); `pnpm check` runs it.
+which, Effect imported by module, no casts that switch type checking off),
+and `@typeonce/oxlint-plugin-ritmo` keeps the simulation and content
+deterministic and headless (no clocks, timers, `Math.random`, `Math.sin` and
+the like, the page, or `Infinity` in their data) and every
+`runtime.tick(...)` result checked (tests wrap one with `expectOk(...)`);
+`pnpm check` runs both. Each report names what to use instead.
 
 ## Conventions
 

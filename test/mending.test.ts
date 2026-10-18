@@ -5,7 +5,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { blow, Damage, ElementState, Enemy, Energy, Game, Health, Marked, Player, Position } from "../src/schema.ts"
 import type { StateId } from "../src/content/elements.ts"
 import { cut } from "../src/content/skills.ts"
-import { center, cursorAt, placeDummies, start, steps, tidecaller } from "./helpers.ts"
+import { center, cursorAt, placeDummies, start, steps, tidecaller, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tide = defaultTuning.skills.tide.effect
@@ -29,14 +29,14 @@ const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: numbe
   const sturdy = tuningWith({ enemies: { dummy: { hp: 100_000 } } })
   const tuning: Tuning = marking ? { ...sturdy, skills: { ...sturdy.skills, tidalWave: { ...sturdy.skills.tidalWave, effect: markingWave } } } : sturdy
   const run = start({ tuning, kits: "shipped", build: tidecaller, ...options, pointer: [{ frame: 0, move: cursorAt(aim) }] })
-  run.runtime.tick(placeDummies(offsets, tuning))
+  expectOk(run.runtime.tick(placeDummies(offsets, tuning)))
   const world = () => run.runtime.inspect(World)
   /** Leaves her at half her health. */
   const hurt = () => {
     const Hurt = Game.System("Test/Hurt", { queries: { player: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Player] }) } }, ({ queries }) => {
       for (const { data } of queries.player.each()) data.health.set({ ...data.health.get(), current: data.health.get().max / 2 })
     })
-    run.runtime.tick(Game.Schedule(Hurt))
+    expectOk(run.runtime.tick(Game.Schedule(Hurt)))
   }
   /** A blow of the team (no skill's) on every enemy. */
   const strike = () => {
@@ -45,7 +45,7 @@ const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: numbe
         events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "player", direction: { x: 1, y: 0 }, blow: blow({ damage: 5, knockback: 0 }) })
       }
     })
-    run.runtime.tick(Game.Schedule(Strike))
+    expectOk(run.runtime.tick(Game.Schedule(Strike)))
     run.step(1)
   }
   /** Puts the enemies at `offsets` (from the center) in `state`. */
@@ -56,7 +56,7 @@ const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: numbe
         if (offsets.some((offset) => Math.hypot(at.x - center.x - offset.x, at.y - center.y - offset.y) < 1)) data.state.set({ current: { id: state, remaining: 10, atk: 100, nextTick: 0, charges: true } })
       }
     })
-    run.runtime.tick(Game.Schedule(Put))
+    expectOk(run.runtime.tick(Game.Schedule(Put)))
   }
   return { ...run, world, hurt, strike, putIn }
 }
@@ -109,7 +109,7 @@ describe("the Tidecaller's healing asks for blows", () => {
     const Fill = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
       for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
     })
-    run.runtime.tick(Game.Schedule(Fill))
+    expectOk(run.runtime.tick(Game.Schedule(Fill)))
     const before = run.world().health
     // One heal from each of the three, one after the other.
     run.step(steps(0.6 + (tide.tick * (tide.count - 1)) / tide.count + 0.2))
@@ -118,7 +118,7 @@ describe("the Tidecaller's healing asks for blows", () => {
     const Away = Game.System("Test/Away", { queries: { player: Game.Query({ selection: { position: Game.Query.write(Position) }, with: [Player] }) } }, ({ queries }) => {
       for (const { data } of queries.player.each()) data.position.set({ x: data.position.get().x + 320, y: data.position.get().y })
     })
-    run.runtime.tick(Game.Schedule(Away))
+    expectOk(run.runtime.tick(Game.Schedule(Away)))
     const away = run.world().health.current
     run.step(steps(0.5))
     expect(run.world().health.current).toBe(away)

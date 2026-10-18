@@ -81,7 +81,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
     const rooted = data.raising.present || data.airborne.present || resources.arrival.get().remaining > 0
     if (rooted) remaining = 0
     let buffered = rooted ? 0 : controls.dashPressed ? own.inputBuffer : Math.max(0, dash.buffered - dt)
-    let since = dash.since + dt
+    let since = dash.since === null ? null : dash.since + dt
     let perfect = dash.perfect
     let from = dash.from
 

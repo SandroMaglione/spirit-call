@@ -8,7 +8,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import type { MeleeMove } from "../src/content/attacks.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { UiRequest, Camera, Enemy, Game, Health, HitStop, Player, Position, RunScope, Stats, BasicAttack } from "../src/schema.ts"
-import { start, windCut, withWindCut, plainAttack, plainEnemies, hitBy } from "./helpers.ts"
+import { start, windCut, withWindCut, plainAttack, plainEnemies, hitBy, expectOk } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const sword = plainAttack(defaultTuning, "blade")
@@ -58,7 +58,7 @@ const arena = (
     for (const { entity } of queries.dummies.each()) commands.despawn(entity)
     for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(defaultTuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
   })
-  run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred())))
   return run
 }
 
@@ -167,7 +167,7 @@ describe("sword slash", () => {
       for (const { entity } of queries.dummies.each()) commands.despawn(entity)
       commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), "chaser", { x: center.x + 70, y: center.y }))
     })
-    run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred())))
     run.step(18)
     const chaser = run.runtime.inspect(World).enemies[0]!
     expect(chaser.health).toBe(defaultTuning.enemies.chaser.hp - hitBy("swordsman", first.power))

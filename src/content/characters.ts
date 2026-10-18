@@ -11,6 +11,7 @@
  * and kit by `resolveBuild`. Her level gives all her stats; an aspect gives
  * none (see docs/aspects.md).
  */
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { ClassId } from "./classes.ts"
 import type { ElementId } from "./elements.ts"
 import type { SkillId, SkillSlot } from "./skills.ts"
@@ -126,7 +127,7 @@ export const bodyScore = (spec: Pick<CharacterSpec, "stats" | "dash" | "impact" 
   const { stats } = spec
   const reference = bodyRules.reference
   const core = (stats.atk / reference.atk) * (effectiveHealth(stats, defenseScale) / effectiveHealth(reference, defenseScale)) * (stats.speed / reference.speed)
-  return core * (dashScore(spec.dash) * spec.impact * spec.weight) ** bodyRules.personality
+  return core * Ops.pow(dashScore(spec.dash) * spec.impact * spec.weight, bodyRules.personality)
 }
 
 /** Every character, by id. */

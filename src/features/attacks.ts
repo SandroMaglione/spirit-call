@@ -40,6 +40,7 @@ import type { Box2 } from "@typeonce/ritmo-math/Box2"
 import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
 import { clampLength, normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as Random from "@typeonce/ritmo-math/Random"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { followUpsOf } from "../content/enemies.ts"
 import type { AttackSpec } from "../content/enemies.ts"
 import type { Area } from "../physics/areas.ts"
@@ -184,7 +185,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   // those keeping their distance keep their rhythm.
   const openToRush = player !== undefined && target !== undefined &&
     readPlayer(tuning, { at: target, aim: player.data.aim.get(), attack: player.data.basicAttack.get(), dashes: player.data.dash.get().charges }).opening
-  const random = Random.make(resources.rng.get().state)
+  const random = Random.draw(resources.rng)
 
   // Champions' phases, by their health (see `ChampionMoveset`): the one each is in, and the last it opened.
   const rampages = new Map<number, { readonly phase: number; readonly was: number; opened: number; pressure: number }>()
@@ -216,7 +217,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const others = sides.filter((side) => side.id !== id && side.turned !== turned).map((side) => ({ moving: side.moving, her: false }))
     const all = turned || moving === undefined ? others : [{ moving, her: true }, ...others]
     return all.reduce<(typeof all)[number] | undefined>((best, next) =>
-      best === undefined || Math.hypot(next.moving.at.x - at.x, next.moving.at.y - at.y) < Math.hypot(best.moving.at.x - at.x, best.moving.at.y - at.y) ? next : best, undefined)
+      best === undefined || Ops.hypot(next.moving.at.x - at.x, next.moving.at.y - at.y) < Ops.hypot(best.moving.at.x - at.x, best.moving.at.y - at.y) ? next : best, undefined)
   }
 
   for (const { entity, data } of order.map((index) => attackers[index]!)) {
@@ -343,10 +344,10 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         data.previous.set(struckFrom)
       }
       if (spec.kind === "volley" && area.kind === "line") {
-        const base = Math.atan2(area.direction.y, area.direction.x)
+        const base = Ops.atan2(area.direction.y, area.direction.x)
         for (let shot = 0; shot < spec.count; shot++) {
           const offset = spec.count === 1 ? 0 : (shot / (spec.count - 1) - 0.5) * area.spread * 2
-          const direction = { x: Math.cos(base + offset), y: Math.sin(base + offset) }
+          const direction = { x: Ops.cos(base + offset), y: Ops.sin(base + offset) }
           commands.spawnIn(RunScope, makeProjectile(position, { x: direction.x * spec.projectileSpeed, y: direction.y * spec.projectileSpeed }, {
             faction, style: "bolt", radius: spec.projectileRadius, blow: struck, range: spec.range, pierce: 0, hit: []
           }))
@@ -429,7 +430,6 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
 
     data.attacker.set({ attack, elapsed, cooldown, area, hit })
   }
-  resources.rng.set({ state: random.state })
   for (const { entity, data } of queries.rampages.each()) {
     const rampage = rampages.get(entity.id)
     if (rampage !== undefined) data.rampage.set({ phase: rampage.phase, opened: rampage.opened, pressure: rampage.pressure })
@@ -500,8 +500,8 @@ export const ResolveHitboxes = Game.System("Shooter/ResolveHitboxes", {
       const attacker = hitbox.blow.source?.attacker ?? null
       if (!areaTouchesCircle(hitbox.area, position, hurtbox.radius)) {
         // Not in its way any more, but it lands where she stood when she dashed, just now: dodged.
-        const dash = target.data.dash.present ? target.data.dash.get() : undefined
-        if (dash !== undefined && dash.since <= window && areaTouchesCircle(hitbox.area, dash.from, hurtbox.radius)) {
+        const dash = target.data.dash.value()
+        if (dash !== undefined && dash.since !== null && dash.since <= window && areaTouchesCircle(hitbox.area, dash.from, hurtbox.radius)) {
           events.dodged.emit({ target: Game.Entity.handle(target.entity.id, Health), at: position, attacker })
         }
         continue

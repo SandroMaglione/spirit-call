@@ -52,7 +52,7 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     const dodged = dodges.find((dodge) => {
       if (dodge.target !== Game.Entity.handle(entity.id, Health)) return false
       const attacker = dodge.attacker === null ? undefined : queries.dodgeAttackers.getHandle(dodge.attacker)
-      return dash.since <= dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
+      return dash.since !== null && dash.since <= dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
     })
     if (dodged === undefined) continue
     // Dashes back (whole charges; all of them back stops the wait for the next).

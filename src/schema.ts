@@ -6,6 +6,7 @@ import { Clock, Descriptor, Schema } from "@typeonce/ritmo"
 import type * as Entity from "@typeonce/ritmo/Entity"
 import type { NodeRegistry } from "@typeonce/ritmo-render"
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import * as Random from "@typeonce/ritmo-math/Random"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
@@ -85,8 +86,8 @@ export interface DashValue {
   readonly buffered: number
   /** Unit direction of the current dash. */
   readonly direction: Vec2
-  /** Seconds since the last dash started, and where it started (for a perfect dodge, see `features/dodge.ts`). */
-  readonly since: number
+  /** Seconds since the last dash started (`null`: she has not dashed yet), and where it started (for a perfect dodge, see `features/dodge.ts`). */
+  readonly since: number | null
   readonly from: Vec2
   /** Whether the last dash was already a perfect dodge (it rewards once). */
   readonly perfect: boolean
@@ -478,12 +479,10 @@ export interface GroundValue {
   readonly element: ElementId
   readonly center: Vec2
   readonly radius: number
-  readonly remaining: number
-  readonly duration: number
+  /** Seconds left of `duration` seconds in all; `null`: an arena hazard, which never runs out or drifts (see `Tuning.hazards`). */
+  readonly timer: { readonly remaining: number; readonly duration: number } | null
   readonly atk: number
   readonly charges: boolean
-  /** An arena hazard: it never runs out or drifts (see `Tuning.hazards`). */
-  readonly permanent: boolean
   /** A pool laid into the floor's tiles is a box this far each way from its center (`radius` then reaches its corners); `null`: a round pool. */
   readonly half: Vec2 | null
   /** An arena pool put out by a newer pool of another element: seconds until it is back (0: in play). */
@@ -575,8 +574,8 @@ export interface BasicAttackValue {
   readonly spent: number
   /** Seconds left reloading (0: not reloading); the magazine is full when it ends. */
   readonly reloading: number
-  /** Seconds since her last dash strike (one per dash, see `BasicAttackSpec.dash`). */
-  readonly sinceDashStrike: number
+  /** Seconds since her last dash strike (one per dash, see `BasicAttackSpec.dash`); `null`: none yet. */
+  readonly sinceDashStrike: number | null
   /** The move (its `MoveContext.serial`) that last took time off her dash (once a move, see `BasicAttackSpec.dashFeed`); -1: none. */
   readonly fed: number
 }
@@ -1154,6 +1153,9 @@ export const TriggeredEffects = Descriptor.Event<TriggeredEffectsValue>()("Shoot
  */
 export const PassiveCooldowns = Descriptor.Resource<{ readonly [key: string]: number }>()("Shooter/PassiveCooldowns")
 
+/** The team slots (`Member.slot`) whose second wind (the Survival passive) went off this run: once a run each. */
+export const SecondWinds = Descriptor.Resource<ReadonlyArray<number>>()("Shooter/SecondWinds")
+
 /**
  * Simulated time: fixed steps since the game started, at `step`'s rate
  * (see `AdvanceTime`). `dt` is 0 on a paused step; seconds since the start
@@ -1304,8 +1306,8 @@ export interface TutorialValue {
 export const Tutorial = Descriptor.Resource<TutorialValue>()("Shooter/Tutorial")
 export const tutorialStart: TutorialValue = { step: 0, count: 0, ready: -1, celebrate: 0 }
 
-/** Deterministic random state (mulberry32), so runs replay exactly. */
-export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
+/** Deterministic random state (mulberry32), so runs replay exactly: start it with `Random.seed`, draw with `Random.draw(resources.rng)`. */
+export const Rng = Descriptor.ConstructedResource(Random)("Shooter/Rng")
 
 /** The current run: simulated time since it started, and when it ended (`Clock.elapsed` of `Time`). */
 export interface RunValue {
@@ -1486,6 +1488,7 @@ export const Game = Schema.bind(
       EnemyLevel,
       Twist,
       PassiveCooldowns,
+      SecondWinds,
       Mending,
       Time,
       Keys,

@@ -8,6 +8,7 @@ import type { EntityId, Handle } from "@typeonce/ritmo/Entity"
 import type { Query } from "@typeonce/ritmo/Query"
 import { sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 
 import { Dash, Game, Health, Hurtbox, Invulnerable, Position, Shield } from "../schema.ts"
 import type { Faction, Root } from "../schema.ts"
@@ -23,7 +24,7 @@ export interface Target {
   /** A frontal shield, if any: blows arriving within `cosHalfAngle` of `facing` are blocked. */
   readonly shield: { readonly facing: Vec2; readonly cosHalfAngle: number } | undefined
   /** Where its last dash started and how long ago (the player), for perfect dodges; `undefined` for a body that does not dash. */
-  readonly dashed: { readonly from: Vec2; readonly since: number } | undefined
+  readonly dashed: { readonly from: Vec2; readonly since: number | null } | undefined
 }
 
 /** Bodies a thing in flight can hit. */
@@ -49,7 +50,7 @@ export const targetOf = (
   radius: data.hurtbox.get().radius,
   faction: data.hurtbox.get().faction,
   invulnerable: data.invulnerable.present && data.invulnerable.get().remaining > 0,
-  shield: data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Math.cos(data.shield.get().halfAngle) } : undefined,
+  shield: data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Ops.cos(data.shield.get().halfAngle) } : undefined,
   dashed: data.dash?.present === true ? { from: data.dash.get().from, since: data.dash.get().since } : undefined
 })
 
@@ -58,7 +59,7 @@ export const shieldBlocks = (target: Target, at: Vec2): boolean => {
   if (target.shield === undefined) return false
   const dx = at.x - target.at.x
   const dy = at.y - target.at.y
-  const length = Math.hypot(dx, dy) || 1
+  const length = Ops.hypot(dx, dy) || 1
   return (dx * target.shield.facing.x + dy * target.shield.facing.y) / length >= target.shield.cosHalfAngle
 }
 
@@ -108,7 +109,7 @@ export const sweepDodgers = (
   }
   for (const target of candidates) {
     if (target.faction === faction || hit.includes(target.id)) continue
-    const fresh = target.dashed !== undefined && target.dashed.since <= window
+    const fresh = target.dashed !== undefined && target.dashed.since !== null && target.dashed.since <= window
     if ((target.invulnerable && touches(target.at, target.radius)) || (fresh && touches(target.dashed!.from, target.radius))) dodgers.push(target)
   }
   return dodgers

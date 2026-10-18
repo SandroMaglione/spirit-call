@@ -14,6 +14,7 @@
  *   and the fall is its blow.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { Cast, Damage, Disarmed, Enemy, Game, Health, Hurtbox, Invulnerable, Lifted, Mantle, noMantle, Player, Position, Stunned, Time } from "../schema.ts"
 import type { Blow, Faction, MantleValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"
@@ -31,7 +32,7 @@ export const mantleMeets = (mantle: MantleValue, faction: Faction, origin: Vec2,
   const reach = mantle.effect.radius + radius
   for (let index = 0; index <= samples; index++) {
     const t = index / samples
-    if (Math.hypot(origin.x + delta.x * t - mantle.at.x, origin.y + delta.y * t - mantle.at.y) <= reach) return t
+    if (Ops.hypot(origin.x + delta.x * t - mantle.at.x, origin.y + delta.y * t - mantle.at.y) <= reach) return t
   }
   return undefined
 }
@@ -82,7 +83,7 @@ export const KeepMantle = Game.System("Shooter/KeepMantle", {
       if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
       const where = body.data.position.get()
       const away = subtract(where, at)
-      if (Math.hypot(away.x, away.y) > mantle.effect.radius + body.data.hurtbox.get().radius) continue
+      if (Ops.hypot(away.x, away.y) > mantle.effect.radius + body.data.hurtbox.get().radius) continue
       events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: "player", direction: normalizeOr(away, { x: 1, y: 0 }), blow: mantle.blow })
     }
   }
@@ -104,7 +105,7 @@ export const CastLifts = Game.System("Shooter/CastLifts", {
     for (const { entity, data } of queries.enemies.each()) {
       const at = data.position.get()
       // Never a champion: skills do not take the fight's own out of it.
-      if (data.enemy.get().champion || Math.hypot(at.x - cast.from.x, at.y - cast.from.y) > effect.radius) continue
+      if (data.enemy.get().champion || Ops.hypot(at.x - cast.from.x, at.y - cast.from.y) > effect.radius) continue
       data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
       data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
       // Out of the fight while up: the team cannot touch it either.

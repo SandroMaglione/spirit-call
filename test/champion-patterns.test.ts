@@ -16,7 +16,7 @@ import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { answering, movesetOf, readFrom } from "../src/features/moveset.ts"
 import { areaTouchesCircle } from "../src/physics/areas.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, Hitbox, PendingSpawn, Player, Poise, Position, Rampage, Roused, RunScope, Stunned } from "../src/schema.ts"
-import { center, ClearEnemies, cursorAt, start, steps } from "./helpers.ts"
+import { center, ClearEnemies, cursorAt, start, steps, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const king = championMovesets.brute!
@@ -56,7 +56,7 @@ const duel = (offset: Vec2, options: { readonly health?: number; readonly tuning
   const Wound = Game.System("Test/Wound", { queries: { enemies: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Enemy] }) } }, ({ queries }) => {
     for (const { data } of queries.enemies.each()) data.health.update((health) => ({ ...health, current: health.max * (options.health ?? 1) }))
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred(), Wound))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred(), Wound)))
   /** Every attack it starts over `seconds` (by id), and whether it roared. */
   const watch = (seconds: number) => {
     const started: Array<string> = []
@@ -172,7 +172,7 @@ describe("champion movesets", () => {
     const Break = Game.System("Test/Break", { queries: { enemies: Game.Query({ selection: { poise: Game.Query.write(Poise) }, with: [Enemy] }) } }, ({ queries }) => {
       for (const { data } of queries.enemies.each()) data.poise.update((poise) => ({ ...poise, current: 1e9 }))
     })
-    run.runtime.tick(Game.Schedule(Break))
+    expectOk(run.runtime.tick(Game.Schedule(Break)))
     run.step(2)
     expect(run.field().champion!.stunned).toBeLessThan(defaultTuning.breaking.seconds)
     expect(run.field().champion!.stunned).toBeGreaterThan(defaultTuning.breaking.seconds * defaultTuning.champions.broken - 0.1)
@@ -195,7 +195,7 @@ describe("champion movesets", () => {
     const Back = Game.System("Test/Back", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       for (const offset of [{ x: 400, y: 300 }, { x: 400, y: -300 }]) commands.spawnIn(RunScope, makeEnemy(supported, "sniper", { x: center.x + offset.x, y: center.y + offset.y }, 1, 20))
     })
-    backed.runtime.tick(Game.Schedule(Back, Game.Schedule.applyDeferred()))
+    expectOk(backed.runtime.tick(Game.Schedule(Back, Game.Schedule.applyDeferred())))
     expect(backed.watch(6).started).not.toContain("callForHelp")
   })
 
@@ -218,7 +218,7 @@ describe("champion movesets", () => {
     const Press = Game.System("Test/Press", { queries: { rampages: Game.Query({ selection: { rampage: Game.Query.write(Rampage) } }) } }, ({ queries }) => {
       for (const { data } of queries.rampages.each()) data.rampage.update((rampage) => ({ ...rampage, pressure: 100 }))
     })
-    run.runtime.tick(Game.Schedule(Press))
+    expectOk(run.runtime.tick(Game.Schedule(Press)))
     seen = run.watch(3).started
     expect(seen).toContain("shove")
     expect(seen[seen.indexOf("shove") + 1]).toBe("smashEnd")
@@ -246,7 +246,7 @@ describe("champion movesets", () => {
     let fire = 0
     for (let step = 0; step < steps(3) && fire === 0; step++) {
       run.step()
-      fire = run.runtime.inspect(Pools).filter((pool) => pool.element === "fire" && !pool.permanent).length
+      fire = run.runtime.inspect(Pools).filter((pool) => pool.element === "fire" && pool.timer !== null).length
     }
     expect(fire).toBeGreaterThan(0)
   })

@@ -7,6 +7,7 @@
  * they came from, out of a ring.
  */
 import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { Barrier, Cast, Damage, Game, Health, Hitbox, Hurtbox, Invulnerable, Position, RunScope, Time } from "../schema.ts"
 import type { BarrierValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"
@@ -16,12 +17,12 @@ const toSegment = (at: Vec2, from: Vec2, to: Vec2): number => {
   const along = subtract(to, from)
   const length = along.x * along.x + along.y * along.y
   const t = length <= 0 ? 0 : Math.max(0, Math.min(1, ((at.x - from.x) * along.x + (at.y - from.y) * along.y) / length))
-  return Math.hypot(at.x - (from.x + along.x * t), at.y - (from.y + along.y * t))
+  return Ops.hypot(at.x - (from.x + along.x * t), at.y - (from.y + along.y * t))
 }
 
 /** How far a body at `at` is from a barrier's middle line (a wall's segment, a ring's circle). */
 export const barrierGap = (shape: BarrierValue["shape"], at: Vec2): number =>
-  shape.kind === "wall" ? toSegment(at, shape.from, shape.to) : Math.abs(Math.hypot(at.x - shape.center.x, at.y - shape.center.y) - shape.radius)
+  shape.kind === "wall" ? toSegment(at, shape.from, shape.to) : Math.abs(Ops.hypot(at.x - shape.center.x, at.y - shape.center.y) - shape.radius)
 
 /** Samples along a step's path (shots move a few body widths a step at most). */
 const samples = 8
@@ -34,7 +35,7 @@ const samples = 8
 export const barrierMeets = (barrier: BarrierValue, origin: Vec2, delta: Vec2, radius: number): number | undefined => {
   const reach = radius + barrier.effect.thickness / 2
   const { shape } = barrier
-  const side = (t: number) => shape.kind === "ring" ? Math.sign(Math.hypot(origin.x + delta.x * t - shape.center.x, origin.y + delta.y * t - shape.center.y) - shape.radius) : 0
+  const side = (t: number) => shape.kind === "ring" ? Math.sign(Ops.hypot(origin.x + delta.x * t - shape.center.x, origin.y + delta.y * t - shape.center.y) - shape.radius) : 0
   for (let index = 0; index <= samples; index++) {
     const t = index / samples
     if (barrierGap(shape, { x: origin.x + delta.x * t, y: origin.y + delta.y * t }) <= reach) return t

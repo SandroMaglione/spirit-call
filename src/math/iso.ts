@@ -11,6 +11,7 @@
  *   screen.y = (x + y) / √2 · squash · zoom
  */
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 
 const INV_SQRT2 = Math.SQRT1_2
 
@@ -49,18 +50,18 @@ export const depthOf = (world: Vec2): number => world.x + world.y
  * above it (radians), orthographically. Its sine is the squash: 0.5 is a
  * camera 30° above the floor.
  */
-export const elevation = (projection: Projection): number => Math.asin(projection.squash)
+export const elevation = (projection: Projection): number => Ops.asin(projection.squash)
 
 /**
  * How high a point `height` world units above the floor shows on screen,
  * in pixels (an upright length is shortened by the camera's angle).
  */
 export const screenHeight = (projection: Projection, height: number): number =>
-  height * Math.cos(elevation(projection)) * projection.zoom
+  height * Ops.cos(elevation(projection)) * projection.zoom
 
 /** The height above the floor (world units) that shows as `pixels` on screen: the inverse of `screenHeight`. */
 export const worldHeight = (projection: Projection, pixels: number): number =>
-  pixels / (Math.cos(elevation(projection)) * projection.zoom)
+  pixels / (Ops.cos(elevation(projection)) * projection.zoom)
 
 /** A point `height` world units above the floor, in screen pixels (relative to the origin's screen point). */
 export const toScreenAt = (projection: Projection, world: Vec2, height: number): Vec2 => {

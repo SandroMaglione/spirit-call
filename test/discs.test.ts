@@ -6,7 +6,7 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { DiscMove } from "../src/content/attacks.ts"
 import { Disc, Enemy, Game, Health } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { cursorAt, placeDummies, start, steps, plainAttack } from "./helpers.ts"
+import { cursorAt, placeDummies, start, steps, plainAttack, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
@@ -37,7 +37,7 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, presses: ReadonlyArray<n
       : [{ frame, press: ["primary"], release: ["primary"] }])
   ]
   const run = start({ ...options, build: tidecaller, pointer })
-  run.runtime.tick(placeDummies(dummies, options.tuning))
+  expectOk(run.runtime.tick(placeDummies(dummies, options.tuning)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 

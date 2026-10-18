@@ -10,8 +10,8 @@ const lintFixtures = (): Array<string> => {
     output = (error as { stdout: string }).stdout
   }
   return output.split("\n").flatMap((line) => {
-    const match = /fixtures\/src\/([^:]+):\d+:\d+: .*\[Error\/shooter\(([a-z-]+)\)\]/.exec(line)
-    return match === null ? [] : [`${match[1]}: ${match[2]}`]
+    const match = /fixtures\/src\/([^:]+):\d+:\d+: .*\[Error\/(shooter|ritmo)\(([a-z-]+)\)\]/.exec(line)
+    return match === null ? [] : [`${match[1]}: ${match[2] === "ritmo" ? "ritmo/" : ""}${match[3]}`]
   })
 }
 
@@ -21,7 +21,12 @@ describe("project lint rules", () => {
     const count = (entry: string) => found.filter((line) => line === entry).length
     expect(count("features/violations.ts: layer-boundaries")).toBe(3)
     expect(count("features/violations.ts: no-effect-barrel")).toBe(1)
-    expect(count("features/violations.ts: deterministic-simulation")).toBe(4)
+    // Determinism comes from @typeonce/oxlint-plugin-ritmo, on for the simulation and content parts.
+    expect(count("features/violations.ts: ritmo/use-random-for-randomness")).toBe(1)
+    expect(count("features/violations.ts: ritmo/use-clock-for-time")).toBe(3)
+    expect(count("features/violations.ts: ritmo/keep-simulation-headless")).toBe(1)
+    expect(count("features/violations.ts: ritmo/use-ops-for-math")).toBe(2)
+    expect(count("features/violations.ts: ritmo/no-infinity-in-simulation-data")).toBe(1)
     expect(count("ui/violations.ts: layer-boundaries")).toBe(2)
     expect(count("content/violations.ts: layer-boundaries")).toBe(1)
     expect(count("features/casts.ts: no-cast-escape")).toBe(2)

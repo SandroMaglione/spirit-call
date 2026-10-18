@@ -1,3 +1,4 @@
+import * as Random from "@typeonce/ritmo-math/Random"
 import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
 import { keyBindings, touchButtons } from "./config/input.ts"
@@ -35,6 +36,7 @@ export const initialResources = (
   EnemyLevel: enemyLevel,
   Twist: twist,
   PassiveCooldowns: {},
+  SecondWinds: [],
   Mending: { ready: 0 },
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),
@@ -49,7 +51,7 @@ export const initialResources = (
   RunLog: emptyRunLog,
   EnergyLedger: {},
   Waves: initialWaves(tuning),
-  Rng: { state: tuning.waves.seed },
+  Rng: Random.seed(tuning.waves.seed),
   Run: { time: 0, endedAt: null },
   RunResult: null,
   HitStop: { remaining: 0 },

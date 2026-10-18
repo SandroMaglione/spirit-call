@@ -12,7 +12,7 @@ import { defaultTuning } from "../src/config/tuning.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { ElementState, Enemy, Energy, Game, Health, Hurtbox, Player, Position, RunScope, Stunned, Turned } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { center, ClearEnemies, cursorAt, start, steps } from "./helpers.ts"
+import { center, ClearEnemies, cursorAt, start, steps, expectOk } from "./helpers.ts"
 
 const dome = defaultTuning.skills.brace.effect
 const bond = defaultTuning.skills.floodgate.effect
@@ -47,8 +47,8 @@ const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly at: V
       commands.spawnIn(RunScope, makeEnemy(defaultTuning, kind, { x: center.x + at.x, y: center.y + at.y }, 1, 1, champion === true ? "water" : null, champion === true))
     }
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
-  run.runtime.tick(Game.Schedule(FillEnergy))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
+  expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 

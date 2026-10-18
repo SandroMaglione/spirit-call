@@ -11,6 +11,7 @@
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
 import { entryChampion, entryKind } from "./challenges.ts"
@@ -427,7 +428,7 @@ const uptime = (condition: HitCondition): number => {
 export const relicWorth = (passives: ReadonlyArray<Passive>): number => {
   const traits = traitsOf(passives)
   const dash = ((bodyRules.dash.charges + traits.dashCharges) / bodyRules.dash.charges) * traits.dashDistance / traits.dashCooldown
-  const traitWorth = ((dash * traits.weight) ** bodyRules.personality - 1) * 100 + (traits.energy - 1) * 50
+  const traitWorth = (Ops.pow(dash * traits.weight, bodyRules.personality) - 1) * 100 + (traits.energy - 1) * 50
   return passives.reduce((sum, passive) =>
     sum + (passive.kind === "damageBonus" ? passive.percent * uptime(passive.when) : passive.kind === "damageTaken" ? -passive.percent : 0), traitWorth)
 }

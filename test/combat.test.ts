@@ -6,7 +6,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Enemy, Game, Health, PendingSpawn, Position, Projectile, Stats } from "../src/schema.ts"
-import { gunShot, gunner, start, withGun, hitBy, placeDummies } from "./helpers.ts"
+import { gunShot, gunner, start, withGun, hitBy, placeDummies, expectOk } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Combat", {
   queries: {
@@ -76,7 +76,7 @@ describe("projectiles", () => {
     const tuning = withGun({ ...defaultTuning, enemies: { ...defaultTuning.enemies, dummy: { ...defaultTuning.enemies.dummy, radius: 4, hurtboxRadius: 4 } } }, { speed: 1000 })
     const run = shootNorth(tuning, 1)
     // A small target fits entirely between the body and the new launch point.
-    run.runtime.tick(placeDummies([{ x: 0, y: -12 }], tuning))
+    expectOk(run.runtime.tick(placeDummies([{ x: 0, y: -12 }], tuning)))
     run.step(3)
     expect(run.runtime.inspect(World).enemies[0]?.health).toBe(tuning.enemies.dummy.hp - hitBy("gunner", gunShot.power))
   })

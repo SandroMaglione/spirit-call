@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import { BasicAttack, Dash, Game, Player } from "../src/schema.ts"
-import { cursorAt, placeDummies, start, steps } from "./helpers.ts"
+import { cursorAt, placeDummies, start, steps, expectOk } from "./helpers.ts"
 
 const feed = defaultTuning.classes.gauntlets.handling.dashFeed
 /** The Swordsman fighting with the Gauntlets (or her own Blade), before any of them has a character. */
@@ -26,7 +26,7 @@ const setDash = (patch: { readonly charges?: number; readonly cooldown?: number;
 const arena = (classId: "gauntlets" | "blade", dummies: ReadonlyArray<{ x: number; y: number }>, presses: ReadonlyArray<number>, dashFeed = feed) => {
   const tuning = fighting(classId, dashFeed)
   const run = start({ tuning, kits: "shipped", pointer: [{ frame: 0, move: cursorAt({ x: 70, y: 0 }) }, ...presses.flatMap((frame) => [{ frame, press: ["primary" as const] }, { frame: frame + 1, release: ["primary" as const] }])] })
-  run.runtime.tick(placeDummies(dummies, tuning))
+  expectOk(run.runtime.tick(placeDummies(dummies, tuning)))
   return { ...run, state: () => run.runtime.inspect(State) }
 }
 
@@ -35,7 +35,7 @@ describe("the Gauntlets", () => {
     const recharge = (dashFeed: number) => {
       // Two dummies in the jab's lane: one move, one feed.
       const run = arena("gauntlets", [{ x: 60, y: 0 }, { x: 85, y: 0 }], [1], dashFeed)
-      run.runtime.tick(Game.Schedule(setDash({ charges: 0, cooldown: 1 })))
+      expectOk(run.runtime.tick(Game.Schedule(setDash({ charges: 0, cooldown: 1 }))))
       run.step(10)
       return run.state().cooldown
     }
@@ -55,8 +55,9 @@ describe("the Gauntlets", () => {
       run.step(second - 3)
       const opened = run.state().step
       // The second press comes out of a dash: the dash strike.
-      run.runtime.tick(Game.Schedule(setDash({ since: 0.02 })))
-      for (let i = 0; i < 8 && run.state().sinceDashStrike > 0.1; i++) run.step(1)
+      expectOk(run.runtime.tick(Game.Schedule(setDash({ since: 0.02 }))))
+      const struckJustNow = () => { const since = run.state().sinceDashStrike; return since !== null && since <= 0.1 }
+      for (let i = 0; i < 8 && !struckJustNow(); i++) run.step(1)
       // It was the dash strike.
       expect(run.state().sinceDashStrike).toBeLessThan(0.1)
       const struck = run.state().step
