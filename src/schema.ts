@@ -6,6 +6,7 @@ import { Clock, Descriptor, Schema } from "@typeonce/ritmo"
 import type * as Entity from "@typeonce/ritmo/Entity"
 import type { NodeRegistry } from "@typeonce/ritmo-render"
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
+import * as Random from "@typeonce/ritmo-math/Random"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
@@ -1305,8 +1306,8 @@ export interface TutorialValue {
 export const Tutorial = Descriptor.Resource<TutorialValue>()("Shooter/Tutorial")
 export const tutorialStart: TutorialValue = { step: 0, count: 0, ready: -1, celebrate: 0 }
 
-/** Deterministic random state (mulberry32), so runs replay exactly. */
-export const Rng = Descriptor.Resource<{ readonly state: number }>()("Shooter/Rng")
+/** Deterministic random state (mulberry32), so runs replay exactly: start it with `Random.seed`, draw with `Random.draw(resources.rng)`. */
+export const Rng = Descriptor.ConstructedResource(Random)("Shooter/Rng")
 
 /** The current run: simulated time since it started, and when it ended (`Clock.elapsed` of `Time`). */
 export interface RunValue {

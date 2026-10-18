@@ -170,7 +170,7 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
   const plan = spec.waves
   const dt = resources.time.get().dt
   const waves = resources.waves.get()
-  const random = Random.make(resources.rng.get().state)
+  const random = Random.draw(resources.rng)
   let { number, phase, timer, front, size, carried } = waves
   let queue = [...waves.queue]
   const player = queries.player.each()[0]?.data.position.get()
@@ -233,5 +233,4 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
   }
 
   resources.waves.set({ number, phase, timer, queue, front, size, carried })
-  resources.rng.set({ state: random.state })
 })

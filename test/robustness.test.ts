@@ -1,3 +1,4 @@
+import * as Random from "@typeonce/ritmo-math/Random"
 import { Descriptor } from "@typeonce/ritmo"
 import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 import { NodeRegistry, RenderSync } from "@typeonce/ritmo-render"
@@ -65,10 +66,12 @@ describe("live tuning", () => {
   it("applies queued edits to the Tuning resource", () => {
     const queue = emptyDevCommands()
     queue.edits.push({ path: ["dash", "distance"], value: 999 }, { path: ["waves", "enabled"], value: false })
-    const runtime = Game.Runtime.make({
+    const made = Game.Runtime.make({
       services: Game.Runtime.services(Game.Runtime.service(DevCommands, queue)),
-      resources: { Tuning: defaultTuning, Rng: { state: 1 } }
+      resources: { Tuning: defaultTuning, Rng: Random.seed(1) }
     })
+    if (!made.ok) throw new Error("the random seed did not validate")
+    const runtime = made.value
     const ReadTuning = Game.Inspector("Test/Tuning", { resources: { tuning: Game.System.readResource(Tuning) } }, ({ resources }) => resources.tuning.get())
     runtime.tick(Game.Schedule(ApplyDevCommands))
     const tuning = runtime.inspect(ReadTuning)

@@ -1,6 +1,6 @@
 import { effect, signal } from "@preact/signals"
-import { Result } from "@typeonce/ritmo"
-import { BrowserHostClock, FixedLoop, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
+import { FixedLoop, Result } from "@typeonce/ritmo"
+import { BrowserHostClock, BrowserTickSource, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
 import { keyBindings, scriptedPartyTaps, touchButtons, touchLayout } from "./config/input.ts"
 import { defaultTuning, engine } from "./config/tuning.ts"
@@ -455,7 +455,7 @@ const start = async (mount: HTMLElement) => {
     perfRecord.gpu = String(named === null ? gl.getParameter(gl.RENDERER) : gl.getParameter(named.UNMASKED_RENDERER_WEBGL))
   }
   const loop = FixedLoop.start({
-    source: FixedLoop.animationFrames(window),
+    source: BrowserTickSource.make(window),
     step: engine.step,
     maxFrameSeconds: engine.maxFrameSeconds,
     maxStepsPerFrame: engine.maxStepsPerFrame,

@@ -1,3 +1,4 @@
+import * as Random from "@typeonce/ritmo-math/Random"
 import { describe, expect, it } from "vitest"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
@@ -192,10 +193,12 @@ describe("dev spawn commands", () => {
 
   it("spawns a chosen type with its whole group near the player, then clears everything", () => {
     const queue = emptyDevCommands()
-    const runtime = Game.Runtime.make({
+    const made = Game.Runtime.make({
       services: Game.Runtime.services(Game.Runtime.service(DevCommands, queue)),
-      resources: { Tuning: defaultTuning, Rng: { state: 3 } }
+      resources: { Tuning: defaultTuning, Rng: Random.seed(3) }
     })
+    if (!made.ok) throw new Error("the random seed did not validate")
+    const runtime = made.value
     const apply = Game.Schedule(ApplyDevCommands, Game.Schedule.applyDeferred())
     queue.spawns.push("swarmer", "sniper")
     runtime.tick(apply)

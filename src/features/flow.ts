@@ -4,6 +4,7 @@
  * screen, and a restart that clears the run and starts over.
  */
 import { Clock } from "@typeonce/ritmo"
+import * as Random from "@typeonce/ritmo-math/Random"
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
 import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, SecondWinds, PracticeField, Reaction, Tutorial, tutorialStart, Rng, Run, RunLog, RunResult, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
@@ -159,7 +160,7 @@ export const ResetRun = Game.System("Shooter/ResetRun", {
   resources.log.set(emptyRunLog)
   resources.energyLedger.set({})
   resources.waves.set(initialWaves(tuning))
-  resources.rng.set({ state: tuning.waves.seed })
+  resources.rng.set(Random.seed(tuning.waves.seed))
   resources.run.set({ time: 0, endedAt: null })
   resources.result.set(null)
   resources.hitStop.set({ remaining: 0 })

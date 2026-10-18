@@ -56,11 +56,10 @@ export const CastSplinters = Game.System("Shooter/CastSplinters", {
       if (wielder.ok) commands.insert(wielder.value.entity, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
       continue
     }
-    random ??= Random.make(resources.rng.get().state)
+    random ??= Random.draw(resources.rng)
     for (const splinter of splintersFrom(random, cast.from, cast.faction, effect, blow, cast.skill)) commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, splinter]))
     events.explosion.emit({ at: cast.from, radius: effect.near, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
   }
-  if (random !== undefined) resources.rng.set({ state: random.state })
 })
 
 const Throwers = Game.Query({
@@ -99,10 +98,9 @@ export const ThrowSplinters = Game.System("Shooter/ThrowSplinters", {
       landed.push({ x: action.at.x + action.direction.x * action.move.reach, y: action.at.y + action.direction.y * action.move.reach })
     }
     if (landed.length === 0) continue
-    random ??= Random.make(resources.rng.get().state)
+    random ??= Random.draw(resources.rng)
     for (const at of landed) {
       for (const splinter of splintersFrom(random, at, "player", splintering.effect, splintering.blow, splintering.skill)) commands.spawnIn(RunScope, Game.Command.spawn([Lobbed, splinter]))
     }
   }
-  if (random !== undefined) resources.rng.set({ state: random.state })
 })

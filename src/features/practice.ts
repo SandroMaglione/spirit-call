@@ -87,7 +87,7 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
   // More picks than fit: a spot that empties takes the next pick in turn (the champion's keeps its kind).
   const turns = new Set(spots.filter((spot) => spot.champion !== true).map((spot) => spot.kind)).size < picks.length
   const dt = resources.time.get().dt
-  const random = Random.make(resources.rng.get().state)
+  const random = Random.draw(resources.rng)
   const player = queries.player.each()[0]?.data.position.get()
   const boxes = wallBoxes(queries.walls.each())
   const { elites, elements = eliteElements, shields = false } = resources.practice.get()
@@ -110,5 +110,4 @@ export const KeepPracticeField = Game.System("Shooter/KeepPracticeField", {
     return { ...spot, wait: null }
   })
   resources.field.set({ spots, turn })
-  resources.rng.set({ state: random.state })
 })

@@ -184,7 +184,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   // those keeping their distance keep their rhythm.
   const openToRush = player !== undefined && target !== undefined &&
     readPlayer(tuning, { at: target, aim: player.data.aim.get(), attack: player.data.basicAttack.get(), dashes: player.data.dash.get().charges }).opening
-  const random = Random.make(resources.rng.get().state)
+  const random = Random.draw(resources.rng)
 
   // Champions' phases, by their health (see `ChampionMoveset`): the one each is in, and the last it opened.
   const rampages = new Map<number, { readonly phase: number; readonly was: number; opened: number; pressure: number }>()
@@ -429,7 +429,6 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
 
     data.attacker.set({ attack, elapsed, cooldown, area, hit })
   }
-  resources.rng.set({ state: random.state })
   for (const { entity, data } of queries.rampages.each()) {
     const rampage = rampages.get(entity.id)
     if (rampage !== undefined) data.rampage.set({ phase: rampage.phase, opened: rampage.opened, pressure: rampage.pressure })
