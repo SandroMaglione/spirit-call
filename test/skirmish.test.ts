@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { defaultTuning, tuningWith, engine } from "../src/config/tuning.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, EnemyMode, Game, Player, Position, RunScope } from "../src/schema.ts"
-import { ClearEnemies, start } from "./helpers.ts"
+import { ClearEnemies, start, expectOk } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
@@ -31,7 +31,7 @@ const surrounded = (count: number, distance: number) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + Math.cos(angle) * distance, y: center.y + Math.sin(angle) * distance }))
     }
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Place, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Place, Game.Schedule.applyDeferred())))
   return run
 }
 

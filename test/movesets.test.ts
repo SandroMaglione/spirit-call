@@ -8,7 +8,7 @@ import type { AttackSpec } from "../src/content/enemies.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { pickAttack } from "../src/features/moveset.ts"
 import { Attacker, AttackPhase, Enemy, Game, Position, RunScope } from "../src/schema.ts"
-import { center, ClearEnemies, start, steps } from "./helpers.ts"
+import { center, ClearEnemies, start, steps, expectOk } from "./helpers.ts"
 
 const swipe = defaultTuning.enemies.chaser.attacks.find((attack) => attack.id === "swipe")! as Extract<AttackSpec, { kind: "melee" }>
 
@@ -31,7 +31,7 @@ const duel = (tuning: Tuning, offset: Vec2) => {
   const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + offset.x, y: center.y + offset.y }))
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
   return { ...run, enemy: () => run.runtime.inspect(World)[0]! }
 }
 

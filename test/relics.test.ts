@@ -17,7 +17,7 @@ import { buildFromQuery } from "../src/dev/build.ts"
 import { relicFits, relicProblems, withValidRelics } from "../src/features/build.ts"
 import { Dash, ElementState, Enemy, Game, Ground, Health, Player, Poise, Position, Rock, Vortex } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { center, cursorAt, doubleTap, placeDummies, start, testRelic, withRelic } from "./helpers.ts"
+import { center, cursorAt, doubleTap, placeDummies, start, testRelic, withRelic, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Relics", {
@@ -43,7 +43,7 @@ const sturdy = tuningWith({ enemies: { dummy: { hp: 2000, knockbackTaken: 0, res
 const arena = (build: BuildValue, offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: number; y: number }, options: StartOptions = {}) => {
   const tuning = options.tuning ?? sturdy
   const run = start({ tuning, kits: "shipped", build, ...options, pointer: [{ frame: 0, move: cursorAt(aim) }, ...(options.pointer ?? [])] })
-  run.runtime.tick(placeDummies(offsets, tuning))
+  expectOk(run.runtime.tick(placeDummies(offsets, tuning)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -163,7 +163,7 @@ describe("relics in play", () => {
   it("Ember Heart: a burning enemy she kills bursts, setting the one beside it burning", () => {
     const fight = (build: BuildValue) => {
       const run = arena(build, [{ x: 150, y: 0 }, { x: 150, y: 70 }], { x: 150, y: 0 }, { pointer: click(4) })
-      run.runtime.tick(Game.Schedule(burningAt({ x: 150, y: 0 }, 1)))
+      expectOk(run.runtime.tick(Game.Schedule(burningAt({ x: 150, y: 0 }, 1))))
       run.step(40)
       return run.world().enemies
     }
@@ -179,7 +179,7 @@ describe("relics in play", () => {
     const fight = (build: BuildValue) => {
       const fragile = tuningWith({ enemies: { dummy: { hp: 1, respawnDelay: 100 } } })
       const run = arena(build, [{ x: 60, y: -15 }, { x: 60, y: 15 }], { x: 300, y: 0 }, { tuning: fragile, pointer: click(4) })
-      run.runtime.tick(Game.Schedule(NoDashes))
+      expectOk(run.runtime.tick(Game.Schedule(NoDashes)))
       run.step(30)
       return run.world()
     }
@@ -197,7 +197,7 @@ describe("relics in play", () => {
       const Brink = Game.System("Test/Brink", { queries: { enemies: Game.Query({ selection: { poise: Game.Query.write(Poise) }, with: [Enemy] }) } }, ({ queries }) => {
         for (const { data } of queries.enemies.each()) data.poise.set({ current: 999.9, broken: 0, quiet: 0 })
       })
-      run.runtime.tick(Game.Schedule(Brink))
+      expectOk(run.runtime.tick(Game.Schedule(Brink)))
       let rocks = 0
       for (let step = 0; step < 40; step++) {
         run.step()

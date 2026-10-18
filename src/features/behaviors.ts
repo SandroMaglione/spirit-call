@@ -7,6 +7,7 @@
  */
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
 import { normalizeOr, scale, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import type { Behavior } from "../content/enemies.ts"
@@ -128,7 +129,7 @@ export const unstickDirection = (at: Vec2, radius: number, obstacles: ReadonlyAr
   for (const { box, reach } of obstacles) {
     const dx = at.x - Math.max(box.minX, Math.min(at.x, box.maxX))
     const dy = at.y - Math.max(box.minY, Math.min(at.y, box.maxY))
-    const gap = Math.hypot(dx, dy)
+    const gap = Ops.hypot(dx, dy)
     if (gap > 1e-6 && gap <= radius + reach) normals.push({ x: dx / gap, y: dy / gap })
   }
   if (normals.length === 0) return undefined
@@ -164,7 +165,7 @@ const edgeOf = (hazard: Hazard, at: Vec2): { readonly inside: boolean; readonly 
   const dx = at.x - hazard.center.x
   const dy = at.y - hazard.center.y
   if (hazard.half === null) {
-    const distance = Math.hypot(dx, dy)
+    const distance = Ops.hypot(dx, dy)
     const out = distance > 1e-6 ? { x: dx / distance, y: dy / distance } : { x: 1, y: 0 }
     return { inside: distance < hazard.radius, out, gap: distance - hazard.radius }
   }
@@ -176,7 +177,7 @@ const edgeOf = (hazard: Hazard, at: Vec2): { readonly inside: boolean; readonly 
   if (overX < 0 && overY < 0) return overX > overY ? { inside: true, out: { x: sx, y: 0 }, gap: overX } : { inside: true, out: { x: 0, y: sy }, gap: overY }
   const ox = Math.max(0, overX) * sx
   const oy = Math.max(0, overY) * sy
-  const gap = Math.hypot(ox, oy)
+  const gap = Ops.hypot(ox, oy)
   return { inside: false, out: gap > 1e-6 ? { x: ox / gap, y: oy / gap } : { x: sx, y: 0 }, gap }
 }
 
@@ -225,7 +226,7 @@ export const readPlayer = (
   const first = attackOf(tuning, attack.attack).combo[0]
   const reach = first !== undefined && isMelee(first) ? first.reach + rules.threatMargin : 0
   const ready = attack.cooldown <= 0 && attack.reloading <= 0
-  const cos = Math.cos((rules.threatDegrees * Math.PI) / 180)
+  const cos = Ops.cos((rules.threatDegrees * Math.PI) / 180)
   return {
     opening,
     reach,
@@ -233,7 +234,7 @@ export const readPlayer = (
       if (!ready || opening || reach <= 0) return false
       const dx = at.x - player.at.x
       const dy = at.y - player.at.y
-      const distance = Math.hypot(dx, dy)
+      const distance = Ops.hypot(dx, dy)
       return distance <= reach && (distance < 1e-6 || (dx * player.aim.x + dy * player.aim.y) / distance >= cos)
     }
   }

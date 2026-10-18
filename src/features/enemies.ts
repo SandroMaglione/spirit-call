@@ -7,6 +7,7 @@ import { clampLength, length, moveToward, normalizeOr, scale, subtract, zero, ty
 import * as FlowField from "@typeonce/ritmo-math/FlowField"
 import * as Scalar from "@typeonce/ritmo-math/Scalar"
 import * as SpatialGrid from "@typeonce/ritmo-math/SpatialGrid"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { trainingDummies } from "../content/arena.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { positive } from "../physics/sizes.ts"
@@ -160,7 +161,7 @@ export const makeGroupSpawns = (tuning: TuningValue, kind: EnemyKind, at: Vec2, 
   const spread = count === 1 ? 0 : tuning.enemies[kind].radius * 3
   return Array.from({ length: count }, (_, index) => {
     const angle = (index / count) * Math.PI * 2
-    return makePendingSpawn(kind, { x: at.x + Math.cos(angle) * spread, y: at.y + Math.sin(angle) * spread }, delay, index === 0 ? elite : null, undefined, false, index === 0 && shield)
+    return makePendingSpawn(kind, { x: at.x + Ops.cos(angle) * spread, y: at.y + Ops.sin(angle) * spread }, delay, index === 0 ? elite : null, undefined, false, index === 0 && shield)
   })
 }
 
@@ -332,7 +333,7 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
         // Open, she gets the circling ones at once.
         else if (mode === "orbit" && (herRead?.opening === true || data.brain.get().modeTimer >= tuning.crowd.minOrbitSeconds)) {
           const position = data.position.get()
-          waiting.push({ distance: Math.hypot(position.x - target.x, position.y - target.y), mode: data.mode, brain: data.brain })
+          waiting.push({ distance: Ops.hypot(position.x - target.x, position.y - target.y), mode: data.mode, brain: data.brain })
         }
       }
       waiting.sort((left, right) => left.distance - right.distance)
@@ -349,7 +350,7 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       const others = sides.filter((side) => side.id !== id && side.turned !== turned).map((side) => ({ at: side.at, her: false }))
       const all = turned || target === undefined ? others : [{ at: target, her: true }, ...others]
       return all.reduce<(typeof all)[number] | undefined>((best, next) =>
-        best === undefined || Math.hypot(next.at.x - at.x, next.at.y - at.y) < Math.hypot(best.at.x - at.x, best.at.y - at.y) ? next : best, undefined)
+        best === undefined || Ops.hypot(next.at.x - at.x, next.at.y - at.y) < Ops.hypot(best.at.x - at.x, best.at.y - at.y) ? next : best, undefined)
     }
 
     for (const { entity, data } of enemies) {
@@ -470,7 +471,7 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
         if (other.id === entity.id) return
         const dx = position.x - other.x
         const dy = position.y - other.y
-        const distance = Math.hypot(dx, dy)
+        const distance = Ops.hypot(dx, dy)
         const minimum = radius + other.r + tuning.crowd.spacing
         if (distance >= minimum) return
         const overlap = minimum - distance
@@ -491,13 +492,13 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       for (const { data } of queries.shields.each()) {
         const shield = data.shield.get()
         const position = data.position.get()
-        const want = Math.atan2(target.y - position.y, target.x - position.x)
-        const have = Math.atan2(shield.facing.y, shield.facing.x)
+        const want = Ops.atan2(target.y - position.y, target.x - position.x)
+        const have = Ops.atan2(shield.facing.y, shield.facing.x)
         let delta = want - have
         while (delta > Math.PI) delta -= Math.PI * 2
         while (delta < -Math.PI) delta += Math.PI * 2
         const step = Math.max(-shield.turnRate * dt, Math.min(shield.turnRate * dt, delta))
-        data.shield.set({ ...shield, facing: { x: Math.cos(have + step), y: Math.sin(have + step) } })
+        data.shield.set({ ...shield, facing: { x: Ops.cos(have + step), y: Ops.sin(have + step) } })
       }
     }
 })

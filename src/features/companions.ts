@@ -9,6 +9,7 @@
  * share, or when its time is up.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { Body, Cast, Companion, Game, Heal, Health, Hurtbox, Invulnerable, Member, Player, Position, PrevPosition, Renderable, RunScope, Time, Velocity, Zap, Disc } from "../schema.ts"
 import { makeDisc } from "./discs.ts"
 import { castBlow } from "./skills.ts"
@@ -20,8 +21,8 @@ const disc = { radius: 15, beyond: 80 }
 
 /** Where the `index`th of `count` companions appears, beside a caster at `at` facing `direction`: behind her, spread out. */
 export const companionStart = (at: Vec2, direction: Vec2, index: number, count: number): Vec2 => {
-  const angle = Math.atan2(-direction.y, -direction.x) + (count > 1 ? ((index / (count - 1)) - 0.5) * Math.PI * 0.8 : 0)
-  return { x: at.x + Math.cos(angle) * keep.distance * 0.8, y: at.y + Math.sin(angle) * keep.distance * 0.8 }
+  const angle = Ops.atan2(-direction.y, -direction.x) + (count > 1 ? ((index / (count - 1)) - 0.5) * Math.PI * 0.8 : 0)
+  return { x: at.x + Ops.cos(angle) * keep.distance * 0.8, y: at.y + Ops.sin(angle) * keep.distance * 0.8 }
 }
 
 /** Who calls (for whose echo it is). */
@@ -90,7 +91,7 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
     let facing = companion.facing
     if (field !== undefined) {
       const away = subtract(field.data.position.get(), at)
-      const distance = Math.hypot(away.x, away.y)
+      const distance = Ops.hypot(away.x, away.y)
       const speed = Math.min(effect.follow, Math.max(0, distance - keep.distance) * 4)
       const direction = normalizeOr(away, facing)
       data.velocity.set({ x: direction.x * speed, y: direction.y * speed })
@@ -108,7 +109,7 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
         if (hurtbox.faction === companion.faction) continue
         if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
         const where = body.data.position.get()
-        const gap = Math.hypot(where.x - at.x, where.y - at.y) - hurtbox.radius
+        const gap = Ops.hypot(where.x - at.x, where.y - at.y) - hurtbox.radius
         if (gap <= effect.radius && gap < nearest) {
           target = body
           nearest = gap
@@ -138,7 +139,7 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
         dealt += effect.power
       } else {
         const health = field.data.health.get()
-        const close = Math.hypot(her.x - at.x, her.y - at.y) <= effect.healRadius
+        const close = Ops.hypot(her.x - at.x, her.y - at.y) <= effect.healRadius
         if (effect.heal > 0 && close && health.current > 0 && health.current < health.max) {
           const amount = Math.min(health.max - health.current, (health.max * effect.heal) / 100)
           field.data.health.set({ current: health.current + amount, max: health.max })

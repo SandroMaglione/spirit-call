@@ -291,3 +291,11 @@ export const placeDummies = (offsets: ReadonlyArray<Vec2>, tuning: Tuning = defa
 
 /** Current mode read through the public inspector API. */
 export const ReadFlow = Game.Inspector("Test/Flow", { machines: { flow: Game.System.machine(Flow) } }, ({ machines }) => machines.flow.get())
+
+/**
+ * Fails the test when a tick (or a restore) fails, naming the failure:
+ * dropping the Result would let the test go on against a half-run world.
+ */
+export const expectOk = (result: { readonly ok: true } | { readonly ok: false; readonly error: unknown }): void => {
+  if (!result.ok) throw new Error(`expected success, got ${JSON.stringify(result.error)}`)
+}

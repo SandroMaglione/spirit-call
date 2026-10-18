@@ -11,6 +11,7 @@
  */
 import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
 import { normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { earthrise } from "../content/skills.ts"
 import type { EarthriseEffect, FaultEffect, QuakeEffect } from "../content/skills.ts"
 import { Cast, Damage, Elite, Enemy, Explosion, Game, Health, Hurtbox, Invulnerable, Poise, Position, Rock, RunScope, Stunned, Time, Tuning } from "../schema.ts"
@@ -43,7 +44,7 @@ export const earthriseTargets = (
   direction: Vec2,
   bodies: ReadonlyArray<RockTarget>
 ): ReadonlyArray<{ readonly at: Vec2; readonly target: number | null }> => {
-  const gap = (body: RockTarget) => Math.hypot(body.at.x - from.x, body.at.y - from.y) - body.radius
+  const gap = (body: RockTarget) => Ops.hypot(body.at.x - from.x, body.at.y - from.y) - body.radius
   const toughest = bodies
     .filter((body) => body.faction !== faction && gap(body) <= effect.radius)
     .sort((left, right) =>
@@ -142,7 +143,7 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
       if (hurtbox.faction === rock.faction) continue
       if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
       const there = body.data.position.get()
-      if (Math.hypot(there.x - at.x, there.y - at.y) - hurtbox.radius > effect.size) continue
+      if (Ops.hypot(there.x - at.x, there.y - at.y) - hurtbox.radius > effect.size) continue
       caught.add(body.entity.id)
       events.damage.emit({
         target: Game.Entity.handle(body.entity.id, Health),

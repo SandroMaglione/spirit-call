@@ -9,7 +9,7 @@ import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { toScreen } from "../src/math/iso.ts"
 import { Attacker, AttackPhase, Enemy, Game, Ground, Health, PendingSpawn, Player, Position, RunScope, Shield } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, grenadeSkill, gunShot, gunner, plainEnemies, playerLoss, start, swordsman, hitBy } from "./helpers.ts"
+import { ClearEnemies, grenadeSkill, gunShot, gunner, plainEnemies, playerLoss, start, swordsman, hitBy, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
@@ -51,7 +51,7 @@ const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}, shield 
   const Spawn = Game.System("Test/SpawnOne", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(plainEnemies(options.tuning ?? defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, null, false, shield))
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -201,7 +201,7 @@ describe("dev spawn commands", () => {
     const runtime = made.value
     const apply = Game.Schedule(ApplyDevCommands, Game.Schedule.applyDeferred())
     queue.spawns.push("swarmer", "sniper")
-    runtime.tick(apply)
+    expectOk(runtime.tick(apply))
     const pending = runtime.inspect(Pending)
     expect(pending.map((spawn) => spawn.kind).sort()).toEqual(["sniper", "swarmer", "swarmer", "swarmer", "swarmer"])
     for (const spawn of pending) {
@@ -209,7 +209,7 @@ describe("dev spawn commands", () => {
       expect(Math.hypot(spawn.at.x - center.x, spawn.at.y - center.y)).toBeLessThan(400)
     }
     queue.clear = true
-    runtime.tick(apply)
+    expectOk(runtime.tick(apply))
     expect(runtime.inspect(Pending)).toEqual([])
   })
 })

@@ -15,7 +15,7 @@ import { knockbackTaken } from "../src/features/motion.ts"
 import { movesetOf } from "../src/features/moveset.ts"
 import { poiseOf } from "../src/features/poise.ts"
 import { UiRequest, Attacker, Body, CombatStats, ElementAffinities, Elite, Enemy, Game, Health, Invulnerable, Player, Waves } from "../src/schema.ts"
-import { ReadFlow, plainEnemies, start } from "./helpers.ts"
+import { ReadFlow, plainEnemies, start, expectOk } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 const rules = defaultTuning.champions
@@ -72,7 +72,7 @@ const play = (tuning: Tuning) => {
   const flow = () => run.runtime.inspect(ReadFlow)
   const tick = (count: number, champions: boolean) => {
     for (let index = 0; index < count; index++) {
-      run.runtime.tick(Game.Schedule(Shield, wipe(champions), Game.Schedule.applyDeferred()))
+      expectOk(run.runtime.tick(Game.Schedule(Shield, wipe(champions), Game.Schedule.applyDeferred())))
       run.step()
     }
   }
@@ -118,10 +118,10 @@ describe("champions", () => {
   it("wait their cooldown times their share, with their kind's telegraphs", () => {
     // A brute champion next to the player: after its first attack, it waits its cooldown times its share at the run's level.
     const run = start({ tuning: withChallenge({ objective: clearWaves(), waves: { scripted: [[champion("brute", "thunder")]], endless: null } }), waves: true, challenge: "swarm" })
-    run.runtime.tick(Game.Schedule(Shield))
+    expectOk(run.runtime.tick(Game.Schedule(Shield)))
     let longest = 0
     for (let step = 0; step < steps(12); step++) {
-      run.runtime.tick(Game.Schedule(Shield))
+      expectOk(run.runtime.tick(Game.Schedule(Shield)))
       run.step()
       const brute = run.runtime.inspect(Field).enemies.find((enemy) => enemy.champion)
       if (brute !== undefined) longest = Math.max(longest, brute.cooldown)

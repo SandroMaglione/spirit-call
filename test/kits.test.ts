@@ -11,7 +11,7 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { Airborne, ElementState, Enemy, Energy, Game, Ground, Health, Player, Poise, Position, Stunned } from "../src/schema.ts"
-import { center, cursorAt, gunner, placeDummies, start, steps, tidecaller } from "./helpers.ts"
+import { center, cursorAt, gunner, placeDummies, start, steps, tidecaller, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Kits", {
@@ -40,7 +40,7 @@ const sturdy = tuningWith({ enemies: { dummy: { hp: 2000 } } })
 const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: number; y: number }, options: StartOptions = {}) => {
   const tuning = options.tuning ?? sturdy
   const run = start({ tuning, kits: "shipped", ...options, pointer: [{ frame: 0, move: cursorAt(aim) }, ...(options.pointer ?? [])] })
-  run.runtime.tick(placeDummies(offsets, tuning))
+  expectOk(run.runtime.tick(placeDummies(offsets, tuning)))
   return { ...run, world: () => run.runtime.inspect(World), airborne: () => run.runtime.inspect(InAir) }
 }
 const InAir = Game.Inspector("Test/InAir", { queries: { player: Game.Query({ selection: { airborne: Game.Query.optional(Airborne) }, with: [Player] }) } }, ({ queries }) => queries.player.each()[0]!.data.airborne.present)
@@ -94,7 +94,7 @@ describe("the Stormcaller", () => {
   it("holds what her Thunderclap strikes: stunned, its break bar filled", () => {
     const breakable = tuningWith({ enemies: { dummy: { hp: 2000, poise: 0.5 } } })
     const run = arena([{ x: 120, y: 0 }], { x: 300, y: 0 }, { build: { character: "stormcaller" }, tuning: breakable, keys: [press("ultimate", 1)] })
-    run.runtime.tick(Game.Schedule(FillEnergy))
+    expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
     run.step(4)
     const [enemy] = run.world().enemies
     expect(enemy!.stunned).toBeGreaterThan(0)

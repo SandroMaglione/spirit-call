@@ -11,7 +11,7 @@ import { Enemy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, St
 
 const Grenades = Game.Inspector("Test/Grenades", { queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }) } }, ({ queries }) => queries.lobbed.each().map(({ data }) => data.lobbed.get()))
 import type { BuildValue } from "../src/schema.ts"
-import { ClearEnemies, gunner, start, swordsman, plainAttack, hitBy } from "./helpers.ts"
+import { ClearEnemies, gunner, start, swordsman, plainAttack, hitBy, expectOk } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
@@ -42,7 +42,7 @@ const range = (offsets: ReadonlyArray<number>, touch: Touch.Timeline<TouchButton
   const Spawn = Game.System("Test/SpawnDummies", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     for (const x of offsets) commands.spawnIn(RunScope, makeEnemy(tuning, "dummy", { x: center.x + x, y: center.y }))
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 

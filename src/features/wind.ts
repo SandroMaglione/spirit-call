@@ -3,6 +3,7 @@
  * (see `ApplyDamage`) and gliding (see `pushDecay`); slammed into a wall
  * while still moving fast, an enemy is stunned.
  */
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { ElementState, Game, Knockback, Player, Position, PrevPosition, Reaction, Stunned, Time, Tuning } from "../schema.ts"
 import { pushShare } from "./motion.ts"
 
@@ -37,10 +38,10 @@ export const SlamSwept = Game.System("Shooter/SlamSwept", {
     if (stunned > 0) data.stunned.set({ remaining: Math.max(0, stunned - dt) })
     if (data.state.get().current?.id !== "swept") continue
     const push = data.knockback.get()
-    const speed = Math.hypot(push.x, push.y)
+    const speed = Ops.hypot(push.x, push.y)
     const position = data.position.get()
     const previous = data.previous.get()
-    const moved = Math.hypot(position.x - previous.x, position.y - previous.y)
+    const moved = Ops.hypot(position.x - previous.x, position.y - previous.y)
     if (speed <= rules.slamSpeed || moved >= speed * share * dt * 0.5) continue
     // Slammed into a wall: the push stops dead, and an enemy is stunned.
     data.knockback.set({ x: 0, y: 0 })

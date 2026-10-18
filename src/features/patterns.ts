@@ -15,6 +15,7 @@
  */
 import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { AttackReleased, Elite, Enemy, Game, Health, Hit, Hitbox, Rampage, RunScope, Time, Tuning, Ground, PendingSpawn } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { makeGround } from "./ground.ts"
@@ -53,7 +54,7 @@ export const callPoints = (at: Vec2, radius: number, count: number, clearance: n
   Array.from({ length: count }, (_, index) => {
     const angle = (index / Math.max(1, count)) * Math.PI * 2 + Math.PI / 4
     for (const reach of [radius, radius * 0.66, radius * 0.33]) {
-      const point = { x: at.x + Math.cos(angle) * reach, y: at.y + Math.sin(angle) * reach }
+      const point = { x: at.x + Ops.cos(angle) * reach, y: at.y + Ops.sin(angle) * reach }
       const inside = point.x >= clearance && point.y >= clearance && point.x <= bounds.width - clearance && point.y <= bounds.height - clearance
       if (inside && !boxes.some((box) => overlapsCircle(box, point, clearance))) return point
     }

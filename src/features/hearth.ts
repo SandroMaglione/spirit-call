@@ -9,6 +9,7 @@
  * a share of what it deals heals the one on the field, up to a cap each time.
  */
 import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { elements } from "../content/elements.ts"
 import type { Affinity, ElementId } from "../content/elements.ts"
@@ -108,7 +109,7 @@ export const UpdateEmberRings = Game.System("Shooter/UpdateEmberRings", {
       const hurtbox = body.data.hurtbox.get()
       if (hurtbox.faction === ring.faction || body.data.health.get().current <= 0 || struck.includes(body.entity.id)) continue
       const at = body.data.position.get()
-      const distance = Math.hypot(at.x - center.x, at.y - center.y)
+      const distance = Ops.hypot(at.x - center.x, at.y - center.y)
       // Kept at a distance: what is closer is spared.
       if (distance < effect.inner || distance - hurtbox.radius > effect.outer) continue
       struck.push(body.entity.id)
@@ -160,7 +161,7 @@ export const UpdatePyres = Game.System("Shooter/UpdatePyres", {
         if (hurtbox.faction === pyre.faction || body.data.health.get().current <= 0) continue
         if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
         const at = body.data.position.get()
-        if (Math.hypot(at.x - center.x, at.y - center.y) > pyre.effect.radius + hurtbox.radius) continue
+        if (Ops.hypot(at.x - center.x, at.y - center.y) > pyre.effect.radius + hurtbox.radius) continue
         events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: pyre.faction, direction: normalizeOr(subtract(at, center), { x: 1, y: 0 }), blow: pyre.tick })
       }
     }

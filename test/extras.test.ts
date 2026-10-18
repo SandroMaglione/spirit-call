@@ -5,7 +5,7 @@ import { objectiveMet } from "../src/features/challenges.ts"
 import { practiceSpots } from "../src/features/practice.ts"
 import { initialWaves } from "../src/features/waves.ts"
 import { UiRequest, blow, Damage, Enemy, Game, Health, Immortal, Player, Poise } from "../src/schema.ts"
-import { ReadFlow, start } from "./helpers.ts"
+import { ReadFlow, start, expectOk } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 const flowOf = (run: ReturnType<typeof start>) => run.runtime.inspect(ReadFlow)
@@ -37,7 +37,7 @@ const strike = (run: ReturnType<typeof start>, target: number | "player", damage
       if (hit) events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: target === "player" ? "enemy" : "player", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0 }) })
     }
   })
-  run.runtime.tick(Game.Schedule(Strike))
+  expectOk(run.runtime.tick(Game.Schedule(Strike)))
 }
 
 describe("the training ground", () => {

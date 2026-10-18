@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { Attacker, AttackPhase, Dash, DodgeChain, ElementState, Enemy, Energy, Game, Health, Player, Poise, SlowMotion, Stats, Stunned, Vortex, BasicAttack } from "../src/schema.ts"
-import { cursorAt, doubleTap, gunner, placeDummies, start, steps, plainAttack } from "./helpers.ts"
+import { cursorAt, doubleTap, gunner, placeDummies, start, steps, plainAttack, expectOk } from "./helpers.ts"
 
 const Charge = Game.Inspector("Test/Charge", { queries: { player: Game.Query({ selection: { energy: Game.Query.read(Energy) }, with: [Player] }) } }, ({ queries }) => queries.player.each()[0]!.data.energy.get().current)
 
@@ -75,7 +75,7 @@ describe("the Gunner's charged shot", () => {
       tuning,
       pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }, ...clicks(1, shots, 12), { frame: charge, press: ["primary"] }, { frame: charge + steps(gun.power!.holdDelay + gun.power!.chargeTime) + 4, release: ["primary"] }]
     })
-    run.runtime.tick(placeDummies([{ x: 300, y: 0 }], tuning))
+    expectOk(run.runtime.tick(placeDummies([{ x: 300, y: 0 }], tuning)))
     run.step(charge + steps(2.2))
     return run
   }
@@ -102,7 +102,7 @@ describe("breaking", () => {
 
   it("breaks an enemy under a pressed attack: stunned, then it recovers with an empty bar", () => {
     const run = start({ tuning: breakable, pointer: [{ frame: 0, move: cursorAt({ x: 60, y: 0 }) }, ...clicks(1, 30, 14)] })
-    run.runtime.tick(placeDummies([{ x: 60, y: 0 }], breakable))
+    expectOk(run.runtime.tick(placeDummies([{ x: 60, y: 0 }], breakable)))
     let broke = -1
     for (let step = 0; step < steps(6) && broke < 0; step++) {
       run.step()
@@ -119,7 +119,7 @@ describe("breaking", () => {
   it("fills the team's energy when it breaks one, on top of what the blows gave (when breaks give any)", () => {
     const charging = tuningWith({ enemies: { dummy: { poise: 0.5, hp: 200 } }, energy: { break: 15 } })
     const run = start({ tuning: charging, pointer: [{ frame: 0, move: cursorAt({ x: 60, y: 0 }) }, ...clicks(1, 30, 14)] })
-    run.runtime.tick(placeDummies([{ x: 60, y: 0 }], charging))
+    expectOk(run.runtime.tick(placeDummies([{ x: 60, y: 0 }], charging)))
     let before = 0
     for (let step = 0; step < steps(6); step++) {
       before = run.runtime.inspect(Charge)
@@ -132,7 +132,7 @@ describe("breaking", () => {
   it("never breaks from chip damage that lets the bar drain", () => {
     // One click every 2.5 seconds: the bar drains between hits.
     const run = start({ tuning: breakable, pointer: [{ frame: 0, move: cursorAt({ x: 60, y: 0 }) }, ...clicks(1, 6, steps(2.5))] })
-    run.runtime.tick(placeDummies([{ x: 60, y: 0 }], breakable))
+    expectOk(run.runtime.tick(placeDummies([{ x: 60, y: 0 }], breakable)))
     let broke = false
     for (let step = 0; step < steps(15); step++) {
       run.step()
@@ -151,7 +151,7 @@ describe("breaking", () => {
       }
     })
     const run = start({ tuning: winding })
-    run.runtime.tick(placeDummies([{ x: 200, y: 0 }], winding))
+    expectOk(run.runtime.tick(placeDummies([{ x: 200, y: 0 }], winding)))
     run.step(5)
     expect(run.runtime.inspect(Fight).enemies[0]!.phase).toBe("windup")
     const Break = Game.System("Test/Break", { queries: { enemies: Game.Query({ selection: { poise: Game.Query.write(Poise), stunned: Game.Query.write(Stunned) } }) } }, ({ queries }) => {
@@ -160,7 +160,7 @@ describe("breaking", () => {
         data.stunned.set({ remaining: 2 })
       }
     })
-    run.runtime.tick(Game.Schedule(Break))
+    expectOk(run.runtime.tick(Game.Schedule(Break)))
     run.step(2)
     expect(run.runtime.inspect(Fight).enemies[0]!.phase).toBe("ready")
   })
@@ -178,7 +178,7 @@ describe("a perfect dodge", () => {
   /** The step the swipe goes off on (the dummy 80 to her right). */
   const landsAt = (() => {
     const dry = start({ tuning })
-    dry.runtime.tick(placeDummies([{ x: 80, y: 0 }], tuning))
+    expectOk(dry.runtime.tick(placeDummies([{ x: 80, y: 0 }], tuning)))
     for (let step = 1; step < 300; step++) {
       dry.step()
       if (dry.runtime.inspect(Fight).enemies[0]!.phase === "active") return step
@@ -188,7 +188,7 @@ describe("a perfect dodge", () => {
   /** A run whose dash (away, screen up) starts `early` steps before the swipe goes off (a double tap read on the following steps). */
   const dodging = (early: number | null) => {
     const run = start({ tuning, keys: early === null ? [] : doubleTap("up", landsAt - early - 3, { hold: true }) })
-    run.runtime.tick(placeDummies([{ x: 80, y: 0 }], tuning))
+    expectOk(run.runtime.tick(placeDummies([{ x: 80, y: 0 }], tuning)))
     return run
   }
   const hp = defaultTuning.characters.swordsman.stats.hp
@@ -212,7 +212,7 @@ describe("a perfect dodge", () => {
     const after = (count: number) => {
       const run = dodging(1)
       const Seed = Game.System("Test/SeedChain", { resources: { chain: Game.System.writeResource(DodgeChain) } }, ({ resources }) => resources.chain.set({ count, remaining: count > 0 ? 100 : 0 }))
-      run.runtime.tick(Game.Schedule(Seed))
+      expectOk(run.runtime.tick(Game.Schedule(Seed)))
       for (let step = 0; step < landsAt + 3 && run.runtime.inspect(Chain).slow.remaining <= 0; step++) run.step()
       return run.runtime.inspect(Chain)
     }
@@ -254,7 +254,7 @@ describe("a perfect dodge", () => {
     // The same swipe and input, with only the practice partner's timing changed.
     const practice = tuningWith({ enemies: { dummy: { poise: 0.5, attacks: [swipe], perfectDodgeWindow: defaultTuning.enemies.sparringDummy.perfectDodgeWindow } } })
     const run = start({ tuning: practice, keys: doubleTap("up", landsAt - early - 3, { hold: true }) })
-    run.runtime.tick(placeDummies([{ x: 80, y: 0 }], practice))
+    expectOk(run.runtime.tick(placeDummies([{ x: 80, y: 0 }], practice)))
     run.step(landsAt + 3)
     expect(run.runtime.inspect(Dodger).dash.perfect).toBe(true)
     expect(run.runtime.inspect(Dodger).health).toBe(hp)
@@ -263,19 +263,19 @@ describe("a perfect dodge", () => {
   it("still rejects a practice dash taken before its wider window", () => {
     const practice = tuningWith({ enemies: { dummy: { attacks: [swipe], perfectDodgeWindow: defaultTuning.enemies.sparringDummy.perfectDodgeWindow } } })
     const run = start({ tuning: practice, keys: doubleTap("up", landsAt - steps(0.55) - 3, { hold: true }) })
-    run.runtime.tick(placeDummies([{ x: 80, y: 0 }], practice))
+    expectOk(run.runtime.tick(placeDummies([{ x: 80, y: 0 }], practice)))
     run.step(landsAt + 3)
     expect(run.runtime.inspect(Dodger).dash.perfect).toBe(false)
   })
 
   it("slows only the enemies: their windup crawls while she runs at full speed", () => {
     const run = start({ tuning, keys: [{ frame: 0, press: ["left"] }] })
-    run.runtime.tick(placeDummies([{ x: 80, y: 0 }], tuning))
+    expectOk(run.runtime.tick(placeDummies([{ x: 80, y: 0 }], tuning)))
     run.step(10)
     const Slow = Game.System("Test/Slow", { resources: { slow: Game.System.writeResource(SlowMotion) } }, ({ resources }) => {
       resources.slow.set({ remaining: 1, scale: 0.25, dodge: true })
     })
-    run.runtime.tick(Game.Schedule(Slow))
+    expectOk(run.runtime.tick(Game.Schedule(Slow)))
     const before = { at: run.player().position, windup: run.runtime.inspect(Fight).enemies[0]!.phase }
     const AttackerElapsed = Game.Inspector("Test/Elapsed", { queries: { enemies: Game.Query({ selection: { attacker: Game.Query.read(Attacker) } }) } }, ({ queries }) => queries.enemies.each()[0]!.data.attacker.get().elapsed)
     const start0 = run.runtime.inspect(AttackerElapsed)
@@ -311,7 +311,7 @@ describe("the dash strike", () => {
   const strike = (after: number) => {
     const tuning = tuningWith({ enemies: { dummy: { hp: 500 } } })
     const run = start({ tuning, pointer: [{ frame: 0, move: cursorAt({ x: 200, y: 0 }) }, ...clicks(3 + after, 1, 1)], keys: doubleTap("right", 0, { hold: true }) })
-    run.runtime.tick(placeDummies([{ x: 260, y: 0 }], tuning))
+    expectOk(run.runtime.tick(placeDummies([{ x: 260, y: 0 }], tuning)))
     return run
   }
 

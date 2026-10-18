@@ -5,7 +5,7 @@ import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { chainFrom } from "../src/features/thunder.ts"
 import type { Struck } from "../src/features/thunder.ts"
 import { ElementState, Enemy, Energy, Game, Health, Member, Player, Position, Stats, Totem } from "../src/schema.ts"
-import { center, cursorAt, placeDummies, start, steps, hitBy } from "./helpers.ts"
+import { center, cursorAt, placeDummies, start, steps, hitBy, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const totemSpec = defaultTuning.skills.sparkTotem.effect
@@ -34,7 +34,7 @@ const World = Game.Inspector("Test/Thunder", {
 /** Training mode with only the listed dummies (offsets from the player), aiming at `aim`. */
 const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = {}) => {
   const run = start({ tuning: sturdy, build: stormcaller, ...options, pointer: [{ frame: 0, move: cursorAt(aim) }] })
-  run.runtime.tick(placeDummies(dummies, options.tuning ?? sturdy))
+  expectOk(run.runtime.tick(placeDummies(dummies, options.tuning ?? sturdy)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -110,7 +110,7 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
     // A few zaps short of whole, so the totem lasts long enough to heal her up and turn on the enemy.
     const low = sturdy.characters.stormcaller.stats.hp - 6
     const run = range([{ x: 120, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
-    run.runtime.tick(Game.Schedule(Hurt(low)))
+    expectOk(run.runtime.tick(Game.Schedule(Hurt(low))))
     run.step(3)
     const max = run.world().player!.max
     expect(run.world().player!.current).toBeCloseTo(low + (max * totemSpec.heal) / 100, 6)
@@ -126,7 +126,7 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
     const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [special(1), { frame: 5, press: ["left"] }, { frame: 50, release: ["left"] }] })
     run.step(60)
     const before = run.world().enemies[0]!.health
-    run.runtime.tick(Game.Schedule(Hurt(50)))
+    expectOk(run.runtime.tick(Game.Schedule(Hurt(50))))
     run.step(steps(totemSpec.tick) + 1)
     expect(run.world().player!.current).toBe(50)
     expect(run.world().enemies[0]!.health).toBeLessThan(before)
@@ -135,7 +135,7 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
   it("keeps working after she leaves the field: it heals whoever comes in, and runs out after its time", () => {
     const run = range([], { x: 200, y: 0 }, { team: [stormcaller, { character: "swordsman" }], keys: [special(1), { frame: 30, press: ["team2"], release: ["team2"] }] })
     run.step(40)
-    run.runtime.tick(Game.Schedule(Hurt(40)))
+    expectOk(run.runtime.tick(Game.Schedule(Hurt(40))))
     run.step(steps(totemSpec.tick) + 2)
     expect(run.world().members.swordsman).toBeGreaterThan(40)
     run.step(steps(totemSpec.seconds))
@@ -146,7 +146,7 @@ describe("the Stormcaller's Spark Totem (Space)", () => {
 describe("thunder on a soaked enemy", () => {
   it("bursts the soak: the struck enemy stops a moment, and is left charged", () => {
     const run = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { keys: [special(1)] })
-    run.runtime.tick(Game.Schedule(Soak))
+    expectOk(run.runtime.tick(Game.Schedule(Soak)))
     run.step(4)
     expect(run.world().enemies[0]!.health).toBeLessThan(1000 - totemSpec.power)
     expect(run.world().reactions).toContain("soaked")
@@ -156,7 +156,7 @@ describe("thunder on a soaked enemy", () => {
 describe("the Stormcaller's Thunderclap (Shift)", () => {
   it("strikes the enemies around her and heals the whole team, the bench too", () => {
     const run = range([{ x: 120, y: 0 }, { x: -150, y: 0 }, { x: 0, y: clapSpec.radius + 120 }], { x: 200, y: 0 }, { team: [stormcaller, { character: "gunner" }], keys: [ultimate(1)] })
-    run.runtime.tick(Game.Schedule(FillEnergy, Hurt(30)))
+    expectOk(run.runtime.tick(Game.Schedule(FillEnergy, Hurt(30))))
     run.step(3)
     const [near, other, far] = run.world().enemies
     expect(near!.health).toBe(1000 - hitBy("stormcaller", clapSpec.power))
@@ -177,7 +177,7 @@ describe("the Stormcaller's Thunderclap (Shift)", () => {
       for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "charged", remaining: 60, atk: 100, nextTick: 0, charges: false } })
     })
     const run = range([{ x: 120, y: 0 }, { x: -150, y: 0 }], { x: 200, y: 0 }, { keys: [ultimate(1)] })
-    run.runtime.tick(Game.Schedule(FillEnergy, Hurt(30), Charge))
+    expectOk(run.runtime.tick(Game.Schedule(FillEnergy, Hurt(30), Charge)))
     run.step(3)
     const percent = Math.min(heals.most, heals.base + heals.per * 2)
     expect(percent).toBeGreaterThan(heals.base)

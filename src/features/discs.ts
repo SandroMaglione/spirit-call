@@ -9,6 +9,7 @@
  */
 import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
 import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { Damage, Disc, ElementState, Game, Health, Impact, Position, PrevPosition, Renderable, Time, Tuning } from "../schema.ts"
 import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -65,7 +66,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         events.damage.emit({ target: Game.Entity.handle(contact.target.entity, Health), faction: disc.faction, direction: push, blow: disc.blow })
         if (disc.phase === "out" && disc.bounces > 0 && bounce === undefined && marked.has(contact.target.id)) {
           let next: (typeof targets)[number] | undefined
-          const away = (other: (typeof targets)[number]) => Math.hypot(other.at.x - contact.at.x, other.at.y - contact.at.y)
+          const away = (other: (typeof targets)[number]) => Ops.hypot(other.at.x - contact.at.x, other.at.y - contact.at.y)
           for (const other of targets) {
             if (hit.includes(other.id) || other.faction === disc.faction || !marked.has(other.id) || away(other) > bounceRange) continue
             if (next === undefined || away(other) < away(next)) next = other
@@ -90,7 +91,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
           // Off the enemy toward the next, with the way there (and a little more) to fly.
           const toward = subtract(bounce.toward, bounce.at)
           data.position.set(bounce.at)
-          disc = { ...disc, direction: normalizeOr(toward, disc.direction), range: Math.hypot(toward.x, toward.y) + disc.radius * 2, bounces: disc.bounces - 1, hit }
+          disc = { ...disc, direction: normalizeOr(toward, disc.direction), range: Ops.hypot(toward.x, toward.y) + disc.radius * 2, bounces: disc.bounces - 1, hit }
           break
         }
         const at = { x: origin.x + delta.x * until, y: origin.y + delta.y * until }
@@ -132,7 +133,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         }
         const home = thrower.value.data.position.get()
         const toward = subtract(home, origin)
-        const distance = Math.hypot(toward.x, toward.y)
+        const distance = Ops.hypot(toward.x, toward.y)
         const travel = disc.speed * dt
         // Caught: it reaches the thrower this step.
         if (distance <= travel + disc.radius) {

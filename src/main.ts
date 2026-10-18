@@ -99,6 +99,11 @@ const restart = async () => {
  * start again. Nothing is written: the account stays as it was last saved,
  * and a run going on is not counted.
  */
+/** Crashes the game (see `crash`) when a tick outside the fixed-step loop fails. */
+const orCrash = (ran: { readonly ok: true } | { readonly ok: false; readonly error: unknown }, what: string) => {
+  if (!ran.ok) crash(new Error(`${what} failed: ${JSON.stringify(ran.error)}`))
+}
+
 const crash = (error: unknown) => {
   if (crashShowing()) return
   console.error("The game stopped", error)
@@ -407,9 +412,9 @@ const start = async (mount: HTMLElement) => {
   })
   if (!madeRuntime.ok) throw new Error(`Simulation resources are invalid: ${JSON.stringify(madeRuntime.error)}`)
   const runtime = madeRuntime.value
-  runtime.tick(setup)
-  runtime.tick(Game.Schedule(perfScene?.populate ?? stress.populate, Game.Schedule.applyDeferred()))
-  runtime.tick(frame)
+  orCrash(runtime.tick(setup), "Setup")
+  orCrash(runtime.tick(Game.Schedule(perfScene?.populate ?? stress.populate, Game.Schedule.applyDeferred())), "Populating the scene")
+  orCrash(runtime.tick(frame), "Drawing")
   /** Applies the comfort settings: the camera's shake and zoom, the page's motion, and the aim assist in the arena. */
   function applyComfort() {
     const comfort = uiStore.comfort.peek()
@@ -501,7 +506,7 @@ const start = async (mount: HTMLElement) => {
     const frameSimMs = simMs
     simMs = 0
     const started = performance.now()
-    runtime.tick(frame)
+    orCrash(runtime.tick(frame), "Drawing")
     browser.host.render()
     showcase.render(elapsedSeconds)
     const drawn = performance.now()

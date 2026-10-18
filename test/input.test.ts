@@ -7,7 +7,7 @@ import { Camera, Controls, Game, Player, Skills } from "../src/schema.ts"
 import { projection, view, viewZoom } from "../src/config/view.ts"
 import { toWorld } from "../src/math/iso.ts"
 import { createSimulation } from "../src/simulation.ts"
-import { PlayerState } from "./helpers.ts"
+import { PlayerState, expectOk } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 
@@ -15,12 +15,12 @@ describe("input", () => {
   it("dashes on a double tap of a movement key and uses the special skill with Space (physical keys)", () => {
     const keyboard = Keyboard.actions(fakeWindow.host, keyBindings)
     const sim = createSimulation({ keyboard, pointer: Pointer.scripted([]), tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } } })
-    sim.runtime.tick(sim.setup)
+    expectOk(sim.runtime.tick(sim.setup))
     fakeWindow.press("w", "KeyW")
-    sim.runtime.tick(sim.fixedUpdate)
+    expectOk(sim.runtime.tick(sim.fixedUpdate))
     expect(sim.runtime.inspect(PlayerState).dash.remaining).toBe(0)
     fakeWindow.press("w", "KeyW")
-    sim.runtime.tick(sim.fixedUpdate)
+    expectOk(sim.runtime.tick(sim.fixedUpdate))
     expect(sim.runtime.inspect(PlayerState).dash.remaining).toBeGreaterThan(0)
 
     const SpecialCooldown = Game.Inspector("Test/SpecialCooldown", {
@@ -28,7 +28,7 @@ describe("input", () => {
     }, ({ queries }) => queries.player.each()[0]!.data.skills.get().special.cooldown)
     expect(sim.runtime.inspect(SpecialCooldown)).toBe(0)
     fakeWindow.press(" ", "Space")
-    sim.runtime.tick(sim.fixedUpdate)
+    expectOk(sim.runtime.tick(sim.fixedUpdate))
     expect(sim.runtime.inspect(SpecialCooldown)).toBeGreaterThan(0)
   })
 
@@ -36,9 +36,9 @@ describe("input", () => {
     // Like a browser before the first mouse event: (0, 0), not over the canvas.
     const untouched: Pointer.Pointer = { snapshot: () => Pointer.idle(), dispose: () => {} }
     const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: untouched, tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } } })
-    sim.runtime.tick(sim.setup)
+    expectOk(sim.runtime.tick(sim.setup))
     const aimBefore = sim.runtime.inspect(PlayerState).aim
-    for (let step = 0; step < 60; step++) sim.runtime.tick(sim.fixedUpdate)
+    for (let step = 0; step < 60; step++) expectOk(sim.runtime.tick(sim.fixedUpdate))
     const CameraAt = Game.Inspector("Test/Camera", { resources: { camera: Game.System.readResource(Camera) } }, ({ resources }) => resources.camera.get())
     const camera = sim.runtime.inspect(CameraAt)
     expect(Math.hypot(camera.x - center.x, camera.y - center.y)).toBeLessThan(1e-6)
@@ -88,10 +88,10 @@ describe("camera zoom", () => {
       tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } }
     })
     const AimPoint = Game.Inspector("Test/ZoomAim", { resources: { controls: Game.System.readResource(Controls), camera: Game.System.readResource(Camera) } }, ({ resources }) => ({ aim: resources.controls.get().aimPoint, camera: resources.camera.get() }))
-    sim.runtime.tick(sim.setup)
+    expectOk(sim.runtime.tick(sim.setup))
     // Controls convert the cursor with the camera as it was when the step started.
     const { camera } = sim.runtime.inspect(AimPoint)
-    sim.runtime.tick(sim.fixedUpdate)
+    expectOk(sim.runtime.tick(sim.fixedUpdate))
     const { aim } = sim.runtime.inspect(AimPoint)
     const expected = toWorld(projection, { x: 100 / zoom, y: 0 })
     expect(aim.x - camera.x).toBeCloseTo(expected.x, 6)

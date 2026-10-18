@@ -9,6 +9,7 @@
  * puts it out where they meet (an arena's pool for a while).
  */
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { GroundSpec } from "../content/elements.ts"
 import { elements } from "../content/elements.ts"
 import { ElementAffinities, ElementState, Game, Ground, Health, Hurtbox, Invulnerable, Position, Reaction, Time, Tuning } from "../schema.ts"
@@ -85,7 +86,7 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
       const there = other.data.ground.get()
       if (other === pool || there.element === ground.element || !active(there) || out.has(other.entity.id)) return false
       if (there.timer === null || age(there) >= age(ground)) return false
-      return Math.hypot(there.center.x - ground.center.x, there.center.y - ground.center.y) < there.radius + ground.radius
+      return Ops.hypot(there.center.x - ground.center.x, there.center.y - ground.center.y) < there.radius + ground.radius
     })
     if (!newer) continue
     out.add(pool.entity.id)

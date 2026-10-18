@@ -16,6 +16,7 @@
  * It sees nothing a player could not: an attack counts only once its
  * telegraph is up, and aimed shots where they aim now.
  */
+import { expectOk } from "./helpers.ts"
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 import type { Touch } from "@typeonce/ritmo-browser"
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
@@ -649,7 +650,7 @@ export const runBot = (run: BotRun): BotReport => {
     ...(run.enemyLevel === undefined ? {} : { enemyLevel: run.enemyLevel }),
     ...(run.twist === undefined ? {} : { twist: run.twist })
   })
-  sim.runtime.tick(sim.setup)
+  expectOk(sim.runtime.tick(sim.setup))
   members = sim.runtime.inspect(Members)
   let specials = 0
   let ultimates = 0
@@ -695,7 +696,7 @@ export const runBot = (run: BotRun): BotReport => {
         if (share !== undefined) data.health.update((health) => ({ ...health, current: health.max * share }))
       }
     })
-    sim.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred(), Wound))
+    expectOk(sim.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred(), Wound)))
   }
   let last: Vec2 = { x: 0, y: 0 }
   let health = sim.runtime.inspect(Vitals) ?? 0
@@ -766,7 +767,7 @@ export const runBot = (run: BotRun): BotReport => {
     touch.set(move)
     if (move.dash && move.closing !== true) dashes += 1
     if (move.direction.x !== 0 || move.direction.y !== 0) last = move.direction
-    sim.runtime.tick(measuredUpdate)
+    expectOk(sim.runtime.tick(measuredUpdate))
     run.probe?.after(sim.runtime, step)
     members = sim.runtime.inspect(Members)
     const now = sim.runtime.inspect(Vitals) ?? health

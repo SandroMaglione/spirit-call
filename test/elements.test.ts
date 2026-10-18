@@ -9,7 +9,7 @@ import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import { Attacker, blow, Damage, Disarmed, ElementState, Enemy, Energy, Game, Ground, Health, Invulnerable, Knockback, Player, Poise, Position, RunScope, Stats, Stunned } from "../src/schema.ts"
 import type { ActiveState } from "../src/schema.ts"
-import { center, cursorAt, grenadeSkill, gunner, withGrenade, placeDummies, start, steps, withWindCut } from "./helpers.ts"
+import { center, cursorAt, grenadeSkill, gunner, withGrenade, placeDummies, start, steps, withWindCut, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const tuning = defaultTuning
@@ -78,7 +78,7 @@ const World = Game.Inspector("Test/Elements", {
 /** Training mode with only the listed dummies (offsets from the player), aiming at `aim`. */
 const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = {}) => {
   const run = start({ ...options, pointer: [{ frame: 0, move: cursorAt(aim) }] })
-  run.runtime.tick(placeDummies(dummies, options.tuning))
+  expectOk(run.runtime.tick(placeDummies(dummies, options.tuning)))
   const world = () => run.runtime.inspect(World)
   /** Puts the player, or the enemies (all, or the one at offset `at`), in `state`. */
   const putIn = (state: ActiveState | null, who: "player" | "enemies" | Vec2 = "enemies") => {
@@ -93,7 +93,7 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
         if (chosen) data.state.set({ current: state })
       }
     })
-    run.runtime.tick(Game.Schedule(Put))
+    expectOk(run.runtime.tick(Game.Schedule(Put)))
   }
   /** A blow of `damage` carrying `element` on the player, or on the enemy at offset `at`, from the other side. */
   const strike = (at: Vec2 | "player", element: ElementId | null, damage = 1, direction: Vec2 = { x: 1, y: 0 }) => {
@@ -113,7 +113,7 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
         })
       }
     })
-    run.runtime.tick(Game.Schedule(Strike))
+    expectOk(run.runtime.tick(Game.Schedule(Strike)))
   }
   /** Leaves pools of `element` at offsets from the player. */
   const pour = (pools: ReadonlyArray<{ readonly element: ElementId; readonly at: Vec2; readonly radius?: number; readonly seconds?: number }>) => {
@@ -122,7 +122,7 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
         commands.spawnIn(RunScope, makeGround({ element: pool.element, radius: pool.radius ?? 80, seconds: pool.seconds ?? 5 }, { x: center.x + pool.at.x, y: center.y + pool.at.y }, 100, true))
       }
     })
-    run.runtime.tick(Game.Schedule(Pour, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Pour, Game.Schedule.applyDeferred())))
   }
   /** The dummy nearest offset `at`. */
   const dummy = (at: Vec2) => {
@@ -260,7 +260,7 @@ describe("states alone", () => {
           })
         }
       })
-      run.runtime.tick(Game.Schedule(Blow))
+      expectOk(run.runtime.tick(Game.Schedule(Blow)))
       run.step(30)
       return { taken: 100_000 - run.world().enemies[0]!.health, moved: run.player().position.x - center.x }
     }
@@ -424,7 +424,7 @@ describe("swept", () => {
         data.knockback.set(push)
       }
     })
-    run.runtime.tick(Game.Schedule(Drive))
+    expectOk(run.runtime.tick(Game.Schedule(Drive)))
   }
 
   it("stuns a swept body slammed into a wall, which then stands still", () => {
@@ -453,11 +453,11 @@ describe("swept", () => {
     const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 200, y: center.y }))
     })
-    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred())))
     const Stun = Game.System("Test/Stun", { queries: { enemies: Game.Query({ selection: { stunned: Game.Query.write(Stunned) }, with: [Enemy] }) } }, ({ queries }) => {
       for (const { data } of queries.enemies.each()) data.stunned.set({ remaining: 1 })
     })
-    run.runtime.tick(Game.Schedule(Stun))
+    expectOk(run.runtime.tick(Game.Schedule(Stun)))
     run.step(30)
     const [chaser] = run.world().enemies
     expect(chaser!.position.x - center.x).toBeCloseTo(200, 6)
@@ -468,7 +468,7 @@ describe("swept", () => {
     const Spawn = Game.System("Test/SpawnChaser", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 70, y: center.y }))
     })
-    run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred())))
     // Its turn comes, and it winds up a swipe.
     const windsUp = (seconds: number) => {
       for (let step = 0; step < steps(seconds); step += 1) {
@@ -481,7 +481,7 @@ describe("swept", () => {
     const Disarm = Game.System("Test/Disarm", { queries: { enemies: Game.Query({ selection: { disarmed: Game.Query.write(Disarmed) }, with: [Enemy] }) } }, ({ queries }) => {
       for (const { data } of queries.enemies.each()) data.disarmed.set({ remaining: 1 })
     })
-    run.runtime.tick(Game.Schedule(Disarm))
+    expectOk(run.runtime.tick(Game.Schedule(Disarm)))
     const before = run.world().enemies[0]!.position
     expect(windsUp(0.9)).toBe(false)
     const after = run.world().enemies[0]!.position
@@ -519,7 +519,7 @@ describe("ground", () => {
     const Shield = Game.System("Test/Invulnerable", { queries: { player: Game.Query({ selection: { invulnerable: Game.Query.write(Invulnerable) }, with: [Player] }) } }, ({ queries }) => {
       for (const { data } of queries.player.each()) data.invulnerable.set({ remaining: 1 })
     })
-    run.runtime.tick(Game.Schedule(Shield))
+    expectOk(run.runtime.tick(Game.Schedule(Shield)))
     run.pour([{ element: "fire", at: { x: 0, y: 0 } }])
     run.step(10)
     expect(run.world().player.state).toBeNull()

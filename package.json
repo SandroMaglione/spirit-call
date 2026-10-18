@@ -55,6 +55,7 @@
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.5.3",
     "@effect/sql-sqlite-node": "4.0.2",
+    "@typeonce/oxlint-plugin-ritmo": "0.9.0",
     "@typeonce/ritmo-devtools": "0.9.0",
     "@types/node": "25.5.0",
     "@types/three": "0.186.0",

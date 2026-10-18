@@ -13,7 +13,7 @@ import { nova } from "../src/content/skills.ts"
 import { damageDealt, resolveBuild } from "../src/features/build.ts"
 import { Enemy, Game, Health, Player } from "../src/schema.ts"
 import type { BuildValue } from "../src/schema.ts"
-import { placeDummies, plainAttack, relicId, start, testRelic, withRelic } from "./helpers.ts"
+import { placeDummies, plainAttack, relicId, start, testRelic, withRelic, expectOk } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.round(seconds / engine.step.dt)
 const sword = plainAttack(defaultTuning, "blade")
@@ -42,7 +42,7 @@ const setHealth = (enemies: number | undefined, player?: number) => Game.System(
 /** Touch play (assist off, facing world +x) with `build` and dummies at `offsets` from the player. */
 const arena = (build: BuildValue, offsets: ReadonlyArray<{ x: number; y: number }>, touch: Touch.Timeline<TouchButton>, tuning: Tuning = defaultTuning) => {
   const run = start({ tuning: { ...tuning, touch: tuningWith({ touch: { assist: { enabled: false } } }).touch }, build, touch })
-  run.runtime.tick(placeDummies(offsets, tuning))
+  expectOk(run.runtime.tick(placeDummies(offsets, tuning)))
   return { ...run, world: () => run.runtime.inspect(Healths) }
 }
 
@@ -90,7 +90,7 @@ describe("relic passives", () => {
     const dealt = damageDealt(resolveBuild(tuning, build).stats.atk, shot.power)
     const hit = (health: number) => {
       const run = arena(build, [{ x: 150, y: 0 }], [{ frame: 0, press: ["attack"], release: ["attack"] }], tuning)
-      run.runtime.tick(Game.Schedule(setHealth(health)))
+      expectOk(run.runtime.tick(Game.Schedule(setHealth(health))))
       run.step(12)
       return health - run.world().enemies[0]!
     }
@@ -101,7 +101,7 @@ describe("relic passives", () => {
   it("a heal on each kill: 2% of maximum health, even through the kill's hit-stop", () => {
     const { tuning, build } = equipped(tuningWith({ enemies: { dummy: { hp: 1, respawnDelay: 100 } } }), "gunner", [on(kill(), heal(2))])
     const run = arena(build, [{ x: 150, y: 0 }], [{ frame: 0, press: ["attack"], release: ["attack"] }], tuning)
-    run.runtime.tick(Game.Schedule(setHealth(undefined, 40)))
+    expectOk(run.runtime.tick(Game.Schedule(setHealth(undefined, 40))))
     run.step(steps(defaultTuning.feedback.hitStopOnKill) + 20)
     const { player } = run.world()
     expect(run.world().enemies).toEqual([])

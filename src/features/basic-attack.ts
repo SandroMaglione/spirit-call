@@ -18,6 +18,7 @@
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
 import { sweepCircleBoxes, sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
 import { scale, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import { lob } from "../content/skills.ts"
@@ -84,8 +85,8 @@ export const slamCenter = (move: Extract<MeleeMove, { shape: "slam" }>, position
  * ahead, an arc's spread evenly over it, a spin's evenly all around.
  */
 export const shockwaveDirections = (move: MeleeMove, wave: Shockwave, aim: Vec2): ReadonlyArray<Vec2> => {
-  const base = Math.atan2(aim.y, aim.x)
-  const along = (angle: number): Vec2 => ({ x: Math.cos(angle), y: Math.sin(angle) })
+  const base = Ops.atan2(aim.y, aim.x)
+  const along = (angle: number): Vec2 => ({ x: Ops.cos(angle), y: Ops.sin(angle) })
   switch (move.shape) {
     case "thrust":
     case "slam":
@@ -245,11 +246,11 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         .map(({ data }) => ({ at: data.position.get(), radius: data.hurtbox.get().radius })))
       if (move.shape === "shot") {
         const muzzle = muzzleAt(move.radius)
-        const base = Math.atan2(aim.y, aim.x)
+        const base = Ops.atan2(aim.y, aim.x)
         const spread = (move.spreadDegrees * Math.PI) / 180
         for (let index = 0; index < move.count; index++) {
           const angle = base + (move.count === 1 ? 0 : (index / (move.count - 1) - 0.5) * spread)
-          commands.spawnIn(RunScope, makeProjectile(muzzle, { x: Math.cos(angle) * move.speed, y: Math.sin(angle) * move.speed }, {
+          commands.spawnIn(RunScope, makeProjectile(muzzle, { x: Ops.cos(angle) * move.speed, y: Ops.sin(angle) * move.speed }, {
             faction: "player",
             style: "bolt",
             weapon: data.basicAttack.get().attack.class,
@@ -263,7 +264,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         }
       } else if (move.shape === "disc") {
         const muzzle = muzzleAt(move.radius)
-        const base = Math.atan2(aim.y, aim.x)
+        const base = Ops.atan2(aim.y, aim.x)
         const spread = (move.spreadDegrees * Math.PI) / 180
         for (let index = 0; index < move.count; index++) {
           const angle = base + (move.count === 1 ? 0 : (index / (move.count - 1) - 0.5) * spread)
@@ -273,7 +274,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
             radius: move.radius,
             blow: struck,
             speed: move.speed,
-            direction: { x: Math.cos(angle), y: Math.sin(angle) },
+            direction: { x: Ops.cos(angle), y: Ops.sin(angle) },
             phase: "out",
             range: move.range,
             hover: move.hover,

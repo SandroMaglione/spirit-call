@@ -10,7 +10,7 @@ import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import { ElementState, Enemy, Energy, Game, Health, Member, Player } from "../src/schema.ts"
-import { cursorAt, placeDummies, start, steps } from "./helpers.ts"
+import { cursorAt, placeDummies, start, steps, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const kindle = defaultTuning.skills.kindle.effect
@@ -40,8 +40,8 @@ const Prepare = Game.System("Test/Prepare", {
 
 const arena = (dummies: ReadonlyArray<Vec2>, keys: NonNullable<StartOptions["keys"]>) => {
   const run = start({ tuning, kits: "shipped", build: { character: "hearth" }, pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys })
-  run.runtime.tick(placeDummies(dummies, tuning))
-  run.runtime.tick(Game.Schedule(Prepare))
+  expectOk(run.runtime.tick(placeDummies(dummies, tuning)))
+  expectOk(run.runtime.tick(Game.Schedule(Prepare)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 

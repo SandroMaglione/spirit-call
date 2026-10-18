@@ -10,6 +10,7 @@
  * Damage comes from stats: an attack deals its `power` as a percentage of the
  * attacker's ATK, and the target's DEF reduces it (see `Tuning.combat`).
  */
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { aspectOf, basicAttack } from "../content/aspects.ts"
 import type { AspectId, AspectSpec } from "../content/aspects.ts"
@@ -46,7 +47,7 @@ export interface ResolvedBuild {
 export const levelScale = (curve: StatCurve, level: number): number => {
   if (curve.at <= 1) return 1
   const reached = Math.max(0, (level - 1) / (curve.at - 1))
-  return 1 + (curve.band - 1) * reached ** curve.shape
+  return 1 + (curve.band - 1) * Ops.pow(reached, curve.shape)
 }
 
 /**

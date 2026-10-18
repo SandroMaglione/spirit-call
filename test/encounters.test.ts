@@ -13,7 +13,7 @@ import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { makeGround } from "../src/features/ground.ts"
 import { pickSpawnPoint, reinforceAfter } from "../src/features/waves.ts"
 import { Elite, ElementState, Enemy, Game, Ground, Health, Player, Position, RunScope, Wall, Waves } from "../src/schema.ts"
-import { center, ClearEnemies, cursorAt, start, plainAttack, plainEnemies } from "./helpers.ts"
+import { center, ClearEnemies, cursorAt, start, plainAttack, plainEnemies, expectOk } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
 const middleOf = (box: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number }) => ({ x: (box.minX + box.maxX) / 2, y: (box.minY + box.maxY) / 2 })
@@ -40,7 +40,7 @@ const alone = (run: ReturnType<typeof start>, kind: Parameters<typeof makeEnemy>
   const Spawn = Game.System("Test/SpawnElite", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }, 1, 1, elite))
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
 }
 
 describe("where enemies come in", () => {
@@ -75,7 +75,7 @@ describe("where enemies come in", () => {
     const Defeat = Game.System("Test/Defeat", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
       for (const { entity } of queries.enemies.each().slice(0, count)) commands.despawn(entity)
     })
-    run.runtime.tick(Game.Schedule(Defeat, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Defeat, Game.Schedule.applyDeferred())))
   }
 
   /** Steps until wave 1 has come in and its spawn warnings have become enemies. */
@@ -158,7 +158,7 @@ describe("elite enemies", () => {
     const Spawn = Game.System("Test/SpawnThunder", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "guardian", { x: center.x + 80, y: center.y }, 1, 1, "thunder"))
     })
-    run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
     const full = run.runtime.inspect(World).player.current
     let charged = false
     for (let step = 0; step < steps(rules.discharge.every + rules.discharge.windup + 1); step++) {
@@ -185,7 +185,7 @@ describe("arenas", () => {
     const Douse = Game.System("Test/Douse", { commands: Game.System.commands(Game.System.spawns(Ground)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeGround({ element: "water", radius: 40, seconds: 0.5 }, at, 50, true))
     })
-    run.runtime.tick(Game.Schedule(Douse, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Douse, Game.Schedule.applyDeferred())))
     run.step(3)
     const doused = () => run.runtime.inspect(World).pools.find((pool) => pool.timer === null && pool.center.x === at.x && pool.center.y === at.y)!
     expect(doused().out).toBeGreaterThan(0)

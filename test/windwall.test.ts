@@ -15,7 +15,7 @@ import { mantleMeets, mantleTaken } from "../src/features/windwall.ts"
 import { barrier } from "../src/content/skills.ts"
 import { blow, Enemy, Energy, Game, Health, Lifted, Player, Position, Projectile, RunScope, Stunned } from "../src/schema.ts"
 import type { BarrierValue, MantleValue } from "../src/schema.ts"
-import { center, cursorAt, placeDummies, start, steps } from "./helpers.ts"
+import { center, cursorAt, placeDummies, start, steps, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const mantle = defaultTuning.skills.galeWall.effect
@@ -48,8 +48,8 @@ const Shoot = (from: Vec2, speed = 600) => Game.System("Test/Shoot", { commands:
 
 const arena = (dummies: ReadonlyArray<Vec2>, keys: NonNullable<StartOptions["keys"]>) => {
   const run = start({ tuning, kits: "shipped", build: { character: "windwall" }, pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }], keys })
-  run.runtime.tick(placeDummies(dummies, tuning))
-  run.runtime.tick(Game.Schedule(FillEnergy))
+  expectOk(run.runtime.tick(placeDummies(dummies, tuning)))
+  expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -93,7 +93,7 @@ describe("Windwall's Wind Mantle", () => {
   it("absorbs a shot flying at her: nothing of it lands", () => {
     const run = arena([], [press("special", 1)])
     run.step(4)
-    run.runtime.tick(Game.Schedule(Shoot({ x: 300, y: 0 })))
+    expectOk(run.runtime.tick(Game.Schedule(Shoot({ x: 300, y: 0 }))))
     run.step(steps(1))
     expect(run.world().shots).toBe(0)
     expect(run.world().health).toBe(defaultTuning.characters.windwall.stats.hp)
@@ -109,7 +109,7 @@ describe("Windwall's Sky Lift", () => {
       commands.spawnIn(RunScope, makeEnemy(tuning, "brute", { x: center.x + 120, y: center.y }, 1, 1, "water", true))
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x - 120, y: center.y }, 1, 1))
     })
-    run.runtime.tick(Game.Schedule(Champion, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(Champion, Game.Schedule.applyDeferred())))
     run.step(4)
     const [champion, chaser] = [...run.world().enemies].sort((left, right) => right.offset.x - left.offset.x)
     expect(champion!.lifted).toBe(false)
@@ -127,7 +127,7 @@ describe("Windwall's Sky Lift", () => {
     const TeamShot = Game.System("Test/TeamShot", { commands: Game.System.commands(Game.System.spawns(Projectile)) }, ({ commands }) => {
       commands.spawnIn(RunScope, makeProjectile({ x: center.x + 30, y: center.y }, { x: 600, y: 0 }, { faction: "player", style: "bolt", radius: 7, blow: blow({ damage: 10, knockback: 0 }), range: 250, pierce: 0, hit: [] }))
     })
-    run.runtime.tick(Game.Schedule(TeamShot))
+    expectOk(run.runtime.tick(Game.Schedule(TeamShot)))
     run.step(steps(0.5))
     expect(run.world().enemies[0]!.hurt).toBe(false)
     run.step(steps(lift.seconds) + 2)

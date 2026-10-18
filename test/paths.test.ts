@@ -5,7 +5,7 @@ import type { Tuning } from "../src/config/tuning.ts"
 import { unstickDirection } from "../src/features/behaviors.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, Game, Player, Position, RunScope, Wall } from "../src/schema.ts"
-import { center, ClearEnemies, start, steps } from "./helpers.ts"
+import { center, ClearEnemies, start, steps, expectOk } from "./helpers.ts"
 
 describe("finding the way around walls", () => {
   it("brings a chaser around a long wall to a player behind it", () => {
@@ -16,7 +16,7 @@ describe("finding the way around walls", () => {
       commands.spawnIn(RunScope, Game.Command.spawn([Wall, { minX: center.x + 100, minY: center.y - 260, maxX: center.x + 130, maxY: center.y + 260 }]))
       commands.spawnIn(RunScope, makeEnemy(tuning, "chaser", { x: center.x + 300, y: center.y }))
     })
-    run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Place, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Place, Game.Schedule.applyDeferred())))
     const Distance = Game.Inspector("Test/ChaserDistance", {
       queries: {
         chaser: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }),
@@ -48,7 +48,7 @@ describe("finding the way around walls", () => {
         for (const wall of corner(center, top)) commands.spawnIn(RunScope, Game.Command.spawn([Wall, wall]))
         commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: center.x + 160, y: center.y + 70 }))
       })
-      run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Place, Game.Schedule.applyDeferred()))
+      expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Place, Game.Schedule.applyDeferred())))
       let highest = Infinity
       for (let step = 0; step < steps(seconds); step++) {
         run.step()

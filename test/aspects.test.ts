@@ -17,7 +17,7 @@ import { aspectPassives, aspectProblems, damageDealt, resolveBuild, withValidAsp
 import { moveMatches } from "../src/features/passives.ts"
 import { Dash, ElementState, Enemy, Game, Health, Player, Position, Totem } from "../src/schema.ts"
 import type { BuildValue, MoveContext } from "../src/schema.ts"
-import { cursorAt, placeDummies, start, testAspect, withAspect } from "./helpers.ts"
+import { cursorAt, placeDummies, start, testAspect, withAspect, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
@@ -35,7 +35,7 @@ const sturdy = tuningWith({ enemies: { dummy: { hp: 2000, knockbackTaken: 0 } } 
 const arena = (build: BuildValue, offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: number; y: number }, options: StartOptions = {}) => {
   const tuning = options.tuning ?? sturdy
   const run = start({ tuning, kits: "shipped", build, ...options, pointer: [{ frame: 0, move: cursorAt(aim) }, ...(options.pointer ?? [])] })
-  run.runtime.tick(placeDummies(offsets, tuning))
+  expectOk(run.runtime.tick(placeDummies(offsets, tuning)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 /** Presses of the attack, `gap` steps apart from `first`. */
@@ -76,7 +76,7 @@ describe("Riptide (Disc)", () => {
   it("hits an enemy in a state as hard as a dry one: a bonus for it is a relic's (Opportunist, 15% more)", () => {
     const loss = (build: BuildValue, soaked: boolean) => {
       const run = arena(build, [{ x: 150, y: 0 }], { x: 300, y: 0 }, throwOne)
-      if (soaked) run.runtime.tick(Game.Schedule(Soak))
+      if (soaked) expectOk(run.runtime.tick(Game.Schedule(Soak)))
       run.step(20)
       return 2000 - run.world().enemies[0]!.health
     }
@@ -89,7 +89,7 @@ describe("Riptide (Disc)", () => {
   it("bounces a disc off an enemy in a state to the next one nearby", () => {
     // The second dummy is far off her line: only a bounce reaches it.
     const run = arena(riptide, [{ x: 150, y: 0 }, { x: 150, y: 200 }], { x: 300, y: 0 }, throwOne)
-    run.runtime.tick(Game.Schedule(Soak))
+    expectOk(run.runtime.tick(Game.Schedule(Soak)))
     run.step(40)
     const [first, second] = run.world().enemies
     expect(first!.health).toBeLessThan(2000)
@@ -145,7 +145,7 @@ describe("Duelist (Blade)", () => {
       const Dashing = Game.System("Test/Dashing", { queries: { player: Game.Query({ selection: { dash: Game.Query.write(Dash) }, with: [Player] }) } }, ({ queries }) => {
         for (const { data } of queries.player.each()) data.dash.update((dash) => ({ ...dash, since: 0.02, perfect }))
       })
-      run.runtime.tick(Game.Schedule(Dashing))
+      expectOk(run.runtime.tick(Game.Schedule(Dashing)))
       run.step(steps(0.4))
       return run.world().enemies[0]!
     }

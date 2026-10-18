@@ -4,6 +4,7 @@
  * lands.
  */
 import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 
 export type Area =
   | { readonly kind: "circle"; readonly center: Vec2; readonly radius: number }
@@ -33,18 +34,18 @@ export const areaTouchesCircle = (area: Area, center: Vec2, r: number): boolean 
     case "cone": {
       const dx = center.x - area.origin.x
       const dy = center.y - area.origin.y
-      const distance = Math.hypot(dx, dy)
+      const distance = Ops.hypot(dx, dy)
       if (distance > area.radius + r) return false
       if (distance <= r) return true
       const cos = (dx * area.direction.x + dy * area.direction.y) / distance
-      const angle = Math.acos(Math.max(-1, Math.min(1, cos)))
+      const angle = Ops.acos(Math.max(-1, Math.min(1, cos)))
       // Widen the cone by the angle the target circle subtends.
-      return angle <= area.halfAngle + Math.asin(Math.min(1, r / distance))
+      return angle <= area.halfAngle + Ops.asin(Math.min(1, r / distance))
     }
     case "line":
       return false
     case "ring": {
-      const distance = Math.hypot(center.x - area.center.x, center.y - area.center.y)
+      const distance = Ops.hypot(center.x - area.center.x, center.y - area.center.y)
       return Math.abs(distance - area.radius) <= area.width / 2 + r
     }
     case "lane": {

@@ -7,6 +7,7 @@
  * `UpdateAttacks`). All of it runs at the enemies' pace, and waits while
  * the elite is stunned.
  */
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { blow, Elite, Enemy, Game, Hitbox, Position, RunScope, SlowMotion, Stunned, Time, Tuning, Velocity, CombatStats, Ground } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeGround } from "./ground.ts"
@@ -41,7 +42,7 @@ export const UpdateElites = Game.System("Shooter/UpdateElites", {
       if (data.enemy.get().champion) continue
       // A pool every so often while it moves.
       const velocity = data.velocity.get()
-      const moving = Math.hypot(velocity.x, velocity.y) > 20
+      const moving = Ops.hypot(velocity.x, velocity.y) > 20
       const trail = elite.trail - (moving ? dt : 0)
       if (trail > 0) {
         data.elite.set({ ...elite, trail })

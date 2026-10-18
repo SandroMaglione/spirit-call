@@ -12,6 +12,7 @@
 import type { EntityId } from "@typeonce/ritmo/Entity"
 import type { Query } from "@typeonce/ritmo/Query"
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import {
@@ -56,7 +57,7 @@ export interface Struck {
 }
 
 /** Edge-to-edge distance between two bodies. */
-const gap = (a: Struck, b: Struck): number => Math.hypot(a.at.x - b.at.x, a.at.y - b.at.y) - a.radius - b.radius
+const gap = (a: Struck, b: Struck): number => Ops.hypot(a.at.x - b.at.x, a.at.y - b.at.y) - a.radius - b.radius
 
 /**
  * The bodies a strike on `first` goes through: `first`, then up to `jumps`
@@ -185,7 +186,7 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
       nextTick += effect.tick
       const center: Struck = { id: -1, entity: null, at, radius: 0, faction: totem.faction, protected: false }
       const health = field?.data.health.get()
-      const close = field !== undefined && Math.hypot(field.data.position.get().x - at.x, field.data.position.get().y - at.y) <= effect.radius + field.data.hurtbox.get().radius
+      const close = field !== undefined && Ops.hypot(field.data.position.get().x - at.x, field.data.position.get().y - at.y) <= effect.radius + field.data.hurtbox.get().radius
       if (effect.heal > 0 && field !== undefined && health !== undefined && close && health.current > 0 && health.current < health.max) {
         const amount = Math.min(health.max - health.current, (health.max * effect.heal) / 100)
         field.data.health.set({ current: health.current + amount, max: health.max })

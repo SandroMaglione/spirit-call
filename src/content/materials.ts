@@ -20,6 +20,7 @@
  *
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  */
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { ElementId } from "./elements.ts"
 
 /** A grade of essence: 1, an element's; 2, Refined; 3, Core. It is the rank whose content pays it. */
@@ -84,7 +85,7 @@ export const materialRules: MaterialRules = {
 
 /** What one clear at `enemyLevel` is worth (see `MaterialRules.worth`). */
 export const worthAt = (rules: MaterialRules, enemyLevel: number): number =>
-  Math.round(rules.worth.atFirst * 2 ** ((enemyLevel - 1) / rules.worth.doublesEvery))
+  Math.round(rules.worth.atFirst * Ops.pow(2, (enemyLevel - 1) / rules.worth.doublesEvery))
 
 /** `element`'s essence (grade 1). */
 export const materialOf = (element: ElementId): MaterialId => `${element}Essence` as MaterialId

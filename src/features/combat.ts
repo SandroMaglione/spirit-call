@@ -12,6 +12,7 @@ import { overlapsCircle } from "@typeonce/ritmo-math/Box2"
 import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
 import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as SpatialGrid from "@typeonce/ritmo-math/SpatialGrid"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
@@ -146,7 +147,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       const window = dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
       const origin = data.position.get()
       const velocity = data.velocity.get()
-      const speed = Math.hypot(velocity.x, velocity.y)
+      const speed = Ops.hypot(velocity.x, velocity.y)
       // Enemy shots fly at the enemies' pace (slower in slow motion).
       const travel = Math.min(speed * dt * paceOf(resources.slowMotion.get(), projectile.faction), projectile.range)
       const delta = speed > 0 ? scale(velocity, travel / speed) : velocity
@@ -206,7 +207,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
         const chain = projectile.blow.chain
         if (chain !== null) {
           let next: Target | undefined
-          const gap = (other: Target) => Math.hypot(other.at.x - contact.target.at.x, other.at.y - contact.target.at.y) - other.radius - contact.target.radius
+          const gap = (other: Target) => Ops.hypot(other.at.x - contact.target.at.x, other.at.y - contact.target.at.y) - other.radius - contact.target.radius
           for (const other of targets) {
             if (other.id === contact.target.id || other.faction !== contact.target.faction || other.invulnerable || gap(other) > chain.range) continue
             if (next === undefined || gap(other) < gap(next)) next = other
@@ -433,7 +434,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       const action = blow.energyAction
       const entry = ledger[action.key] ?? { targets: [], gained: 0, expires: now + 60 }
       if (!entry.targets.includes(Game.Entity.handle(entity.id, Health))) {
-        const gain = Math.max(0, Math.min(action.base / 2 ** entry.targets.length, action.base * tuning.energy.targetCap - entry.gained))
+        const gain = Math.max(0, Math.min(action.base / Ops.pow(2, entry.targets.length), action.base * tuning.energy.targetCap - entry.gained))
         energy += gain
         ledger[action.key] = { ...entry, targets: [...entry.targets, Game.Entity.handle(entity.id, Health)], gained: entry.gained + gain }
       }
@@ -568,8 +569,8 @@ export const DecayKnockback = Game.System("Shooter/DecayKnockback", {
   for (const { data } of queries.pushed.each()) {
     const current = data.knockback.get()
     if (current.x !== 0 || current.y !== 0) {
-      const next = scale(current, Math.exp(-pushDecay(tuning, data.state.present ? data.state.get().current : undefined) * dt))
-      data.knockback.set(Math.hypot(next.x, next.y) < 0.5 ? { x: 0, y: 0 } : next)
+      const next = scale(current, Ops.exp(-pushDecay(tuning, data.state.present ? data.state.get().current : undefined) * dt))
+      data.knockback.set(Ops.hypot(next.x, next.y) < 0.5 ? { x: 0, y: 0 } : next)
     }
   }
 })

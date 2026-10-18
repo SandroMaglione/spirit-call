@@ -6,7 +6,7 @@ import type { ChallengeSpec } from "../src/content/challenges.ts"
 import { clearWaves, endure } from "../src/content/challenges.ts"
 import { objectiveProgress, runResultOf, waveLevelBonus } from "../src/features/challenges.ts"
 import { Enemy, Game, Invulnerable, Player, RunResult, Waves } from "../src/schema.ts"
-import { ReadFlow, start } from "./helpers.ts"
+import { ReadFlow, start, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 import { noTally } from "../src/content/stars.ts"
 
@@ -37,7 +37,7 @@ const play = (tuning: Tuning, options: Pick<StartOptions, "keys"> = {}) => {
   const flow = () => run.runtime.inspect(ReadFlow)
   const tick = (count: number, wipe: boolean) => {
     for (let index = 0; index < count; index++) {
-      run.runtime.tick(Game.Schedule(Shield, ...(wipe ? [Wipe] : []), Game.Schedule.applyDeferred()))
+      expectOk(run.runtime.tick(Game.Schedule(Shield, ...(wipe ? [Wipe] : []), Game.Schedule.applyDeferred())))
       run.step()
     }
   }

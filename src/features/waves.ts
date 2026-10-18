@@ -17,6 +17,7 @@
 import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as Random from "@typeonce/ritmo-math/Random"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { champion, elite, entryChampion, entryElite, entryKind, entryShield, shielded } from "../content/challenges.ts"
 import type { WaveEntry, WavePlan } from "../content/challenges.ts"
@@ -103,14 +104,14 @@ export const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec
         ? front + random.range(-placement.frontSpread, placement.frontSpread)
         : front + side * random.range(placement.flankFrom, Math.PI)
       const distance = random.range(band.min, band.max)
-      const at = { x: player.x + Math.cos(angle) * distance, y: player.y + Math.sin(angle) * distance }
+      const at = { x: player.x + Ops.cos(angle) * distance, y: player.y + Ops.sin(angle) * distance }
       if (inside(at) && clear(at)) return at
     }
   }
   let candidate: Vec2 = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
   for (let attempt = 0; attempt < 40; attempt++) {
     candidate = { x: random.range(margin, tuning.arena.width - margin), y: random.range(margin, tuning.arena.height - margin) }
-    const farEnough = player === undefined || Math.hypot(candidate.x - player.x, candidate.y - player.y) >= tuning.waves.minSpawnDistance
+    const farEnough = player === undefined || Ops.hypot(candidate.x - player.x, candidate.y - player.y) >= tuning.waves.minSpawnDistance
     if (farEnough && clear(candidate)) return candidate
   }
   return candidate
@@ -123,8 +124,8 @@ export const pickSpawnPoint = (tuning: TuningValue, kind: EnemyKind, player: Vec
 const pickFront = (tuning: TuningValue, player: Vec2 | undefined, random: Random.Random): number => {
   if (player === undefined) return random.range(0, Math.PI * 2)
   const room = (angle: number) => {
-    const dx = Math.cos(angle)
-    const dy = Math.sin(angle)
+    const dx = Ops.cos(angle)
+    const dy = Ops.sin(angle)
     const tx = dx > 0 ? (tuning.arena.width - player.x) / dx : dx < 0 ? -player.x / dx : Infinity
     const ty = dy > 0 ? (tuning.arena.height - player.y) / dy : dy < 0 ? -player.y / dy : Infinity
     return Math.min(tx, ty)

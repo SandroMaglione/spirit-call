@@ -9,7 +9,7 @@ import { CastCuts } from "../src/features/skills.ts"
 import { projection } from "../src/config/view.ts"
 import { screenDirectionToWorld } from "../src/math/iso.ts"
 import { BasicAttack, Cast, Companion, ElementState, Enemy, Energy, Game, Ground, Health, Lobbed, Overdriven, Player, Position, Projectile, Skills } from "../src/schema.ts"
-import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack, hitBy, volley, withVolley } from "./helpers.ts"
+import { center, cursorAt, gale, grenadeSkill, gunner, placeDummies, playerLoss, start, steps, swordsman, tidecaller, windCut, withGale, withWindCut, plainAttack, hitBy, volley, withVolley, expectOk } from "./helpers.ts"
 import type { StartOptions } from "./helpers.ts"
 
 
@@ -36,7 +36,7 @@ const World = Game.Inspector("Test/Skills", {
 const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = {}) => {
   const tuning = options.tuning ?? defaultTuning
   const run = start({ ...options, pointer: [{ frame: 0, move: cursorAt(aim) }, ...(options.pointer ?? [])] })
-  run.runtime.tick(placeDummies(dummies, tuning))
+  expectOk(run.runtime.tick(placeDummies(dummies, tuning)))
   return { ...run, world: () => run.runtime.inspect(World) }
 }
 
@@ -248,7 +248,7 @@ describe("ultimates (Shift)", () => {
   it("makes every character briefly invulnerable as hers goes off, and spends the energy", () => {
     for (const character of ["swordsman", "gunner", "tidecaller"] as const) {
       const run = range([], { x: 200, y: 0 }, { build: { character }, keys: [ultimate(1)] })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(2)
       const spec = defaultTuning.skills[defaultTuning.characters[character].skills.ultimate]
       expect(spec.invulnerability).toBeGreaterThan(0)
@@ -266,7 +266,7 @@ describe("ultimates (Shift)", () => {
       const inside = [{ x: at.x + 130, y: 0 }, { x: at.x, y: -120 }]
       const outside = { x: at.x, y: spec.radius + 80 }
       const run = range([...inside, outside], at, { tuning: sturdy, keys: [ultimate(1)] })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(steps(spec.seconds) + 10)
       const [right, up, far] = run.world().enemies
       const toCenter = (position: Vec2) => Math.hypot(position.x - center.x - at.x, position.y - center.y - at.y)
@@ -280,7 +280,7 @@ describe("ultimates (Shift)", () => {
 
     it("runs out after its time", () => {
       const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, keys: [ultimate(1)] })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(steps(spec.seconds) + 5)
       const struck = run.world().enemies[0]!.health
       run.step(60)
@@ -302,7 +302,7 @@ describe("ultimates (Shift)", () => {
 
     it("runs her gun hot a while: her magazine never runs dry, then it wears off", () => {
       const run = range([], { x: 300, y: 0 }, { build: gunner, keys: [ultimate(1)], pointer: taps(10, 6, 7) })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(4)
       expect(run.runtime.inspect(Gun).overdriven).toBe(true)
       run.step(80)
@@ -314,7 +314,7 @@ describe("ultimates (Shift)", () => {
 
     it("sets what her shots hit alight, and each shot bursts on what it hits, catching what stands by", () => {
       const run = range([{ x: 300, y: 0 }, { x: 300, y: spec.blast.radius - 5 }], { x: 300, y: 0 }, { tuning: sturdy, build: gunner, keys: [ultimate(1)], pointer: taps(1, 8, 7) })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(40)
       const [aimed, beside] = run.world().enemies
       expect(aimed!.state).toBe("burning")
@@ -327,7 +327,7 @@ describe("ultimates (Shift)", () => {
 
     it("lobs its shells one after the other around the cursor, each blasting and leaving a fire pool", () => {
       const run = range([{ x: 250, y: 0 }], { x: 250, y: 0 }, { tuning: withVolley(sturdy), build: gunner, keys: [ultimate(1)] })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(3)
       const shells = run.world().grenades
       expect(shells).toHaveLength(spec.shells)
@@ -355,7 +355,7 @@ describe("ultimates (Shift)", () => {
       expect(moment).toBeGreaterThan(0)
       // She also holds a direction: nothing moves while the world stands still.
       const run = range([{ x: tide.radius - 20, y: 0 }], { x: 200, y: 0 }, { tuning: novaTide, build: tidecaller, moments: true, keys: [ultimate(1), { frame: 2, press: ["right"] }] })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(3)
       const from = run.player().position
       expect(run.world().energy).toBe(defaultTuning.energy.max - defaultTuning.skills.tide.energy)
@@ -369,7 +369,7 @@ describe("ultimates (Shift)", () => {
 
     it("leaves her untouchable as it goes off", () => {
       const run = range([], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, moments: true, keys: [ultimate(1)] })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(steps(moment) + 2)
       expect(run.player().invulnerable).toBeGreaterThan(0)
     })
@@ -382,7 +382,7 @@ describe("ultimates (Shift)", () => {
 
     it("calls up her echo, throwing at the nearest enemy within its reach, soaking it; never one beyond", () => {
       const run = range([{ x: 150, y: 0 }, { x: -(spec.radius + 300), y: 0 }], { x: 200, y: 0 }, { tuning: sturdy, build: tidecaller, keys: [ultimate(1)] })
-      run.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(run.runtime.tick(Game.Schedule(FillEnergy)))
       run.step(steps(1.05))
       expect(run.runtime.inspect(Companions)).toBe(spec.count)
       const [near, far] = run.world().enemies
@@ -395,12 +395,12 @@ describe("ultimates (Shift)", () => {
     it("each leaves once it has dealt its share, or when its time is up", () => {
       const shots = Math.ceil(spec.budget / spec.power)
       const fighting = range([{ x: 150, y: 0 }], { x: 200, y: 0 }, { tuning: tuningWith({ enemies: { dummy: { hp: 1_000_000 } } }), build: tidecaller, keys: [ultimate(1)] })
-      fighting.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(fighting.runtime.tick(Game.Schedule(FillEnergy)))
       // The last of them acts a tick's share after the first.
       fighting.step(steps(0.6 + spec.tick * shots + 0.2))
       expect(fighting.runtime.inspect(Companions)).toBe(0)
       const idle = range([], { x: 200, y: 0 }, { build: tidecaller, keys: [ultimate(1)] })
-      idle.runtime.tick(Game.Schedule(FillEnergy))
+      expectOk(idle.runtime.tick(Game.Schedule(FillEnergy)))
       idle.step(steps(spec.seconds - 0.5))
       expect(idle.runtime.inspect(Companions)).toBe(spec.count)
       idle.step(steps(1))
@@ -434,7 +434,7 @@ describe("kits", () => {
         events.cast.emit({ caster: Game.Entity.handle(entity.id, Position), faction: "enemy", atk: defaultTuning.enemies.dummy.atk, skill: "bladeWave", effect, from, at: center, direction: { x: -1, y: 0 }, charges: false })
       }
     })
-    run.runtime.tick(Game.Schedule(EnemyCasts, CastCuts, Game.Schedule.applyDeferred()))
+    expectOk(run.runtime.tick(Game.Schedule(EnemyCasts, CastCuts, Game.Schedule.applyDeferred())))
     run.step(2)
     expect(run.runtime.inspect(PlayerHealth)).toBe(swordsman.hp - playerLoss(defaultTuning, "dummy", windCut.power))
   })

@@ -5,7 +5,7 @@ import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { Attacker, AttackPhase, blow, Burst, Damage, Enemy, Game, Health, Player, Position, PrevPosition, RunScope, Ward } from "../src/schema.ts"
 import type { EnemyKind } from "../src/schema.ts"
-import { ClearEnemies, plainEnemies, start } from "./helpers.ts"
+import { ClearEnemies, plainEnemies, start, expectOk } from "./helpers.ts"
 
 const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height / 2 }
 const steps = (seconds: number) => Math.ceil(seconds / engine.step.dt)
@@ -28,7 +28,7 @@ const World = Game.Inspector("Test/StrangeEnemies", {
     health: data.health.get().current,
     attack: data.attacker.get(),
     phase: data.phase.get(),
-    ward: data.ward.present ? data.ward.get() : undefined
+    ward: data.ward.value()
   })),
   bursts: queries.bursts.each().map(({ data }) => data.burst.get())
 }))
@@ -39,7 +39,7 @@ const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly offse
   const Spawn = Game.System("Test/SpawnSome", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     for (const { kind, offset } of enemies) commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), kind, { x: center.x + offset.x, y: center.y + offset.y }))
   })
-  run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred()))
+  expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred())))
   const world = () => run.runtime.inspect(World)
   /** A blow of `damage` from the player on the enemy with id `id`, landing next step. */
   const strike = (id: number, damage: number) => {
@@ -51,7 +51,7 @@ const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly offse
         if (entity.id === id) events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "player", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0 }) })
       }
     })
-    run.runtime.tick(Game.Schedule(Strike))
+    expectOk(run.runtime.tick(Game.Schedule(Strike)))
   }
   /** Puts the player at `at`. */
   const place = (at: Vec2) => {
@@ -63,7 +63,7 @@ const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly offse
         data.previous.set(at)
       }
     })
-    run.runtime.tick(Game.Schedule(Place))
+    expectOk(run.runtime.tick(Game.Schedule(Place)))
   }
   return { ...run, world, strike, place }
 }

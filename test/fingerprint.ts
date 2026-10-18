@@ -8,6 +8,7 @@
  * reads back as the same number), and each sample is hashed (FNV-1a), so a
  * difference in the last bit of any of them shows.
  */
+import { expectOk } from "./helpers.ts"
 import type { HostClock } from "@typeonce/ritmo"
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
@@ -123,13 +124,13 @@ export const playPerfScene = (scene: PerfScene, onStep: (runtime: ReturnType<typ
     team: scene.team,
     ...(hostClock === undefined ? {} : { hostClock })
   })
-  sim.runtime.tick(sim.setup)
-  sim.runtime.tick(Game.Schedule(scene.populate, Game.Schedule.applyDeferred()))
+  expectOk(sim.runtime.tick(sim.setup))
+  expectOk(sim.runtime.tick(Game.Schedule(scene.populate, Game.Schedule.applyDeferred())))
   const step = extra === undefined
     ? Game.Schedule(sim.fixedUpdate, scene.keep, KeepCharged, Game.Schedule.applyDeferred(), scene.count)
     : Game.Schedule(sim.fixedUpdate, scene.keep, KeepCharged, Game.Schedule.applyDeferred(), scene.count, extra)
   for (let index = 0; index < scene.steps; index++) {
-    sim.runtime.tick(step)
+    expectOk(sim.runtime.tick(step))
     onStep(sim.runtime, index)
   }
   return sim.runtime

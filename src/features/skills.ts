@@ -21,6 +21,7 @@
  */
 import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
 import { add, clampLength, length as lengthOf, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import {
@@ -583,7 +584,7 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
         const invulnerable = target.data.invulnerable
         if (invulnerable.present && invulnerable.get().remaining > 0) continue
         const at = target.data.position.get()
-        const distance = Math.hypot(center.x - at.x, center.y - at.y)
+        const distance = Ops.hypot(center.x - at.x, center.y - at.y)
         if (distance > effect.radius + hurtbox.radius) continue
         const direction = normalizeOr(subtract(center, at), { x: 0, y: 0 })
         const enemy = target.data.enemy.present ? target.data.enemy.get().kind : undefined

@@ -6,6 +6,7 @@
 import { Clock } from "@typeonce/ritmo"
 import { InputCapture } from "@typeonce/ritmo-browser"
 import { length, normalizeOr, scale, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 
 import { directions, teamKeys, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PartyTap, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
@@ -231,7 +232,7 @@ export const assistTargetOf = (
   for (const enemy of enemies) {
     const dx = enemy.position.x - origin.x
     const dy = enemy.position.y - origin.y
-    const center = Math.hypot(dx, dy)
+    const center = Ops.hypot(dx, dy)
     const distance = center - enemy.radius
     if (distance > reach) continue
     // 0 straight ahead, 1 directly behind.

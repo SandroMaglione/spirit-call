@@ -9,6 +9,7 @@
  */
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as Random from "@typeonce/ritmo-math/Random"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import { lob } from "../content/skills.ts"
 import type { SkillId, SplintersEffect } from "../content/skills.ts"
 import { isMelee } from "../content/attacks.ts"
@@ -28,7 +29,7 @@ const splintersFrom = (random: Random.Random, from: Vec2, faction: Faction, effe
     const fuse = random.range(effect.fuse.first, effect.fuse.last)
     return {
       from,
-      to: { x: from.x + Math.cos(angle) * distance, y: from.y + Math.sin(angle) * distance },
+      to: { x: from.x + Ops.cos(angle) * distance, y: from.y + Ops.sin(angle) * distance },
       faction,
       effect: lob({ power, element, knockback, hitStop, heavy, radius, flightTime: flight, fuse, leaves: null, maxRange: distance }),
       blow,

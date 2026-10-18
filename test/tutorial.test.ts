@@ -8,7 +8,7 @@ import { defaultTuning } from "../src/config/tuning.ts"
 import { tutorialSteps } from "../src/content/tutorial.ts"
 import { tutorialSpot, tutorialSuccessSeconds } from "../src/features/tutorial.ts"
 import { UiRequest, AttackPhase, Enemy, Game, Health, Immortal, PerfectDodged, Player, Position, PrevPosition, RunResult, SlowMotion, Tutorial, tutorialStart } from "../src/schema.ts"
-import { doubleTap, start, steps } from "./helpers.ts"
+import { doubleTap, start, steps, expectOk } from "./helpers.ts"
 
 const World = Game.Inspector("Test/Tutorial", {
   queries: {
@@ -62,7 +62,7 @@ describe("the tutorial", () => {
     // Move: into the circle.
     const move = tutorialSteps[0]
     if (move?.kind !== "move") throw new Error("the tutorial starts by moving")
-    run.runtime.tick(putAt(tutorialSpot(defaultTuning, move.to)))
+    expectOk(run.runtime.tick(putAt(tutorialSpot(defaultTuning, move.to))))
     run.step(2)
     expect(world().step).toBe(1)
 
@@ -76,7 +76,7 @@ describe("the tutorial", () => {
     expect(Math.hypot(dummy.x - player.x, dummy.y - player.y)).toBeLessThanOrEqual(220)
 
     // Attack: four blows on it.
-    run.runtime.tick(putAt({ x: dummy.x - 50, y: dummy.y }))
+    expectOk(run.runtime.tick(putAt({ x: dummy.x - 50, y: dummy.y })))
     run.step(200)
     expect(world().step).toBe(3)
 
@@ -90,7 +90,7 @@ describe("the tutorial", () => {
     expect(world().enemies.map((enemy) => enemy.kind)).toEqual(["sparringDummy"])
 
     // The perfect dodge: then the tutorial is done.
-    run.runtime.tick(PerfectDodge)
+    expectOk(run.runtime.tick(PerfectDodge))
     run.step(2)
     expect(world().step).toBe(tutorialSteps.length)
     expect(world().player).toBeDefined()
@@ -124,10 +124,10 @@ describe("the tutorial", () => {
     }))
     const Phase = Game.Inspector("Test/TutorialDummyPhase", { queries: { enemies: Game.Query({ selection: { phase: Game.Query.read(AttackPhase) } }) } }, ({ queries }) => queries.enemies.each()[0]?.data.phase.get())
     const prepare = (run: ReturnType<typeof start>) => {
-      run.runtime.tick(BeginDodge)
+      expectOk(run.runtime.tick(BeginDodge))
       run.step(2)
       const dummy = run.runtime.inspect(World).enemies[0]!.position
-      run.runtime.tick(putAt({ x: dummy.x - 60, y: dummy.y }))
+      expectOk(run.runtime.tick(putAt({ x: dummy.x - 60, y: dummy.y })))
     }
     const dry = start({ challenge: "tutorial", waves: true, toughness: true })
     prepare(dry)
@@ -162,7 +162,7 @@ describe("the tutorial", () => {
     const run = start({ challenge: "tutorial", waves: true })
     const move = tutorialSteps[0]!
     if (move.kind !== "move") throw new Error("the tutorial starts by moving")
-    run.runtime.tick(putAt(tutorialSpot(defaultTuning, move.to)))
+    expectOk(run.runtime.tick(putAt(tutorialSpot(defaultTuning, move.to))))
     run.step(2)
     expect(run.runtime.inspect(World).step).toBe(1)
     run.runtime.send(UiRequest, { kind: "leave" })

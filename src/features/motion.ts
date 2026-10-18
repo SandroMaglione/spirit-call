@@ -4,6 +4,7 @@
 import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
 import { moveCircle, sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
 import { add, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
@@ -78,7 +79,7 @@ export const pushDecay = (tuning: TuningValue, state: ActiveState | null | undef
   state?.id === "swept" ? tuning.elements.swept.decay : tuning.knockback.decay
 
 /** The share of a push's speed a body covers over a step of `dt`, as its push dies down at `decay`. */
-export const pushShare = (decay: number, dt: number): number => (decay > 0 ? (1 - Math.exp(-decay * dt)) / (decay * dt) : 1)
+export const pushShare = (decay: number, dt: number): number => (decay > 0 ? (1 - Ops.exp(-decay * dt)) / (decay * dt) : 1)
 
 /**
  * Moves every body by its velocity plus knockback, stopping and sliding at

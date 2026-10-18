@@ -8,6 +8,7 @@ import type { EntityId, Handle } from "@typeonce/ritmo/Entity"
 import type { Query } from "@typeonce/ritmo/Query"
 import { sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
+import * as Ops from "@typeonce/ritmo-math/Ops"
 
 import { Dash, Game, Health, Hurtbox, Invulnerable, Position, Shield } from "../schema.ts"
 import type { Faction, Root } from "../schema.ts"
@@ -49,7 +50,7 @@ export const targetOf = (
   radius: data.hurtbox.get().radius,
   faction: data.hurtbox.get().faction,
   invulnerable: data.invulnerable.present && data.invulnerable.get().remaining > 0,
-  shield: data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Math.cos(data.shield.get().halfAngle) } : undefined,
+  shield: data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Ops.cos(data.shield.get().halfAngle) } : undefined,
   dashed: data.dash?.present === true ? { from: data.dash.get().from, since: data.dash.get().since } : undefined
 })
 
@@ -58,7 +59,7 @@ export const shieldBlocks = (target: Target, at: Vec2): boolean => {
   if (target.shield === undefined) return false
   const dx = at.x - target.at.x
   const dy = at.y - target.at.y
-  const length = Math.hypot(dx, dy) || 1
+  const length = Ops.hypot(dx, dy) || 1
   return (dx * target.shield.facing.x + dy * target.shield.facing.y) / length >= target.shield.cosHalfAngle
 }
 

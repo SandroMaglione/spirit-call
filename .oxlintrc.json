@@ -1,7 +1,16 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["typescript", "import", "oxc", "eslint", "unicorn"],
-  "jsPlugins": ["./tools/lint/plugin.mjs"],
+  "plugins": [
+    "typescript",
+    "import",
+    "oxc",
+    "eslint",
+    "unicorn"
+  ],
+  "jsPlugins": [
+    "./tools/lint/plugin.mjs",
+    "@typeonce/oxlint-plugin-ritmo"
+  ],
   "categories": {
     "correctness": "error",
     "suspicious": "error",
@@ -10,16 +19,40 @@
   "rules": {
     "shooter/layer-boundaries": "error",
     "shooter/no-effect-barrel": "error",
-    "shooter/deterministic-simulation": "error",
     "shooter/no-cast-escape": "error",
+    "ritmo/handle-tick-result": "error",
+    "ritmo/prefix-descriptor-and-system-names": "error",
+    "ritmo/use-cell-value": "error",
     "typescript/consistent-type-imports": "error",
     "typescript/no-import-type-side-effects": "error",
     "import/no-duplicates": "error",
     "import/no-cycle": "error",
     "import/no-self-import": "error",
-    "eslint/no-console": ["error", { "allow": ["warn", "error"] }],
-    "eslint/no-underscore-dangle": ["error", { "allow": ["_tag"] }],
-    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
+    "eslint/no-console": [
+      "error",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
+    "eslint/no-underscore-dangle": [
+      "error",
+      {
+        "allow": [
+          "_tag"
+        ]
+      }
+    ],
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": [
+          "**/*.css"
+        ]
+      }
+    ],
     "unicorn/no-array-fill-with-reference-type": "off",
     "unicorn/no-array-sort": "off",
     "unicorn/consistent-function-scoping": "off",
@@ -28,13 +61,38 @@
   },
   "overrides": [
     {
-      "files": ["test/**", "scripts/**"],
+      "files": [
+        "**/src/features/**",
+        "**/src/physics/**",
+        "**/src/math/**",
+        "**/src/config/**",
+        "**/src/content/**",
+        "**/src/schema.ts",
+        "**/src/schedules.ts",
+        "**/src/simulation.ts",
+        "**/src/runtime.ts"
+      ],
+      "rules": {
+        "ritmo/use-clock-for-time": "error",
+        "ritmo/use-random-for-randomness": "error",
+        "ritmo/use-ops-for-math": "error",
+        "ritmo/keep-simulation-headless": "error",
+        "ritmo/no-infinity-in-simulation-data": "error"
+      }
+    },
+    {
+      "files": [
+        "test/**",
+        "scripts/**"
+      ],
       "rules": {
         "eslint/no-console": "off",
-        "eslint/no-unmodified-loop-condition": "off",
-        "shooter/deterministic-simulation": "off"
+        "eslint/no-unmodified-loop-condition": "off"
       }
     }
   ],
-  "ignorePatterns": ["dist/**", "node_modules/**"]
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**"
+  ]
 }
