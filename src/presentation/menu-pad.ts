@@ -65,7 +65,7 @@ export interface MenuPad {
  */
 const candidates = (root: HTMLElement): ReadonlyArray<HTMLElement> => {
   const within = (scope: Element) => [...scope.querySelectorAll<HTMLElement>(focusable)].filter(visible)
-  const dialog = [...document.querySelectorAll<HTMLElement>("[role=\"dialog\"], [aria-modal=\"true\"]")].filter(visible).at(-1)
+  const dialog = [...document.querySelectorAll<HTMLElement>("[role=\"dialog\"], [aria-modal=\"true\"]")].findLast(visible)
   if (dialog !== undefined) return within(dialog)
   const screens = [...root.querySelectorAll(".ui-screen")].flatMap(within)
   return screens.length > 0 ? screens : within(root)
