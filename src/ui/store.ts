@@ -10,6 +10,7 @@ import type { Signal } from "@preact/signals"
 import { Descriptor } from "@typeonce/ritmo"
 
 import type { Account, Earned, Play, TeamAspects, TeamRelics } from "../account/account.ts"
+import type { ControlBindings, KeyCommand, PadCommand, PadFamily } from "../config/controls.ts"
 import type { CosmeticId, CosmeticKind } from "../content/cosmetics.ts"
 import type { ElementId } from "../content/elements.ts"
 import type { Tuning } from "../config/tuning.ts"
@@ -72,6 +73,8 @@ export interface UiStore {
   readonly sound: Signal<Sound>
   /** This device's comfort settings. */
   readonly comfort: Signal<Comfort>
+  /** The keys and gamepad buttons the player moved, and whose labels the gamepad's buttons carry. */
+  readonly controls: Signal<Controls>
   /** Whether the tutorial being played has had its last step done. */
   readonly tutorialDone: Signal<boolean>
   /** The Extra being played, or last played; `null` for a quest or tier (or a dev quick start). */
@@ -88,6 +91,15 @@ export interface Sound {
   readonly muted: boolean
   readonly volume: number
 }
+
+/** The player's controls (saved on this device), and the labels of the gamepad last used. */
+export interface Controls {
+  readonly bindings: ControlBindings
+  readonly padFamily: PadFamily
+}
+
+/** What came of waiting for the key or button to bind: set, refused (it keeps its meaning everywhere, as Esc does), or given up (Esc, or nothing pressed in time). */
+export type Rebound = "set" | "reserved" | "cancelled"
 
 /** How the game feels on this device: buzzes, how much the screen shakes, fewer moving things, and the aim assist on touch. */
 export interface Comfort {
@@ -107,6 +119,7 @@ export const createUiStore = (initial: {
   readonly notices: ReadonlyArray<string>
   readonly sound: Sound
   readonly comfort: Comfort
+  readonly controls: Controls
   /** What the controls start as. */
   readonly device: ControlDevice
 }): UiStore => ({
@@ -132,6 +145,7 @@ export const createUiStore = (initial: {
   notices: signal(initial.notices),
   sound: signal(initial.sound),
   comfort: signal(initial.comfort),
+  controls: signal(initial.controls),
   tutorialDone: signal(false),
   extra: signal(null),
   practicePicks: signal({ kinds: [], elites: false }),
@@ -185,6 +199,15 @@ export interface UiActions {
   readonly skipTutorial: () => void
   /** Changes this device's comfort settings (saved, and applied at once). */
   readonly setComfort: (change: Partial<Comfort>) => void
+  /**
+   * Waits for the key (or gamepad button) to put `command` on, then binds it
+   * (saved, and applied at once) and tells `done` what came of it. Returns
+   * a function that stops waiting.
+   */
+  readonly rebindKey: (command: KeyCommand, done: (outcome: Rebound) => void) => () => void
+  readonly rebindButton: (command: PadCommand, done: (outcome: Rebound) => void) => () => void
+  /** Puts every key (or gamepad button) back where it was. */
+  readonly resetBindings: (kind: "keys" | "pad") => void
   /** Leave this account for the list of this device's accounts (what it did is already saved). */
   readonly switchAccount: () => void
   /** Closes the game (Android's back button on the home screen, once confirmed); `null` where the game cannot close itself. */

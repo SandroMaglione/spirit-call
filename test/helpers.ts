@@ -239,11 +239,12 @@ export const hitBy = (character: CharacterId, power: number, tuning: Tuning = de
 
 /** A headless run after setup. Timeline frame `n` is read by fixed step `n + 1`. */
 export const start = (options: StartOptions = {}) => {
+  const gamepad = Gamepad.scripted(padBindings, options.pad ?? [])
   const sim = createSimulation({
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
-    gamepad: Gamepad.scripted(padBindings, options.pad ?? []),
+    gamepad,
     party: scriptedPartyTaps(options.party ?? []),
     tuning: inArena(withWaves((options.toughness === true ? (tuning: Tuning) => tuning : plainEnemies)((options.moments === true ? (tuning: Tuning) => tuning : withoutMoments)(options.kits === "shipped" ? options.tuning ?? defaultTuning : withLobbedSpecials(options.tuning ?? defaultTuning))), options.waves ?? false), options.arena ?? "courtyard"),
     ...(options.build === undefined ? {} : { build: options.build }),
@@ -260,7 +261,7 @@ export const start = (options: StartOptions = {}) => {
       if (!result.ok) throw new Error("step failed")
     }
   }
-  return { ...sim, step, player: () => sim.runtime.inspect(PlayerState) }
+  return { ...sim, gamepad, step, player: () => sim.runtime.inspect(PlayerState) }
 }
 
 /** Despawns every enemy (training dummies included). */

@@ -140,9 +140,27 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     resources.controls.set(party(resolveSticks(sticks, previous, state, enemies, resources.tuning.get(), resources.options.get().aimAssist)))
     return
   }
-  const camera = resources.camera.get()
-  const viewport = resources.viewport.get()
+  const time = resources.time.get()
+  resources.controls.set(party(resolveDesktop(keys, pointer, previous, resources.camera.get(), resources.viewport.get(), Clock.elapsed(time), time.dt, resources.tuning.get())))
+})
 
+/**
+ * The keyboard and mouse into intent: screen-relative movement (with a
+ * short grace after the keys are let go), the aim under the cursor, a
+ * double tap of a direction to dash, the mouse's button to attack, and the
+ * skill keys aimed at the cursor.
+ */
+const resolveDesktop = (
+  keys: KeysSnapshot,
+  pointer: PointerSnapshot,
+  previous: ControlsValue,
+  camera: { readonly x: number; readonly y: number },
+  viewport: { readonly width: number; readonly height: number },
+  /** `Clock.elapsed` of `Time`, for the double tap. */
+  now: number,
+  dt: number,
+  tuning: TuningValue
+): ControlsValue => {
   // Screen-relative movement: "up" moves up the screen.
   const screen = {
     x: (keys.right.held ? 1 : 0) - (keys.left.held ? 1 : 0),
@@ -156,7 +174,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   const lastMove = moving ? held : previous.lastMove
   const move = moving ? held : previous.grace > 1e-9 ? lastMove : zero
   // The grace covers the release step itself, then counts down.
-  const grace = moving ? resources.tuning.get().player.movementGrace : Math.max(0, previous.grace - resources.time.get().dt)
+  const grace = moving ? tuning.player.movementGrace : Math.max(0, previous.grace - dt)
 
   // Until the pointer is over the game the browser reports it at (0, 0);
   // keep the previous aim point instead of aiming at the corner.
@@ -165,13 +183,12 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     x: (pointer.position.x - viewport.width / 2) / zoom,
     y: (pointer.position.y - viewport.height / 2) / zoom
   })
-  const aimPoint = pointer.over ? { x: camera.x + offset.x, y: camera.y + offset.y } : resources.controls.get().aimPoint
+  const aimPoint = pointer.over ? { x: camera.x + offset.x, y: camera.y + offset.y } : previous.aimPoint
 
   // Double tap to dash: a second press of the same movement key within the
   // window. The dash goes where the player is moving, so tapping D twice
   // while holding W dashes diagonally.
-  const now = Clock.elapsed(resources.time.get())
-  const window = resources.tuning.get().dash.doubleTapWindow
+  const window = tuning.dash.doubleTapWindow
   let lastTap = previous.lastTap
   let dashPressed = false
   for (const direction of directions) {
@@ -184,8 +201,8 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     }
   }
 
-  resources.controls.set(party({
-    device,
+  return {
+    device: "desktop",
     move,
     aimPoint,
     // Skills aim at the cursor; the skill decides what that means (see `UseSkills`).
@@ -199,8 +216,8 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     lastMove,
     lastTap,
     grace
-  }))
-})
+  }
+}
 
 /**
  * The party list's taps into the controls, as Genshin's: a tap on a row

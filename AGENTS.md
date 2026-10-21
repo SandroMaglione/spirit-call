@@ -16,6 +16,8 @@ owned, auditions, and the game's pace;
 `docs/roster.md`: who the characters are (element, class, role), and how
 support is set up;
 `docs/saves.md`: the account saved on the device, and its versions;
+`docs/controls.md`: input devices (keyboard and mouse, touch, gamepad),
+how they become the same commands, and remapping;
 `docs/mobile.md`: the Android and iOS apps (Capacitor);
 `docs/playtest.md`: playtest builds, the runs they send, the server that
 keeps them, and releasing).

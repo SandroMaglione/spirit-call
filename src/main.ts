@@ -2,7 +2,8 @@ import { effect, signal } from "@preact/signals"
 import { FixedLoop, Result } from "@typeonce/ritmo"
 import { BrowserHostClock, BrowserTickSource, Gamepad, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
-import { padFamilyOf } from "./config/controls.ts"
+import { assignButton, assignKey, defaultControlBindings, keyBindingsOf, padBindingsOf, padFamilyOf } from "./config/controls.ts"
+import type { ControlBindings, KeyCommand, PadCommand } from "./config/controls.ts"
 import { keyBindings, padBindings, scriptedPartyTaps, touchButtons, touchLayout } from "./config/input.ts"
 import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
@@ -19,7 +20,7 @@ import { crashShowing, describeError, showCrash } from "./ui/crash.ts"
 
 import { mountUi } from "./ui/mount.tsx"
 import { createUiStore, UiStoreService } from "./ui/store.ts"
-import type { License, UiActions } from "./ui/store.ts"
+import type { License, Rebound, UiActions } from "./ui/store.ts"
 import { withValidAspects, withValidRelics } from "./features/build.ts"
 import { buildOf, encounterOf, entryTeam, teamLevel, teamOf, validAspects, validRelics } from "./account/account.ts"
 import { wearLooks } from "./presentation/looks.ts"
@@ -30,6 +31,7 @@ import { createBrowserHost, loadLooks } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
 import { createShowcase } from "./presentation/showcase.ts"
 import { createMenuInputHost } from "./presentation/menu-input.ts"
+import { createMenuPad } from "./presentation/menu-pad.ts"
 import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
@@ -157,10 +159,19 @@ const start = async (mount: HTMLElement) => {
   looks.catch(() => undefined)
   // Android's back button is Escape: it steps back in the menus, closes a dialog, pauses and resumes a run, and on the
   // list of accounts or the home screen asks to leave; over the crash screen it leaves.
+  const goBack = () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }))
   onBackButton(() => {
     if (crashShowing()) leaveApp?.()
-    else document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }))
+    else goBack()
   })
+  // A gamepad moves through the menus (from the list of accounts on) whenever a fight does not have it; east is back, as Esc is.
+  // Which pad was used last names its buttons' labels.
+  const padUsed = signal<string | null>(null)
+  let fightHasPad = () => false
+  const menuPad = typeof navigator.getGamepads === "function"
+    ? createMenuPad({ host: navigator, root: mount, active: () => !fightHasPad() && !crashShowing(), back: goBack, used: (id) => (padUsed.value = id) })
+    : undefined
+  window.addEventListener("gamepadconnected", (event) => (padUsed.value = event.gamepad.id))
   const accounts = openAccounts()
   const partyTest = dev && !choosingAccount && new URLSearchParams(devQuery).has("partyTest")
   const pickAccounts = partyTest ? (await import("./app/party-test.ts")).partyTestAccounts(accounts) : accounts
@@ -203,8 +214,8 @@ const start = async (mount: HTMLElement) => {
   // first fight); a key or a mouse button switches to the keyboard's, and a touch back.
   const touchScreen = inApp || window.matchMedia("(pointer: coarse)").matches || new URLSearchParams(window.location.search).has("touch")
   const device = touchScreen && perfScene === undefined ? "touch" : "desktop"
-  const { muted, volume, ...comfort } = shell.settings
-  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: { muted, volume }, comfort, device })
+  const { muted, volume, bindings, ...comfort } = shell.settings
+  const uiStore = createUiStore({ tuning, team, challenge, flow, account, accountName: picked.name, notices: shell.notes, sound: { muted, volume }, comfort, controls: { bindings, padFamily: padFamilyOf(padUsed.peek()) }, device })
   if (partyTest) uiStore.menuScreens.value = [{ kind: "home" }, { kind: "team" }]
   setMotion(comfort.reducedMotion)
   if (tutorialFirst) uiStore.extra.value = { kind: "tutorial" }
@@ -255,6 +266,37 @@ const start = async (mount: HTMLElement) => {
   const change = (action: () => unknown, message: string | null) => {
     if (action() === undefined) notify("That cannot be done right now.", true, "Not allowed")
     else if (message !== null) notify(message)
+  }
+  /**
+   * Waits for a key or button to bind (`listen` starts listening, and returns
+   * how to stop), for a few seconds at most, and tells `done` what came of it.
+   */
+  function waitToBind(done: (outcome: Rebound) => void, listen: (finish: (outcome: Rebound) => void) => () => void): () => void {
+    let stopListening: () => void = () => undefined
+    let finished = false
+    const finish = (outcome: Rebound) => {
+      if (finished) return
+      finished = true
+      clearTimeout(timer)
+      stopListening()
+      done(outcome)
+    }
+    const timer = setTimeout(() => finish("cancelled"), 6000)
+    stopListening = listen(finish)
+    return () => {
+      finished = true
+      clearTimeout(timer)
+      stopListening()
+    }
+  }
+  /** Puts the player's controls in force (the keyboard, the gamepad, the arena's hints, the settings) and saves them. */
+  function setBindings(next: ControlBindings): "set" {
+    keyboard.rebind(keyBindingsOf(next))
+    gamepad.rebind(padBindingsOf(next))
+    browser.host.controls.bindings = next
+    uiStore.controls.value = { ...uiStore.controls.peek(), bindings: next }
+    shell.changeSettings({ bindings: next })
+    return "set"
   }
   /** What the UI can ask for: arena changes go to the game, account changes to the account. */
   const uiActions: UiActions = {
@@ -342,6 +384,46 @@ const start = async (mount: HTMLElement) => {
       shell.changeSettings(change)
       applyComfort()
     },
+    rebindKey: (command: KeyCommand, done) => waitToBind(done, (finish) => {
+      // Ahead of the menus' own keys (Esc would close the settings): this key is the answer.
+      const onKey = (event: KeyboardEvent) => {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        if (event.repeat) return
+        if (event.code === "Escape") finish("cancelled")
+        else {
+          const assigned = assignKey(uiStore.controls.peek().bindings, command, event.code)
+          finish(assigned.ok ? setBindings(assigned.bindings) : assigned.reason)
+        }
+      }
+      window.addEventListener("keydown", onKey, { capture: true })
+      return () => window.removeEventListener("keydown", onKey, { capture: true })
+    }),
+    rebindButton: (command: PadCommand, done) => waitToBind(done, (finish) => {
+      // Start gives up, as Esc does on a keyboard (which also works).
+      const stopPad = menuPad?.listen((button) => {
+        if (button === "start") finish("cancelled")
+        else {
+          const assigned = assignButton(uiStore.controls.peek().bindings, command, button)
+          finish(assigned.ok ? setBindings(assigned.bindings) : assigned.reason)
+        }
+      })
+      const onKey = (event: KeyboardEvent) => {
+        if (event.code !== "Escape") return
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        finish("cancelled")
+      }
+      window.addEventListener("keydown", onKey, { capture: true })
+      return () => {
+        stopPad?.()
+        window.removeEventListener("keydown", onKey, { capture: true })
+      }
+    }),
+    resetBindings: (kind) => {
+      const current = uiStore.controls.peek().bindings
+      setBindings(kind === "keys" ? { ...current, keys: defaultControlBindings.keys } : { ...current, pad: defaultControlBindings.pad })
+    },
     // Only an explicit switch opens the picker; wait for pending progress before reloading.
     switchAccount: () => {
       const url = new URL(window.location.href)
@@ -360,6 +442,7 @@ const start = async (mount: HTMLElement) => {
   // Native Enter/Space activation and sliders must keep working in menus.
   const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek() && !(uiStore.extra.peek()?.kind === "tutorial" && uiStore.tutorialDone.peek()))
   const keyboard = Keyboard.actions(input.host, keyBindings, { preventDefault: false })
+  keyboard.rebind(keyBindingsOf(bindings))
   const pointer = Pointer.track(canvas, input.host)
   // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.
   // The controls keep inside the screen's safe area (clear of a notch and rounded corners).
@@ -368,13 +451,21 @@ const start = async (mount: HTMLElement) => {
   })
   // A gamepad is read where the browser offers one (a secure context: HTTPS, localhost, the apps); elsewhere none is connected.
   const gamepad = typeof navigator.getGamepads === "function" ? Gamepad.actions(navigator, padBindings) : Gamepad.scripted(padBindings, [])
-  // Polled each frame too, so a press shorter than a fixed step still counts; button labels follow the pad's maker.
+  gamepad.rebind(padBindingsOf(bindings))
+  browser.host.controls.bindings = bindings
+  // The fight has the gamepad while a run is played (not paused, not over); the menus have it otherwise.
+  fightHasPad = () => uiStore.flow.peek() === "Playing" && !uiStore.paused.peek() && !(uiStore.extra.peek()?.kind === "tutorial" && uiStore.tutorialDone.peek())
+  effect(() => {
+    const padFamily = padFamilyOf(padUsed.value)
+    browser.host.controls.padFamily = padFamily
+    if (uiStore.controls.peek().padFamily !== padFamily) uiStore.controls.value = { ...uiStore.controls.peek(), padFamily }
+  })
+  // Polled each frame too, so a press shorter than a fixed step still counts.
   const pollPad = () => {
     gamepad.poll()
     requestAnimationFrame(pollPad)
   }
   requestAnimationFrame(pollPad)
-  window.addEventListener("gamepadconnected", (event) => (browser.host.controls.padFamily = padFamilyOf(event.gamepad.id)))
   effect(() => {
     if (uiStore.paused.value || uiStore.flow.value !== "Playing") input.cancel()
   })

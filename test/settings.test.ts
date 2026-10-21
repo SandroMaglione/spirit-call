@@ -22,12 +22,13 @@ describe("settings store", () => {
       }).pipe(Effect.provide(KeyValueStore.layerMemory))
     )
 
-  const comfort = { haptics: true, shake: "full", reducedMotion: false, aimAssist: true }
+  const noBindings = { keys: {}, pad: {} }
+  const comfort = { haptics: true, shake: "full", reducedMotion: false, aimAssist: true, bindings: noBindings }
 
   it("starts with sound on at full volume, buzzes, the full shake, and the aim assist, and saves changes", async () => {
     const fresh = await withSettings({})
     expect(fresh.loaded).toEqual({ muted: false, volume: 1, ...comfort })
-    expect(fresh.saved).toEqual({ version: 3, muted: true, volume: 1, ...comfort })
+    expect(fresh.saved).toEqual({ version: 4, muted: true, volume: 1, ...comfort })
   })
 
   it("moves first-version settings to full volume, and keeps a volume saved since", async () => {
@@ -35,13 +36,13 @@ describe("settings store", () => {
     expect(first.loaded).toEqual({ muted: true, volume: 1, ...comfort })
     const second = await withSettings({ [settingsKey]: JSON.stringify({ version: 2, muted: false, volume: 0.4 }) })
     expect(second.loaded).toEqual({ muted: false, volume: 0.4, ...comfort })
-    expect(second.saved).toEqual({ version: 3, muted: true, volume: 0.4, ...comfort })
+    expect(second.saved).toEqual({ version: 4, muted: true, volume: 0.4, ...comfort })
   })
 
   it("keeps the comfort settings saved, and starts reduced motion as the device asks", async () => {
     const saved = { version: 3, muted: false, volume: 0.5, haptics: false, shake: "off", reducedMotion: true, aimAssist: false }
     const kept = await withSettings({ [settingsKey]: JSON.stringify(saved) })
-    expect(kept.loaded).toEqual({ muted: false, volume: 0.5, haptics: false, shake: "off", reducedMotion: true, aimAssist: false })
+    expect(kept.loaded).toEqual({ muted: false, volume: 0.5, haptics: false, shake: "off", reducedMotion: true, aimAssist: false, bindings: noBindings })
     const asked = await Effect.runPromise(Effect.gen(function*() {
       return yield* (yield* SettingsStore).get
     }).pipe(Effect.provide(settingsLayer({ reducedMotion: true })), Effect.provide(KeyValueStore.layerMemory)))
@@ -56,5 +57,15 @@ describe("settings store", () => {
     }).pipe(Effect.provide(settingsLayer()), Effect.provideService(KeyValueStore.KeyValueStore, device.store)))
     expect(loaded).toEqual({ muted: false, volume: 1, ...comfort })
     expect(device.held.get(settingsKey)).toBe(saved)
+  })
+
+  it("keeps the controls the player moved, and drops what cannot be applied", async () => {
+    const saved = {
+      version: 4, muted: false, volume: 1, haptics: true, shake: "full", reducedMotion: false, aimAssist: true,
+      bindings: { keys: { up: "KeyI", jump: "KeyJ", special: "Escape" }, pad: { attack: "north", dash: "A", ultimate: "start" } }
+    }
+    const kept = await withSettings({ [settingsKey]: JSON.stringify(saved) })
+    expect(kept.loaded.bindings).toEqual({ keys: { up: "KeyI" }, pad: { attack: "north" } })
+    expect(kept.saved.bindings).toEqual({ keys: { up: "KeyI" }, pad: { attack: "north" } })
   })
 })
