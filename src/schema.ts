@@ -4,7 +4,6 @@
  */
 import { Clock, Descriptor, Schema } from "@typeonce/ritmo"
 import type * as Entity from "@typeonce/ritmo/Entity"
-import type { NodeRegistry } from "@typeonce/ritmo-render"
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
 import * as Random from "@typeonce/ritmo-math/Random"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
@@ -27,7 +26,7 @@ import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
 import type { Area } from "./physics/areas.ts"
-import type { RenderHostValue, RenderNode } from "./presentation/host-types.ts"
+import type { RenderHostValue } from "./presentation/host-types.ts"
 import type { SoundBoard } from "./presentation/sound.ts"
 
 export const Root = Schema.defineRoot("Shooter")
@@ -1403,7 +1402,6 @@ export const RenderClock = Descriptor.Service<RenderClockValue>()("Shooter/Rende
 export const RenderHost = Descriptor.Service<RenderHostValue>()("Shooter/RenderHost")
 /** Game sounds (see presentation/sound.ts). */
 export const Sounds = Descriptor.Service<SoundBoard>()("Shooter/Sounds")
-export const RenderNodes = Descriptor.Service<NodeRegistry.NodeRegistry<RenderNode>>()("Shooter/RenderNodes")
 
 // ── Game ──────────────────────────────────────────────────────────────────
 

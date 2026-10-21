@@ -49,7 +49,7 @@ const InsideArena = Invariant.fromInspector(Game.Inspector("player inside arena"
 // them (so their reads count in lints) without running them, as `pnpm lint:game` does.
 const session = Session.make(sim.runtime, {
   schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
-  ...hostSide,
+  ...(await hostSide()),
   invariants: [InsideArena],
   hostClock: sim.hostClock
 })

@@ -70,7 +70,8 @@
         "**/src/schema.ts",
         "**/src/schedules.ts",
         "**/src/simulation.ts",
-        "**/src/runtime.ts"
+        "**/src/runtime.ts",
+        ".repos/ritmo-preview/**"
       ],
       "rules": {
         "ritmo/use-clock-for-time": "error",

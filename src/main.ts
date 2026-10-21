@@ -44,9 +44,9 @@ import {
   TouchInput,
   RenderClock,
   RenderHost,
-  RenderNodes,
   Sounds
 } from "./schema.ts"
+import { RenderNodes } from "./presentation/render-nodes.ts"
 import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
