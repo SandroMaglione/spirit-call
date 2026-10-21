@@ -94,7 +94,8 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
       ? { color: view.charge.full, fill: 0.14, outline: 0.9 }
       : { color: view.playerArea, fill: 0.06, outline: 0.35 })
   }
-  if (controls.device !== "touch") return
+  // The cursor shows the mouse's aim; a stick's (touch, a gamepad) is shown on the floor.
+  if (controls.device === "desktop") return
   // The enemy an attack now would turn toward (attack assist), ringed on the floor.
   if (controls.assistTarget !== null) {
     for (const { entity, data } of queries.enemies.each()) {

@@ -16,7 +16,7 @@ import type { Tuning } from "../config/tuning.ts"
 import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
 import { emptyRunLog } from "../schema.ts"
-import type { BuildValue, FlowState, PracticeValue, RunLogValue, RunResultValue } from "../schema.ts"
+import type { BuildValue, ControlDevice, FlowState, PracticeValue, RunLogValue, RunResultValue } from "../schema.ts"
 import type { Screen } from "./menu/screens.ts"
 import type { TeamDraft } from "./draft.ts"
 
@@ -48,7 +48,7 @@ export interface UiStore {
   /** Whether the run going on is paused (its in-game menu open). */
   readonly paused: Signal<boolean>
   /** The input in use: keyboard and mouse, or touch (for hints). */
-  readonly device: Signal<"desktop" | "touch">
+  readonly device: Signal<ControlDevice>
   /** The content (characters, classes, aspects, skills, challenges) and its numbers. */
   readonly tuning: Signal<Tuning>
   /** The team and challenge of the run going on, or of the last one. */
@@ -108,7 +108,7 @@ export const createUiStore = (initial: {
   readonly sound: Sound
   readonly comfort: Comfort
   /** What the controls start as. */
-  readonly device: "desktop" | "touch"
+  readonly device: ControlDevice
 }): UiStore => ({
   feedback: signal(null),
   menuPlay: signal(initial.account.selection.play),

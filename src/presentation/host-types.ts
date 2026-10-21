@@ -2,6 +2,7 @@ import type { BufferGeometry, Group, Mesh, Object3D, OrthographicCamera, Scene, 
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
+import type { ControlBindings, PadFamily } from "../config/controls.ts"
 import type { ActionButton, SafeArea } from "../config/input.ts"
 import type { StateId } from "../content/elements.ts"
 import type { ArenaId } from "../content/arena.ts"
@@ -333,6 +334,8 @@ export interface RenderHostValue {
   readonly feedback: FeedbackState
   /** The player's comfort settings, as the app sets them: how much the screen shakes (0..1), and whether motion is reduced (no zoom punches). */
   readonly comfort: { shake: number; reducedMotion: boolean }
+  /** The player's controls, as the app sets them, and whose labels the gamepad's buttons carry: for the hints shown in the arena. */
+  readonly controls: { bindings: ControlBindings; padFamily: PadFamily }
   /** Characters who just fell, until they are gone (see `PlayFalls`). */
   readonly fallen: Array<Fallen>
   /** Lays out the floor (none over `holes`, the hazards laid into it) and scenery of arena `id` (see `SyncArena`); nothing to do when it is already shown. */

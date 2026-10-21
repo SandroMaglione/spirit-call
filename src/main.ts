@@ -1,8 +1,9 @@
 import { effect, signal } from "@preact/signals"
 import { FixedLoop, Result } from "@typeonce/ritmo"
-import { BrowserHostClock, BrowserTickSource, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
+import { BrowserHostClock, BrowserTickSource, Gamepad, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
-import { keyBindings, scriptedPartyTaps, touchButtons, touchLayout } from "./config/input.ts"
+import { padFamilyOf } from "./config/controls.ts"
+import { keyBindings, padBindings, scriptedPartyTaps, touchButtons, touchLayout } from "./config/input.ts"
 import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { makePerfScene, parsePerf } from "./dev/perf-scene.ts"
@@ -38,6 +39,7 @@ import {
   UiRequest,
   FrameContext,
   Game,
+  GamepadInput,
   KeyboardInput,
   PartyInput,
   PointerInput,
@@ -364,6 +366,15 @@ const start = async (mount: HTMLElement) => {
   const touch = Touch.track(canvas, input.host, (size) => touchLayout(size, browser.host.safeArea()), {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
   })
+  // A gamepad is read where the browser offers one (a secure context: HTTPS, localhost, the apps); elsewhere none is connected.
+  const gamepad = typeof navigator.getGamepads === "function" ? Gamepad.actions(navigator, padBindings) : Gamepad.scripted(padBindings, [])
+  // Polled each frame too, so a press shorter than a fixed step still counts; button labels follow the pad's maker.
+  const pollPad = () => {
+    gamepad.poll()
+    requestAnimationFrame(pollPad)
+  }
+  requestAnimationFrame(pollPad)
+  window.addEventListener("gamepadconnected", (event) => (browser.host.controls.padFamily = padFamilyOf(event.gamepad.id)))
   effect(() => {
     if (uiStore.paused.value || uiStore.flow.value !== "Playing") input.cancel()
   })
@@ -392,6 +403,7 @@ const start = async (mount: HTMLElement) => {
       Game.Runtime.service(KeyboardInput, perfScene === undefined ? keyboard : Keyboard.scripted(keyBindings, perfScene.keys)),
       Game.Runtime.service(PointerInput, perfScene === undefined ? pointer : Pointer.scripted(perfScene.pointer)),
       Game.Runtime.service(TouchInput, perfScene === undefined ? touch : Touch.scripted(touchButtons, [])),
+      Game.Runtime.service(GamepadInput, perfScene === undefined ? gamepad : Gamepad.scripted(padBindings, [])),
       Game.Runtime.service(PartyInput, perfScene === undefined ? browser.party : scriptedPartyTaps([])),
       Game.Runtime.service(FrameContext, frameContext),
       Game.Runtime.service(RenderClock, clock),

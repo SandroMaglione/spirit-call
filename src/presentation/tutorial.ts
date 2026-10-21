@@ -2,26 +2,40 @@
  * The tutorial, written on the floor (see `features/tutorial.ts`): the step
  * asked, in painted letters lying on the arena's floor where it is to be done
  * (under the circle to walk into, under the dummy to hit), and under it how
- * to do it on this device (a button on touch, a key on a keyboard). A step
+ * to do it with the controls in use (a button on touch or a gamepad, as the
+ * player bound it, a key on a keyboard). A step
  * done chimes, and the next one's words take its place.
  */
 import { CanvasTexture, LinearFilter, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace } from "three"
 import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 
+import { buttonHint, keyHint } from "../config/controls.ts"
+import type { ControlBindings, PadFamily } from "../config/controls.ts"
 import { projection, view } from "../config/view.ts"
 import type { TutorialStep, TutorialStepKind } from "../content/tutorial.ts"
 import { stepGoal, tutorialSpot, tutorialSpotRadius } from "../features/tutorial.ts"
 import { screenDirectionToWorld } from "../math/iso.ts"
 import { Challenge, Controls, Enemy, Flow, Game, Player, Position, RenderHost, Sounds, Tuning, Tutorial } from "../schema.ts"
+import type { ControlDevice } from "../schema.ts"
 
 /** How to do each step, on each kind of device. */
-const how: { readonly [Kind in TutorialStepKind]: { readonly touch: string; readonly desktop: string } } = {
-  move: { touch: "Left stick", desktop: "W A S D" },
-  dash: { touch: "Dash button", desktop: "Double-tap a direction" },
-  attack: { touch: "Sword button", desktop: "Click" },
-  special: { touch: "Special button", desktop: "Space" },
-  ultimate: { touch: "Ultimate button", desktop: "Shift" },
-  perfectDodge: { touch: "Stand close · Dash button", desktop: "Stand close · Double-tap" }
+const how = (kind: TutorialStepKind, device: ControlDevice, bindings: ControlBindings, family: PadFamily): string => {
+  if (device === "touch") {
+    return { move: "Left stick", dash: "Dash button", attack: "Sword button", special: "Special button", ultimate: "Ultimate button", perfectDodge: "Stand close · Dash button" }[kind]
+  }
+  if (device === "gamepad") {
+    const button = (command: "attack" | "dash" | "special" | "ultimate") => buttonHint(bindings, command, family)
+    return { move: "Left stick", dash: button("dash"), attack: button("attack"), special: button("special"), ultimate: button("ultimate"), perfectDodge: `Stand close · ${button("dash")}` }[kind]
+  }
+  const key = (command: "up" | "left" | "down" | "right" | "special" | "ultimate") => keyHint(bindings, command).split(" / ")[0]!
+  return {
+    move: [key("up"), key("left"), key("down"), key("right")].join(" "),
+    dash: "Double-tap a direction",
+    attack: "Click",
+    special: key("special"),
+    ultimate: key("ultimate"),
+    perfectDodge: "Stand close · Double-tap"
+  }[kind]
 }
 
 /** The words' size on the floor (world units), and the canvas they are drawn on (pixels). */
@@ -122,7 +136,7 @@ export const ShowTutorial = Game.System("Shooter/ShowTutorial", {
     place(state.anchor, 120)
     return
   }
-  words.draw(titleOf(step, count), how[step.kind][device])
+  words.draw(titleOf(step, count), how(step.kind, device, host.controls.bindings, host.controls.padFamily))
   const marks = host.groundMarks
   const pulse = host.comfort.reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(performance.now() / 260)
   switch (step.kind) {

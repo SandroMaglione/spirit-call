@@ -13,17 +13,17 @@
  * ```
  */
 import { HostClock } from "@typeonce/ritmo"
-import { Touch } from "@typeonce/ritmo-browser"
+import { Gamepad, Touch } from "@typeonce/ritmo-browser"
 import type { ChallengeId } from "./content/challenges.ts"
 
-import { scriptedPartyTaps, touchButtons } from "./config/input.ts"
-import type { KeyboardSource, PartyTaps, PointerSource, TouchSource } from "./config/input.ts"
+import { padBindings, scriptedPartyTaps, touchButtons } from "./config/input.ts"
+import type { KeyboardSource, PadSource, PartyTaps, PointerSource, TouchSource } from "./config/input.ts"
 import { defaultTuning } from "./config/tuning.ts"
 import type { Tuning } from "./config/tuning.ts"
 import { initialControls } from "./features/input.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
-import { FrameContext, Game, KeyboardInput, PartyInput, PointerInput, TouchInput } from "./schema.ts"
-import type { BuildValue, TwistValue, ViewportValue } from "./schema.ts"
+import { FrameContext, Game, GamepadInput, KeyboardInput, PartyInput, PointerInput, TouchInput } from "./schema.ts"
+import type { BuildValue, ControlDevice, TwistValue, ViewportValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
 export interface SimulationOptions {
@@ -31,6 +31,8 @@ export interface SimulationOptions {
   readonly pointer: PointerSource
   /** On-screen touch controls. Defaults to untouched scripted controls. */
   readonly touch?: TouchSource
+  /** A gamepad. Defaults to none connected. */
+  readonly gamepad?: PadSource
   /** Taps on the party list. Defaults to none. */
   readonly party?: PartyTaps
   readonly tuning?: Tuning
@@ -49,7 +51,7 @@ export interface SimulationOptions {
   /** Defaults to 1280×720. */
   readonly viewport?: ViewportValue
   /** What the controls start as (a phone's browser starts as touch); defaults to desktop. */
-  readonly device?: "desktop" | "touch"
+  readonly device?: ControlDevice
   /** The clock the debug handle times systems with. Defaults to `HostClock.test()` (every timing 0, deterministic output). */
   readonly hostClock?: HostClock.HostClock
 }
@@ -65,6 +67,7 @@ export const createSimulation = (options: SimulationOptions) => {
       Game.Runtime.service(KeyboardInput, options.keyboard),
       Game.Runtime.service(PointerInput, options.pointer),
       Game.Runtime.service(TouchInput, options.touch ?? Touch.scripted(touchButtons, [])),
+      Game.Runtime.service(GamepadInput, options.gamepad ?? Gamepad.scripted(padBindings, [])),
       Game.Runtime.service(PartyInput, options.party ?? scriptedPartyTaps([])),
       Game.Runtime.service(FrameContext, { viewport }),
     ),

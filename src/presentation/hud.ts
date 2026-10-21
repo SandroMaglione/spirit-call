@@ -7,13 +7,15 @@
  * energy). Colors follow the element of
  * the character on the field (`data-element`).
  */
+import { buttonHint, buttonLabel, keyHint } from "../config/controls.ts"
+import type { ControlBindings, PadFamily } from "../config/controls.ts"
 import { actionButtons, drawnShare, partyLayout, stickRest, touchLayout } from "../config/input.ts"
 import { bySlot, skillSlots } from "../content/skills.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { SkillSpec } from "../content/skills.ts"
 import { view } from "../config/view.ts"
 import { Challenge, Controls, Dash, ElementState, EnemyLevel, Energy, Flow, Game, Health, Hit, Member, Passives, Player, RenderClock, RenderHost, Run, Skills, Sounds, Stats, TeamSwitch, TouchInput, Tuning, Tutorial, Waves, BasicAttack } from "../schema.ts"
-import type { SkillsValue, TutorialValue, WavesValue } from "../schema.ts"
+import type { ControlDevice, SkillsValue, TutorialValue, WavesValue } from "../schema.ts"
 import type { ChallengeSpec } from "../content/challenges.ts"
 import { dashOf, traitsIn } from "../features/build.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -21,6 +23,44 @@ import { elementOf } from "../ui/draft.ts"
 import { setText } from "./draw.ts"
 import { skillIcons, stateIcons, classIcons } from "./icons.ts"
 import { setStyle } from "./styles.ts"
+
+/** What the HUD's key caps and hint line show: the keys or buttons bound now. */
+interface Caps {
+  readonly special: string
+  readonly ultimate: string
+  readonly team: readonly [string, string, string]
+  readonly hint: string
+}
+
+let lastCaps: { readonly device: ControlDevice; readonly bindings: ControlBindings; readonly family: PadFamily; readonly caps: Caps } | null = null
+
+/** The caps for the controls in use, worked out again only when they change. */
+const capsOf = (device: ControlDevice, controls: { readonly bindings: ControlBindings; readonly padFamily: PadFamily }): Caps => {
+  const { bindings, padFamily: family } = controls
+  if (lastCaps !== null && lastCaps.device === device && lastCaps.bindings === bindings && lastCaps.family === family) return lastCaps.caps
+  let caps: Caps
+  if (device === "gamepad") {
+    const button = (command: Parameters<typeof buttonHint>[1]) => buttonHint(bindings, command, family)
+    const team = [button("team1"), button("team2"), button("team3")] as const
+    caps = {
+      special: button("special"),
+      ultimate: button("ultimate"),
+      team,
+      hint: `Left stick move · ${button("dash")} dash · ${button("attack")} attack · ${button("special")} special · ${button("ultimate")} ultimate · hold a skill, aim with the right stick · ${team.join(" ")} switch · ${buttonLabel("start", family)} menu`
+    }
+  } else {
+    const key = (command: Parameters<typeof keyHint>[1]) => keyHint(bindings, command).split(" / ")[0]!
+    const team = [key("team1"), key("team2"), key("team3")] as const
+    caps = {
+      special: key("special"),
+      ultimate: key("ultimate"),
+      team,
+      hint: `${key("up")}${key("left")}${key("down")}${key("right")} move · double-tap dash · Click attack · ${key("special")} special · ${key("ultimate")} ultimate · ${team.join(" ")} switch · Esc menu`
+    }
+  }
+  lastCaps = { device, bindings, family, caps }
+  return caps
+}
 
 /**
  * The on-screen touch controls: the stick under the thumb (or a faint hint
@@ -39,13 +79,20 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
 }, ({ queries, resources, services }) => {
   const hud = services.host.hud
   const pad = hud.pad
-  const touchMode = resources.controls.get().device === "touch"
-  if (pad.root.hidden === touchMode) {
+  const device = resources.controls.get().device
+  const touchMode = device === "touch"
+  if (hud.root.dataset["device"] !== device) {
     pad.root.hidden = !touchMode
     for (const element of hud.desktopOnly) element.hidden = touchMode
-    hud.root.dataset["device"] = touchMode ? "touch" : "desktop"
+    hud.root.dataset["device"] = device
   }
-  if (!touchMode) return
+  if (!touchMode) {
+    const caps = capsOf(device, services.host.controls)
+    setText(hud.root.querySelector("[data-skill=special] kbd"), caps.special)
+    setText(hud.root.querySelector("[data-skill=ultimate] kbd"), caps.ultimate)
+    setText(hud.desktopOnly[1] ?? null, caps.hint)
+    return
+  }
   const live = services.touch.view()
   // Input refreshes its hit regions on the next touch. At rest, draw the
   // current viewport immediately so rotation never leaves buttons offscreen.
@@ -182,7 +229,7 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
     if (element === null) delete refs.root.dataset["element"]
     else if (refs.root.dataset["element"] !== element) refs.root.dataset["element"] = element
     if (refs.portrait.dataset["portrait"] !== character) refs.portrait.dataset["portrait"] = character
-    setText(refs.face.querySelector("kbd"), String(slot + 1))
+    setText(refs.face.querySelector("kbd"), capsOf(resources.controls.get().device, services.host.controls).team[slot] ?? String(slot + 1))
     const initial = tuning.characters[character].name.charAt(0)
     if (refs.face.dataset["initial"] !== initial) refs.face.dataset["initial"] = initial
     setText(refs.name, tuning.characters[character].name)

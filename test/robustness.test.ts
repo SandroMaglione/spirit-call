@@ -1,17 +1,17 @@
 import * as Random from "@typeonce/ritmo-math/Random"
 import { Descriptor } from "@typeonce/ritmo"
-import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
+import { Gamepad, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 import { NodeRegistry, RenderSync } from "@typeonce/ritmo-render"
 import { describe, expect, it } from "vitest"
 
-import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
+import { keyBindings, padBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands, setAt } from "../src/dev/commands.ts"
 import { makeStress, stressTuning } from "../src/dev/stress.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { initialMachines, initialResources } from "../src/runtime.ts"
 import { fixedUpdate, setup } from "../src/schedules.ts"
-import { Dash, FrameContext, Game, HitStop, KeyboardInput, PartyInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning, Enemy } from "../src/schema.ts"
+import { Dash, FrameContext, Game, HitStop, GamepadInput, KeyboardInput, PartyInput, Player, PointerInput, Renderable, RunScope, Time, TouchInput, Tuning, Enemy } from "../src/schema.ts"
 import { defaultViewport } from "../src/simulation.ts"
 import { ReadFlow, doubleTap, gunner, start, withGun, expectOk } from "./helpers.ts"
 
@@ -132,6 +132,7 @@ describe("render sync under multi-rate ticking", () => {
         Game.Runtime.service(KeyboardInput, Keyboard.scripted(keyBindings, [])),
         Game.Runtime.service(PointerInput, Pointer.scripted([])),
         Game.Runtime.service(TouchInput, Touch.scripted(touchButtons, [])),
+        Game.Runtime.service(GamepadInput, Gamepad.scripted(padBindings, [])),
         Game.Runtime.service(PartyInput, scriptedPartyTaps([])),
         Game.Runtime.service(FrameContext, { viewport: defaultViewport }),
         Game.Runtime.service(TestNodes, registry),

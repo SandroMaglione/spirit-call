@@ -1,8 +1,8 @@
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { ArenaId } from "../src/content/arena.ts"
-import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
+import { Gamepad, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
-import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
+import { keyBindings, padBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
 import type { Direction, PartyTap, TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { projection, viewZoom } from "../src/config/view.ts"
@@ -195,6 +195,8 @@ export interface StartOptions {
   readonly keys?: Keyboard.Timeline<typeof keyBindings>
   readonly pointer?: Pointer.Timeline
   readonly touch?: Touch.Timeline<TouchButton>
+  /** A gamepad's timeline (buttons by the standard mapping, the sticks). */
+  readonly pad?: Gamepad.Timeline
   /** Taps on the party list. */
   readonly party?: ReadonlyArray<PartyTap & { readonly frame: number }>
   readonly tuning?: Tuning
@@ -241,6 +243,7 @@ export const start = (options: StartOptions = {}) => {
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
+    gamepad: Gamepad.scripted(padBindings, options.pad ?? []),
     party: scriptedPartyTaps(options.party ?? []),
     tuning: inArena(withWaves((options.toughness === true ? (tuning: Tuning) => tuning : plainEnemies)((options.moments === true ? (tuning: Tuning) => tuning : withoutMoments)(options.kits === "shipped" ? options.tuning ?? defaultTuning : withLobbedSpecials(options.tuning ?? defaultTuning))), options.waves ?? false), options.arena ?? "courtyard"),
     ...(options.build === undefined ? {} : { build: options.build }),
