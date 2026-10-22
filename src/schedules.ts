@@ -44,7 +44,7 @@ import { RecordRunLog } from "./features/run-log.ts"
 import { DetectGameOver, PauseWithKey, QueueRestart, RecordReactions, RecordTally, ResetRun, TrackRun } from "./features/flow.ts"
 import { ApplyUiRequests } from "./features/menu.ts"
 import { RunTutorial } from "./features/tutorial.ts"
-import { CaptureKeys, CaptureParty, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
+import { CaptureGamepad, CaptureKeys, CaptureParty, CapturePointer, CaptureTouch, CaptureViewport, ResolveControls } from "./features/input.ts"
 import { IntegrateBodies, RememberPositions } from "./features/motion.ts"
 import { ApplyTriggeredEffects, TriggerPassives } from "./features/passives.ts"
 import { ControlPlayer } from "./features/player.ts"
@@ -85,6 +85,7 @@ const input = Game.Schedule.when(
   CaptureKeys,
   CapturePointer,
   CaptureTouch,
+  CaptureGamepad,
   CaptureParty,
   ResolveControls
 )

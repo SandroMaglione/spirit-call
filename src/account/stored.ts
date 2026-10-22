@@ -37,8 +37,20 @@ export const StoredSettingsV3 = Schema.Struct({
   aimAssist: Schema.Boolean
 })
 
-export const StoredSettings = Schema.Union([StoredSettingsV1, StoredSettingsV2, StoredSettingsV3])
-export const StoredSettingsLatest = StoredSettingsV3
+/**
+ * Version 4: and the player's controls, as changes to the defaults: a
+ * physical key (`KeyboardEvent.code`) or a gamepad button per remapped
+ * command. Unknown commands, keys, or buttons are dropped on load (see
+ * `sanitizeBindings`).
+ */
+export const StoredSettingsV4 = Schema.Struct({
+  ...StoredSettingsV3.fields,
+  version: Schema.Literal(4),
+  bindings: Schema.Struct({ keys: Schema.Record(Schema.String, Schema.String), pad: Schema.Record(Schema.String, Schema.String) })
+})
+
+export const StoredSettings = Schema.Union([StoredSettingsV1, StoredSettingsV2, StoredSettingsV3, StoredSettingsV4])
+export const StoredSettingsLatest = StoredSettingsV4
 export type StoredSettingsLatest = typeof StoredSettingsLatest.Type
 
 /** Brings saved settings to the latest version; what a version adds starts as it would on a new device (`reducedMotion`: as the device asks). */
@@ -47,8 +59,10 @@ export const migrateSettings = (stored: typeof StoredSettings.Type, device: { re
     case 1:
       return migrateSettings({ version: 2, muted: stored.muted, volume: 1 }, device)
     case 2:
-      return { version: 3, muted: stored.muted, volume: stored.volume, haptics: true, shake: "full", reducedMotion: device.reducedMotion, aimAssist: true }
+      return migrateSettings({ version: 3, muted: stored.muted, volume: stored.volume, haptics: true, shake: "full", reducedMotion: device.reducedMotion, aimAssist: true }, device)
     case 3:
+      return { ...stored, version: 4, bindings: { keys: {}, pad: {} } }
+    case 4:
       return stored
   }
 }

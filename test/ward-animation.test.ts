@@ -7,7 +7,8 @@ import { AnimateActors } from "../src/presentation/animate.ts"
 import { Batch, Instance } from "../src/presentation/batch.ts"
 import type { RenderNode } from "../src/presentation/host-types.ts"
 import { initialResources } from "../src/runtime.ts"
-import { AttackPhase, Attacker, Enemy, Game, Position, RenderClock, RenderNodes, Stunned, Ward } from "../src/schema.ts"
+import { AttackPhase, Attacker, Enemy, Game, Position, RenderClock, Stunned, Ward } from "../src/schema.ts"
+import { RenderNodes } from "../src/presentation/render-nodes.ts"
 import type { AttackPhase as Phase } from "../src/schema.ts"
 
 it("raises and holds Warden's staff from its ward state, with attacks and stun taking priority", () => {

@@ -18,7 +18,8 @@ runs every change through the account's rules
 - `src/account/account-store.ts`: **one account's store** (`AccountStore`):
   loads its save (or starts a new account) and saves the account whole, one
   save at a time, in order.
-- `src/account/settings.ts`: **the device's settings** (sound), saved the
+- `src/account/settings.ts`: **the device's settings** (sound, comfort,
+  and the controls the player remapped, see `docs/controls.md`), saved the
   same way.
 - `src/account/stored.ts`: **every shape a save ever had**, as Schemas, and
   the migrations between them.

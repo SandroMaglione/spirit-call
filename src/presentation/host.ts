@@ -5,6 +5,7 @@ import type { Box2 } from "@typeonce/ritmo-math/Box2"
 import { actionButtons, teamSlots } from "../config/input.ts"
 import type { ActionButton, PartyTaps } from "../config/input.ts"
 import { projection, view } from "../config/view.ts"
+import { defaultControlBindings } from "../config/controls.ts"
 import { toScreen, toScreenAt, worldHeight } from "../math/iso.ts"
 import { makeCamera, placeCamera } from "./camera.ts"
 import { DropTrail } from "./drop-trail.ts"
@@ -279,6 +280,7 @@ export const createBrowserHost = async (
     stats: { fps: 60, steps: 0, sinceHud: 0, simMs: 0, drawMs: 0 },
     fallen: [],
     comfort: { shake: 1, reducedMotion: false },
+    controls: { bindings: defaultControlBindings, padFamily: "xbox" },
     feedback: { shake: 0, hurt: 0, bannerWave: 0, slashCue: { alpha: 0, idle: 0 }, kick: { x: 0, y: 0 }, punch: 0, tutorial: { words: null, step: -1, anchor: { x: 0, y: 0 } }, moment: 0, protection: 0, entrance: Infinity, wideEyes: 0, stepIn: null, sway: { x: 0, y: 0, vx: 0, vy: 0, last: null }, recoil: new Map(), stateClock: { id: null, full: 0 }, hover: null, squish: null, meter: { recent: [] } },
     toCanvas: (world, height) => {
       const center = toScreen(projection, cameraView.center)

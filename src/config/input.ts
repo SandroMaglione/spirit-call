@@ -1,5 +1,5 @@
 import { Keyboard } from "@typeonce/ritmo-browser"
-import type { Pointer, Touch } from "@typeonce/ritmo-browser"
+import type { Gamepad, Pointer, Touch } from "@typeonce/ritmo-browser"
 
 /**
  * Keyboard actions. The mouse aims and left click fires. Double-tapping a
@@ -28,6 +28,31 @@ export const keyBindings = {
 } as const
 
 export type KeyBindings = typeof keyBindings
+
+/**
+ * Gamepad actions, by the standard mapping's buttons (`south` is A on Xbox,
+ * Cross on PlayStation). A gamepad plays as touch does: the left stick
+ * moves, the attack (held, it charges) turns toward the enemy the aim assist
+ * picks, and a skill is used on release, aimed by the right stick while its
+ * button is held (released untilted, it goes where a tap would). The d-pad's
+ * left, up, and right switch to the team's first, second, and third, in the
+ * order the party list shows them. Start pauses. Menus and the results
+ * screen are moved through with the d-pad (see `presentation/menu-pad.ts`).
+ */
+export const padBindings = {
+  attack: ["west"],
+  dash: ["south"],
+  special: ["rightBumper"],
+  ultimate: ["rightTrigger"],
+  team1: ["dpadLeft"],
+  team2: ["dpadUp"],
+  team3: ["dpadRight"],
+  menu: ["start"]
+} as const
+
+export type PadBindings = typeof padBindings
+export type PadSnapshot = Gamepad.Snapshot<PadBindings>
+export type PadSource = Gamepad.Actions<PadBindings>
 
 /** The switch actions, by team slot. */
 export const teamKeys = ["team1", "team2", "team3"] as const

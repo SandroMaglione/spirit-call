@@ -14,22 +14,28 @@
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
 import { keyBindings } from "../src/config/input.ts"
-import { ApplyDevCommands } from "../src/dev/commands.ts"
-import { frame } from "../src/presentation/schedule.ts"
 import { Game, UiRequest } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
-/** The schedules described without running, and the events the host sends: shared with `scripts/debug.ts`, so its lints match. */
-export const hostSide = {
-  describe: { frame, dev: Game.Schedule(ApplyDevCommands) },
-  hostEvents: [UiRequest]
+/**
+ * The schedules described without running, and the events the host sends:
+ * shared with `scripts/debug.ts`, so its lints match. Imported only when
+ * called, so the render and dev modules count as host code, not simulation
+ * (the lint checks that every module the simulation loads is linted as one).
+ */
+export const hostSide = async () => {
+  const [{ ApplyDevCommands }, { frame }] = await Promise.all([import("../src/dev/commands.ts"), import("../src/presentation/schedule.ts")])
+  return {
+    describe: { frame, dev: Game.Schedule(ApplyDevCommands) },
+    hostEvents: [UiRequest]
+  }
 }
 
-export const lintTarget = () => {
+export const lintTarget = async () => {
   const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: Pointer.scripted([]) })
   return {
     runtime: sim.runtime,
     schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
-    ...hostSide
+    ...(await hostSide())
   }
 }

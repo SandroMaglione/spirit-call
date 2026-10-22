@@ -1,8 +1,8 @@
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { ArenaId } from "../src/content/arena.ts"
-import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
+import { Gamepad, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
-import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
+import { keyBindings, padBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
 import type { Direction, PartyTap, TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { projection, viewZoom } from "../src/config/view.ts"
@@ -195,6 +195,8 @@ export interface StartOptions {
   readonly keys?: Keyboard.Timeline<typeof keyBindings>
   readonly pointer?: Pointer.Timeline
   readonly touch?: Touch.Timeline<TouchButton>
+  /** A gamepad's timeline (buttons by the standard mapping, the sticks). */
+  readonly pad?: Gamepad.Timeline
   /** Taps on the party list. */
   readonly party?: ReadonlyArray<PartyTap & { readonly frame: number }>
   readonly tuning?: Tuning
@@ -237,10 +239,12 @@ export const hitBy = (character: CharacterId, power: number, tuning: Tuning = de
 
 /** A headless run after setup. Timeline frame `n` is read by fixed step `n + 1`. */
 export const start = (options: StartOptions = {}) => {
+  const gamepad = Gamepad.scripted(padBindings, options.pad ?? [])
   const sim = createSimulation({
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
     pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
     touch: Touch.scripted(touchButtons, options.touch ?? []),
+    gamepad,
     party: scriptedPartyTaps(options.party ?? []),
     tuning: inArena(withWaves((options.toughness === true ? (tuning: Tuning) => tuning : plainEnemies)((options.moments === true ? (tuning: Tuning) => tuning : withoutMoments)(options.kits === "shipped" ? options.tuning ?? defaultTuning : withLobbedSpecials(options.tuning ?? defaultTuning))), options.waves ?? false), options.arena ?? "courtyard"),
     ...(options.build === undefined ? {} : { build: options.build }),
@@ -257,7 +261,7 @@ export const start = (options: StartOptions = {}) => {
       if (!result.ok) throw new Error("step failed")
     }
   }
-  return { ...sim, step, player: () => sim.runtime.inspect(PlayerState) }
+  return { ...sim, gamepad, step, player: () => sim.runtime.inspect(PlayerState) }
 }
 
 /** Despawns every enemy (training dummies included). */

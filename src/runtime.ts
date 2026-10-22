@@ -1,7 +1,7 @@
 import * as Random from "@typeonce/ritmo-math/Random"
-import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
+import { Gamepad, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
-import { keyBindings, touchButtons } from "./config/input.ts"
+import { keyBindings, padBindings, touchButtons } from "./config/input.ts"
 import type { Tuning } from "./config/tuning.ts"
 import { noTally } from "./content/stars.ts"
 import type { ChallengeId } from "./content/challenges.ts"
@@ -42,6 +42,7 @@ export const initialResources = (
   Keys: Keyboard.idle(keyBindings),
   PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),
   TouchState: Touch.idle(touchButtons),
+  PadState: Gamepad.idle(padBindings),
   PartyState: [],
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
   ControlOptions: { aimAssist: true },

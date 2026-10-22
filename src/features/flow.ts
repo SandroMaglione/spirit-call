@@ -7,7 +7,7 @@ import { Clock } from "@typeonce/ritmo"
 import * as Random from "@typeonce/ritmo-math/Random"
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
-import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, SecondWinds, PracticeField, Reaction, Tutorial, tutorialStart, Rng, Run, RunLog, RunResult, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
+import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, HitStop, Keys, Member, PadState, Mending, Paused, PassiveCooldowns, PerfectDodged, SecondWinds, PracticeField, Reaction, Tutorial, tutorialStart, Rng, Run, RunLog, RunResult, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
 import { runResultOf } from "./challenges.ts"
 import { noGuard } from "./guard.ts"
 import { initialWaves } from "./waves.ts"
@@ -96,7 +96,8 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
 
 /**
  * Keyboard shortcuts on the results screen (lost or won), after a short
- * delay: R/Enter plays again, Esc goes back to the menu. Clicks and taps go
+ * delay: R/Enter plays again, Esc goes back to the menu. A gamepad moves
+ * through the screen's buttons instead (`presentation/menu-pad.ts`). Clicks and taps go
  * to the results screen's buttons (src/ui).
  */
 export const QueueRestart = Game.System("Shooter/QueueRestart", {
@@ -117,14 +118,14 @@ export const QueueRestart = Game.System("Shooter/QueueRestart", {
 })
 
 /**
- * Esc opens the in-game menu during a run, and closes it again. Taps go to
+ * Esc (a gamepad's Start) opens the in-game menu during a run, and closes it again. Taps go to
  * the HUD's menu button and the menu's own buttons (src/ui).
  */
 export const PauseWithKey = Game.System("Shooter/PauseWithKey", {
-  resources: { keys: Game.System.readResource(Keys), paused: Game.System.writeResource(Paused), result: Game.System.readResource(RunResult) },
+  resources: { keys: Game.System.readResource(Keys), pad: Game.System.readResource(PadState), paused: Game.System.writeResource(Paused), result: Game.System.readResource(RunResult) },
   when: [Game.Condition.inState(Flow, "Playing")]
 }, ({ resources }) => {
-  if (!resources.keys.get().menu.pressed || resources.result.get() !== null) return
+  if (!(resources.keys.get().menu.pressed || resources.pad.get().actions.menu.pressed) || resources.result.get() !== null) return
   resources.paused.set({ paused: !resources.paused.get().paused })
 })
 

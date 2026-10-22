@@ -4,12 +4,11 @@
  */
 import { Clock, Descriptor, Schema } from "@typeonce/ritmo"
 import type * as Entity from "@typeonce/ritmo/Entity"
-import type { NodeRegistry } from "@typeonce/ritmo-render"
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
 import * as Random from "@typeonce/ritmo-math/Random"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
-import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
+import type { Direction, KeyboardSource, KeysSnapshot, PadSnapshot, PadSource, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
 import { step } from "./config/clock.ts"
 import type { Tuning as TuningValue } from "./config/tuning.ts"
 import type { AttackMove } from "./content/attacks.ts"
@@ -27,7 +26,7 @@ import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
 import type { Area } from "./physics/areas.ts"
-import type { RenderHostValue, RenderNode } from "./presentation/host-types.ts"
+import type { RenderHostValue } from "./presentation/host-types.ts"
 import type { SoundBoard } from "./presentation/sound.ts"
 
 export const Root = Schema.defineRoot("Shooter")
@@ -1166,6 +1165,7 @@ export const Time = Clock.resource("Shooter/Time", step)
 export const Keys = Descriptor.TransientResource<KeysSnapshot>()("Shooter/Keys")
 export const PointerState = Descriptor.TransientResource<PointerSnapshot>()("Shooter/PointerState")
 export const TouchState = Descriptor.TransientResource<TouchSnapshot>()("Shooter/TouchState")
+export const PadState = Descriptor.TransientResource<PadSnapshot>()("Shooter/PadState")
 /** The party list's taps this step (see `PartyTap`). */
 export const PartyState = Descriptor.TransientResource<ReadonlyArray<PartyTap>>()("Shooter/PartyState")
 
@@ -1175,21 +1175,27 @@ export interface SkillControl {
   readonly pressed: boolean
   /** Where it is aimed: a point for a lob or a whirl, a point along a cut, or the player for a nova. */
   readonly at: Vec2
-  /** While its touch button is dragged, where it is aimed (as `at`); `null` otherwise. */
+  /** While its touch button is dragged (or its gamepad button held with the right stick tilted), where it is aimed (as `at`); `null` otherwise. */
   readonly aiming: Vec2 | null
 }
 
+/**
+ * The input in use, whichever was used last: keyboard and mouse (aimed by
+ * the cursor), or the on-screen touch controls or a gamepad (both aimed by
+ * a stick and the aim assist).
+ */
+export type ControlDevice = "desktop" | "touch" | "gamepad"
+
 /** Player intent for this step, in world space. */
 export interface ControlsValue {
-  /** The input in use: keyboard and mouse, or the on-screen touch controls (whichever was used last). */
-  readonly device: "desktop" | "touch"
-  /** Movement direction and strength: length 1 on the keyboard, 0 to 1 on the touch stick. */
+  readonly device: ControlDevice
+  /** Movement direction and strength: length 1 on the keyboard, 0 to 1 on a stick. */
   readonly move: Vec2
   /** Ground point the player aims at: under the cursor, or along the touch aim. */
   readonly aimPoint: Vec2
   /** Each skill slot's input this step. */
   readonly skills: { readonly [Slot in SkillSlot]: SkillControl }
-  /** On touch, the enemy (entity id) an attack now would turn toward, or `null`. */
+  /** On touch or a gamepad, the enemy (entity id) an attack now would turn toward, or `null`. */
   readonly assistTarget: number | null
   readonly dashPressed: boolean
   /** The attack button went down this step: one combo move per press. */
@@ -1385,6 +1391,7 @@ export const RunLog = Descriptor.Resource<RunLogValue>()("Shooter/RunLog")
 export const KeyboardInput = Descriptor.Service<KeyboardSource>()("Shooter/KeyboardInput")
 export const PointerInput = Descriptor.Service<PointerSource>()("Shooter/PointerInput")
 export const TouchInput = Descriptor.Service<TouchSource>()("Shooter/TouchInput")
+export const GamepadInput = Descriptor.Service<PadSource>()("Shooter/GamepadInput")
 export const PartyInput = Descriptor.Service<PartyTaps>()("Shooter/PartyInput")
 
 /** What the fixed update reads from the host: the current viewport size. */
@@ -1403,7 +1410,6 @@ export const RenderClock = Descriptor.Service<RenderClockValue>()("Shooter/Rende
 export const RenderHost = Descriptor.Service<RenderHostValue>()("Shooter/RenderHost")
 /** Game sounds (see presentation/sound.ts). */
 export const Sounds = Descriptor.Service<SoundBoard>()("Shooter/Sounds")
-export const RenderNodes = Descriptor.Service<NodeRegistry.NodeRegistry<RenderNode>>()("Shooter/RenderNodes")
 
 // ── Game ──────────────────────────────────────────────────────────────────
 
@@ -1494,6 +1500,7 @@ export const Game = Schema.bind(
       Keys,
       PointerState,
       TouchState,
+      PadState,
       PartyState,
       Controls,
       Viewport,
