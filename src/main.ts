@@ -169,7 +169,7 @@ const start = async (mount: HTMLElement) => {
   const padUsed = signal<string | null>(null)
   let fightHasPad = () => false
   const menuPad = typeof navigator.getGamepads === "function"
-    ? createMenuPad({ host: navigator, root: mount, active: () => !fightHasPad() && !crashShowing(), back: goBack, used: (id) => (padUsed.value = id) })
+    ? createMenuPad({ host: window, root: mount, active: () => !fightHasPad() && !crashShowing(), back: goBack, used: (id) => (padUsed.value = id) })
     : undefined
   window.addEventListener("gamepadconnected", (event) => (padUsed.value = event.gamepad.id))
   const accounts = openAccounts()
@@ -450,7 +450,7 @@ const start = async (mount: HTMLElement) => {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
   })
   // A gamepad is read where the browser offers one (a secure context: HTTPS, localhost, the apps); elsewhere none is connected.
-  const gamepad = typeof navigator.getGamepads === "function" ? Gamepad.actions(navigator, padBindings) : Gamepad.scripted(padBindings, [])
+  const gamepad = typeof navigator.getGamepads === "function" ? Gamepad.actions(window, padBindings) : Gamepad.scripted(padBindings, [])
   gamepad.rebind(padBindingsOf(bindings))
   browser.host.controls.bindings = bindings
   // The fight has the gamepad while a run is played (not paused, not over); the menus have it otherwise.
@@ -460,12 +460,6 @@ const start = async (mount: HTMLElement) => {
     browser.host.controls.padFamily = padFamily
     if (uiStore.controls.peek().padFamily !== padFamily) uiStore.controls.value = { ...uiStore.controls.peek(), padFamily }
   })
-  // Polled each frame too, so a press shorter than a fixed step still counts.
-  const pollPad = () => {
-    gamepad.poll()
-    requestAnimationFrame(pollPad)
-  }
-  requestAnimationFrame(pollPad)
   effect(() => {
     if (uiStore.paused.value || uiStore.flow.value !== "Playing") input.cancel()
   })
