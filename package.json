@@ -43,10 +43,10 @@
     "@fontsource/alegreya-sans": "^5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
     "@preact/signals": "2.11.3",
-    "@typeonce/ritmo": "link:.repos/ritmo-preview/deaed5ad70e98287bc10de6f36f99d40b6b67ef9/packages/core",
-    "@typeonce/ritmo-browser": "link:.repos/ritmo-preview/deaed5ad70e98287bc10de6f36f99d40b6b67ef9/packages/browser",
-    "@typeonce/ritmo-math": "link:.repos/ritmo-preview/deaed5ad70e98287bc10de6f36f99d40b6b67ef9/packages/math",
-    "@typeonce/ritmo-render": "link:.repos/ritmo-preview/deaed5ad70e98287bc10de6f36f99d40b6b67ef9/packages/render",
+    "@typeonce/ritmo": "link:.repos/ritmo-preview/c77a24f843cc65541c621ed6fbc751155fad3796/packages/core",
+    "@typeonce/ritmo-browser": "link:.repos/ritmo-preview/c77a24f843cc65541c621ed6fbc751155fad3796/packages/browser",
+    "@typeonce/ritmo-math": "link:.repos/ritmo-preview/c77a24f843cc65541c621ed6fbc751155fad3796/packages/math",
+    "@typeonce/ritmo-render": "link:.repos/ritmo-preview/c77a24f843cc65541c621ed6fbc751155fad3796/packages/render",
     "effect": "4.0.2",
     "preact": "11.0.1",
     "three": "0.186.1"
@@ -55,8 +55,8 @@
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.5.3",
     "@effect/sql-sqlite-node": "4.0.2",
-    "@typeonce/oxlint-plugin-ritmo": "link:.repos/ritmo-preview/deaed5ad70e98287bc10de6f36f99d40b6b67ef9/packages/oxlint-plugin",
-    "@typeonce/ritmo-devtools": "link:.repos/ritmo-preview/deaed5ad70e98287bc10de6f36f99d40b6b67ef9/packages/devtools",
+    "@typeonce/oxlint-plugin-ritmo": "link:.repos/ritmo-preview/c77a24f843cc65541c621ed6fbc751155fad3796/packages/oxlint-plugin",
+    "@typeonce/ritmo-devtools": "link:.repos/ritmo-preview/c77a24f843cc65541c621ed6fbc751155fad3796/packages/devtools",
     "@types/node": "25.5.0",
     "@types/three": "0.186.0",
     "oxlint": "1.87.0",
@@ -71,5 +71,5 @@
     }
   },
   "ritmoRelease": "0.8.0",
-  "ritmoSource": "deaed5ad70e98287bc10de6f36f99d40b6b67ef9"
+  "ritmoSource": "c77a24f843cc65541c621ed6fbc751155fad3796"
 }
