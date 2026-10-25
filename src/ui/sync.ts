@@ -23,7 +23,7 @@ export const SyncUi = Game.System("Shooter/SyncUi", {
   services: { store: Game.System.service(UiStoreService) }
 }, ({ resources, machines, services }) => {
   const store = services.store
-  const flow = machines.flow.get()
+  const flow = machines.flow.get()._tag
   batch(() => {
     store.flow.value = flow
     store.paused.value = flow === "Playing" && resources.paused.get().paused

@@ -1,6 +1,7 @@
 /** Wind belongs to the 3D spirit: far ribbons pass behind its body.
  * Gust, the Cyclone and her basic blows share this light, rather than flat swords. */
-import { Action, Airborne, Cast, Game, Member, Player, RenderClock, RenderHost, RenderNodes, Vortex } from "../schema.ts"
+import { Action, Airborne, Cast, Game, Member, Player, RenderClock, RenderHost, Vortex } from "../schema.ts"
+import { RenderNodes } from "./render-nodes.ts"
 import { view } from "../config/view.ts"
 
 export const ShowSwordsmanWind = Game.System("Shooter/ShowSwordsmanWind", {

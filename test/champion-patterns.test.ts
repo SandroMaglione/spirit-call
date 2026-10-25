@@ -37,7 +37,7 @@ const Field = Game.Inspector("Test/ChampionPatterns", {
   events: { roused: Game.System.readEvent(Roused) }
 }, ({ queries, events }) => ({
   champion: queries.champion.each().map(({ data }) => ({
-    ...data.attacker.get(), cycle: data.phase.get(), rampage: data.rampage.get(), health: data.health.get(), stunned: data.stunned.get().remaining
+    ...data.attacker.get(), cycle: data.phase.get()._tag, rampage: data.rampage.get(), health: data.health.get(), stunned: data.stunned.get().remaining
   }))[0],
   player: queries.player.each()[0]?.data.position.get(),
   hurt: queries.player.each()[0]?.data.health.get(),

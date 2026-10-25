@@ -11,7 +11,8 @@
 import { lerp, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import { projection, view } from "../config/view.ts"
 import { toScreen, worldHeight } from "../math/iso.ts"
-import { Cast, Game, Impact, Lifted, Mantle, Player, Position, PrevPosition, RenderClock, RenderHost, RenderNodes } from "../schema.ts"
+import { Cast, Game, Impact, Lifted, Mantle, Player, Position, PrevPosition, RenderClock, RenderHost } from "../schema.ts"
+import { RenderNodes } from "./render-nodes.ts"
 
 const wind = view.elements.wind
 const white = view.hitFlash

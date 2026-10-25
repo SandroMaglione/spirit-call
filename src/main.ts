@@ -2,7 +2,7 @@ import { effect, signal } from "@preact/signals"
 import { FixedLoop, Result } from "@typeonce/ritmo"
 import { BrowserHostClock, BrowserTickSource, Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
-import { keyBindings, scriptedPartyTaps, touchButtons, touchLayout } from "./config/input.ts"
+import { keyBindings, pointerBindings, scriptedPartyTaps, touchLayout, touchNames } from "./config/input.ts"
 import { defaultTuning, engine } from "./config/tuning.ts"
 import { makeStress, parseStress, stressTuning } from "./dev/stress.ts"
 import { makePerfScene, parsePerf } from "./dev/perf-scene.ts"
@@ -23,7 +23,6 @@ import { withValidAspects, withValidRelics } from "./features/build.ts"
 import { buildOf, encounterOf, entryTeam, teamLevel, teamOf, validAspects, validRelics } from "./account/account.ts"
 import { wearLooks } from "./presentation/looks.ts"
 import type { Play } from "./account/account.ts"
-import { attachMonitor } from "./dev/monitor.ts"
 import { chargedFromQuery, KeepCharged } from "./dev/charged.ts"
 import { createBrowserHost, loadLooks } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
@@ -34,19 +33,8 @@ import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.
 import { initialMachines, initialResources } from "./runtime.ts"
 import { initialControls } from "./features/input.ts"
 import { newAccount } from "./content/account.ts"
-import {
-  UiRequest,
-  FrameContext,
-  Game,
-  KeyboardInput,
-  PartyInput,
-  PointerInput,
-  TouchInput,
-  RenderClock,
-  RenderHost,
-  RenderNodes,
-  Sounds
-} from "./schema.ts"
+import { UiRequest, FrameContext, Game, KeyboardInput, PartyInput, PointerInput, TouchInput, RenderClock, RenderHost, Sounds } from "./schema.ts"
+import { RenderNodes } from "./presentation/render-nodes.ts"
 import type { FrameContextValue, RenderClockValue, RunResultValue } from "./schema.ts"
 import { fixedUpdate, setup } from "./schedules.ts"
 
@@ -61,7 +49,7 @@ const cueBuzz: Record<keyof typeof cueSounds, number | Array<number>> = {
 /**
  * Whether this is a dev build (`pnpm dev`): only there do the dev tools
  * answer (the URL's quick starts and tools, the tuning panel and its saved
- * numbers, the monitor). A player's game always plays the shipped numbers.
+ * numbers). A player's game always plays the shipped numbers.
  */
 const dev = import.meta.env.DEV
 /** The URL's dev parameters: none outside a dev build. */
@@ -358,10 +346,10 @@ const start = async (mount: HTMLElement) => {
   // Native Enter/Space activation and sliders must keep working in menus.
   const input = createMenuInputHost(window, () => uiStore.flow.peek() !== "Menu" && !uiStore.paused.peek() && !(uiStore.extra.peek()?.kind === "tutorial" && uiStore.tutorialDone.peek()))
   const keyboard = Keyboard.actions(input.host, keyBindings, { preventDefault: false })
-  const pointer = Pointer.track(canvas, input.host)
+  const pointer = Pointer.actions(canvas, input.host, pointerBindings)
   // `?touch` also drives the on-screen controls with the mouse, to try them on a desktop.
   // The controls keep inside the screen's safe area (clear of a notch and rounded corners).
-  const touch = Touch.track(canvas, input.host, (size) => touchLayout(size, browser.host.safeArea()), {
+  const touch = Touch.actions(canvas, input.host, (size) => touchLayout(size, browser.host.safeArea()), {
     pointerTypes: new URLSearchParams(window.location.search).has("touch") ? ["touch", "mouse"] : ["touch"]
   })
   effect(() => {
@@ -390,8 +378,8 @@ const start = async (mount: HTMLElement) => {
     services: Game.Runtime.services(
       // `?perf` plays its script instead of the devices.
       Game.Runtime.service(KeyboardInput, perfScene === undefined ? keyboard : Keyboard.scripted(keyBindings, perfScene.keys)),
-      Game.Runtime.service(PointerInput, perfScene === undefined ? pointer : Pointer.scripted(perfScene.pointer)),
-      Game.Runtime.service(TouchInput, perfScene === undefined ? touch : Touch.scripted(touchButtons, [])),
+      Game.Runtime.service(PointerInput, perfScene === undefined ? pointer : Pointer.scripted(pointerBindings, perfScene.pointer)),
+      Game.Runtime.service(TouchInput, perfScene === undefined ? touch : Touch.scripted(touchNames, [])),
       Game.Runtime.service(PartyInput, perfScene === undefined ? browser.party : scriptedPartyTaps([])),
       Game.Runtime.service(FrameContext, frameContext),
       Game.Runtime.service(RenderClock, clock),
@@ -443,11 +431,8 @@ const start = async (mount: HTMLElement) => {
     ? Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, KeepCharged, Game.Schedule.applyDeferred())
     : Game.Schedule(ApplyDevCommands, fixedUpdate, stress.topUp, Game.Schedule.applyDeferred())
   // Name the schedule objects actually ticked: `step` wraps fixedUpdate.
-  // The monitor, and a handle for inspecting the running game from the console: dev builds only.
-  if (dev) {
-    const monitor = attachMonitor(runtime, { fixedUpdate: step, frame }, browser.host, browser.nodes)
-    Object.assign(window, { __game: { runtime, pointer, keyboard, touch, sounds, host: browser.host, monitor } })
-  }
+  // A handle for inspecting the running game from the console: dev builds only.
+  if (dev) Object.assign(window, { __game: { runtime, pointer, keyboard, touch, sounds, host: browser.host } })
 
   const stats = browser.host.stats
   let simMs = 0

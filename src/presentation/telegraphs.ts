@@ -73,7 +73,7 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   for (const { data } of queries.attackers.each()) {
     const attacker = data.attacker.get()
     const spec = currentAttack(tuning, data.enemy.get(), attacker)
-    if (spec === undefined || attacker.area === null || data.phase.get() !== "windup") continue
+    if (spec === undefined || attacker.area === null || data.phase.get()._tag !== "windup") continue
     const area = attacker.area
     // A shot shows no line: the shot itself is the warning.
     if (area.kind === "line") continue

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 
 import { defaultTuning, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
@@ -24,7 +24,7 @@ const chaserWith = (attacks: ReadonlyArray<AttackSpec>): Tuning =>
 
 const World = Game.Inspector("Test/Movesets", {
   queries: { enemies: Game.Query({ selection: { attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), position: Game.Query.read(Position) }, with: [Enemy] }) }
-}, ({ queries }) => queries.enemies.each().map(({ data }) => ({ ...data.attacker.get(), phase: data.phase.get(), position: data.position.get() })))
+}, ({ queries }) => queries.enemies.each().map(({ data }) => ({ ...data.attacker.get(), phase: data.phase.get()._tag, position: data.position.get() })))
 
 const duel = (tuning: Tuning, offset: Vec2) => {
   const run = start({ tuning })

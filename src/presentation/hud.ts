@@ -49,23 +49,25 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   const live = services.touch.view()
   // Input refreshes its hit regions on the next touch. At rest, draw the
   // current viewport immediately so rotation never leaves buttons offscreen.
-  const layout = live.stick !== null || actionButtons.some((name) => live.buttons[name].held)
+  const layout = live.sticks.move !== null || actionButtons.some((name) => live.buttons[name].held)
     ? live.layout : touchLayout(services.host.size, services.host.safeArea())
   const place = (element: HTMLElement, x: number, y: number, radius: number) => {
     setStyle(element, "transform", `translate(${x - radius}px, ${y - radius}px)`)
     setStyle(element, "width", `${radius * 2}px`)
     setStyle(element, "height", `${radius * 2}px`)
   }
-  const stickRadius = layout.stick.radius
-  if (live.stick === null) {
+  // The game never hides a control, so a `null` zone is not drawn.
+  const stickRadius = layout.sticks.move?.radius ?? 0
+  const held = live.sticks.move
+  if (held === null) {
     // Where the thumb usually rests: a hint of the floating stick.
     const rest = stickRest(services.host.size, services.host.safeArea())
     place(pad.stick, rest.x, rest.y, stickRadius)
     place(pad.knob, stickRadius, stickRadius, stickRadius * 0.45)
     pad.stick.classList.remove("is-active")
   } else {
-    place(pad.stick, live.stick.origin.x, live.stick.origin.y, stickRadius)
-    place(pad.knob, stickRadius + live.stick.knob.x - live.stick.origin.x, stickRadius + live.stick.knob.y - live.stick.origin.y, stickRadius * 0.45)
+    place(pad.stick, held.origin.x, held.origin.y, stickRadius)
+    place(pad.knob, stickRadius + held.knob.x - held.origin.x, stickRadius + held.knob.y - held.origin.y, stickRadius * 0.45)
     pad.stick.classList.add("is-active")
   }
 
@@ -94,6 +96,7 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
   }
   for (const name of actionButtons) {
     const zone = layout.buttons[name]
+    if (zone === null) continue
     const refs = pad.buttons[name]
     const state = live.buttons[name]
     place(refs.root, zone.center.x, zone.center.y, zone.radius * (drawnShare[name] ?? 1))
@@ -284,7 +287,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     }
   }
   // The HUD belongs to a run going on: hidden on the menu and on the results screen (in src/ui), which says how it went.
-  const away = machines.flow.get() !== "Playing"
+  const away = machines.flow.get()._tag !== "Playing"
   if (hud.root.hidden !== away) hud.root.hidden = away
 
   const stats = services.host.stats

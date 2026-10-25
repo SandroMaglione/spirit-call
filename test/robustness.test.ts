@@ -1,10 +1,10 @@
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 import { Descriptor } from "@typeonce/ritmo"
 import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 import { NodeRegistry, RenderSync } from "@typeonce/ritmo-render"
 import { describe, expect, it } from "vitest"
 
-import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
+import { keyBindings, pointerBindings, scriptedPartyTaps, touchNames } from "../src/config/input.ts"
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { ApplyDevCommands, DevCommands, emptyDevCommands, setAt } from "../src/dev/commands.ts"
 import { makeStress, stressTuning } from "../src/dev/stress.ts"
@@ -130,8 +130,8 @@ describe("render sync under multi-rate ticking", () => {
     const made = Game.Runtime.make({
       services: Game.Runtime.services(
         Game.Runtime.service(KeyboardInput, Keyboard.scripted(keyBindings, [])),
-        Game.Runtime.service(PointerInput, Pointer.scripted([])),
-        Game.Runtime.service(TouchInput, Touch.scripted(touchButtons, [])),
+        Game.Runtime.service(PointerInput, Pointer.scripted(pointerBindings, [])),
+        Game.Runtime.service(TouchInput, Touch.scripted(touchNames, [])),
         Game.Runtime.service(PartyInput, scriptedPartyTaps([])),
         Game.Runtime.service(FrameContext, { viewport: defaultViewport }),
         Game.Runtime.service(TestNodes, registry),

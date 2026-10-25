@@ -12,7 +12,8 @@ import { skillSlots } from "../content/skills.ts"
 import { projection, view } from "../config/view.ts"
 import { screenHeight, toScreen, worldHeight } from "../math/iso.ts"
 import { attackOf, dashOf, traitsIn } from "../features/build.ts"
-import { Action, Aim, Airborne, Overcharged, Overdriven, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, RenderNodes, Skills, Stunned, Tuning, Turned, Velocity, BasicAttack } from "../schema.ts"
+import { Action, Aim, Airborne, Overcharged, Overdriven, AttackPhase, Attacker, Body, Dash, Elite, ElementState, Enemy, Energy, Game, Health, HitFlash, HitStop, Invulnerable, Member, Passives, PerfectDodged, Player, Poise, Position, PrevPosition, RenderClock, RenderHost, Skills, Stunned, Tuning, Turned, Velocity, BasicAttack } from "../schema.ts"
+import { RenderNodes } from "./render-nodes.ts"
 import type { ActiveState } from "../schema.ts"
 import { poiseOf } from "../features/poise.ts"
 import { skillRecharge } from "../features/skills.ts"
@@ -341,7 +342,7 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
     const attacker = data.attacker.get()
     const spec = currentAttack(tuning, data.enemy.get(), attacker)
     // Anticipation: the body brightens through the windup.
-    const windup = spec !== undefined && data.phase.get() === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
+    const windup = spec !== undefined && data.phase.get()._tag === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
     const stunned = data.stunned.get().remaining > 0
     // A hit flashes it white; stunned it is dimly lit; otherwise a windup lights it up.
     const tint = stateTint(0xffffff, data.state.get().current)

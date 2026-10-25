@@ -6,7 +6,7 @@
 import { Clock } from "@typeonce/ritmo"
 import { InputCapture } from "@typeonce/ritmo-browser"
 import { length, normalizeOr, scale, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 
 import { directions, teamKeys, touchButtons } from "../config/input.ts"
 import type { KeysSnapshot, PartyTap, PointerSnapshot, TouchSnapshot } from "../config/input.ts"
@@ -57,11 +57,11 @@ export const CaptureParty = InputCapture.system(Game, { name: "Shooter/CapturePa
 
 /** Whether the on-screen controls were used this step. */
 const touchUsed = (touch: TouchSnapshot): boolean =>
-  touch.stick.active || touchButtons.some((name) => touch.buttons[name].held || touch.buttons[name].pressed || touch.buttons[name].released)
+  touch.vectors.move.active || touchButtons.some((name) => touch.actions[name].held || touch.actions[name].pressed || touch.actions[name].released)
 
 /** Whether the keyboard or mouse buttons were used this step (moving the mouse alone does not switch). */
 const desktopUsed = (keys: KeysSnapshot, pointer: PointerSnapshot): boolean =>
-  Object.values(keys).some((action) => action.held || action.pressed) || pointer.primary.pressed || pointer.secondary.pressed
+  Object.values(keys.actions).some((action) => action.held || action.pressed) || pointer.buttons.primary.pressed || pointer.buttons.secondary.pressed
 
 /** The first team slot whose switch went down this step (`switches` are the slots' keys or buttons, in order), or `null`. */
 const switchPressed = (switches: ReadonlyArray<{ readonly pressed: boolean }>): number | null => {
@@ -126,8 +126,8 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
 
   // Screen-relative movement: "up" moves up the screen.
   const screen = {
-    x: (keys.right.held ? 1 : 0) - (keys.left.held ? 1 : 0),
-    y: (keys.down.held ? 1 : 0) - (keys.up.held ? 1 : 0)
+    x: (keys.actions.right.held ? 1 : 0) - (keys.actions.left.held ? 1 : 0),
+    y: (keys.actions.down.held ? 1 : 0) - (keys.actions.up.held ? 1 : 0)
   }
   const held = normalizeOr(screenDirectionToWorld(projection, screen), zero)
 
@@ -156,7 +156,7 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   let lastTap = previous.lastTap
   let dashPressed = false
   for (const direction of directions) {
-    if (!keys[direction].pressed) continue
+    if (!keys.actions[direction].pressed) continue
     if (lastTap !== null && lastTap.direction === direction && now - lastTap.at <= window) {
       dashPressed = true
       lastTap = null
@@ -170,12 +170,12 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
     move,
     aimPoint,
     // Skills aim at the cursor; the skill decides what that means (see `UseSkills`).
-    skills: bySlot((slot) => ({ pressed: keys[slot].pressed, at: aimPoint, aiming: null })),
+    skills: bySlot((slot) => ({ pressed: keys.actions[slot].pressed, at: aimPoint, aiming: null })),
     assistTarget: null,
     dashPressed,
-    attackPressed: pointer.primary.pressed,
-    attackHeld: pointer.primary.held,
-    switchTo: switchPressed(teamKeys.map((key) => keys[key])),
+    attackPressed: pointer.buttons.primary.pressed,
+    attackHeld: pointer.buttons.primary.held,
+    switchTo: switchPressed(teamKeys.map((key) => keys.actions[key])),
     burstOnArrival: null,
     lastMove,
     lastTap,
@@ -274,11 +274,11 @@ const resolveTouch = (
   if (player === undefined) {
     return { ...previous, device: "touch", move: zero, skills: idleSkills(previous.aimPoint), assistTarget: null, dashPressed: false, attackPressed: false, attackHeld: false, switchTo: null, burstOnArrival: null, grace: 0 }
   }
-  const tilt = length(touch.stick.vector)
-  const move = tilt > 0 ? scale(worldDirection(touch.stick.vector, zero), tilt) : zero
+  const tilt = length(touch.vectors.move)
+  const move = tilt > 0 ? scale(worldDirection(touch.vectors.move, zero), tilt) : zero
   const moving = tilt > 0
   const origin = player.position
-  const { attack } = touch.buttons
+  const { attack } = touch.actions
   const heading = moving ? normalizeOr(move, player.aim) : player.aim
   // The pick is shown by a ring at all times, so what the ring marks is what a tap hits.
   const target = aimAssist ? assistTargetOf(origin, heading, enemies, previous.assistTarget, player.attack, tuning) : undefined
@@ -294,7 +294,7 @@ const resolveTouch = (
     aimPoint,
     skills: bySlot((slot) => touchSkill(touch, slot, tuning.skills[player.skills[slot].skill].effect, origin, ahead, target?.position ?? null, tuning)),
     assistTarget: target?.id ?? null,
-    dashPressed: touch.buttons.dash.pressed,
+    dashPressed: touch.actions.dash.pressed,
     attackPressed: attack.pressed,
     attackHeld: attack.held,
     // The team switches from the party list (see `withParty`).
@@ -320,7 +320,7 @@ const resolveTouch = (
  * `ahead` (set down a share of its range away).
  */
 const touchSkill = (touch: TouchSnapshot, slot: SkillSlot, effect: SkillEffect, origin: Vec2, ahead: Vec2, pick: Vec2 | null, tuning: TuningValue): SkillControl => {
-  const button = touch.buttons[slot]
+  const button = touch.actions[slot]
   const aim = skillAim(effect)
   // Around her, or where she faces: on touch, nothing to aim.
   if (aim.kind === "self" || aim.kind === "facing") return { pressed: button.pressed, at: origin, aiming: null }

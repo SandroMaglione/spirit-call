@@ -6,7 +6,7 @@
  * ```ts
  * const sim = createSimulation({
  *   keyboard: Keyboard.scripted(keyBindings, [{ frame: 0, press: ["right"] }]),
- *   pointer: Pointer.scripted([])
+ *   pointer: Pointer.scripted(pointerBindings, [])
  * })
  * sim.runtime.tick(sim.setup)
  * for (let step = 0; step < 60; step++) sim.runtime.tick(sim.fixedUpdate)
@@ -16,7 +16,7 @@ import { HostClock } from "@typeonce/ritmo"
 import { Touch } from "@typeonce/ritmo-browser"
 import type { ChallengeId } from "./content/challenges.ts"
 
-import { scriptedPartyTaps, touchButtons } from "./config/input.ts"
+import { scriptedPartyTaps, touchNames } from "./config/input.ts"
 import type { KeyboardSource, PartyTaps, PointerSource, TouchSource } from "./config/input.ts"
 import { defaultTuning } from "./config/tuning.ts"
 import type { Tuning } from "./config/tuning.ts"
@@ -64,7 +64,7 @@ export const createSimulation = (options: SimulationOptions) => {
     services: Game.Runtime.services(
       Game.Runtime.service(KeyboardInput, options.keyboard),
       Game.Runtime.service(PointerInput, options.pointer),
-      Game.Runtime.service(TouchInput, options.touch ?? Touch.scripted(touchButtons, [])),
+      Game.Runtime.service(TouchInput, options.touch ?? Touch.scripted(touchNames, [])),
       Game.Runtime.service(PartyInput, options.party ?? scriptedPartyTaps([])),
       Game.Runtime.service(FrameContext, { viewport }),
     ),

@@ -14,7 +14,7 @@
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 import { Invariant, Session } from "@typeonce/ritmo-devtools"
 
-import { keyBindings } from "../src/config/input.ts"
+import { keyBindings, pointerBindings } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { Game, Player, Position } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
@@ -29,7 +29,7 @@ const sim = createSimulation({
     { frame: 30, press: ["down"] },
     { frame: 120, release: ["down"] }
   ]),
-  pointer: Pointer.scripted([{ frame: 0, move: { x: 900, y: 300 } }])
+  pointer: Pointer.scripted(pointerBindings, [{ frame: 0, move: { x: 900, y: 300 } }])
 })
 
 // An invariant is an inspector that returns a violation message, or
@@ -49,7 +49,7 @@ const InsideArena = Invariant.fromInspector(Game.Inspector("player inside arena"
 // them (so their reads count in lints) without running them, as `pnpm lint:game` does.
 const session = Session.make(sim.runtime, {
   schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
-  ...hostSide,
+  ...(await hostSide()),
   invariants: [InsideArena],
   hostClock: sim.hostClock
 })

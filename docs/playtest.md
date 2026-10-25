@@ -179,8 +179,8 @@ developer decides, and nothing changes it on its own.
 - **bevy-ts stays at `ritmoRelease`**; moving it to a newer published
   version is a deliberate local change, validated and reviewed in a PR.
 - **Dev tools are a dev build's** (`pnpm dev`): the tuning panel and its
-  saved numbers, the URL's quick starts and tools, and the monitor are not
-  in a built game.
+  saved numbers, and the URL's quick starts and tools are not in a built
+  game.
 - **The release** is `prod`, built without `PLAYTEST_KEY`, so it sends
   nothing. When playtesting ends (the day is written here when it comes),
   the `playtest` stage, the Worker's `/api/` route, and the playtest

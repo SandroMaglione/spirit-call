@@ -27,7 +27,7 @@ const World = Game.Inspector("Test/StrangeEnemies", {
     at: data.position.get(),
     health: data.health.get().current,
     attack: data.attacker.get(),
-    phase: data.phase.get(),
+    phase: data.phase.get()._tag,
     ward: data.ward.value()
   })),
   bursts: queries.bursts.each().map(({ data }) => data.burst.get())

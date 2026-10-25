@@ -4,9 +4,8 @@
  */
 import { Clock, Descriptor, Schema } from "@typeonce/ritmo"
 import type * as Entity from "@typeonce/ritmo/Entity"
-import type { NodeRegistry } from "@typeonce/ritmo-render"
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import type { Direction, KeyboardSource, KeysSnapshot, PartyTap, PartyTaps, PointerSnapshot, PointerSource, TouchSnapshot, TouchSource } from "./config/input.ts"
@@ -27,7 +26,7 @@ import type { AspectId } from "./content/aspects.ts"
 import type { EquippedRelic, RelicSlot } from "./content/relics.ts"
 import type { ClassId } from "./content/classes.ts"
 import type { Area } from "./physics/areas.ts"
-import type { RenderHostValue, RenderNode } from "./presentation/host-types.ts"
+import type { RenderHostValue } from "./presentation/host-types.ts"
 import type { SoundBoard } from "./presentation/sound.ts"
 
 export const Root = Schema.defineRoot("Shooter")
@@ -643,11 +642,11 @@ export type { EnemyKind }
 export const Enemy = Descriptor.Component<{ readonly kind: EnemyKind; readonly champion: boolean; readonly rest?: number; readonly windup?: number }>()("Shooter/Enemy", { immutable: true })
 
 /** Where an enemy is in its telegraphed attack cycle. */
-export const AttackPhase = Descriptor.EntityState("Shooter/AttackPhase", ["ready", "windup", "active", "recovery"] as const, {
+export const AttackPhase = Descriptor.EntityState("Shooter/AttackPhase", { ready: {}, windup: {}, active: {}, recovery: {} }, {
   // A windup can be cut off (the enemy broke) and goes back to ready.
   transitions: { ready: ["windup"], windup: ["active", "ready"], active: ["recovery"], recovery: ["ready"] }
 })
-export type AttackPhase = (typeof AttackPhase.states)[number]
+export type AttackPhase = Descriptor.StateName<typeof AttackPhase.states>
 
 /**
  * An attack in progress (its phase is `AttackPhase`). `area` is fixed when the
@@ -732,10 +731,10 @@ export const Brain = Descriptor.Component<BrainValue>()("Shooter/Brain")
  * closing in to attack (holding one of the few engagement slots), or backing
  * off after an attack.
  */
-export const EnemyMode = Descriptor.EntityState("Shooter/EnemyMode", ["orbit", "engage", "retreat"] as const, {
+export const EnemyMode = Descriptor.EntityState("Shooter/EnemyMode", { orbit: {}, engage: {}, retreat: {} }, {
   transitions: { orbit: ["engage"], engage: ["retreat"], retreat: ["orbit"] }
 })
-export type EnemyMode = (typeof EnemyMode.states)[number]
+export type EnemyMode = Descriptor.StateName<typeof EnemyMode.states>
 
 /** A damaging area that exists while an attack is active. */
 export interface HitboxValue {
@@ -1307,7 +1306,7 @@ export const Tutorial = Descriptor.Resource<TutorialValue>()("Shooter/Tutorial")
 export const tutorialStart: TutorialValue = { step: 0, count: 0, ready: -1, celebrate: 0 }
 
 /** Deterministic random state (mulberry32), so runs replay exactly: start it with `Random.seed`, draw with `Random.draw(resources.rng)`. */
-export const Rng = Descriptor.ConstructedResource(Random)("Shooter/Rng")
+export const Rng = Descriptor.ConstructedResource(Random.codec)("Shooter/Rng")
 
 /** The current run: simulated time since it started, and when it ended (`Clock.elapsed` of `Time`). */
 export interface RunValue {
@@ -1403,7 +1402,6 @@ export const RenderClock = Descriptor.Service<RenderClockValue>()("Shooter/Rende
 export const RenderHost = Descriptor.Service<RenderHostValue>()("Shooter/RenderHost")
 /** Game sounds (see presentation/sound.ts). */
 export const Sounds = Descriptor.Service<SoundBoard>()("Shooter/Sounds")
-export const RenderNodes = Descriptor.Service<NodeRegistry.NodeRegistry<RenderNode>>()("Shooter/RenderNodes")
 
 // ── Game ──────────────────────────────────────────────────────────────────
 
@@ -1540,9 +1538,8 @@ export const Game = Schema.bind(
  * on, or a run over: lost (`GameOver`) or won (`Cleared`). Gameplay systems
  * run only while `Playing`.
  */
-export const flowStates = ["Menu", "Playing", "GameOver", "Cleared"] as const
-export type FlowState = (typeof flowStates)[number]
-export const Flow = Game.StateMachine("Shooter/Flow", flowStates)
+export const Flow = Game.StateMachine("Shooter/Flow", { Menu: {}, Playing: {}, GameOver: {}, Cleared: {} })
+export type FlowState = Descriptor.StateName<typeof Flow.states>
 
 /**
  * Hit-stop: the simulation freezes while `HitStop.remaining` is above zero.

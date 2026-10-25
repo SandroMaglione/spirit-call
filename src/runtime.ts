@@ -1,7 +1,7 @@
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
-import { keyBindings, touchButtons } from "./config/input.ts"
+import { keyBindings, pointerBindings, touchNames } from "./config/input.ts"
 import type { Tuning } from "./config/tuning.ts"
 import { noTally } from "./content/stars.ts"
 import type { ChallengeId } from "./content/challenges.ts"
@@ -40,8 +40,8 @@ export const initialResources = (
   Mending: { ready: 0 },
   Time: initialTime(),
   Keys: Keyboard.idle(keyBindings),
-  PointerState: Pointer.idle({ x: viewport.width / 2, y: viewport.height / 2 }),
-  TouchState: Touch.idle(touchButtons),
+  PointerState: Pointer.idle(pointerBindings, { x: viewport.width / 2, y: viewport.height / 2 }),
+  TouchState: Touch.idle(touchNames),
   PartyState: [],
   Controls: initialControls({ x: tuning.arena.width / 2, y: tuning.arena.height / 2 }),
   ControlOptions: { aimAssist: true },
@@ -66,4 +66,4 @@ export const initialResources = (
 })
 
 /** The browser starts in the menu; headless runs start playing. */
-export const initialMachines = (flow: "Menu" | "Playing" = "Playing") => Game.Runtime.machines(Game.Runtime.machine(Flow, flow))
+export const initialMachines = (flow: "Menu" | "Playing" = "Playing") => Game.Runtime.machines(Game.Runtime.machine(Flow, { _tag: flow }))

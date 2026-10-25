@@ -28,7 +28,7 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
   events: { requests: Game.System.readEvent(UiRequest) }
 }, ({ resources, machines, nextMachines, events }) => {
   const pending = events.requests.all()
-  const flow = machines.flow.get()
+  const flow = machines.flow.get()._tag
   const onResults = flow === "GameOver" || flow === "Cleared"
   // A run that just ended (its result is in, the results screen comes with this step's transitions) is no longer paused.
   const live = flow === "Playing" && resources.result.get() === null
@@ -43,16 +43,16 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
         resources.twist.set(request.twist ?? noTwist)
         resources.practice.set(request.practice ?? { kinds: [], elites: false })
         // Entering `Playing` restarts the run with the new team (see `restart`).
-        nextMachines.flow.set("Playing")
+        nextMachines.flow.set({ _tag: "Playing" })
         break
       case "retry":
         // From a paused run, entering `Playing` again restarts it all the same.
-        if (onResults || resources.paused.get().paused) nextMachines.flow.set("Playing")
+        if (onResults || resources.paused.get().paused) nextMachines.flow.set({ _tag: "Playing" })
         break
       case "menu":
         if (onResults || resources.paused.get().paused) {
           resources.paused.set({ paused: false })
-          nextMachines.flow.set("Menu")
+          nextMachines.flow.set({ _tag: "Menu" })
         }
         break
       case "pause":
@@ -64,7 +64,7 @@ export const ApplyUiRequests = Game.System("Shooter/ApplyUiRequests", {
       case "leave":
         if (flow === "Playing" && resources.tuning.get().challenges[resources.challenge.get()].objective.kind === "tutorial") {
           resources.paused.set({ paused: false })
-          nextMachines.flow.set("Menu")
+          nextMachines.flow.set({ _tag: "Menu" })
         }
         break
       case "controlOptions":

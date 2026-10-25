@@ -26,7 +26,7 @@ const Fight = Game.Inspector("Test/Spark", {
     state: data.state.get().current?.id ?? null,
     poise: data.poise.get(),
     stunned: data.stunned.get().remaining,
-    phase: data.phase.get()
+    phase: data.phase.get()._tag
   })),
   vortices: queries.vortices.each().map(({ data }) => data.vortex.get())
 }))

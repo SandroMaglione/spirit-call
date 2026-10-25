@@ -89,7 +89,7 @@ describe("power attack", () => {
   })
 
   it("slows the player while charging", () => {
-    const run = range([], [{ frame: 0, press: ["attack"], stick: { x: 0, y: 1 } }])
+    const run = range([], [{ frame: 0, press: ["attack"], sticks: { move: { x: 0, y: 1 } } }])
     run.step(steps(swordPower.holdDelay) + 20)
     const before = run.world().player
     run.step(10)
@@ -134,7 +134,7 @@ describe("stats in play", () => {
   })
 
   it("run at the character's speed", () => {
-    const run = range([], [{ frame: 0, stick: { x: 1, y: 0 } }], gunner)
+    const run = range([], [{ frame: 0, sticks: { move: { x: 1, y: 0 } } }], gunner)
     run.step(30)
     const before = run.world().player
     run.step(10)

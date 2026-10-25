@@ -9,27 +9,30 @@
  *
  * It lives here, not in `src/simulation.ts`, because the simulation may not
  * import the presentation (see `tools/lint/plugin.mjs`), and the render
- * schedule needs the asset loader.
+ * schedule needs the asset loader. The host schedules are imported inside
+ * `lintTarget`, so the check that the simulation rules cover every module
+ * the simulation loads leaves render code out.
  */
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
-import { keyBindings } from "../src/config/input.ts"
-import { ApplyDevCommands } from "../src/dev/commands.ts"
-import { frame } from "../src/presentation/schedule.ts"
+import { keyBindings, pointerBindings } from "../src/config/input.ts"
 import { Game, UiRequest } from "../src/schema.ts"
 import { createSimulation } from "../src/simulation.ts"
 
 /** The schedules described without running, and the events the host sends: shared with `scripts/debug.ts`, so its lints match. */
-export const hostSide = {
-  describe: { frame, dev: Game.Schedule(ApplyDevCommands) },
-  hostEvents: [UiRequest]
+export const hostSide = async () => {
+  const [{ ApplyDevCommands }, { frame }] = await Promise.all([import("../src/dev/commands.ts"), import("../src/presentation/schedule.ts")])
+  return {
+    describe: { frame, dev: Game.Schedule(ApplyDevCommands) },
+    hostEvents: [UiRequest]
+  }
 }
 
-export const lintTarget = () => {
-  const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: Pointer.scripted([]) })
+export const lintTarget = async () => {
+  const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: Pointer.scripted(pointerBindings, []) })
   return {
     runtime: sim.runtime,
     schedules: { setup: sim.setup, fixedUpdate: sim.fixedUpdate },
-    ...hostSide
+    ...(await hostSide())
   }
 }

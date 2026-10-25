@@ -2,9 +2,9 @@
  * Moving bodies with swept collision against walls.
  */
 import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
-import { moveCircle, sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { moveCircle, sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { add, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
@@ -49,18 +49,18 @@ export const hopLanding = (from: Vec2, direction: Vec2, reach: number, radius: n
   const way = normalizeOr(direction, { x: 1, y: 0 })
   const clear = (at: Vec2) => !low.some((box) => overlapsCircle(box, at, radius)) && !tall.some((box) => overlapsCircle(box, at, radius))
   // As far as the tall walls let her (stopping a hair short of one, as moving does).
-  const span = Math.max(0, reach * (sweepCircleBoxes(from, scale(way, reach), radius, tall)?.time ?? 1) - 0.01)
+  const span = Math.max(0, reach * (sweepCircle(from, scale(way, reach), radius, { boxes: tall })?.time ?? 1) - 0.01)
   const aimed = add(from, scale(way, span))
   if (clear(aimed)) return aimed
   // On a low wall: over it, if she clears it soon enough with nothing tall in the way...
   for (let past = 1; past <= hopOvershoot; past += 1) {
     const beyond = add(aimed, scale(way, past))
     if (!clear(beyond)) continue
-    if (sweepCircleBoxes(from, subtract(beyond, from), radius, tall) === undefined) return beyond
+    if (sweepCircle(from, subtract(beyond, from), radius, { boxes: tall }) === undefined) return beyond
     break
   }
   // ...else short of it, where she meets the first wall in her way.
-  const meets = sweepCircleBoxes(from, subtract(aimed, from), radius, [...tall, ...low])
+  const meets = sweepCircle(from, subtract(aimed, from), radius, { boxes: [...tall, ...low] })
   return meets === undefined ? from : add(from, scale(way, Math.max(0, span * meets.time - 0.01)))
 }
 
@@ -121,7 +121,7 @@ export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
     const vy = velocity.y + knockback.y * knockbackShare
     if (vx === 0 && vy === 0) continue
     const hopping = data.airborne.present && data.airborne.get().kind === "plunge"
-    const moved = moveCircle(data.position.get(), { x: vx * dt, y: vy * dt }, data.body.get().radius, hopping ? tall : boxes)
+    const moved = moveCircle(data.position.get(), { x: vx * dt, y: vy * dt }, data.body.get().radius, { boxes: hopping ? tall : boxes })
     data.position.set(moved.position)
   }
 })

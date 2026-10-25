@@ -23,8 +23,8 @@ import type { Box2 } from "@typeonce/ritmo-math/Box2"
 import { moveCircle } from "@typeonce/ritmo-math/Collide2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
-import type { PartyTaps, TouchButton } from "../src/config/input.ts"
-import { keyBindings, touchButtons } from "../src/config/input.ts"
+import type { PartyTaps, TouchButton, TouchLayout, TouchSnapshot, TouchSource } from "../src/config/input.ts"
+import { keyBindings, pointerBindings, touchButtons } from "../src/config/input.ts"
 import { engine, tuningWith } from "../src/config/tuning.ts"
 import type { Tuning } from "../src/config/tuning.ts"
 import type { ChallengeId, EliteElement } from "../src/content/challenges.ts"
@@ -151,7 +151,7 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
   const threats: Array<Threat> = []
   for (const { data } of queries.enemies.each()) {
     const attacker = data.attacker.get()
-    const phase = data.phase.get()
+    const phase = data.phase.get()._tag
     const spec = currentAttack(tuning, data.enemy.get(), attacker)
     const area = attacker.area
     if (spec === undefined || area === null || (phase !== "windup" && phase !== "active")) continue
@@ -328,7 +328,7 @@ const playOut = (
   let burns = false
   for (let t = sample; t <= horizon + 1e-9; t += sample) {
     const speed = dash && t <= player.dash.duration + 1e-9 ? dashSpeed : player.speed
-    at = moveCircle(at, { x: direction.x * speed * sample, y: direction.y * speed * sample }, player.body, field.walls).position
+    at = moveCircle(at, { x: direction.x * speed * sample, y: direction.y * speed * sample }, player.body, { boxes: field.walls }).position
     if (t <= safeUntil) continue
     if (!burns && field.threats.some((threat) => threat.soft === true && touches(threat, at, player.hurtbox, t))) burns = true
     if (field.threats.some((threat) => threat.soft !== true && touches(threat, at, player.hurtbox + margin, t))) return { danger: t, end: at, burns }
@@ -440,7 +440,7 @@ const idleButton: Touch.ButtonState = { held: false, pressed: false, released: f
 export const botTouch = () => {
   let move: Move = { direction: { x: 0, y: 0 }, dash: false, attack: false, target: null }
   let tapped = false
-  const source: Touch.Touch<TouchButton> = {
+  const source: TouchSource = {
     snapshot() {
       const screen = toScreen(projection, move.direction)
       const length = Math.hypot(screen.x, screen.y)
@@ -453,16 +453,16 @@ export const botTouch = () => {
         return [name, pressed(name) ? { ...idleButton, held: !skill, pressed: true, released: skill, aim: name === "ultimate" ? move.ultimateAim ?? null : skill ? move.skillAim ?? null : null } : idleButton]
       }))
       return {
-        stick: { active: length > 0, vector: length > 0 ? { x: screen.x / length, y: screen.y / length } : { x: 0, y: 0 } },
-        buttons: buttons as Touch.Snapshot<TouchButton>["buttons"],
+        actions: buttons as TouchSnapshot["actions"],
+        vectors: { move: length > 0 ? { active: true, x: screen.x / length, y: screen.y / length } : { active: false, x: 0, y: 0 } },
         swipe: { active: false, delta: { x: 0, y: 0 } },
-        touched: true
+        used: true
       }
     },
     view() {
       return {
-        layout: { stick: { region: { left: 0, top: 0, width: 0, height: 0 }, radius: 1 }, buttons: Object.fromEntries(touchButtons.map((name) => [name, { center: { x: 0, y: 0 }, radius: 0 }])) as Touch.Layout<TouchButton>["buttons"] },
-        stick: null,
+        layout: { sticks: { move: { region: { left: 0, top: 0, width: 0, height: 0 }, radius: 1 } }, buttons: Object.fromEntries(touchButtons.map((name) => [name, { center: { x: 0, y: 0 }, radius: 0 }])) as TouchLayout["buttons"] },
+        sticks: { move: null },
         buttons: Object.fromEntries(touchButtons.map((name) => [name, { held: false, aim: null }])) as Touch.View<TouchButton>["buttons"]
       }
     },
@@ -641,7 +641,7 @@ export const runBot = (run: BotRun): BotReport => {
   } }
   const sim = createSimulation({
     keyboard: Keyboard.scripted(keyBindings, []),
-    pointer: Pointer.scripted([], { x: 640, y: 360 }),
+    pointer: Pointer.scripted(pointerBindings, [], { x: 640, y: 360 }),
     touch: touch.source,
     tuning,
     team,

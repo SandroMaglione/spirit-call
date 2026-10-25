@@ -19,9 +19,9 @@
  * that takes her off the ground (a plunge, a leap) keeps her in the air for
  * a moment (`Airborne`), acting on landing (`LandAirborne`).
  */
-import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { add, clampLength, length as lengthOf, normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { blast, bySlot, lob, nova } from "../content/skills.ts"
 import type { BarrageEffect, SkillEffect, SkillId, SkillSlot, SkillSpec } from "../content/skills.ts"
 import {
@@ -338,7 +338,7 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
     const effect = cast.effect
     if (effect.kind !== "cut") continue
     const { from, direction } = cast
-    const blocked = sweepCircleBoxes(from, scale(direction, effect.length), effect.width / 4, wallBoxes(queries.walls.each()))
+    const blocked = sweepCircle(from, scale(direction, effect.length), effect.width / 4, { boxes: wallBoxes(queries.walls.each()) })
     const length = effect.length * (blocked?.time ?? 1)
     // What it leaves along its way: pools spaced down the lane, from a little ahead of the caster.
     if (effect.leaves !== null) {

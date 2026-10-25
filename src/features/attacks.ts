@@ -37,10 +37,10 @@
  * with shorter rests. Such a champion never waits for the crowd's windups.
  */
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { clampLength, normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Random from "@typeonce/ritmo-math/Random"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Random from "@typeonce/ritmo/Random"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { followUpsOf } from "../content/enemies.ts"
 import type { AttackSpec } from "../content/enemies.ts"
 import type { Area } from "../physics/areas.ts"
@@ -104,7 +104,7 @@ export const aimArea = (spec: AttackSpec, origin: Vec2, target: Vec2, walls: Rea
     case "charge":
       return { kind: "lane", origin, direction, length: spec.speed * spec.active, halfWidth: spec.width / 2 }
     case "beam": {
-      const blocked = sweepCircleBoxes(origin, { x: direction.x * spec.length, y: direction.y * spec.length }, 1, walls)
+      const blocked = sweepCircle(origin, { x: direction.x * spec.length, y: direction.y * spec.length }, 1, { boxes: walls })
       return { kind: "lane", origin, direction, length: spec.length * (blocked?.time ?? 1), halfWidth: spec.width / 2 }
     }
     case "melee":
@@ -203,7 +203,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
   const attackers = queries.attackers.each()
   const away = (at: Vec2) => (target === undefined ? 0 : (at.x - target.x) ** 2 + (at.y - target.y) ** 2)
   const order = attackers.map((_, index) => index).sort((left, right) => away(attackers[left]!.data.position.get()) - away(attackers[right]!.data.position.get()))
-  let windingUp = attackers.filter(({ data }) => data.phase.get() === "windup").length
+  let windingUp = attackers.filter(({ data }) => data.phase.get()._tag === "windup").length
   // How many stand on the field (spawn warnings included), for an attacker short of support (`alone`).
   const standing = attackers.length + queries.pending.each().length
   // Enemies turned to her side (see `Turned`) and those still against her: each fights the nearest of the other.
@@ -242,14 +242,14 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     // A broken or a disarmed enemy's windup is cut off (it starts over once it recovers, or once it is armed again).
     const disarmed = data.disarmed.get().remaining
     if (disarmed > 0) data.disarmed.set({ remaining: Math.max(0, disarmed - dt) })
-    if ((data.poise.get().broken > 0 || disarmed > 0) && data.phase.get() === "windup") {
+    if ((data.poise.get().broken > 0 || disarmed > 0) && data.phase.get()._tag === "windup") {
       const cut = data.attacker.get()
-      data.phase.transition("windup", "ready")
+      data.phase.transition({ from: "windup", to: "ready" })
       windingUp -= 1
       data.attacker.set({ ...cut, elapsed: 0, area: null, cooldown: (attacks[cut.attack ?? -1]?.cooldown ?? 0) * rest })
     }
     // A disarmed enemy starts no attack (it still moves); a swing already under way finishes.
-    if (disarmed > 0 && data.phase.get() === "ready") continue
+    if (disarmed > 0 && data.phase.get()._tag === "ready") continue
     // A stunned enemy's attack waits, its telegraph still showing, until the stun wears off.
     if (attacks.length === 0 || data.stunned.get().remaining > 0) continue
     const position = data.position.get()
@@ -257,7 +257,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     const cycle = data.phase
     let { attack, area, hit } = current
     // A windup runs slower at the first levels (see `windupOf`): its telegraph and its body take longer, alike.
-    let elapsed = current.elapsed + (cycle.get() === "windup" ? dt / (data.enemy.get().windup ?? 1) : dt)
+    let elapsed = current.elapsed + (cycle.get()._tag === "windup" ? dt / (data.enemy.get().windup ?? 1) : dt)
     const behavior = behaviorOf(tuning, data.enemy.get())
     const rate = behavior.kind === "kite" ? 1 : cooldownRate
     let cooldown = Math.max(0, current.cooldown - dt * rate)
@@ -268,14 +268,14 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       attack = index
       // Its answer to being pressed spends the pressure.
       if (spec.read === "pressed" && rampage !== undefined) rampage.pressure = 0
-      cycle.transition("ready", "windup")
+      cycle.transition({ from: "ready", to: "windup" })
       area = aimArea(spec, position, aimPoint(spec, position, at, spec.windup), boxes)
       windingUp += 1
     }
 
     // A skirmisher attacks only while holding an engagement slot (see `Behavior`).
-    const engaged = turned !== null || behavior.kind !== "skirmish" || data.mode.get() === "engage"
-    if (cycle.get() === "ready") {
+    const engaged = turned !== null || behavior.kind !== "skirmish" || data.mode.get()._tag === "engage"
+    if (cycle.get()._tag === "ready") {
       elapsed = 0
       // A phase begun: its opening attack, at once.
       const opener = rampage === undefined || rampage.opened >= phase ? -1 : attacks.findIndex((spec) => spec.opens && spec.phase === phase)
@@ -297,7 +297,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     }
 
     const spec = attack === null ? undefined : attacks[attack]
-    if (spec === undefined || cycle.get() === "ready") {
+    if (spec === undefined || cycle.get()._tag === "ready") {
       data.attacker.set({ attack, elapsed, cooldown, area, hit })
       continue
     }
@@ -313,13 +313,13 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     })
 
     // The aim follows the target until it locks.
-    if (cycle.get() === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
+    if (cycle.get()._tag === "windup" && moving !== undefined && !aimLocked(spec, "windup", elapsed)) {
       area = aimArea(spec, position, aimPoint(spec, position, moving, Math.max(0, spec.windup - elapsed)), boxes)
     }
     // A blow can push the attacker during the windup (a gust, a knockback): what it committed to goes with it, so
     // nothing lands where it no longer stands. A swing or a lane starts from where it stands (a beam stops at the
     // first wall from there); a slam's circle comes back within its reach.
-    if (cycle.get() === "windup" && area !== null) {
+    if (cycle.get()._tag === "windup" && area !== null) {
       if (area.kind === "cone" || area.kind === "lane") {
         area = spec.kind === "beam" && area.kind === "lane"
           ? aimArea(spec, position, { x: position.x + area.direction.x, y: position.y + area.direction.y }, boxes)
@@ -332,9 +332,9 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
       }
     }
 
-    if (cycle.get() === "windup" && elapsed >= spec.windup && area !== null) {
+    if (cycle.get()._tag === "windup" && elapsed >= spec.windup && area !== null) {
       elapsed -= spec.windup
-      cycle.transition("windup", "active")
+      cycle.transition({ from: "windup", to: "active" })
       windingUp -= 1
       // A blink: it appears in the middle of its mark (walls push it out as it moves on), with nothing to blend from.
       const struckFrom = spec.kind === "blink" && area.kind === "circle" ? area.center : position
@@ -389,7 +389,7 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
     }
 
     // A charging attacker damages what it runs into, once per target per charge.
-    if (cycle.get() === "active" && spec.kind === "charge" && area !== null && area.kind === "lane") {
+    if (cycle.get()._tag === "active" && spec.kind === "charge" && area !== null && area.kind === "lane") {
       for (const other of queries.targets.each()) {
         const hurtbox = other.data.hurtbox.get()
         if (hurtbox.faction === faction || hit.includes(Game.Entity.handle(other.entity.id, Health))) continue
@@ -402,12 +402,12 @@ export const UpdateAttacks = Game.System("Shooter/UpdateAttacks", {
         events.damage.emit({ target: Game.Entity.handle(other.entity.id, Health), faction, direction: pushDirection({ ...area, origin: position, length: 1 }, at), blow: struck })
       }
     }
-    if (cycle.get() === "active" && elapsed >= spec.active) {
+    if (cycle.get()._tag === "active" && elapsed >= spec.active) {
       elapsed -= spec.active
-      cycle.transition("active", "recovery")
+      cycle.transition({ from: "active", to: "recovery" })
     }
-    if (cycle.get() === "recovery" && elapsed >= spec.recovery) {
-      cycle.transition("recovery", "ready")
+    if (cycle.get()._tag === "recovery" && elapsed >= spec.recovery) {
+      cycle.transition({ from: "recovery", to: "ready" })
       elapsed = 0
       area = null
       cooldown = spec.cooldown * rest

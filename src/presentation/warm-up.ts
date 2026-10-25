@@ -85,7 +85,7 @@ export const WarmUpFights = Game.System("Shooter/WarmUpFights", {
   machines: { flow: Game.System.machine(Flow) },
   services: { host: Game.System.service(RenderHost) }
 }, ({ resources, machines, services }) => {
-  if (machines.flow.get() !== "Playing") return
+  if (machines.flow.get()._tag !== "Playing") return
   const tuning = resources.tuning.get()
   const challenge = resources.challenge.get()
   const team = resources.team.get()

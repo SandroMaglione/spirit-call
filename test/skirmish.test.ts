@@ -17,7 +17,7 @@ const World = Game.Inspector("Test/Skirmish", {
   const player = queries.player.each()[0]!.data.position.get()
   return queries.enemies.each().map(({ data }) => {
     const position = data.position.get()
-    return { mode: data.mode.get(), distance: Math.hypot(position.x - player.x, position.y - player.y) }
+    return { mode: data.mode.get()._tag, distance: Math.hypot(position.x - player.x, position.y - player.y) }
   })
 })
 
