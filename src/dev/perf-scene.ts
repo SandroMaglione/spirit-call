@@ -18,7 +18,7 @@
  * next member, her special 30 steps later and her ultimate 70 steps later.
  */
 import type { Keyboard, Pointer } from "@typeonce/ritmo-browser"
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 
 import type { KeyBindings } from "../config/input.ts"
 import { tuningWith } from "../config/tuning.ts"

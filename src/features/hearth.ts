@@ -9,7 +9,7 @@
  * a share of what it deals heals the one on the field, up to a cap each time.
  */
 import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { elements } from "../content/elements.ts"
 import type { Affinity, ElementId } from "../content/elements.ts"

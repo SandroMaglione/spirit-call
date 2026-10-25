@@ -9,7 +9,7 @@
  * pace, and stand still in a hit-stop.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { areaTouchesCircle } from "../physics/areas.ts"
 import { Enemy, Game, Health, Hit, HitStop, Hurtbox, Player, Poise, Position, SlowMotion, Stunned, Time, Tuning, Ward } from "../schema.ts"

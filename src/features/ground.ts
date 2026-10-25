@@ -9,7 +9,7 @@
  * puts it out where they meet (an arena's pool for a while).
  */
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { GroundSpec } from "../content/elements.ts"
 import { elements } from "../content/elements.ts"
 import { ElementAffinities, ElementState, Game, Ground, Health, Hurtbox, Invulnerable, Position, Reaction, Time, Tuning } from "../schema.ts"

@@ -8,7 +8,7 @@ import type { EntityId, Handle } from "@typeonce/ritmo/Entity"
 import type { Query } from "@typeonce/ritmo/Query"
 import { sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 
 import { Dash, Game, Health, Hurtbox, Invulnerable, Position, Shield } from "../schema.ts"
 import type { Faction, Root } from "../schema.ts"

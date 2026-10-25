@@ -3,7 +3,7 @@
  * random directions, topped up every step. Used by `scripts/stress.ts`
  * (headless timing) and by the browser with `?stress=enemies,projectiles`.
  */
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { tuningWith } from "../config/tuning.ts"
 import { makeProjectile } from "../features/combat.ts"

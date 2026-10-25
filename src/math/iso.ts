@@ -11,7 +11,7 @@
  *   screen.y = (x + y) / √2 · squash · zoom
  */
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 
 const INV_SQRT2 = Math.SQRT1_2
 

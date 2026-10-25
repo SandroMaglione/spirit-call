@@ -26,7 +26,7 @@ import path from "node:path"
  */
 const layers = [
   // Content is data; its curves use Ops, so they compute the same on every device.
-  { name: "content", paths: ["src/content/"], parts: ["content"], packages: ["@typeonce/ritmo-math/Ops"] },
+  { name: "content", paths: ["src/content/"], parts: ["content"], packages: ["@typeonce/ritmo/Ops"] },
   {
     name: "simulation",
     paths: ["src/features/", "src/physics/", "src/math/", "src/config/", "src/schema.ts", "src/schedules.ts", "src/simulation.ts", "src/runtime.ts"],

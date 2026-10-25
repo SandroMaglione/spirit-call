@@ -11,7 +11,7 @@
  * and kit by `resolveBuild`. Her level gives all her stats; an aspect gives
  * none (see docs/aspects.md).
  */
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { ClassId } from "./classes.ts"
 import type { ElementId } from "./elements.ts"
 import type { SkillId, SkillSlot } from "./skills.ts"

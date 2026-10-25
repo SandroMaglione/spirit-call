@@ -8,8 +8,8 @@
  * are drawn from the seeded `Rng`.
  */
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Random from "@typeonce/ritmo-math/Random"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Random from "@typeonce/ritmo/Random"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { lob } from "../content/skills.ts"
 import type { SkillId, SplintersEffect } from "../content/skills.ts"
 import { isMelee } from "../content/attacks.ts"

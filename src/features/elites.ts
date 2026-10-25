@@ -7,7 +7,7 @@
  * `UpdateAttacks`). All of it runs at the enemies' pace, and waits while
  * the elite is stunned.
  */
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { blow, Elite, Enemy, Game, Hitbox, Position, RunScope, SlowMotion, Stunned, Time, Tuning, Velocity, CombatStats, Ground } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeGround } from "./ground.ts"

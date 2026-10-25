@@ -16,8 +16,8 @@
  */
 import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Random from "@typeonce/ritmo-math/Random"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Random from "@typeonce/ritmo/Random"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { champion, elite, entryChampion, entryElite, entryKind, entryShield, shielded } from "../content/challenges.ts"
 import type { WaveEntry, WavePlan } from "../content/challenges.ts"

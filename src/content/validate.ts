@@ -11,7 +11,7 @@
  * `validateContent` lists every broken rule; a test checks the shipped
  * content, and tools can check edited content.
  */
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning } from "../config/tuning.ts"
 import { newAccount } from "./account.ts"
 import { entryChampion, entryKind } from "./challenges.ts"

@@ -4,7 +4,7 @@
  * lands.
  */
 import { normalizeOr, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 
 export type Area =
   | { readonly kind: "circle"; readonly center: Vec2; readonly radius: number }

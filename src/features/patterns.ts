@@ -15,7 +15,7 @@
  */
 import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { AttackReleased, Elite, Enemy, Game, Health, Hit, Hitbox, Rampage, RunScope, Time, Tuning, Ground, PendingSpawn } from "../schema.ts"
 import { makeGroupSpawns } from "./enemies.ts"
 import { makeGround } from "./ground.ts"

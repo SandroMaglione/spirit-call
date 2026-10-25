@@ -4,7 +4,7 @@
  * a run of another challenge stands in another arena).
  */
 import { around, type Box2 } from "@typeonce/ritmo-math/Box2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { ArenaId } from "../content/arena.ts"
 import { Challenge, Game, Ground, LowWall, Position, Renderable, RunScope, Tuning, Wall } from "../schema.ts"
