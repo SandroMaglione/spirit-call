@@ -10,7 +10,7 @@
  * Damage comes from stats: an attack deals its `power` as a percentage of the
  * attacker's ATK, and the target's DEF reduces it (see `Tuning.combat`).
  */
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { aspectOf, basicAttack } from "../content/aspects.ts"
 import type { AspectId, AspectSpec } from "../content/aspects.ts"

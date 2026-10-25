@@ -12,7 +12,7 @@
  * side go for each other (`SteerEnemies`). Then it goes back.
  */
 import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { elements } from "../content/elements.ts"
 import { Cast, Damage, Disarmed, Dome, ElementAffinities, ElementState, Enemy, Game, Health, Hitbox, Hurtbox, Invulnerable, Player, Position, Reaction, RunScope, Time, Stunned, Tuning, Turned, Zap } from "../schema.ts"
 import { afflict } from "./elements.ts"

@@ -11,7 +11,7 @@
 import { Clock } from "@typeonce/ritmo"
 import type { WriteCell } from "@typeonce/ritmo/Query"
 import { normalizeOr, subtract } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 
 import type { SkillEffect, MarkSpec, StateHeal } from "../content/skills.ts"
 import { blow, Cast, Damage, ElementState, Enemy, Game, Heal, Health, Hit, Hurtbox, Marked, Member, Mending, Player, Position, Time, Tuning } from "../schema.ts"

@@ -1,4 +1,4 @@
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 import { describe, expect, it } from "vitest"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
@@ -30,7 +30,7 @@ const World = Game.Inspector("Test/NewEnemies", {
     kind: data.enemy.get().kind,
     position: data.position.get(),
     health: data.health.get().current,
-    attacker: { ...data.attacker.get(), phase: data.phase.get() },
+    attacker: { ...data.attacker.get(), phase: data.phase.get()._tag },
     facing: data.shield.present ? data.shield.get().facing : undefined
   })),
   pending: queries.pending.each().map(({ data }) => data.pending.get())

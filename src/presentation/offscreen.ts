@@ -25,7 +25,7 @@ export const DrawOffscreenEnemies = Game.System("Shooter/DrawOffscreenEnemies", 
   const edges = host.edges
   edges.clear()
   // Only while fighting: the results screen shows how it went, not who is left.
-  if (machines.flow.get() !== "Playing") return
+  if (machines.flow.get()._tag !== "Playing") return
   const { width, height } = host.size
   const center = { x: width / 2, y: height / 2 }
   // Rays from the center end on this box, just inside the edge.

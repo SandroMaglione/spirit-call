@@ -7,7 +7,7 @@
  * they came from, out of a ring.
  */
 import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { Barrier, Cast, Damage, Game, Health, Hitbox, Hurtbox, Invulnerable, Position, RunScope, Time } from "../schema.ts"
 import type { BarrierValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"

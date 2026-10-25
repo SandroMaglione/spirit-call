@@ -94,19 +94,19 @@ describe("the tutorial", () => {
     run.step(2)
     expect(world().step).toBe(tutorialSteps.length)
     expect(world().player).toBeDefined()
-    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Playing")
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current._tag).toBe("Playing")
     expect(world().result).toBeNull()
     run.step(steps(tutorialSuccessSeconds))
-    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Cleared")
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current._tag).toBe("Cleared")
     expect(world().result).toMatchObject({ cleared: true, challenge: "tutorial" })
     // The clear stays for the player's choice, even after the former automatic exit time.
     run.step(steps(5))
-    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Cleared")
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current._tag).toBe("Cleared")
 
     // Starting the first quest uses the normal results-to-quest path and clears the tutorial state.
     run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "firstBlood", enemyLevel: 1 })
     run.step(2)
-    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Playing")
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current._tag).toBe("Playing")
     expect(world().result).toBeNull()
     expect(world().step).toBe(0)
   })
@@ -122,7 +122,7 @@ describe("the tutorial", () => {
     const BeginDodge = Game.Schedule(Game.System("Test/BeginTutorialDodge", { resources: { tutorial: Game.System.writeResource(Tutorial) } }, ({ resources }) => {
       resources.tutorial.set({ ...tutorialStart, step: 5 })
     }))
-    const Phase = Game.Inspector("Test/TutorialDummyPhase", { queries: { enemies: Game.Query({ selection: { phase: Game.Query.read(AttackPhase) } }) } }, ({ queries }) => queries.enemies.each()[0]?.data.phase.get())
+    const Phase = Game.Inspector("Test/TutorialDummyPhase", { queries: { enemies: Game.Query({ selection: { phase: Game.Query.read(AttackPhase) } }) } }, ({ queries }) => queries.enemies.each()[0]?.data.phase.get()._tag)
     const prepare = (run: ReturnType<typeof start>) => {
       expectOk(run.runtime.tick(BeginDodge))
       run.step(2)
@@ -143,7 +143,7 @@ describe("the tutorial", () => {
     run.step(landsAt + 3 - 2)
     expect(run.runtime.inspect(World).step).toBe(tutorialSteps.length)
     expect(run.runtime.inspect(World).slow).toBeGreaterThan(0)
-    const flow = () => run.runtime.debug.dump().machines["Shooter/Flow"]?.current
+    const flow = () => run.runtime.debug.dump().machines["Shooter/Flow"]?.current._tag
     // Success stays on the floor through the actual slow motion, then a little longer.
     while (run.runtime.inspect(World).slow > 0) {
       expect(flow()).toBe("Playing")
@@ -167,7 +167,7 @@ describe("the tutorial", () => {
     expect(run.runtime.inspect(World).step).toBe(1)
     run.runtime.send(UiRequest, { kind: "leave" })
     run.step(2)
-    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current).toBe("Menu")
+    expect(run.runtime.debug.dump().machines["Shooter/Flow"]?.current._tag).toBe("Menu")
     expect(run.runtime.inspect(World).result).toBeNull()
 
     run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "tutorial", enemyLevel: 1 })

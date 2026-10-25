@@ -14,7 +14,7 @@
  *   and the fall is its blow.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { Cast, Damage, Disarmed, Enemy, Game, Health, Hurtbox, Invulnerable, Lifted, Mantle, noMantle, Player, Position, Stunned, Time } from "../schema.ts"
 import type { Blow, Faction, MantleValue } from "../schema.ts"
 import { castBlow } from "./skills.ts"

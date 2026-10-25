@@ -1,7 +1,8 @@
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 import { describe, expect, it } from "vitest"
 
-import { keyBindings } from "../src/config/input.ts"
+import { keyBindings, pointerBindings } from "../src/config/input.ts"
+import type { PointerSource } from "../src/config/input.ts"
 import { defaultTuning } from "../src/config/tuning.ts"
 import { Camera, Controls, Game, Player, Skills } from "../src/schema.ts"
 import { projection, view, viewZoom } from "../src/config/view.ts"
@@ -14,7 +15,7 @@ const center = { x: defaultTuning.arena.width / 2, y: defaultTuning.arena.height
 describe("input", () => {
   it("dashes on a double tap of a movement key and uses the special skill with Space (physical keys)", () => {
     const keyboard = Keyboard.actions(fakeWindow.host, keyBindings)
-    const sim = createSimulation({ keyboard, pointer: Pointer.scripted([]), tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } } })
+    const sim = createSimulation({ keyboard, pointer: Pointer.scripted(pointerBindings, []), tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } } })
     expectOk(sim.runtime.tick(sim.setup))
     fakeWindow.press("w", "KeyW")
     expectOk(sim.runtime.tick(sim.fixedUpdate))
@@ -34,7 +35,7 @@ describe("input", () => {
 
   it("ignores the pointer until it is over the game: no aiming or camera drift toward (0, 0)", () => {
     // Like a browser before the first mouse event: (0, 0), not over the canvas.
-    const untouched: Pointer.Pointer = { snapshot: () => Pointer.idle(), dispose: () => {} }
+    const untouched: PointerSource = { snapshot: () => Pointer.idle(pointerBindings), rebind: () => {}, dispose: () => {} }
     const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: untouched, tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } } })
     expectOk(sim.runtime.tick(sim.setup))
     const aimBefore = sim.runtime.inspect(PlayerState).aim
@@ -83,7 +84,7 @@ describe("camera zoom", () => {
     // The cursor 100 px right of the screen center is 100 / zoom screen units away in the world.
     const sim = createSimulation({
       keyboard: Keyboard.scripted(keyBindings, []),
-      pointer: Pointer.scripted([{ frame: 0, move: { x: phone.width / 2 + 100, y: phone.height / 2 } }]),
+      pointer: Pointer.scripted(pointerBindings, [{ frame: 0, move: { x: phone.width / 2 + 100, y: phone.height / 2 } }]),
       viewport: phone,
       tuning: { ...defaultTuning, waves: { ...defaultTuning.waves, enabled: false } }
     })
@@ -103,8 +104,8 @@ describe("physical key bindings", () => {
   it("moves with the key in W's position whatever it types (AZERTY types z there)", () => {
     const keyboard = Keyboard.actions(fakeWindow.host, keyBindings)
     fakeWindow.down("z", "KeyW")
-    expect(keyboard.snapshot().up.held).toBe(true)
+    expect(keyboard.snapshot().actions.up.held).toBe(true)
     fakeWindow.up("z", "KeyW")
-    expect(keyboard.snapshot().up.held).toBe(false)
+    expect(keyboard.snapshot().actions.up.held).toBe(false)
   })
 })

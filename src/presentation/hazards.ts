@@ -13,7 +13,8 @@ import type { BufferGeometry, Material } from "three"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 
 import { view } from "../config/view.ts"
-import { Game, Ground, RenderNodes } from "../schema.ts"
+import { Game, Ground } from "../schema.ts"
+import { RenderNodes } from "./render-nodes.ts"
 import type { HazardNode } from "./host-types.ts"
 import type { PoolLook, PoolTones } from "./looks.ts"
 

@@ -9,7 +9,8 @@ import type { Area } from "../physics/areas.ts"
 import { isMelee } from "../content/attacks.ts"
 import { currentAttack } from "../features/moveset.ts"
 import { attackOf } from "../features/build.ts"
-import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, RenderNodes, Shield, Stunned, Tuning, UltimateCalled, UltimateMoment, Velocity, Ward, BasicAttack } from "../schema.ts"
+import { Action, AttackPhase, Attacker, Cast, Dash, Enemy, Facing, Game, Hit, HitStop, Player, Position, RenderClock, Shield, Stunned, Tuning, UltimateCalled, UltimateMoment, Velocity, Ward, BasicAttack } from "../schema.ts"
+import { RenderNodes } from "./render-nodes.ts"
 import { enemyPose } from "./enemy-pose.ts"
 import { enemyLooks } from "./looks.ts"
 import type { ActorNode } from "./host-types.ts"
@@ -64,7 +65,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     if (node?.kind !== "enemy") continue
     const velocity = data.velocity.get()
     const area = data.attacker.get().area
-    const aimed = data.phase.get() !== "ready" && area !== null ? areaDirection(area, data.position.get()) : null
+    const aimed = data.phase.get()._tag !== "ready" && area !== null ? areaDirection(area, data.position.get()) : null
     const moving = Math.hypot(velocity.x, velocity.y) > turnSpeed ? normalizeOr(velocity, node.facing) : null
     const shield = data.shield.present ? data.shield.get().facing : null
     const facing = aimed ?? shield ?? moving ?? node.facing
@@ -75,7 +76,7 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     const spec = currentAttack(resources.tuning.get(), data.enemy.get(), data.attacker.get())
     const look = enemyLooks[kind]
     const clips = look.kind === "model" && spec !== undefined ? look.attackClips?.[spec.id] : undefined
-    const pose = enemyPose(spec, data.phase.get(), data.attacker.get().elapsed, clips)
+    const pose = enemyPose(spec, data.phase.get()._tag, data.attacker.get().elapsed, clips)
     if (pose !== null) node.body.sample?.(pose.clip, pose.progress)
     else if (!held && look.kind === "model" && look.wardClip !== undefined && data.ward.present) {
       const ward = data.ward.get()
@@ -142,7 +143,7 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
   for (const { entity, data } of queries.enemies.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "enemy") continue
-    const phase = data.phase.get()
+    const phase = data.phase.get()._tag
     const started = phase === "windup" && node.attackPhase !== "windup"
     node.attackPhase = phase
     const spec = currentAttack(tuning, data.enemy.get(), data.attacker.get())

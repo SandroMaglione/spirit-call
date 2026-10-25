@@ -5,17 +5,17 @@
  * that its attacks answer (see `Read`).
  */
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import type * as Random from "@typeonce/ritmo-math/Random"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import type * as Random from "@typeonce/ritmo/Random"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { AttackSpec, Behavior, Read } from "../content/enemies.ts"
 import type { AttackerValue, EnemyKind } from "../schema.ts"
 
 /** Whether a circle of `radius` gets from `from` to `to` without touching a wall. */
 export const hasLineOfSight = (from: Vec2, to: Vec2, radius: number, boxes: ReadonlyArray<Box2>): boolean =>
-  sweepCircleBoxes(from, subtract(to, from), radius, boxes) === undefined
+  sweepCircle(from, subtract(to, from), radius, { boxes }) === undefined
 
 /** Radius used for the line-of-sight check before starting an attack, or undefined when none is needed. */
 const sightRadius = (spec: AttackSpec): number | undefined =>

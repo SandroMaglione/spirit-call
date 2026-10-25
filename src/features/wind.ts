@@ -3,7 +3,7 @@
  * (see `ApplyDamage`) and gliding (see `pushDecay`); slammed into a wall
  * while still moving fast, an enemy is stunned.
  */
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { ElementState, Game, Knockback, Player, Position, PrevPosition, Reaction, Stunned, Time, Tuning } from "../schema.ts"
 import { pushShare } from "./motion.ts"
 

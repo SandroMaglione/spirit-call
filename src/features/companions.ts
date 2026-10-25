@@ -9,7 +9,7 @@
  * share, or when its time is up.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { Body, Cast, Companion, Game, Heal, Health, Hurtbox, Invulnerable, Member, Player, Position, PrevPosition, Renderable, RunScope, Time, Velocity, Zap, Disc } from "../schema.ts"
 import { makeDisc } from "./discs.ts"
 import { castBlow } from "./skills.ts"

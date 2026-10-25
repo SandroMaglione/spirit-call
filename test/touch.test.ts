@@ -41,7 +41,7 @@ const Charge = Game.System("Test/ChargeUltimate", {
 
 describe("touch controls", () => {
   it("moves with the stick, at a speed that follows the tilt, and switches to touch", () => {
-    const run = start({ touch: [{ frame: 0, stick: { x: 0.5, y: 0 } }] })
+    const run = start({ touch: [{ frame: 0, sticks: { move: { x: 0.5, y: 0 } } }] })
     run.step(30)
     const { velocity } = run.player()
     const right = world({ x: 1, y: 0 })
@@ -62,7 +62,7 @@ describe("touch controls", () => {
   })
 
   it("faces where the stick moves, and keeps the facing when standing still", () => {
-    const run = start({ touch: [{ frame: 0, stick: { x: -1, y: 0 } }, { frame: 10, stick: null }] })
+    const run = start({ touch: [{ frame: 0, sticks: { move: { x: -1, y: 0 } } }, { frame: 10, sticks: { move: null } }] })
     const left = world({ x: -1, y: 0 })
     run.step(10)
     expect(run.player().aim.x).toBeCloseTo(left.x, 6)
@@ -139,7 +139,7 @@ describe("touch controls", () => {
   })
 
   it("dashes with the dash button toward the stick, and casts the ultimate with its button", () => {
-    const run = start({ touch: [{ frame: 0, stick: { x: 1, y: 0 }, press: ["dash"], release: ["dash"] }] })
+    const run = start({ touch: [{ frame: 0, sticks: { move: { x: 1, y: 0 } }, press: ["dash"], release: ["dash"] }] })
     run.step(1)
     const { dash } = run.player()
     const right = world({ x: 1, y: 0 })
@@ -224,7 +224,7 @@ describe("touch controls", () => {
       const layout = touchLayout(screen)
       const rest = stickRest(screen)
       const dash = layout.buttons.dash
-      expect(rest.x - layout.stick.radius).toBeCloseTo(screen.width - (dash.center.x + dash.radius * (drawnShare.dash ?? 1)), 6)
+      expect(rest.x - layout.sticks.move.radius).toBeCloseTo(screen.width - (dash.center.x + dash.radius * (drawnShare.dash ?? 1)), 6)
     }
   })
 
@@ -250,7 +250,7 @@ describe("touch controls", () => {
   })
 
   it("switches back to keyboard and mouse as soon as they are used", () => {
-    const run = start({ touch: [{ frame: 0, stick: { x: 1, y: 0 } }, { frame: 5, stick: null }], keys: [{ frame: 10, press: ["up"] }] })
+    const run = start({ touch: [{ frame: 0, sticks: { move: { x: 1, y: 0 } } }, { frame: 5, sticks: { move: null } }], keys: [{ frame: 10, press: ["up"] }] })
     run.step(6)
     expect(run.runtime.inspect(World).device).toBe("touch")
     run.step(6)
@@ -258,7 +258,7 @@ describe("touch controls", () => {
   })
 
   it("keeps the aim still when there is no player (game over)", () => {
-    const run = start({ touch: [{ frame: 0, stick: { x: 1, y: 0 }, press: ["attack"] }] })
+    const run = start({ touch: [{ frame: 0, sticks: { move: { x: 1, y: 0 } }, press: ["attack"] }] })
     run.step(2)
     const Remove = Game.System("Test/RemovePlayer", { queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) }, commands: Game.System.commands(Game.System.despawns(Player)) }, ({ queries, commands }) => {
       for (const { entity } of queries.player.each()) commands.despawn(entity)

@@ -20,7 +20,7 @@
  *
  * Numbers are live-tunable: they are part of the `Tuning` resource.
  */
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { ElementId } from "./elements.ts"
 
 /** A grade of essence: 1, an element's; 2, Refined; 3, Core. It is the rank whose content pays it. */

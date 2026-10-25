@@ -4,7 +4,7 @@
  * screen, and a restart that clears the run and starts over.
  */
 import { Clock } from "@typeonce/ritmo"
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 import type { ReactionRecord } from "../content/elements.ts"
 import { noTally } from "../content/stars.ts"
 import { Arrival, Broke, Cast, Challenge, DodgeChain, emptyRunLog, EnergyLedger, Flow, Game, Guard, Health, Hit, Mantle, noMantle, HitStop, Keys, Member, Mending, Paused, PassiveCooldowns, PerfectDodged, SecondWinds, PracticeField, Reaction, Tutorial, tutorialStart, Rng, Run, RunLog, RunResult, SlowMotion, Stats, UltimateMoment, noUltimateMoment, Team, TeamSwitch, Time, Tuning, Waves } from "../schema.ts"
@@ -91,7 +91,7 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
   const challenge = resources.challenge.get()
   resources.run.set(run)
   resources.result.set(runResultOf(false, challenge, resources.tuning.get().challenges[challenge], run, resources.waves.get(), resources.stats.get(), resources.team.get()))
-  nextMachines.flow.set("GameOver")
+  nextMachines.flow.set({ _tag: "GameOver" })
 })
 
 /**
@@ -112,8 +112,8 @@ export const QueueRestart = Game.System("Shooter/QueueRestart", {
   const endedAt = resources.run.get().endedAt
   if (endedAt === null || Clock.elapsed(resources.time.get()) - endedAt < resources.tuning.get().flow.restartDelay) return
   const keys = resources.keys.get()
-  if (keys.restart.pressed) nextMachines.flow.set("Playing")
-  else if (keys.menu.pressed) nextMachines.flow.set("Menu")
+  if (keys.actions.restart.pressed) nextMachines.flow.set({ _tag: "Playing" })
+  else if (keys.actions.menu.pressed) nextMachines.flow.set({ _tag: "Menu" })
 })
 
 /**
@@ -124,7 +124,7 @@ export const PauseWithKey = Game.System("Shooter/PauseWithKey", {
   resources: { keys: Game.System.readResource(Keys), paused: Game.System.writeResource(Paused), result: Game.System.readResource(RunResult) },
   when: [Game.Condition.inState(Flow, "Playing")]
 }, ({ resources }) => {
-  if (!resources.keys.get().menu.pressed || resources.result.get() !== null) return
+  if (!resources.keys.get().actions.menu.pressed || resources.result.get() !== null) return
   resources.paused.set({ paused: !resources.paused.get().paused })
 })
 

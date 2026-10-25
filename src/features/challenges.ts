@@ -114,5 +114,5 @@ export const CheckObjective = Game.System("Shooter/CheckObjective", {
   const ended = { ...run, endedAt: Clock.elapsed(resources.time.get()) }
   resources.run.set(ended)
   resources.result.set(runResultOf(true, challenge, spec, ended, resources.waves.get(), resources.stats.get(), resources.team.get()))
-  nextMachines.flow.set("Cleared")
+  nextMachines.flow.set({ _tag: "Cleared" })
 })

@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from "vitest"
 import { around, overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { sweepCircle } from "@typeonce/ritmo-math/Collide2"
 
 import { defaultTuning } from "../src/config/tuning.ts"
 import type { ArenaId } from "../src/content/arena.ts"
@@ -81,7 +81,7 @@ describe("arena layouts", () => {
           if (!open.has(next) || reached.has(next)) continue
           const origin = { x: (column + .5) * step, y: (row + .5) * step }
           const delta = { x: (next % columns - column) * step, y: (Math.floor(next / columns) - row) * step }
-          if (sweepCircleBoxes(origin, delta, passage / 2, boxes) === undefined) { reached.add(next); queue.push(next) }
+          if (sweepCircle(origin, delta, passage / 2, { boxes }) === undefined) { reached.add(next); queue.push(next) }
         }
       }
       expect([...open].filter((cell) => !reached.has(cell)), "isolated floor cells").toEqual([])

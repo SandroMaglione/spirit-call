@@ -9,14 +9,14 @@
 import { Clock } from "@typeonce/ritmo"
 import type { ReadCell, WriteCell } from "@typeonce/ritmo/Query"
 import { overlapsCircle } from "@typeonce/ritmo-math/Box2"
-import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as SpatialGrid from "@typeonce/ritmo-math/SpatialGrid"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { DodgeAttackers, dodgeWindowOf } from "./dodge-window.ts"
 
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { positive } from "../physics/sizes.ts"
+import { made } from "../physics/sizes.ts"
+import * as SpatialGrid from "../physics/spatial-grid.ts"
 import {
   Arc,
   Barrier,
@@ -102,7 +102,7 @@ export const makeProjectile = (at: Vec2, velocity: Vec2, projectile: ProjectileV
  * contacts win, so nothing fast can pass through what it should hit.
  */
 export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
-    local: () => ({ grid: SpatialGrid.make(positive(96)), targets: new Array<Target>(), nearby: new Array<Target>() }),
+    local: () => ({ grid: made(SpatialGrid.make(96)), targets: new Array<Target>(), nearby: new Array<Target>() }),
     queries: {
       projectiles: Game.Query({
         selection: { position: Game.Query.write(Position), velocity: Game.Query.read(Velocity), projectile: Game.Query.write(Projectile) }
@@ -155,7 +155,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
 
       // Earliest wall contact along the path (or right away if it starts inside one).
       const inWall = boxes.some((box) => overlapsCircle(box, origin, r))
-      const wall = inWall ? { time: 0 } : sweepCircleBoxes(origin, delta, r, boxes)
+      const wall = inWall ? { time: 0 } : sweepCircle(origin, delta, r, { boxes })
 
       nearby.length = 0
       grid.forEachIn(

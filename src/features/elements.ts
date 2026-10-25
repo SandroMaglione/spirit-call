@@ -16,7 +16,7 @@
  * of it.
  */
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { elementOf, elements } from "../content/elements.ts"
 import type { Affinity, StateId } from "../content/elements.ts"

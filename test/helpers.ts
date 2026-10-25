@@ -2,7 +2,7 @@ import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import type { ArenaId } from "../src/content/arena.ts"
 import { Keyboard, Pointer, Touch } from "@typeonce/ritmo-browser"
 
-import { keyBindings, scriptedPartyTaps, touchButtons } from "../src/config/input.ts"
+import { keyBindings, pointerBindings, scriptedPartyTaps, touchNames } from "../src/config/input.ts"
 import type { Direction, PartyTap, TouchButton } from "../src/config/input.ts"
 import { defaultTuning, engine } from "../src/config/tuning.ts"
 import { projection, viewZoom } from "../src/config/view.ts"
@@ -239,8 +239,8 @@ export const hitBy = (character: CharacterId, power: number, tuning: Tuning = de
 export const start = (options: StartOptions = {}) => {
   const sim = createSimulation({
     keyboard: Keyboard.scripted(keyBindings, options.keys ?? []),
-    pointer: Pointer.scripted(options.pointer ?? [], { x: 640 + 200, y: 360 }),
-    touch: Touch.scripted(touchButtons, options.touch ?? []),
+    pointer: Pointer.scripted(pointerBindings, options.pointer ?? [], { x: 640 + 200, y: 360 }),
+    touch: Touch.scripted(touchNames, options.touch ?? []),
     party: scriptedPartyTaps(options.party ?? []),
     tuning: inArena(withWaves((options.toughness === true ? (tuning: Tuning) => tuning : plainEnemies)((options.moments === true ? (tuning: Tuning) => tuning : withoutMoments)(options.kits === "shipped" ? options.tuning ?? defaultTuning : withLobbedSpecials(options.tuning ?? defaultTuning))), options.waves ?? false), options.arena ?? "courtyard"),
     ...(options.build === undefined ? {} : { build: options.build }),
@@ -290,7 +290,7 @@ export const placeDummies = (offsets: ReadonlyArray<Vec2>, tuning: Tuning = defa
 }
 
 /** Current mode read through the public inspector API. */
-export const ReadFlow = Game.Inspector("Test/Flow", { machines: { flow: Game.System.machine(Flow) } }, ({ machines }) => machines.flow.get())
+export const ReadFlow = Game.Inspector("Test/Flow", { machines: { flow: Game.System.machine(Flow) } }, ({ machines }) => machines.flow.get()._tag)
 
 /**
  * Fails the test when a tick (or a restore) fails, naming the failure:

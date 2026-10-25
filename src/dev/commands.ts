@@ -10,7 +10,7 @@
  */
 import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 import { entryChampion, entryElite, entryKind } from "../content/challenges.ts"
 import type { WaveEntry } from "../content/challenges.ts"
 import { Descriptor } from "@typeonce/ritmo"

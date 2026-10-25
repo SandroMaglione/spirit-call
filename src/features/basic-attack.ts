@@ -16,9 +16,9 @@
  * is an impulse on the player's knockback.
  */
 import type { Box2 } from "@typeonce/ritmo-math/Box2"
-import { sweepCircleBoxes, sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
+import { sweepCircle, sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
 import { scale, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import { isMelee } from "../content/attacks.ts"
 import { lob } from "../content/skills.ts"
@@ -129,7 +129,7 @@ const lungeDistance = (
 /** Where shots leave: in front, clamped so no wall or point-blank target is skipped. */
 const muzzleOf = (tuning: TuningValue, position: Vec2, aim: Vec2, radius: number, boxes: ReadonlyArray<Box2>, targets: ReadonlyArray<{ readonly at: Vec2; readonly radius: number }>): Vec2 => {
   const reach = scale(aim, tuning.player.muzzleOffset)
-  const blocked = sweepCircleBoxes(position, reach, radius, boxes)
+  const blocked = sweepCircle(position, reach, radius, { boxes })
   let until = blocked?.time ?? 1
   for (const target of targets) until = Math.min(until, sweepCircleCircle(position, reach, radius, target.at, target.radius) ?? 1)
   return { x: position.x + reach.x * until, y: position.y + reach.y * until }
@@ -313,7 +313,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
           const blow = { ...struck, damage: struck.damage * wave.share, hitStop: 0 }
           for (const direction of shockwaveDirections(move, wave, aim)) {
             const start = scale(direction, Math.max(0, move.reach - wave.radius))
-            const blocked = sweepCircleBoxes(position, start, wave.radius, boxes)
+            const blocked = sweepCircle(position, start, wave.radius, { boxes })
             // A swing against a wall sends nothing through it.
             if (blocked !== undefined) continue
             commands.spawnIn(RunScope, makeProjectile({ x: position.x + start.x, y: position.y + start.y }, scale(direction, wave.speed), {

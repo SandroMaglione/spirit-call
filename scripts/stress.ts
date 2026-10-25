@@ -12,7 +12,7 @@
 import type { HostClock } from "@typeonce/ritmo"
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
-import { keyBindings } from "../src/config/input.ts"
+import { keyBindings, pointerBindings } from "../src/config/input.ts"
 import { engine } from "../src/config/tuning.ts"
 import { makePerfScene, perfSceneNames } from "../src/dev/perf-scene.ts"
 import type { PerfSceneName } from "../src/dev/perf-scene.ts"
@@ -64,7 +64,7 @@ if (sceneAt !== -1) {
 } else {
   const load = { enemies: Number(process.argv[2] ?? 300), projectiles: Number(process.argv[3] ?? 2000) }
   const tuning = stressTuning()
-  const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: Pointer.scripted([]), tuning })
+  const sim = createSimulation({ keyboard: Keyboard.scripted(keyBindings, []), pointer: Pointer.scripted(pointerBindings, []), tuning })
   sim.runtime.tick(sim.setup)
   const stress = makeStress(tuning, load)
   sim.runtime.tick(Game.Schedule(stress.populate, stress.topUp, Game.Schedule.applyDeferred()))

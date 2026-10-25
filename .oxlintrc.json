@@ -23,6 +23,7 @@
     "ritmo/handle-tick-result": "error",
     "ritmo/prefix-descriptor-and-system-names": "error",
     "ritmo/use-cell-value": "error",
+    "ritmo/no-state-spread": "error",
     "typescript/consistent-type-imports": "error",
     "typescript/no-import-type-side-effects": "error",
     "import/no-duplicates": "error",
@@ -77,7 +78,8 @@
         "ritmo/use-random-for-randomness": "error",
         "ritmo/use-ops-for-math": "error",
         "ritmo/keep-simulation-headless": "error",
-        "ritmo/no-infinity-in-simulation-data": "error"
+        "ritmo/no-infinity-in-simulation-data": "error",
+        "ritmo/no-brand-cast": "error"
       }
     },
     {

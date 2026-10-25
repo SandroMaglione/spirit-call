@@ -9,9 +9,9 @@
  * raises its rocks down a line toward the aim; a quake (see `QuakeEffect`)
  * slams around the caster, each slam a rock under her, wider than the last.
  */
-import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { normalizeOr, rotate, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { earthrise } from "../content/skills.ts"
 import type { EarthriseEffect, FaultEffect, QuakeEffect } from "../content/skills.ts"
 import { Cast, Damage, Elite, Enemy, Explosion, Game, Health, Hurtbox, Invulnerable, Poise, Position, Rock, RunScope, Stunned, Time, Tuning } from "../schema.ts"
@@ -183,7 +183,7 @@ export const CastFaults = Game.System("Shooter/CastFaults", {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "fault") continue
-    const blocked = sweepCircleBoxes(cast.from, scale(cast.direction, effect.length), effect.size / 4, wallBoxes(queries.walls.each()))
+    const blocked = sweepCircle(cast.from, scale(cast.direction, effect.length), effect.size / 4, { boxes: wallBoxes(queries.walls.each()) })
     const length = effect.length * (blocked?.time ?? 1)
     const rock = rockOf(effect, effect.size, effect.warning, effect.stun, effect.breakFill)
     const blow = castBlow(cast, effect)

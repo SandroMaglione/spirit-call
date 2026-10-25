@@ -20,7 +20,7 @@ const World = Game.Inspector("Test/Pressure", {
   resources: { stats: Game.System.readResource(Stats) }
 }, ({ queries, resources }) => ({
   player: queries.player.each().map(({ data }) => ({ health: data.health.get().current, state: data.state.get().current }))[0],
-  phases: queries.enemies.each().map(({ data }) => data.phase.get()),
+  phases: queries.enemies.each().map(({ data }) => data.phase.get()._tag),
   reactions: resources.stats.get().reactions
 }))
 
@@ -88,7 +88,7 @@ describe("leading aim", () => {
           shooter: Game.Query({ selection: { attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) }, with: [Enemy] }),
           player: Game.Query({ selection: { velocity: Game.Query.read(Velocity) }, with: [Player] })
         }
-      }, ({ queries }) => ({ ...queries.shooter.each()[0]!.data.attacker.get(), phase: queries.shooter.each()[0]!.data.phase.get(), velocity: queries.player.each()[0]!.data.velocity.get() }))
+      }, ({ queries }) => ({ ...queries.shooter.each()[0]!.data.attacker.get(), phase: queries.shooter.each()[0]!.data.phase.get()._tag, velocity: queries.player.each()[0]!.data.velocity.get() }))
       for (let step = 0; step < steps(5); step++) {
         run.step()
         const aim = run.runtime.inspect(Aim)

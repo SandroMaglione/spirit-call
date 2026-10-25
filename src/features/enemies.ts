@@ -5,12 +5,11 @@
  */
 import { clampLength, length, moveToward, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as FlowField from "@typeonce/ritmo-math/FlowField"
-import * as Scalar from "@typeonce/ritmo-math/Scalar"
-import * as SpatialGrid from "@typeonce/ritmo-math/SpatialGrid"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { trainingDummies } from "../content/arena.ts"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
-import { positive } from "../physics/sizes.ts"
+import { made } from "../physics/sizes.ts"
+import * as SpatialGrid from "../physics/spatial-grid.ts"
 import { makeBody } from "./bodies.ts"
 import { levelScale } from "./build.ts"
 import { behaviorOf, currentAttack, hasLineOfSight } from "./moveset.ts"
@@ -130,9 +129,9 @@ export const makeEnemy = (tuning: TuningValue, kind: EnemyKind, at: Vec2, strafe
     [Enemy, { kind, champion: lead !== null, rest: restOf(tuning, level, lead !== null), windup: windupOf(tuning, level) }],
     [Attacker, { attack: null, elapsed: 0, cooldown: 0, area: null, hit: [] }],
     [Marked, { remaining: 0, heal: 0, every: 0 }],
-    [AttackPhase, "ready"],
+    [AttackPhase, { _tag: "ready" }],
     [Brain, { strafe, strafeTimer: 0, modeTimer: 0, pressedAt: at, stuck: 0, unstick: null }],
-    [EnemyMode, "orbit"],
+    [EnemyMode, { _tag: "orbit" }],
     [Poise, { current: 0, broken: 0, quiet: 0 }],
     [Renderable, elite === null ? { kind: "enemy", enemy: kind, radius: stats.radius } : { kind: "enemy", enemy: kind, radius: stats.radius * size, elite, ...(lead === null ? {} : { champion: true as const }) }]
   )
@@ -248,7 +247,7 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
  * progress: attacks are commitments.
  */
 export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
-    local: () => ({ grid: SpatialGrid.make(positive(64)), bodies: new Array<{ x: number; y: number; r: number; id: number }>(), paths: FlowField.make(positive(30)) }),
+    local: () => ({ grid: made(SpatialGrid.make(64)), bodies: new Array<{ x: number; y: number; r: number; id: number }>(), paths: made(FlowField.make(30)) }),
     queries: {
       enemies: Game.Query({
         selection: {
@@ -298,8 +297,10 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       : []))
     const avoided = laid.length === 0 ? boxes : [...boxes, ...laid]
     // A cell size being edited live may pass through zero: keep the field until it is positive again.
-    const cellSize = Scalar.Positive.option(tuning.paths.cellSize)
-    if (cellSize !== null && paths.cellSize !== cellSize) local.paths = paths = FlowField.make(cellSize)
+    if (paths.cellSize !== tuning.paths.cellSize) {
+      const remade = FlowField.make(tuning.paths.cellSize)
+      if (remade.ok) local.paths = paths = remade.value
+    }
     paths.setWalls(avoided, tuning.paths.clearance)
     if (target !== undefined) paths.setGoal(target)
 
@@ -328,7 +329,7 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       }> = []
       for (const { data } of enemies) {
         if (behaviorOf(tuning, data.enemy.get()).kind !== "skirmish") continue
-        const mode = data.mode.get()
+        const mode = data.mode.get()._tag
         if (mode === "engage") engaged += 1
         // Open, she gets the circling ones at once.
         else if (mode === "orbit" && (herRead?.opening === true || data.brain.get().modeTimer >= tuning.crowd.minOrbitSeconds)) {
@@ -338,7 +339,7 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       }
       waiting.sort((left, right) => left.distance - right.distance)
       for (const candidate of waiting.slice(0, Math.max(0, tuning.crowd.engagers - engaged))) {
-        candidate.mode.transition("orbit", "engage")
+        candidate.mode.transition({ from: "orbit", to: "engage" })
         candidate.brain.update((brain) => ({ ...brain, modeTimer: 0 }))
       }
     }
@@ -362,12 +363,12 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       // Speed is a stat, so what changes stats (levels) changes it.
       // Closing in on her while she is open, a melee enemy rushes.
       const behavior = behaviorOf(tuning, data.enemy.get())
-      const closing = behavior.kind === "chase" || (behavior.kind === "skirmish" && data.mode.get() === "engage")
+      const closing = behavior.kind === "chase" || (behavior.kind === "skirmish" && data.mode.get()._tag === "engage")
       const speed = data.stats.get().speed * (closing && read?.opening === true ? tuning.reading.rushSpeed : 1)
       const position = data.position.get()
       const radius = data.body.get().radius
       const attacker = data.attacker.get()
-      const phase = data.phase.get()
+      const phase = data.phase.get()._tag
 
       // Stunned: it stands where it is (a push still slides it).
       if (data.stunned.get().remaining > 0) {
@@ -383,13 +384,13 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       }
 
       // Skirmish turns: an attack (its recovery) or a long engagement sends the enemy back; retreats end in circling.
-      let mode = data.mode.get()
+      let mode = data.mode.get()._tag
       if (behavior.kind === "skirmish") {
         const before = mode
         const turn = skirmishTurn(behavior, mode, phase, data.brain.get().modeTimer + dt)
         mode = turn.mode
-        if (before === "engage" && mode === "retreat") data.mode.transition("engage", "retreat")
-        else if (before === "retreat" && mode === "orbit") data.mode.transition("retreat", "orbit")
+        if (before === "engage" && mode === "retreat") data.mode.transition({ from: "engage", to: "retreat" })
+        else if (before === "retreat" && mode === "orbit") data.mode.transition({ from: "retreat", to: "orbit" })
         data.brain.update((brain) => ({ ...brain, modeTimer: turn.modeTimer }))
       }
 

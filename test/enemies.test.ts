@@ -38,7 +38,7 @@ const World = Game.Inspector("Test/Enemies", {
       health: player.data.health.get().current,
       invulnerable: player.data.invulnerable.get().remaining
     },
-    enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, position: data.position.get(), attacker: { ...data.attacker.get(), phase: data.phase.get() } })),
+    enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, position: data.position.get(), attacker: { ...data.attacker.get(), phase: data.phase.get()._tag } })),
     pending: queries.pending.each().map(({ data }) => data.pending.get()),
     waves: resources.waves.get(),
     stats: resources.stats.get()

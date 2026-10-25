@@ -124,10 +124,13 @@ keeps them, and releasing).
   math, config): the ECS. Deterministic (time comes from the world's `Time`,
   randomness from `Random.draw(resources.rng)`, and trigonometry, `exp`,
   `pow`, `hypot`, and `a ** b` from `Ops`, which returns the same bits on
-  every device), headless, and tested without a browser. Vectors, swept
-  collision, the spatial grid, the flow field, random numbers, and that math
-  come from `@typeonce/ritmo-math` (`Vec2`, `Box2`, `Collide2`, `SpatialGrid`,
-  `FlowField`, `Random`, `Ops`); content (`src/content/`) may import `Ops`.
+  every device), headless, and tested without a browser. `Random` and `Ops`
+  come from `@typeonce/ritmo`; vectors, swept collision, and the flow field
+  from `@typeonce/ritmo-math` (`Vec2`, `Box2`, `Collide2`, `FlowField`); the
+  spatial grid is the game's own (`src/physics/spatial-grid.ts`, copied from
+  the Ritmo skill's spatial-grid playbook). Content (`src/content/`) may
+  import `Ops`. The Ritmo skill is linked at `.agents/skills/ritmo` from the
+  installed package, so it follows every upgrade.
 - `src/presentation/`: rendering (Three.js), sounds, effects, and the in-arena
   HUD (plain DOM). The world is 3D (low-poly), seen by an orthographic
   camera whose view of the floor is exactly `src/math/iso.ts`'s projection

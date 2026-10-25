@@ -7,9 +7,9 @@
  * on reaching them. Hits go through the combat pipeline (`Damage`) like
  * every other blow, tested like shots (see `features/targets.ts`).
  */
-import { sweepCircleBoxes } from "@typeonce/ritmo-math/Collide2"
+import { sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
-import * as Ops from "@typeonce/ritmo-math/Ops"
+import * as Ops from "@typeonce/ritmo/Ops"
 import { Damage, Disc, ElementState, Game, Health, Impact, Position, PrevPosition, Renderable, Time, Tuning } from "../schema.ts"
 import type { DiscValue } from "../schema.ts"
 import { Walls, wallBoxes } from "./motion.ts"
@@ -84,7 +84,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
       case "out": {
         const travel = Math.min(disc.speed * dt, disc.range)
         const delta = scale(disc.direction, travel)
-        const wall = sweepCircleBoxes(origin, delta, disc.radius, boxes)
+        const wall = sweepCircle(origin, delta, disc.radius, { boxes })
         const until = wall?.time ?? 1
         const blocked = sweep(delta, until, disc.direction)
         if (bounce !== undefined) {

@@ -94,7 +94,7 @@ export const ShowTutorial = Game.System("Shooter/ShowTutorial", {
   const tuning = resources.tuning.get()
   const objective = tuning.challenges[resources.challenge.get()].objective
   const [player] = queries.player.each()
-  if (machines.flow.get() !== "Playing" || objective.kind !== "tutorial" || player === undefined) {
+  if (machines.flow.get()._tag !== "Playing" || objective.kind !== "tutorial" || player === undefined) {
     if (state.words !== null) state.words.mesh.visible = false
     state.step = -1
     return

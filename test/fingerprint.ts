@@ -12,7 +12,7 @@ import { expectOk } from "./helpers.ts"
 import type { HostClock } from "@typeonce/ritmo"
 import { Keyboard, Pointer } from "@typeonce/ritmo-browser"
 
-import { keyBindings } from "../src/config/input.ts"
+import { keyBindings, pointerBindings } from "../src/config/input.ts"
 import { KeepCharged } from "../src/dev/charged.ts"
 import type { PerfScene } from "../src/dev/perf-scene.ts"
 import { Damage, ElementState, Game, Health, Hit, Position, RunLog, RunResult } from "../src/schema.ts"
@@ -119,7 +119,7 @@ export const botProbe = (probe: ReturnType<typeof makeProbe>): BotProbe => ({ sy
 export const playPerfScene = (scene: PerfScene, onStep: (runtime: ReturnType<typeof createSimulation>["runtime"], step: number) => void = () => undefined, extra?: ProbeSystem, hostClock?: HostClock.HostClock) => {
   const sim = createSimulation({
     keyboard: Keyboard.scripted(keyBindings, scene.keys),
-    pointer: Pointer.scripted(scene.pointer),
+    pointer: Pointer.scripted(pointerBindings, scene.pointer),
     tuning: scene.tuning,
     team: scene.team,
     ...(hostClock === undefined ? {} : { hostClock })

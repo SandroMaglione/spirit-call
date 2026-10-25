@@ -4,7 +4,7 @@
  * their hazards.
  */
 import { describe, expect, it } from "vitest"
-import * as Random from "@typeonce/ritmo-math/Random"
+import * as Random from "@typeonce/ritmo/Random"
 
 import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { hazardBoxes } from "../src/features/arena.ts"

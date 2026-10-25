@@ -37,8 +37,11 @@ export const directions = ["up", "down", "left", "right"] as const
 export type Direction = (typeof directions)[number]
 export type KeysSnapshot = Keyboard.Snapshot<KeyBindings>
 export type KeyboardSource = Keyboard.Actions<KeyBindings>
-export type PointerSnapshot = Pointer.Snapshot
-export type PointerSource = Pointer.Pointer
+/** The pointer binds no actions: the game reads its position and raw buttons. */
+export const pointerBindings = {} as const
+export type PointerBindings = typeof pointerBindings
+export type PointerSnapshot = Pointer.Snapshot<PointerBindings>
+export type PointerSource = Pointer.Actions<PointerBindings>
 
 /**
  * On-screen controls for touch screens, laid out as Genshin's (its sizes
@@ -58,8 +61,18 @@ export const touchButtons = actionButtons
 export const teamSlots = [0, 1, 2] as const
 export type ActionButton = (typeof actionButtons)[number]
 export type TouchButton = (typeof touchButtons)[number]
-export type TouchSnapshot = Touch.Snapshot<TouchButton>
-export type TouchSource = Touch.Touch<TouchButton>
+/** The touch layout's one stick, by the vector it drives. */
+export const touchSticks = ["move"] as const
+export type TouchStick = (typeof touchSticks)[number]
+/** The names `Touch.idle` and `Touch.scripted` take. */
+export const touchNames = { buttons: touchButtons, sticks: touchSticks }
+export type TouchSnapshot = Touch.Snapshot<TouchButton, TouchStick>
+export type TouchSource = Touch.Actions<TouchButton, TouchStick>
+/** The touch layout: every control is always shown, so no zone is `null`. */
+export interface TouchLayout extends Touch.Layout<TouchButton, TouchStick> {
+  readonly sticks: { readonly move: Touch.StickZone }
+  readonly buttons: { readonly [Button in TouchButton]: Touch.ButtonZone }
+}
 
 /**
  * A tap on the party list (the HUD's row per team member, as Genshin's): on
@@ -141,16 +154,17 @@ export const stickRest = (size: Touch.Size, safe: SafeArea = noSafeArea): { read
   const dash = layout.buttons.dash
   const margin = controlsEdge(size, safe) - (dash.center.x + dash.radius * (drawnShare.dash ?? 1))
   const left = Math.max(0, safe.left + 8 * scale - rightMargin * scale)
-  return { x: left + margin + layout.stick.radius, y: layout.stick.region.top + layout.stick.region.height - layout.stick.radius * 2 }
+  const stick = layout.sticks.move
+  return { x: left + margin + stick.radius, y: stick.region.top + stick.region.height - stick.radius * 2 }
 }
 
 /** The touch buttons, as Genshin's. The bottom is left as it is, the buttons already well above it. */
-export const touchLayout = (size: Touch.Size, safe: SafeArea = noSafeArea): Touch.Layout<TouchButton> => {
+export const touchLayout = (size: Touch.Size, safe: SafeArea = noSafeArea): TouchLayout => {
   const px = (value: number) => value * controlScale(size)
   const { center: attack, radius } = attackButton(size, safe)
   return {
     // Below the top-left HUD, left half of the screen.
-    stick: { region: { left: 0, top: size.height * 0.25, width: size.width / 2, height: size.height * 0.75 }, radius: px(55), deadZone: 0.12 },
+    sticks: { move: { region: { left: 0, top: size.height * 0.25, width: size.width / 2, height: size.height * 0.75 }, radius: px(55), deadZone: 0.12 } },
     buttons: {
       attack: { center: attack, radius },
       dash: { center: { x: attack.x + px(dashOffset.x), y: attack.y + px(dashOffset.y) }, radius: px(dashOffset.radius * dashOffset.reach) },
