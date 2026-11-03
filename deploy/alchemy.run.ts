@@ -1,7 +1,7 @@
 // The game on Cloudflare: the Vite build as static assets, and for playtest
 // builds the server that keeps the runs they send, under `/api/`
 // (src/server/worker.ts; see docs/playtest.md).
-// - `prod` is the release, at spirit-call.typeonce.dev: a release build,
+// - `prod` is the release, at spirit-call.typeonce.games: a release build,
 //   sending nothing, served as static files alone (no Worker code, no
 //   database). The game keeps everything on the player's device.
 // - `playtest` is the testers' game: a playtest build whose runs go to the
@@ -29,7 +29,10 @@ import * as Layer from "effect/Layer"
 const rootDir = fileURLToPath(new URL("..", import.meta.url))
 
 // Where players find the release (prod); every other stage stays on workers.dev
-const productionDomain = "spirit-call.typeonce.dev"
+const productionDomain = "spirit-call.typeonce.games"
+
+// The old address (spirit-call.typeonce.dev) 301s here from a redirect
+// Worker in the typeonce-dev repository, so existing links keep working.
 
 // The stacks and their Cloudflare resources keep the game's working name
 // (top-down-team-shooter): renaming them would make new ones, and a new,

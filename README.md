@@ -16,7 +16,7 @@ chain of blows that sets the whole crowd off at once.
 
 <p align="center"><sub>Water, thunder, and rock taking turns on a crowd. <a href="docs/media/spirit-call.mp4">Watch it in full quality</a>.</sub></p>
 
-<p align="center"><a href="https://spirit-call.typeonce.dev"><b>▶ Play Spirit Call in your browser</b></a> · free, nothing to install, saves stay on your device</p>
+<p align="center"><a href="https://spirit-call.typeonce.games"><b>▶ Play Spirit Call in your browser</b></a> · free, nothing to install, saves stay on your device</p>
 
 Spirit Call is finished, free, and has nothing to buy: every character,
 fight, and reward is in the game from the first day, and nothing in it is
@@ -127,7 +127,7 @@ first spirits at a low level.
 
 ## Play
 
-**[Play Spirit Call at spirit-call.typeonce.dev](https://spirit-call.typeonce.dev)**,
+**[Play Spirit Call at spirit-call.typeonce.games](https://spirit-call.typeonce.games)**,
 on a phone (turn it sideways) or a computer. There is no login: your
 accounts and progress are kept by the browser on that device.
 

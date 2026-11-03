@@ -49,7 +49,7 @@ The build decides, in `vite.config.ts`:
 
 On Cloudflare (`deploy/alchemy.run.ts`), each stage is one or the other:
 
-- **`prod`, the release** (spirit-call.typeonce.dev): a release build,
+- **`prod`, the release** (spirit-call.typeonce.games): a release build,
   sending nothing, deployed as static files alone: no `/api/`, no database.
 - **`playtest`, the testers' game**: a playtest build, its runs kept in the
   playtest database.

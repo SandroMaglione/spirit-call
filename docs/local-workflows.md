@@ -54,7 +54,7 @@ and check it with `pnpm --dir deploy typecheck`. Use your local Alchemy
 Cloudflare profile or the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
 environment variables. Keep credentials outside the repository.
 
-The release is `prod`, at <https://spirit-call.typeonce.dev>: the game's
+The release is `prod`, at <https://spirit-call.typeonce.games>: the game's
 files alone, with no Worker code and no database (the game keeps
 everything on the player's device). Run `pnpm check` (on Linux, for the
 determinism fingerprints), then deploy it from main:
