@@ -163,24 +163,25 @@ export const TriggerPassives = Game.System("Shooter/TriggerPassives", {
     })
   }
   const players = queries.players.each()
+  const playerData = queries.players.data
   for (const action of events.action.all()) {
     let happened: (trigger: Trigger) => boolean
     if (action.kind === "attack") happened = (trigger) => trigger.kind === "move" && moveMatches(trigger.move, action)
     else if (action.kind === "dash") happened = (trigger) => trigger.kind === "dash"
     else continue
-    for (const { entity, data } of players) fire(Game.Entity.handle(entity.id, Position), data.passives.get(), happened, action.at)
+    for (const entity of players) fire(Game.Entity.handle(entity.id, Position), playerData.passives.get(entity), happened, action.at)
   }
   for (const dodge of events.perfect.all()) {
-    for (const { entity, data } of players) fire(Game.Entity.handle(entity.id, Position), data.passives.get(), (trigger) => trigger.kind === "perfectDodge", dodge.at)
+    for (const entity of players) fire(Game.Entity.handle(entity.id, Position), playerData.passives.get(entity), (trigger) => trigger.kind === "perfectDodge", dodge.at)
   }
   for (const broke of events.broke.all()) {
-    for (const { entity, data } of players) fire(Game.Entity.handle(entity.id, Position), data.passives.get(), (trigger) => trigger.kind === "break", broke.at)
+    for (const entity of players) fire(Game.Entity.handle(entity.id, Position), playerData.passives.get(entity), (trigger) => trigger.kind === "break", broke.at)
   }
   for (const hit of events.hit.all()) {
     if (!hit.killed || hit.source === null) continue
     const found = queries.holders.getHandle(hit.source.attacker)
     if (!found.ok) continue
-    fire(hit.source.attacker, found.value.data.passives.get(), (trigger) => trigger.kind === "kill" && killMatches(trigger.state, hit.state), hit.at)
+    fire(hit.source.attacker, queries.holders.data.passives.get(found.value), (trigger) => trigger.kind === "kill" && killMatches(trigger.state, hit.state), hit.at)
   }
   for (const effect of queued) events.triggered.emit(effect)
   if (waited) resources.cooldowns.set(cooldowns)
@@ -220,14 +221,15 @@ export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects"
   for (const { holder, effect, there } of queue) {
     const found = queries.wielders.getHandle(holder)
     if (!found.ok) continue
-    const { data } = found.value
-    const self = data.position.get()
+    const wielder = found.value
+    const { data } = queries.wielders
+    const self = data.position.get(wielder)
     switch (effect.kind) {
       case "heal": {
-        const health = data.health.get()
+        const health = data.health.get(wielder)
         const amount = Math.min(health.max - health.current, (health.max * effect.percent) / 100)
         if (amount <= 0) break
-        data.health.set({ current: health.current + amount, max: health.max })
+        data.health.set(wielder, { current: health.current + amount, max: health.max })
         events.heal.emit({ at: self, amount })
         break
       }
@@ -235,29 +237,31 @@ export const ApplyTriggeredEffects = Game.System("Shooter/ApplyTriggeredEffects"
         const dasher = queries.dashers.getHandle(holder)
         if (!dasher.ok) break
         // A whole charge back; all of them back stops the wait for the next.
-        const most = dashOf(tuning, dasher.value.data.member.get().character, traitsIn(dasher.value.data.passives)).charges
-        dasher.value.data.dash.update((dash) => {
+        const dashers = queries.dashers.data
+        const most = dashOf(tuning, dashers.member.get(dasher.value).character, traitsIn(dashers.passives.get(dasher.value))).charges
+        dashers.dash.update(dasher.value, (dash) => {
           const charges = Math.min(most, dash.charges + 1)
           return { ...dash, charges, cooldown: charges >= most ? 0 : dash.cooldown }
         })
         break
       }
       case "leave": {
-        commands.spawnIn(RunScope, makeGround(effect.ground, effect.at === "there" ? there : self, data.stats.get().atk, false))
+        commands.spawnIn(RunScope, makeGround(effect.ground, effect.at === "there" ? there : self, data.stats.get(wielder).atk, false))
         break
       }
       case "cast": {
         const from = effect.at === "there" ? there : self
-        const direction = data.aim.get()
+        const direction = data.aim.get(wielder)
         const aim = skillAim(effect.effect)
         const reach = aim.kind === "direction" ? aim.reach : aim.kind === "point" ? aim.range : 0
         const at = { x: from.x + direction.x * reach, y: from.y + direction.y * reach }
         // Her element, when the effect carries it (an aspect's elemental moment, a relic's top tier).
-        const element = effect.own && data.member.present ? tuning.characters[data.member.get().character].element : null
+        const member = data.member.get(wielder)
+        const element = effect.own && member !== undefined ? tuning.characters[member.character].element : null
         events.cast.emit({
           caster: holder,
-          faction: data.hurtbox.get().faction,
-          atk: data.stats.get().atk,
+          faction: data.hurtbox.get(wielder).faction,
+          atk: data.stats.get(wielder).atk,
           skill: null,
           effect: effect.own ? { ...effect.effect, element } : effect.effect,
           from,

@@ -6,11 +6,11 @@ const Wielder = Game.Inspector("Test/RuntimeWielder", {
   queries: { player: Game.Query({ selection: { health: Game.Query.read(Health), position: Game.Query.read(Position) }, with: [Player] }) },
   resources: { paused: Game.System.readResource(Paused) }
 }, ({ queries, resources }) => {
-  const match = queries.player.each()[0]!
-  return { holder: Game.Entity.handle(match.entity.id, Position), health: match.data.health.get(), paused: resources.paused.get().paused }
+  const player = queries.player.each()[0]!
+  return { holder: Game.Entity.handle(player.id, Position), health: queries.player.data.health.get(player), paused: resources.paused.get().paused }
 })
 const Wound = Game.System("Test/RuntimeWound", { queries: { player: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.health.update(({ max }) => ({ max, current: max / 2 }))
+  for (const entity of queries.player.each()) queries.player.data.health.update(entity, ({ max }) => ({ max, current: max / 2 }))
 })
 
 describe("bevy-ts runtime integration", () => {

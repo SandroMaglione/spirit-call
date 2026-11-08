@@ -15,16 +15,19 @@ const plain = defaultTuning.classes.hammer.plain
 const sturdy = { enemies: { dummy: { hp: 100_000, knockbackTaken: 0 } } } as const
 
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 const World = Game.Inspector("Test/Hammer", {
   queries: { enemies: Game.Query({ selection: { health: Game.Query.read(Health), state: Game.Query.read(ElementState), stunned: Game.Query.read(Stunned) }, with: [Enemy] }) }
-}, ({ queries }) => queries.enemies.each().map(({ data }) => ({
-  hurt: data.health.get().max - data.health.get().current,
-  state: data.state.get().current?.id ?? null,
-  stunned: data.stunned.get().remaining
-})))
+}, ({ queries }) => {
+  const { data } = queries.enemies
+  return queries.enemies.each().map((entity) => ({
+    hurt: data.health.get(entity).max - data.health.get(entity).current,
+    state: data.state.get(entity).current?.id ?? null,
+    stunned: data.stunned.get(entity).remaining
+  }))
+})
 
 /** A run with dummies at `dummies` (offsets from her), aiming right. */
 const arena = (tuning: Tuning, build: { readonly character: "swordsman" | "quarry" }, dummies: ReadonlyArray<Vec2>, options: Parameters<typeof start>[0] = {}) => {

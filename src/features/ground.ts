@@ -59,55 +59,57 @@ export const UpdateGround = Game.System("Shooter/UpdateGround", {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
   const pools = queries.pools.each()
+  const grounds = queries.pools.data
   const live: Array<(typeof pools)[number]> = []
   for (const pool of pools) {
-    const ground = pool.data.ground.get()
+    const ground = grounds.ground.get(pool)
     // An arena pool stays where it is, for good; one put out comes back in a while.
     if (ground.timer === null) {
-      if (ground.out > 0) pool.data.ground.set({ ...ground, out: Math.max(0, ground.out - dt) })
+      if (ground.out > 0) grounds.ground.set(pool, { ...ground, out: Math.max(0, ground.out - dt) })
       live.push(pool)
       continue
     }
     const remaining = ground.timer.remaining - dt
     if (remaining <= 0) {
-      commands.despawn(pool.entity)
+      commands.despawn(pool)
       continue
     }
-    pool.data.ground.set({ ...ground, timer: { ...ground.timer, remaining } })
+    grounds.ground.set(pool, { ...ground, timer: { ...ground.timer, remaining } })
     live.push(pool)
   }
 
   // The newer pool wins where two of different elements meet: the older goes out.
   const out = new Set<number>()
   for (const pool of live) {
-    const ground = pool.data.ground.get()
+    const ground = grounds.ground.get(pool)
     if (!active(ground)) continue
     const newer = live.some((other) => {
-      const there = other.data.ground.get()
-      if (other === pool || there.element === ground.element || !active(there) || out.has(other.entity.id)) return false
+      const there = grounds.ground.get(other)
+      if (other === pool || there.element === ground.element || !active(there) || out.has(other.id)) return false
       if (there.timer === null || age(there) >= age(ground)) return false
       return Ops.hypot(there.center.x - ground.center.x, there.center.y - ground.center.y) < there.radius + ground.radius
     })
     if (!newer) continue
-    out.add(pool.entity.id)
-    if (ground.timer === null) pool.data.ground.set({ ...ground, out: tuning.hazards.relightSeconds })
-    else commands.despawn(pool.entity)
+    out.add(pool.id)
+    if (ground.timer === null) grounds.ground.set(pool, { ...ground, out: tuning.hazards.relightSeconds })
+    else commands.despawn(pool)
     events.reaction.emit({ at: ground.center, kind: "out", state: elements[ground.element].state, faction: null })
   }
-  const standing = live.filter((pool) => active(pool.data.ground.get()) && !out.has(pool.entity.id))
+  const standing = live.filter((pool) => active(grounds.ground.get(pool)) && !out.has(pool.id))
 
-  for (const { data } of queries.bodies.each()) {
-    if (data.invulnerable.get().remaining > 0) continue
-    const at = data.position.get()
-    const radius = data.hurtbox.get().radius
+  const { data } = queries.bodies
+  for (const body of queries.bodies.each()) {
+    if (data.invulnerable.get(body).remaining > 0) continue
+    const at = data.position.get(body)
+    const radius = data.hurtbox.get(body).radius
     for (const pool of standing) {
-      const ground = pool.data.ground.get()
+      const ground = grounds.ground.get(pool)
       if (!inPool(ground, at, radius)) continue
-      const before = data.state.get().current
+      const before = data.state.get(body).current
       // A pool never bursts a state: it holds its own on bodies in none, or in it already.
       if (before !== null && before.id !== elements[ground.element].state) continue
-      const afflicted = afflict(tuning, before, { id: ground.element, atk: ground.atk }, ground.charges, data.affinities.get()[ground.element])
-      data.state.set({ current: afflicted.state })
+      const afflicted = afflict(tuning, before, { id: ground.element, atk: ground.atk }, ground.charges, data.affinities.get(body)[ground.element])
+      data.state.set(body, { current: afflicted.state })
       if (afflicted.state !== null && before === null) events.reaction.emit({ at, kind: "apply", state: afflicted.state.id, faction: "player" })
     }
   }

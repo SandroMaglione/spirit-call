@@ -110,14 +110,14 @@ export const ResolveControls = Game.System("Shooter/ResolveControls", {
   const previous = resources.controls.get()
   const device = touchUsed(touch) ? "touch" : desktopUsed(keys, pointer) ? "desktop" : previous.device
   const [field] = queries.player.each()
-  const fieldSlot = field?.data.member.get().slot ?? null
+  const fieldSlot = (field === undefined ? undefined : queries.player.data.member.get(field).slot) ?? null
   const party = (controls: ControlsValue) => withParty(controls, previous, resources.party.get(), fieldSlot)
   if (device === "touch") {
     const player = field
-    const enemies = queries.enemies.each().map(({ entity, data }) => ({ id: entity.id, position: data.position.get(), radius: data.hurtbox.get().radius }))
+    const enemies = queries.enemies.each().map((entity) => ({ id: entity.id, position: queries.enemies.data.position.get(entity), radius: queries.enemies.data.hurtbox.get(entity).radius }))
     const state = player === undefined
       ? undefined
-      : { position: player.data.position.get(), aim: player.data.aim.get(), skills: player.data.skills.get(), attack: attackOf(resources.tuning.get(), player.data.basicAttack.get().attack) }
+      : { position: queries.player.data.position.get(player), aim: queries.player.data.aim.get(player), skills: queries.player.data.skills.get(player), attack: attackOf(resources.tuning.get(), queries.player.data.basicAttack.get(player).attack) }
     resources.controls.set(party(resolveTouch(touch, previous, state, enemies, resources.tuning.get(), resources.options.get().aimAssist)))
     return
   }

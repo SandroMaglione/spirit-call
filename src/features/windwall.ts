@@ -75,16 +75,18 @@ export const KeepMantle = Game.System("Shooter/KeepMantle", {
     return
   }
   const [field] = queries.field.each()
-  const at = field?.data.position.get() ?? mantle.at
+  const at = field === undefined ? mantle.at : queries.field.data.position.get(field)
   let nextTick = mantle.nextTick - dt
   if (nextTick <= 1e-9) {
     nextTick += mantle.effect.tick
+    const bodies = queries.bodies.data
     if (mantle.blow !== null && mantle.effect.power > 0) for (const body of queries.bodies.each()) {
-      if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
-      const where = body.data.position.get()
+      const invulnerable = bodies.invulnerable.get(body)
+      if (invulnerable !== undefined && invulnerable.remaining > 0) continue
+      const where = bodies.position.get(body)
       const away = subtract(where, at)
-      if (Ops.hypot(away.x, away.y) > mantle.effect.radius + body.data.hurtbox.get().radius) continue
-      events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: "player", direction: normalizeOr(away, { x: 1, y: 0 }), blow: mantle.blow })
+      if (Ops.hypot(away.x, away.y) > mantle.effect.radius + bodies.hurtbox.get(body).radius) continue
+      events.damage.emit({ target: Game.Entity.handle(body.id, Health), faction: "player", direction: normalizeOr(away, { x: 1, y: 0 }), blow: mantle.blow })
     }
   }
   resources.mantle.set({ ...mantle, remaining, at, nextTick })
@@ -102,14 +104,15 @@ export const CastLifts = Game.System("Shooter/CastLifts", {
     const effect = cast.effect
     if (effect.kind !== "lift") continue
     const blow: Blow = castBlow(cast, effect)
-    for (const { entity, data } of queries.enemies.each()) {
-      const at = data.position.get()
+    const { data } = queries.enemies
+    for (const entity of queries.enemies.each()) {
+      const at = data.position.get(entity)
       // Never a champion: skills do not take the fight's own out of it.
-      if (data.enemy.get().champion || Ops.hypot(at.x - cast.from.x, at.y - cast.from.y) > effect.radius) continue
-      data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
-      data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
+      if (data.enemy.get(entity).champion || Ops.hypot(at.x - cast.from.x, at.y - cast.from.y) > effect.radius) continue
+      data.stunned.update(entity, ({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
+      data.disarmed.update(entity, ({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
       // Out of the fight while up: the team cannot touch it either.
-      data.invulnerable.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
+      data.invulnerable.update(entity, ({ remaining }) => ({ remaining: Math.max(remaining, effect.seconds) }))
       commands.insert(entity, [Lifted, { remaining: effect.seconds, seconds: effect.seconds, rise: effect.rise, blow }])
     }
   }
@@ -123,16 +126,17 @@ export const UpdateLifted = Game.System("Shooter/UpdateLifted", {
   commands: Game.System.commands(Game.System.removes(Lifted))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.lifted.each()) {
-    const lifted = data.lifted.get()
+  const { data } = queries.lifted
+  for (const entity of queries.lifted.each()) {
+    const lifted = data.lifted.get(entity)
     const remaining = lifted.remaining - dt
     if (remaining > 0) {
-      data.lifted.set({ ...lifted, remaining })
+      data.lifted.set(entity, { ...lifted, remaining })
       continue
     }
     commands.remove(entity, Lifted)
     // Back in the fight as it lands: its fall lands on it.
-    data.invulnerable.set({ remaining: 0 })
+    data.invulnerable.set(entity, { remaining: 0 })
     events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "player", direction: { x: 0, y: 1 }, blow: lifted.blow })
   }
 })

@@ -23,22 +23,26 @@ const World = Game.Inspector("Test/NewEnemies", {
     }),
     pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } })
   }
-}, ({ queries }) => ({
-  player: queries.player.each()[0]?.data.health.get().current,
-  playerAt: queries.player.each()[0]?.data.position.get(),
-  enemies: queries.enemies.each().map(({ data }) => ({
-    kind: data.enemy.get().kind,
-    position: data.position.get(),
-    health: data.health.get().current,
-    attacker: { ...data.attacker.get(), phase: data.phase.get()._tag },
-    facing: data.shield.present ? data.shield.get().facing : undefined
-  })),
-  pending: queries.pending.each().map(({ data }) => data.pending.get())
-}))
+}, ({ queries }) => {
+  const [player] = queries.player.each()
+  const { data } = queries.enemies
+  return {
+    player: player === undefined ? undefined : queries.player.data.health.get(player).current,
+    playerAt: player === undefined ? undefined : queries.player.data.position.get(player),
+    enemies: queries.enemies.each().map((entity) => ({
+      kind: data.enemy.get(entity).kind,
+      position: data.position.get(entity),
+      health: data.health.get(entity).current,
+      attacker: { ...data.attacker.get(entity), phase: data.phase.get(entity)._tag },
+      facing: data.shield.get(entity)?.facing
+    })),
+    pending: queries.pending.each().map((entity) => queries.pending.data.pending.get(entity))
+  }
+})
 
 const Pools = Game.Inspector("Test/Pools", {
   queries: { pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }) }
-}, ({ queries }) => queries.pools.each().map(({ data }) => data.ground.get().element))
+}, ({ queries }) => queries.pools.each().map((entity) => queries.pools.data.ground.get(entity).element))
 
 const cursorAt = (offset: Vec2) => {
   const screen = toScreen(projection, offset)
@@ -189,7 +193,7 @@ describe("a shielded enemy", () => {
 describe("dev spawn commands", () => {
   const Pending = Game.Inspector("Test/Pending", {
     queries: { pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }) }
-  }, ({ queries }) => queries.pending.each().map(({ data }) => data.pending.get()))
+  }, ({ queries }) => queries.pending.each().map((entity) => queries.pending.data.pending.get(entity)))
 
   it("spawns a chosen type with its whole group near the player, then clears everything", () => {
     const queue = emptyDevCommands()

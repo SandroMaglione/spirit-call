@@ -43,27 +43,27 @@ const Field = Game.Inspector("Test/Champions", {
   resources: { waves: Game.System.readResource(Waves) }
 }, ({ queries, resources }) => ({
   waves: resources.waves.get(),
-  enemies: queries.enemies.each().map(({ entity, data }) => ({
+  enemies: queries.enemies.each().map((entity) => ({
     id: entity.id,
-    kind: data.enemy.get().kind,
-    champion: data.enemy.get().champion,
-    health: data.health.get(),
-    stats: data.stats.get(),
-    radius: data.body.get().radius,
-    affinities: data.affinities.get(),
-    element: data.elite.present ? data.elite.get().element : null,
-    cooldown: data.attacker.get().cooldown
+    kind: queries.enemies.data.enemy.get(entity).kind,
+    champion: queries.enemies.data.enemy.get(entity).champion,
+    health: queries.enemies.data.health.get(entity),
+    stats: queries.enemies.data.stats.get(entity),
+    radius: queries.enemies.data.body.get(entity).radius,
+    affinities: queries.enemies.data.affinities.get(entity),
+    element: queries.enemies.data.elite.get(entity)?.element ?? null,
+    cooldown: queries.enemies.data.attacker.get(entity).cooldown
   }))
 }))
 
 /** Removes every enemy but champions as soon as it appears; with `champions`, champions too. */
 const wipe = (champions: boolean) => Game.System("Test/Wipe", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
-  for (const { entity, data } of queries.enemies.each()) if (champions || !data.enemy.get().champion) commands.despawn(entity)
+  for (const entity of queries.enemies.each()) if (champions || !queries.enemies.data.enemy.get(entity).champion) commands.despawn(entity)
 })
 
 /** Keeps the player untouchable, so only the objective ends the run. */
 const Shield = Game.System("Test/Shield", { queries: { player: Game.Query({ selection: { invulnerable: Game.Query.write(Invulnerable) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.invulnerable.set({ remaining: 10 })
+  for (const entity of queries.player.each()) queries.player.data.invulnerable.set(entity, { remaining: 10 })
 })
 
 /** The swarm challenge (replaced by the test's) with waves on, stepped with the field wiped as it comes. */

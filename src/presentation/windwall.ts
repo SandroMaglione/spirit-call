@@ -60,7 +60,7 @@ export const ShowWindwall = Game.System("Shooter/ShowWindwall", {
   const g = host.overlay
   const now = performance.now() / 1000
   const [player] = queries.player.each()
-  const her = player === undefined ? null : lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
+  const her = player === undefined ? null : lerp(queries.player.data.previous.get(player), queries.player.data.position.get(player), services.clock.alpha)
 
   // The Wind Mantle: a current running round the one on the field.
   const mantle = resources.mantle.get()
@@ -132,9 +132,10 @@ export const ShowWindwall = Game.System("Shooter/ShowWindwall", {
   }
 
   const shown = new Set<number>()
-  for (const { entity, data } of queries.lifted.each()) {
-    const lift = data.lifted.get()
-    const where = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+  const { data } = queries.lifted
+  for (const entity of queries.lifted.each()) {
+    const lift = data.lifted.get(entity)
+    const where = lerp(data.previous.get(entity), data.position.get(entity), services.clock.alpha)
     shown.add(entity.id)
     liftedSeen.set(entity.id, { entity: entity.id, at: where })
     const height = liftHeight(lift.seconds - lift.remaining, lift.seconds, lift.rise, now)

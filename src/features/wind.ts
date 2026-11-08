@@ -33,20 +33,21 @@ export const SlamSwept = Game.System("Shooter/SlamSwept", {
   const dt = resources.time.get().dt
   // The share of a swept body's push covered over the step (see `IntegrateBodies`).
   const share = pushShare(rules.decay, dt)
-  for (const { data } of queries.bodies.each()) {
-    const stunned = data.stunned.get().remaining
-    if (stunned > 0) data.stunned.set({ remaining: Math.max(0, stunned - dt) })
-    if (data.state.get().current?.id !== "swept") continue
-    const push = data.knockback.get()
+  const { data } = queries.bodies
+  for (const entity of queries.bodies.each()) {
+    const stunned = data.stunned.get(entity).remaining
+    if (stunned > 0) data.stunned.set(entity, { remaining: Math.max(0, stunned - dt) })
+    if (data.state.get(entity).current?.id !== "swept") continue
+    const push = data.knockback.get(entity)
     const speed = Ops.hypot(push.x, push.y)
-    const position = data.position.get()
-    const previous = data.previous.get()
+    const position = data.position.get(entity)
+    const previous = data.previous.get(entity)
     const moved = Ops.hypot(position.x - previous.x, position.y - previous.y)
     if (speed <= rules.slamSpeed || moved >= speed * share * dt * 0.5) continue
     // Slammed into a wall: the push stops dead, and an enemy is stunned.
-    data.knockback.set({ x: 0, y: 0 })
-    if (data.player.present) continue
-    data.stunned.set({ remaining: rules.stunSeconds })
+    data.knockback.set(entity, { x: 0, y: 0 })
+    if (data.player.has(entity)) continue
+    data.stunned.set(entity, { remaining: rules.stunSeconds })
     events.reaction.emit({ at: position, kind: "slam", state: "swept", faction: "player" })
   }
 })

@@ -21,12 +21,13 @@ const World = Game.Inspector("Test/WindKit", {
     vortices: Game.Query({ selection: { vortex: Game.Query.read(Vortex) } })
   }
 }, ({ queries }) => {
-  const { data } = queries.player.each()[0]!
-  return { at: data.position.get(), airborne: data.airborne.present, vortices: queries.vortices.each().map((match) => match.data.vortex.get().center) }
+  const player = queries.player.each()[0]!
+  const { data } = queries.player
+  return { at: data.position.get(player), airborne: data.airborne.has(player), vortices: queries.vortices.each().map((vortex) => queries.vortices.data.vortex.get(vortex).center) }
 })
 
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 /** A wall standing at `box`, low (a hop goes over it) or tall. */

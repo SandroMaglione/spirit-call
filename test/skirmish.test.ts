@@ -14,10 +14,11 @@ const World = Game.Inspector("Test/Skirmish", {
     player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] })
   }
 }, ({ queries }) => {
-  const player = queries.player.each()[0]!.data.position.get()
-  return queries.enemies.each().map(({ data }) => {
-    const position = data.position.get()
-    return { mode: data.mode.get()._tag, distance: Math.hypot(position.x - player.x, position.y - player.y) }
+  const player = queries.player.data.position.get(queries.player.each()[0]!)
+  const { data } = queries.enemies
+  return queries.enemies.each().map((entity) => {
+    const position = data.position.get(entity)
+    return { mode: data.mode.get(entity)._tag, distance: Math.hypot(position.x - player.x, position.y - player.y) }
   })
 })
 

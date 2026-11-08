@@ -19,7 +19,7 @@ export const FollowCamera = Game.System("Shooter/FollowCamera", {
   const player = queries.player.singleOptional()
   if (!player.ok || player.value === undefined) return
   const tuning = resources.tuning.get().camera
-  const position = player.value.data.position.get()
+  const position = queries.player.data.position.get(player.value)
   const controls = resources.controls.get()
   // Mouse: lead a little toward the cursor. Touch: stay centered on the player.
   const lead = controls.device === "touch" ? zero : clampLength(scale(subtract(controls.aimPoint, position), tuning.aimLead), tuning.maxAimLead)
@@ -42,6 +42,6 @@ export const SnapCamera = Game.System("Shooter/SnapCamera", {
 }, ({ queries, resources }) => {
   const player = queries.player.singleOptional()
   if (!player.ok || player.value === undefined) return
-  const { x, y } = player.value.data.position.get()
+  const { x, y } = queries.player.data.position.get(player.value)
   resources.camera.set({ x, y, prevX: x, prevY: y })
 })

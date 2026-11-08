@@ -46,20 +46,21 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
   resources.chain.set(chain)
   const dodges = events.dodged.all()
   if (dodges.length === 0) return
-  for (const { entity, data } of queries.player.each()) {
-    const dash = data.dash.get()
+  const { data } = queries.player
+  for (const entity of queries.player.each()) {
+    const dash = data.dash.get(entity)
     if (dash.perfect) continue
     const dodged = dodges.find((dodge) => {
       if (dodge.target !== Game.Entity.handle(entity.id, Health)) return false
       const attacker = dodge.attacker === null ? undefined : queries.dodgeAttackers.getHandle(dodge.attacker)
-      return dash.since !== null && dash.since <= dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
+      return dash.since !== null && dash.since <= dodgeWindowOf(tuning, attacker?.ok === true ? queries.dodgeAttackers.data.enemy.get(attacker.value) : undefined)
     })
     if (dodged === undefined) continue
     // Dashes back (whole charges; all of them back stops the wait for the next).
-    const traits = traitsIn(data.passives)
-    const most = dashOf(tuning, data.member.get().character, traits).charges
+    const traits = traitsIn(data.passives.get(entity))
+    const most = dashOf(tuning, data.member.get(entity).character, traits).charges
     const charges = Math.min(most, dash.charges + rules.dashRefund)
-    data.dash.set({ ...dash, perfect: true, charges, cooldown: charges >= most ? 0 : dash.cooldown })
+    data.dash.set(entity, { ...dash, perfect: true, charges, cooldown: charges >= most ? 0 : dash.cooldown })
     // The chain's next step (or a new chain): the slow and the energy grow with it.
     const steps = rules.chain.slow.length
     const count = Math.min(Math.max(1, steps), (chain.remaining > 0 ? chain.count : 0) + 1)
@@ -67,15 +68,16 @@ export const PerfectDodge = Game.System("Shooter/PerfectDodge", {
     const slow = rules.slowSeconds * (rules.chain.slow[count - 1] ?? 1)
     const energy = rules.energy * (rules.chain.energy[count - 1] ?? 1) * traits.energy
     if (slow > 0) resources.slowMotion.set({ remaining: slow, scale: rules.slowScale, dodge: true })
-    if (energy > 0) data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + energy) }))
-    if (rules.reload) data.basicAttack.update((attack) => ({ ...attack, spent: 0, reloading: 0 }))
-    data.invulnerable.update(({ remaining }) => ({ remaining: remaining + rules.invulnerability }))
+    if (energy > 0) data.energy.update(entity, ({ current }) => ({ current: Math.min(tuning.energy.max, current + energy) }))
+    if (rules.reload) data.basicAttack.update(entity, (attack) => ({ ...attack, spent: 0, reloading: 0 }))
+    data.invulnerable.update(entity, ({ remaining }) => ({ remaining: remaining + rules.invulnerability }))
     // The attacker's break bar fills (it breaks right after, see `BuildPoise`, if that fills it).
     const attacker = dodged.attacker === null ? undefined : queries.attackers.getHandle(dodged.attacker)
-    if (attacker?.ok === true && attacker.value.data.poise.get().broken <= 0) {
-      const bar = poiseOf(tuning, attacker.value.data.enemy.get().kind, attacker.value.data.health.get().max, attacker.value.data.enemy.get().champion)
-      attacker.value.data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * rules.breakFill), quiet: 0 }))
+    const foes = queries.attackers.data
+    if (attacker?.ok === true && foes.poise.get(attacker.value).broken <= 0) {
+      const bar = poiseOf(tuning, foes.enemy.get(attacker.value).kind, foes.health.get(attacker.value).max, foes.enemy.get(attacker.value).champion)
+      foes.poise.update(attacker.value, (poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * rules.breakFill), quiet: 0 }))
     }
-    events.perfect.emit({ at: data.position.get(), chain: count })
+    events.perfect.emit({ at: data.position.get(entity), chain: count })
   }
 })

@@ -40,12 +40,13 @@ export const PlayerState = Game.Inspector("Test/PlayerState", {
 }, ({ queries }) => {
   const [player] = queries.player.each()
   if (player === undefined) throw new Error("no player")
+  const { data } = queries.player
   return {
-    position: player.data.position.get(),
-    velocity: player.data.velocity.get(),
-    aim: player.data.aim.get(),
-    dash: player.data.dash.get(),
-    invulnerable: player.data.invulnerable.get().remaining
+    position: data.position.get(player),
+    velocity: data.velocity.get(player),
+    aim: data.aim.get(player),
+    dash: data.dash.get(player),
+    invulnerable: data.invulnerable.get(player).remaining
   }
 })
 
@@ -265,7 +266,7 @@ export const ClearEnemies = Game.System("Test/ClearEnemies", {
   queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
   commands: Game.System.commands(Game.System.despawns(Enemy))
 }, ({ queries, commands }) => {
-  for (const { entity } of queries.enemies.each()) commands.despawn(entity)
+  for (const entity of queries.enemies.each()) commands.despawn(entity)
 })
 
 /** The center of the default arena, where the player spawns. */

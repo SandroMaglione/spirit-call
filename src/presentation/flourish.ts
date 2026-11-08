@@ -118,7 +118,7 @@ export const ShowUltimateMoments = Game.System("Shooter/ShowUltimateMoments", {
     // Her element's light drawn in toward her from all around.
     if (player !== undefined && moment.character !== null) {
       const color = view.elements[tuning.characters[moment.character].element]
-      const body = screenAt(player.data.position.get(), bodyLift())
+      const body = screenAt(queries.player.data.position.get(player), bodyLift())
       const count = Math.floor(spec.gather * seconds + Math.random())
       for (let index = 0; index < count; index++) {
         const angle = Math.random() * Math.PI * 2
@@ -169,10 +169,11 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
   const fx = host.fx
   const seconds = services.clock.frameSeconds
   const [player] = queries.player.each()
+  const { data } = queries.player
   // Swordsman's wind wraps her in the 3D scene (ShowSwordsmanWind).
-  if (player !== undefined && player.data.member.get().character !== "swordsman" && player.data.airborne.present) {
-    const airborne = player.data.airborne.get()
-    const at = player.data.position.get()
+  const airborne = player === undefined ? undefined : data.airborne.get(player)
+  if (player !== undefined && data.member.get(player).character !== "swordsman" && airborne !== undefined) {
+    const at = data.position.get(player)
     const lift = airborneLift(airborne)
     if (airborne.kind === "plunge" && diving(airborne)) {
       // Diving: her element (wind for the Gust, water for the Tidefall) streaming off her, back along where she came from.
@@ -215,7 +216,7 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
         if (soar.phase === "rise" && Math.random() < seconds * 12) fx.ring(screenAt(at), (40 + 60 * soar.rising) * projection.zoom, wind, 0.25)
       } else {
         // Gliding down: wind streaming off her, back along where she glides.
-        const velocity = player.data.velocity.get()
+        const velocity = data.velocity.get(player)
         const back = normalizeOr(toScreen(projection, { x: -velocity.x, y: -velocity.y }), { x: 0, y: -1 })
         const count = Math.floor(200 * seconds + Math.random())
         for (let index = 0; index < count; index++) {
@@ -246,8 +247,8 @@ export const ShowAirborne = Game.System("Shooter/ShowAirborne", {
     host.feedback.punch = Math.max(host.feedback.punch, 0.8)
   }
   // A volley's shells trail smoke on their way up and over.
-  for (const { data } of queries.lobbed.each()) {
-    const lobbed = data.lobbed.get()
+  for (const entity of queries.lobbed.each()) {
+    const lobbed = queries.lobbed.data.lobbed.get(entity)
     if (lobbed.faction !== "player" || lobbed.elapsed < 0 || lobbed.elapsed >= lobbed.effect.flightTime || Math.random() > seconds * 40) continue
     const flight = lobbed.elapsed / lobbed.effect.flightTime
     const ground = { x: lobbed.from.x + (lobbed.to.x - lobbed.from.x) * flight, y: lobbed.from.y + (lobbed.to.y - lobbed.from.y) * flight }
@@ -281,8 +282,9 @@ export const ShowChampions = Game.System("Shooter/ShowChampions", {
   }
   // A shockwave on its way out: dust thrown up along its ring.
   const seconds = services.clock.frameSeconds
-  for (const { data } of queries.hitboxes.each()) {
-    const hitbox = data.hitbox.get()
+  const { data } = queries.hitboxes
+  for (const entity of queries.hitboxes.each()) {
+    const hitbox = data.hitbox.get(entity)
     if (hitbox.grows === undefined || hitbox.area.kind !== "ring" || hitbox.area.radius <= 0) continue
     const area = hitbox.area
     const count = Math.floor(area.radius * spec.dust * seconds + Math.random())

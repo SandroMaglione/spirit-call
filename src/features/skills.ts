@@ -66,7 +66,7 @@ import {
 import type { Blow, CastValue, SkillsValue } from "../schema.ts"
 import { damageDealt } from "./build.ts"
 import { makeGround } from "./ground.ts"
-import { hopLanding, knockbackTaken, tallWallBoxes, Walls, wallBoxes } from "./motion.ts"
+import { hopLanding, knockbackTaken, lowWallBoxes, tallWallBoxes, Walls, wallBoxes } from "./motion.ts"
 import { paceOf } from "./time.ts"
 
 export const initialSkills = (build: { readonly skills: { readonly [Slot in SkillSlot]: SkillId } }): SkillsValue =>
@@ -164,10 +164,11 @@ export const ReadySkillsInPractice = Game.System("Shooter/ReadySkillsInPractice"
   const kind = tuning.challenges[resources.challenge.get()].objective.kind
   if (kind !== "training" && kind !== "practice") return
   const max = tuning.energy.max
-  for (const { data } of queries.team.each()) {
-    if (data.energy.get().current < max) data.energy.set({ current: max })
-    const skills = data.skills.get()
-    if (skills.special.cooldown > 0 || skills.ultimate.cooldown > 0) data.skills.set(bySlot((slot) => ({ ...skills[slot], cooldown: 0 })))
+  const { data } = queries.team
+  for (const entity of queries.team.each()) {
+    if (data.energy.get(entity).current < max) data.energy.set(entity, { current: max })
+    const skills = data.skills.get(entity)
+    if (skills.special.cooldown > 0 || skills.ultimate.cooldown > 0) data.skills.set(entity, bySlot((slot) => ({ ...skills[slot], cooldown: 0 })))
   }
 })
 
@@ -209,25 +210,26 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
   const held = resources.arrival.get().remaining > 0
-  for (const { entity, data } of queries.player.each()) {
-    const from = data.position.get()
-    const slots = data.skills.get()
-    const grounded = !data.airborne.present && !held
-    let energy = data.energy.get().current
-    data.skills.set(bySlot((slot) => {
+  const { data } = queries.player
+  for (const entity of queries.player.each()) {
+    const from = data.position.get(entity)
+    const slots = data.skills.get(entity)
+    const grounded = !data.airborne.has(entity) && !held
+    let energy = data.energy.get(entity).current
+    data.skills.set(entity, bySlot((slot) => {
       const { skill } = slots[slot]
       const spec: SkillSpec = tuning.skills[skill]
       const cooldown = Math.max(0, slots[slot].cooldown - dt)
       const input = controls.skills[slot]
       if (!input.pressed || !grounded || cooldown > 0 || energy < spec.energy) return { skill, cooldown }
       energy -= spec.energy
-      if (spec.invulnerability > 0) data.invulnerable.update((current) => ({ remaining: Math.max(current.remaining, spec.invulnerability) }))
+      if (spec.invulnerability > 0) data.invulnerable.update(entity, (current) => ({ remaining: Math.max(current.remaining, spec.invulnerability) }))
       const facing = skillAim(spec.effect).kind === "facing"
-      const direction = facing ? data.facing.get().direction : normalizeOr(subtract(input.at, from), data.aim.get())
+      const direction = facing ? data.facing.get(entity).direction : normalizeOr(subtract(input.at, from), data.aim.get(entity))
       const cast: CastValue = {
         caster: Game.Entity.handle(entity.id, Position),
         faction: "player",
-        atk: data.stats.get().atk,
+        atk: data.stats.get(entity).atk,
         skill,
         effect: spec.effect,
         from,
@@ -239,14 +241,14 @@ export const UseSkills = Game.System("Shooter/UseSkills", {
       const moment = tuning.ultimate.moment
       if (slot === "ultimate" && moment > 0) {
         // Its moment: the world stands still (a hit-stop) while she calls it up; it goes off after (`ReleaseUltimates`).
-        const character = data.member.get().character
+        const character = data.member.get(entity).character
         resources.moment.set({ remaining: moment, seconds: moment, cast: { ...cast, called: true }, character })
         resources.hitStop.update(({ remaining }) => ({ remaining: Math.max(remaining, moment) }))
         events.called.emit({ at: from, character, skill })
       } else events.cast.emit(cast)
       return { skill, cooldown: spec.cooldown }
     }))
-    data.energy.set({ current: energy })
+    data.energy.set(entity, { current: energy })
   }
 })
 
@@ -290,18 +292,19 @@ export const LandAirborne = Game.System("Shooter/LandAirborne", {
   commands: Game.System.commands(Game.System.removes(Airborne))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.airborne.each()) {
-    const airborne = data.airborne.get()
+  const { data } = queries.airborne
+  for (const entity of queries.airborne.each()) {
+    const airborne = data.airborne.get(entity)
     const remaining = airborne.remaining - dt
-    if (remaining > 1e-9 && data.player.present) {
-      data.airborne.set({ ...airborne, remaining })
+    if (remaining > 1e-9 && data.player.has(entity)) {
+      data.airborne.set(entity, { ...airborne, remaining })
       continue
     }
     // Landed: no more flying this step (see `ControlPlayer`).
-    data.airborne.set({ ...airborne, remaining: 0 })
+    data.airborne.set(entity, { ...airborne, remaining: 0 })
     commands.remove(entity, Airborne)
-    if (!data.player.present || !data.position.present) continue
-    const at = data.position.get()
+    const at = data.position.get(entity)
+    if (!data.player.has(entity) || at === undefined) continue
     for (const cast of airborne.landing) events.cast.emit({ ...cast, from: at, at: { x: at.x + cast.direction.x, y: at.y + cast.direction.y }, landing: true })
   }
 })
@@ -338,7 +341,7 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
     const effect = cast.effect
     if (effect.kind !== "cut") continue
     const { from, direction } = cast
-    const blocked = sweepCircle(from, scale(direction, effect.length), effect.width / 4, { boxes: wallBoxes(queries.walls.each()) })
+    const blocked = sweepCircle(from, scale(direction, effect.length), effect.width / 4, { boxes: wallBoxes(queries.walls) })
     const length = effect.length * (blocked?.time ?? 1)
     // What it leaves along its way: pools spaced down the lane, from a little ahead of the caster.
     if (effect.leaves !== null) {
@@ -356,15 +359,15 @@ export const CastCuts = Game.System("Shooter/CastCuts", {
       pushAlong: direction
     }]))
     const caster = queries.turning.getHandle(cast.caster)
-    if (caster.ok) caster.value.data.aim.set(direction)
+    if (caster.ok) queries.turning.data.aim.set(caster.value, direction)
     const facer = queries.facers.getHandle(cast.caster)
-    if (facer.ok) facer.value.data.facing.set({ direction, hold: effect.active + 0.2 })
+    if (facer.ok) queries.facers.data.facing.set(facer.value, { direction, hold: effect.active + 0.2 })
     // A dart: she is carried along it (a push, as a lunge is), as far as the cut reaches before a wall.
     const carried = Math.min(effect.carries, Math.max(0, length - effect.width / 4))
     const pushed = carried > 0 ? queries.leapers.getHandle(cast.caster) : undefined
     if (pushed?.ok === true) {
       const push = scale(direction, carried * resources.tuning.get().knockback.decay)
-      pushed.value.data.knockback.update((knockback) => ({ x: knockback.x + push.x, y: knockback.y + push.y }))
+      queries.leapers.data.knockback.update(pushed.value, (knockback) => ({ x: knockback.x + push.x, y: knockback.y + push.y }))
     }
   }
 })
@@ -387,9 +390,9 @@ export const CastBlasts = Game.System("Shooter/CastBlasts", {
       hit: []
     }]))
     const caster = queries.turning.getHandle(cast.caster)
-    if (caster.ok) caster.value.data.aim.set(direction)
+    if (caster.ok) queries.turning.data.aim.set(caster.value, direction)
     const facer = queries.facers.getHandle(cast.caster)
-    if (facer.ok) facer.value.data.facing.set({ direction, hold: effect.active + 0.2 })
+    if (facer.ok) queries.facers.data.facing.set(facer.value, { direction, hold: effect.active + 0.2 })
   }
 })
 
@@ -404,7 +407,6 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
   events: { cast: Game.System.readEvent(Cast) },
   commands: Game.System.commands(Game.System.inserts(Airborne))
 }, ({ queries, events, commands }) => {
-  const walls = queries.walls.each()
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "plunge") continue
@@ -415,13 +417,13 @@ export const CastPlunges = Game.System("Shooter/CastPlunges", {
     const caster = queries.facers.getHandle(cast.caster)
     if (!caster.ok) continue
     const seconds = rise + dive
-    caster.value.data.facing.set({ direction: cast.direction, hold: seconds + active + 0.2 })
+    queries.facers.data.facing.set(caster.value, { direction: cast.direction, hold: seconds + active + 0.2 })
     // Where she comes down: over low walls in her way, never past a tall one or the arena's edge.
     const body = queries.hoppers.getHandle(cast.caster)
     const to = body.ok
-      ? hopLanding(cast.from, cast.direction, distance, body.value.data.body.get().radius, tallWallBoxes(walls), wallBoxes(walls.filter((wall) => wall.data.low.present)))
+      ? hopLanding(cast.from, cast.direction, distance, queries.hoppers.data.body.get(body.value).radius, tallWallBoxes(queries.walls), lowWallBoxes(queries.walls))
       : add(cast.from, scale(cast.direction, distance))
-    commands.insert(caster.value.entity, [Airborne, {
+    commands.insert(caster.value, [Airborne, {
       remaining: seconds,
       seconds,
       kind: "plunge",
@@ -461,11 +463,11 @@ export const CastLeaps = Game.System("Shooter/CastLeaps", {
     const caster = queries.leapers.getHandle(cast.caster)
     if (caster.ok) {
       const away = scale(cast.direction, -effect.distance * decay)
-      caster.value.data.knockback.update((push) => ({ x: push.x + away.x, y: push.y + away.y }))
-      if (effect.air > 0 && queries.teamMembers.getHandle(cast.caster).ok) commands.insert(caster.value.entity, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, glide: null, landing: [] }])
+      queries.leapers.data.knockback.update(caster.value, (push) => ({ x: push.x + away.x, y: push.y + away.y }))
+      if (effect.air > 0 && queries.teamMembers.getHandle(cast.caster).ok) commands.insert(caster.value, [Airborne, { remaining: effect.air, seconds: effect.air, kind: "leap", dive: null, glide: null, landing: [] }])
       // She keeps facing the way she was as she flies back.
       const facer = queries.facers.getHandle(cast.caster)
-      if (facer.ok) facer.value.data.facing.set({ direction: cast.direction, hold: effect.air + 0.1 })
+      if (facer.ok) queries.facers.data.facing.set(facer.value, { direction: cast.direction, hold: effect.air + 0.1 })
     }
   }
 })
@@ -527,7 +529,7 @@ export const CastVortices = Game.System("Shooter/CastVortices", {
     const rider = soar !== null && cast.skill !== null && cast.landing !== true ? queries.teamMembers.getHandle(cast.caster) : undefined
     if (soar !== null && rider?.ok === true) {
       const seconds = soar.rise + soar.hang + soar.glide
-      commands.insert(rider.value.entity, [Airborne, { remaining: seconds, seconds, kind: "soar", dive: null, glide: { rise: soar.rise, seconds: soar.glide, speed: soar.speed }, landing: [] }])
+      commands.insert(rider.value, [Airborne, { remaining: seconds, seconds, kind: "soar", dive: null, glide: { rise: soar.rise, seconds: soar.glide, speed: soar.speed }, landing: [] }])
     }
     commands.spawnIn(RunScope, Game.Command.spawn([Vortex, {
       center: lobTarget(effect, cast.from, cast.at),
@@ -570,33 +572,36 @@ export const UpdateVortices = Game.System("Shooter/UpdateVortices", {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
   const decay = tuning.elements.swept.decay
-  for (const { entity, data } of queries.vortices.each()) {
-    const vortex = data.vortex.get()
+  const { data } = queries.vortices
+  for (const entity of queries.vortices.each()) {
+    const vortex = data.vortex.get(entity)
     const { effect, center } = vortex
     // What its strikes carry: the element it took on, else its own.
     const struck: Blow = { ...vortex.blow, knockback: 0 }
     let nextTick = vortex.nextTick - dt
     if (nextTick <= 1e-9) {
       nextTick += effect.tick
+      const targets = queries.targets.data
       for (const target of queries.targets.each()) {
-        const hurtbox = target.data.hurtbox.get()
+        const hurtbox = targets.hurtbox.get(target)
         if (hurtbox.faction === vortex.faction) continue
-        const invulnerable = target.data.invulnerable
-        if (invulnerable.present && invulnerable.get().remaining > 0) continue
-        const at = target.data.position.get()
+        const invulnerable = targets.invulnerable.get(target)
+        if (invulnerable !== undefined && invulnerable.remaining > 0) continue
+        const at = targets.position.get(target)
         const distance = Ops.hypot(center.x - at.x, center.y - at.y)
         if (distance > effect.radius + hurtbox.radius) continue
         const direction = normalizeOr(subtract(center, at), { x: 0, y: 0 })
-        const enemy = target.data.enemy.present ? target.data.enemy.get().kind : undefined
-        const push = effect.pull * distance * decay * knockbackTaken(tuning, enemy, target.data.enemy.present && target.data.enemy.get().champion)
-        target.data.knockback.update((current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
+        const found = targets.enemy.get(target)
+        const enemy = found !== undefined ? found.kind : undefined
+        const push = effect.pull * distance * decay * knockbackTaken(tuning, enemy, found !== undefined && found.champion)
+        targets.knockback.update(target, (current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
         if (effect.power <= 0) continue
-        events.damage.emit({ target: Game.Entity.handle(target.entity.id, Health), faction: vortex.faction, direction, blow: struck })
+        events.damage.emit({ target: Game.Entity.handle(target.id, Health), faction: vortex.faction, direction, blow: struck })
       }
     }
     const remaining = vortex.remaining - dt
     if (remaining <= 0) commands.despawn(entity)
-    else data.vortex.set({ ...vortex, remaining, nextTick })
+    else data.vortex.set(entity, { ...vortex, remaining, nextTick })
   }
 })
 
@@ -608,13 +613,14 @@ export const UpdateLobbed = Game.System("Shooter/UpdateLobbed", {
   commands: Game.System.commands(Game.System.spawns(Ground, Hitbox), Game.System.despawns(Lobbed))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.lobbed.each()) {
-    const lobbed = data.lobbed.get()
+  const { data } = queries.lobbed
+  for (const entity of queries.lobbed.each()) {
+    const lobbed = data.lobbed.get(entity)
     const { effect } = lobbed
     // An enemy's bomb flies at the enemies' pace (slower in slow motion).
     const elapsed = lobbed.elapsed + dt * paceOf(resources.slowMotion.get(), lobbed.faction)
     if (elapsed < effect.flightTime + effect.fuse) {
-      data.lobbed.set({ ...lobbed, elapsed })
+      data.lobbed.set(entity, { ...lobbed, elapsed })
       continue
     }
     commands.despawn(entity)
@@ -652,10 +658,11 @@ export const CastNovas = Game.System("Shooter/CastNovas", {
     }]))
     events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
     if (!effect.clearsProjectiles) continue
-    for (const { entity, data } of queries.projectiles.each()) {
-      const projectile = data.projectile.get()
+    const { data } = queries.projectiles
+    for (const entity of queries.projectiles.each()) {
+      const projectile = data.projectile.get(entity)
       if (projectile.faction === cast.faction) continue
-      const position = data.position.get()
+      const position = data.position.get(entity)
       if ((position.x - at.x) ** 2 + (position.y - at.y) ** 2 > effect.radius * effect.radius) continue
       commands.despawn(entity)
       events.impact.emit({ at: position, faction: projectile.faction, wall: false, shielded: false })

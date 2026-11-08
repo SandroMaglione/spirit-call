@@ -16,9 +16,9 @@ const World = Game.Inspector("Test/Combat", {
   },
   resources: { stats: Game.System.readResource(Stats) }
 }, ({ queries, resources }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current })),
-  projectiles: queries.projectiles.each().map(({ data }) => data.position.get()),
-  launches: queries.projectiles.each().map(({ data }) => ({ origin: data.projectile.get().origin, weapon: data.projectile.get().weapon })),
+  enemies: queries.enemies.each().map((entity) => ({ position: queries.enemies.data.position.get(entity), health: queries.enemies.data.health.get(entity).current })),
+  projectiles: queries.projectiles.each().map((entity) => queries.projectiles.data.position.get(entity)),
+  launches: queries.projectiles.each().map((entity) => ({ origin: queries.projectiles.data.projectile.get(entity).origin, weapon: queries.projectiles.data.projectile.get(entity).weapon })),
   pending: queries.pending.each().length,
   stats: resources.stats.get()
 }))

@@ -37,7 +37,7 @@ export const CastTidewarden = Game.System("Shooter/CastTidewarden", {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind === "dome") {
-      for (const { entity, data } of queries.domes.each()) if (data.dome.get().faction === cast.faction) commands.despawn(entity)
+      for (const entity of queries.domes.each()) if (queries.domes.data.dome.get(entity).faction === cast.faction) commands.despawn(entity)
       const blow = castBlow(cast, effect)
       commands.spawnIn(RunScope, Game.Command.spawn(
         [Position, cast.from],
@@ -47,27 +47,28 @@ export const CastTidewarden = Game.System("Shooter/CastTidewarden", {
       continue
     }
     if (effect.kind !== "turn") continue
-    const candidates = queries.turnable.each().filter(({ data }) => {
-      const hurtbox = data.hurtbox.get()
-      const at = data.position.get()
+    const { data } = queries.turnable
+    const candidates = queries.turnable.each().filter((entity) => {
+      const hurtbox = data.hurtbox.get(entity)
+      const at = data.position.get(entity)
       // Never a champion: it is the fight's own.
-      return !data.turned.present && !data.enemy.get().champion && hurtbox.faction !== cast.faction && data.health.get().current > 0 &&
+      return !data.turned.has(entity) && !data.enemy.get(entity).champion && hurtbox.faction !== cast.faction && data.health.get(entity).current > 0 &&
         Ops.hypot(at.x - cast.from.x, at.y - cast.from.y) - hurtbox.radius <= effect.radius
     })
     const chosen = candidates.reduce<(typeof candidates)[number] | undefined>(
-      (best, candidate) => best === undefined || candidate.data.health.get().current > best.data.health.get().current ? candidate : best,
+      (best, candidate) => best === undefined || data.health.get(candidate).current > data.health.get(best).current ? candidate : best,
       undefined
     )
     if (chosen === undefined) continue
-    const at = chosen.data.position.get()
+    const at = data.position.get(chosen)
     // The lash: its blow lands first, while it is still of the other side.
-    events.damage.emit({ target: Game.Entity.handle(chosen.entity.id, Health), faction: cast.faction, direction: normalizeOr(subtract(at, cast.from), { x: 1, y: 0 }), blow: castBlow(cast, effect) })
+    events.damage.emit({ target: Game.Entity.handle(chosen.id, Health), faction: cast.faction, direction: normalizeOr(subtract(at, cast.from), { x: 1, y: 0 }), blow: castBlow(cast, effect) })
     events.zap.emit({ path: [cast.from, at], heal: false, skill: cast.skill })
     const snap = castBlow(cast, { ...effect, power: effect.snap.power, knockback: effect.snap.knockback, hitStop: 0.12, heavy: true })
-    commands.insert(chosen.entity, [Turned, { faction: cast.faction, effect, remaining: effect.seconds, snap: { ...snap, charges: false, energyAction: undefined }, skill: cast.skill }])
-    chosen.data.hurtbox.update((hurtbox) => ({ ...hurtbox, faction: cast.faction }))
+    commands.insert(chosen, [Turned, { faction: cast.faction, effect, remaining: effect.seconds, snap: { ...snap, charges: false, energyAction: undefined }, skill: cast.skill }])
+    data.hurtbox.update(chosen, (hurtbox) => ({ ...hurtbox, faction: cast.faction }))
     // The lash cuts off what it was winding up at her (see `UpdateAttacks`): it turns from a standstill.
-    chosen.data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, 0.35) }))
+    data.disarmed.update(chosen, ({ remaining }) => ({ remaining: Math.max(remaining, 0.35) }))
   }
 })
 
@@ -97,32 +98,34 @@ export const UpdateDomes = Game.System("Shooter/UpdateDomes", {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
   const [field] = queries.field.each()
-  for (const { entity, data } of queries.domes.each()) {
-    const dome = data.dome.get()
+  const { data } = queries.domes
+  const bodies = queries.bodies.data
+  for (const entity of queries.domes.each()) {
+    const dome = data.dome.get(entity)
     const remaining = dome.remaining - dt
     if (remaining <= 0) {
       commands.despawn(entity)
       continue
     }
-    const center = field === undefined ? data.position.get() : field.data.position.get()
-    data.position.set(center)
+    const center = field === undefined ? data.position.get(entity) : queries.field.data.position.get(field)
+    data.position.set(entity, center)
     const element = dome.effect.element
     const inside: Array<number> = []
     for (const body of queries.bodies.each()) {
-      const hurtbox = body.data.hurtbox.get()
+      const hurtbox = bodies.hurtbox.get(body)
       if (hurtbox.faction === dome.faction) continue
-      const at = body.data.position.get()
+      const at = bodies.position.get(body)
       if (Ops.hypot(at.x - center.x, at.y - center.y) > dome.effect.radius + hurtbox.radius) continue
-      inside.push(body.entity.id)
-      if (element === null || (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0)) continue
+      inside.push(body.id)
+      if (element === null || (bodies.invulnerable.get(body)?.remaining ?? 0) > 0) continue
       // Like a pool: given to a body in none, kept on one in it, never bursting another.
-      const before = body.data.state.get().current
+      const before = bodies.state.get(body).current
       if (before !== null && before.id !== elements[element].state) continue
-      const afflicted = afflict(tuning, before, { id: element, atk: dome.blow.element?.atk ?? 0 }, true, body.data.affinities.get()[element])
-      body.data.state.set({ current: afflicted.state })
+      const afflicted = afflict(tuning, before, { id: element, atk: dome.blow.element?.atk ?? 0 }, true, bodies.affinities.get(body)[element])
+      bodies.state.set(body, { current: afflicted.state })
       if (afflicted.state !== null && before === null) events.reaction.emit({ at, kind: "apply", state: afflicted.state.id, faction: dome.faction })
     }
-    data.dome.set({ ...dome, remaining, inside })
+    data.dome.set(entity, { ...dome, remaining, inside })
   }
 })
 
@@ -144,19 +147,20 @@ export const UpdateTurned = Game.System("Shooter/UpdateTurned", {
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const [field] = queries.field.each()
-  for (const { entity, data } of queries.turned.each()) {
-    const turned = data.turned.get()
+  const { data } = queries.turned
+  for (const entity of queries.turned.each()) {
+    const turned = data.turned.get(entity)
     const remaining = turned.remaining - dt
     if (remaining > 0) {
-      data.turned.set({ ...turned, remaining })
+      data.turned.set(entity, { ...turned, remaining })
       continue
     }
     commands.remove(entity, Turned)
-    data.hurtbox.update((hurtbox) => ({ ...hurtbox, faction: "enemy" }))
-    const at = data.position.get()
-    const from = field === undefined ? at : field.data.position.get()
+    data.hurtbox.update(entity, (hurtbox) => ({ ...hurtbox, faction: "enemy" }))
+    const at = data.position.get(entity)
+    const from = field === undefined ? at : queries.field.data.position.get(field)
     events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: turned.faction, direction: normalizeOr(subtract(at, from), { x: 1, y: 0 }), blow: turned.snap })
-    data.stunned.update(({ remaining: stun }) => ({ remaining: Math.max(stun, turned.effect.snap.stun) }))
+    data.stunned.update(entity, ({ remaining: stun }) => ({ remaining: Math.max(stun, turned.effect.snap.stun) }))
     // The snap, seen as the skill's: from the one on the field to it.
     events.zap.emit({ path: [from, at], heal: false, skill: turned.skill })
   }

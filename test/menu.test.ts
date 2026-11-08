@@ -12,7 +12,7 @@ const Screen = Game.Inspector("Test/Screen", {
   queries: { player: Game.Query({ selection: { stats: Game.Query.read(CombatStats) }, with: [Player] }) },
   resources: { team: Game.System.readResource(Team), challenge: Game.System.readResource(Challenge) }
 }, ({ queries, resources }) => ({
-  stats: queries.player.each()[0]?.data.stats.get(),
+  stats: queries.player.each().map((entity) => queries.player.data.stats.get(entity))[0],
   team: resources.team.get(),
   challenge: resources.challenge.get()
 }))

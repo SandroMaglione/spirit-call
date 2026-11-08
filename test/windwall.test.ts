@@ -24,7 +24,7 @@ const tuning = tuningWith({ enemies: { dummy: { hp: 100_000 } } })
 const press = (slot: "special" | "ultimate", frame: number) => ({ frame, press: [slot], release: [slot] })
 
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 const World = Game.Inspector("Test/Windwall", {
@@ -34,8 +34,8 @@ const World = Game.Inspector("Test/Windwall", {
     shots: Game.Query({ selection: { projectile: Game.Query.read(Projectile) } })
   }
 }, ({ queries }) => ({
-  health: queries.player.each()[0]!.data.health.get().current,
-  enemies: queries.enemies.each().map(({ data }) => ({ offset: { x: data.position.get().x - center.x, y: data.position.get().y - center.y }, hurt: data.health.get().current < data.health.get().max, lifted: data.lifted.present, stunned: data.stunned.get().remaining > 0 })),
+  health: queries.player.data.health.get(queries.player.each()[0]!).current,
+  enemies: queries.enemies.each().map((entity) => ({ offset: { x: queries.enemies.data.position.get(entity).x - center.x, y: queries.enemies.data.position.get(entity).y - center.y }, hurt: queries.enemies.data.health.get(entity).current < queries.enemies.data.health.get(entity).max, lifted: queries.enemies.data.lifted.has(entity), stunned: queries.enemies.data.stunned.get(entity).remaining > 0 })),
   shots: queries.shots.each().length
 }))
 

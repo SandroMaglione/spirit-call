@@ -114,7 +114,8 @@ const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number, 
     queries: { player: playerQuery },
     commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts))
   }, ({ queries, commands }) => {
-    const around = queries.player.each()[0]?.data.position.get() ?? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
+    const first = queries.player.each()[0]
+    const around = first === undefined ? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 } : queries.player.data.position.get(first)
     for (let index = 0; index < enemies; index++) commands.spawnIn(RunScope, next(around))
   })
 
@@ -126,20 +127,22 @@ const makeSystems = (tuning: TuningValue, name: PerfSceneName, enemies: number, 
     commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts))
   }, ({ queries, commands }) => {
     steps += 1
-    const around = queries.player.each()[0]?.data.position.get()
-    if (around === undefined) return
+    const player = queries.player.each()[0]
+    if (player === undefined) return
+    const around = queries.player.data.position.get(player)
     const crowd = queries.enemies.each()
+    const { data } = queries.enemies
     if (steps % ring.every === 0) {
-      for (const { data } of crowd) {
-        const at = data.position.get()
+      for (const entity of crowd) {
+        const at = data.position.get(entity)
         if (Math.hypot(at.x - around.x, at.y - around.y) <= ring.far + 40) continue
         const back = ringAround(around)
-        data.position.set(back)
-        data.previous.set(back)
+        data.position.set(entity, back)
+        data.previous.set(entity, back)
       }
     }
     if (name === "kills") {
-      const alive = crowd.filter(({ data }) => data.health.get().current > 0).length
+      const alive = crowd.filter((entity) => data.health.get(entity).current > 0).length
       for (let count = alive; count < enemies; count++) commands.spawnIn(RunScope, next(around))
     }
   })

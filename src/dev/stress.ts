@@ -52,7 +52,7 @@ export const makeStress = (tuning: TuningValue, load: StressLoad) => {
     },
     commands: Game.System.commands(Game.System.spawns(Projectile))
   }, ({ queries, commands }) => {
-    if (load.mixed) for (const { data } of queries.player.each()) data.invulnerable.set({ remaining: 1e9 })
+    if (load.mixed) for (const entity of queries.player.each()) queries.player.data.invulnerable.set(entity, { remaining: 1e9 })
     for (let count = queries.projectiles.each().length; count < load.projectiles; count++) {
       const angle = random.next() * Math.PI * 2
       const speed = 600 + random.next() * 600

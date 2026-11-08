@@ -52,25 +52,27 @@ const World = Game.Inspector("Test/Elements", {
   }
 }, ({ queries }) => {
   const [player] = queries.player.each()
+  const { data } = queries.enemies
+  const you = queries.player.data
   return {
-    pools: queries.pools.each().map(({ data }) => data.ground.get()),
-    enemies: queries.enemies.each().map(({ entity, data }) => ({
+    pools: queries.pools.each().map((entity) => queries.pools.data.ground.get(entity)),
+    enemies: queries.enemies.each().map((entity) => ({
       id: entity.id,
-      position: data.position.get(),
-      health: data.health.get().current,
-      state: data.state.get().current,
-      stunned: data.stunned.get().remaining,
-      disarmed: data.disarmed.get().remaining,
-      winding: data.attacker.get().area !== null,
-      knockback: data.knockback.get()
+      position: data.position.get(entity),
+      health: data.health.get(entity).current,
+      state: data.state.get(entity).current,
+      stunned: data.stunned.get(entity).remaining,
+      disarmed: data.disarmed.get(entity).remaining,
+      winding: data.attacker.get(entity).area !== null,
+      knockback: data.knockback.get(entity)
     })),
     player: {
-      health: player!.data.health.get().current,
-      state: player!.data.state.get().current,
-      energy: player!.data.energy.get().current,
-      invulnerable: player!.data.invulnerable.get().remaining,
-      stunned: player!.data.stunned.get().remaining,
-      knockback: player!.data.knockback.get()
+      health: you.health.get(player!).current,
+      state: you.state.get(player!).current,
+      energy: you.energy.get(player!).current,
+      invulnerable: you.invulnerable.get(player!).remaining,
+      stunned: you.stunned.get(player!).remaining,
+      knockback: you.knockback.get(player!)
     }
   }
 })
@@ -85,12 +87,13 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
     const Put = Game.System("Test/PutInState", {
       queries: { bodies: Game.Query({ selection: { state: Game.Query.write(ElementState), position: Game.Query.read(Position), player: Game.Query.optional(Player) }, with: [Health] }) }
     }, ({ queries }) => {
-      for (const { data } of queries.bodies.each()) {
-        const there = data.position.get()
+      const { data } = queries.bodies
+      for (const entity of queries.bodies.each()) {
+        const there = data.position.get(entity)
         const chosen = who === "player"
-          ? data.player.present
-          : who === "enemies" ? !data.player.present : !data.player.present && Math.hypot(there.x - center.x - who.x, there.y - center.y - who.y) < 1
-        if (chosen) data.state.set({ current: state })
+          ? data.player.has(entity)
+          : who === "enemies" ? !data.player.has(entity) : !data.player.has(entity) && Math.hypot(there.x - center.x - who.x, there.y - center.y - who.y) < 1
+        if (chosen) data.state.set(entity, { current: state })
       }
     })
     expectOk(run.runtime.tick(Game.Schedule(Put)))
@@ -101,9 +104,10 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
       queries: { bodies: Game.Query({ selection: { position: Game.Query.read(Position), player: Game.Query.optional(Player) }, with: [Health] }) },
       events: { damage: Game.System.writeEvent(Damage) }
     }, ({ queries, events }) => {
-      for (const { entity, data } of queries.bodies.each()) {
-        const there = data.position.get()
-        const hit = at === "player" ? data.player.present : !data.player.present && Math.hypot(there.x - center.x - at.x, there.y - center.y - at.y) < 1
+      const { data } = queries.bodies
+      for (const entity of queries.bodies.each()) {
+        const there = data.position.get(entity)
+        const hit = at === "player" ? data.player.has(entity) : !data.player.has(entity) && Math.hypot(there.x - center.x - at.x, there.y - center.y - at.y) < 1
         if (!hit) continue
         events.damage.emit({
           target: Game.Entity.handle(entity.id, Health),
@@ -251,12 +255,12 @@ describe("states alone", () => {
         events: { damage: Game.System.writeEvent(Damage) }
       }, ({ queries, events }) => {
         const [player] = queries.player.each()
-        for (const { entity } of queries.enemies.each()) {
+        for (const entity of queries.enemies.each()) {
           events.damage.emit({
             target: Game.Entity.handle(entity.id, Health),
             faction: "player",
             direction: { x: 1, y: 0 },
-            blow: blow({ damage: 100, knockback: 0, source: { attacker: Game.Entity.handle(player!.entity.id, Position) } })
+            blow: blow({ damage: 100, knockback: 0, source: { attacker: Game.Entity.handle(player!.id, Position) } })
           })
         }
       })
@@ -382,7 +386,10 @@ describe("cracked", () => {
   const breakable = () => tuningWith({ enemies: { dummy: { hp: 100_000, poise: 0.5 } } })
   const bar = 100_000 * 0.5
   const Bars = Game.Inspector("Test/Bars", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position), poise: Game.Query.read(Poise) }, with: [Enemy] }) } }, ({ queries }) =>
-    queries.enemies.each().map(({ data }) => ({ x: data.position.get().x - center.x, y: data.position.get().y - center.y, filled: data.poise.get().current })))
+    queries.enemies.each().map((entity) => {
+      const { data } = queries.enemies
+      return { x: data.position.get(entity).x - center.x, y: data.position.get(entity).y - center.y, filled: data.poise.get(entity).current }
+    }))
   const filled = (run: ReturnType<typeof range>, at: Vec2) => run.runtime.inspect(Bars).find((enemy) => Math.hypot(enemy.x - at.x, enemy.y - at.y) < 1)!.filled
 
   it("fills the break bar faster: every blow counts half as much again", () => {
@@ -419,9 +426,10 @@ describe("swept", () => {
     const Drive = Game.System("Test/Drive", {
       queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState), knockback: Game.Query.write(Knockback) }, with: [Enemy] }) }
     }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) {
-        data.state.set({ current: state("swept") })
-        data.knockback.set(push)
+      const { data } = queries.enemies
+      for (const entity of queries.enemies.each()) {
+        data.state.set(entity, { current: state("swept") })
+        data.knockback.set(entity, push)
       }
     })
     expectOk(run.runtime.tick(Game.Schedule(Drive)))
@@ -455,7 +463,7 @@ describe("swept", () => {
     })
     expectOk(run.runtime.tick(Game.Schedule(Spawn, Game.Schedule.applyDeferred())))
     const Stun = Game.System("Test/Stun", { queries: { enemies: Game.Query({ selection: { stunned: Game.Query.write(Stunned) }, with: [Enemy] }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) data.stunned.set({ remaining: 1 })
+      for (const entity of queries.enemies.each()) queries.enemies.data.stunned.set(entity, { remaining: 1 })
     })
     expectOk(run.runtime.tick(Game.Schedule(Stun)))
     run.step(30)
@@ -479,7 +487,7 @@ describe("swept", () => {
     }
     expect(windsUp(6)).toBe(true)
     const Disarm = Game.System("Test/Disarm", { queries: { enemies: Game.Query({ selection: { disarmed: Game.Query.write(Disarmed) }, with: [Enemy] }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) data.disarmed.set({ remaining: 1 })
+      for (const entity of queries.enemies.each()) queries.enemies.data.disarmed.set(entity, { remaining: 1 })
     })
     expectOk(run.runtime.tick(Game.Schedule(Disarm)))
     const before = run.world().enemies[0]!.position
@@ -517,7 +525,7 @@ describe("ground", () => {
   it("leaves a body that is invulnerable (dashing) alone", () => {
     const run = range([], { x: 300, y: 0 })
     const Shield = Game.System("Test/Invulnerable", { queries: { player: Game.Query({ selection: { invulnerable: Game.Query.write(Invulnerable) }, with: [Player] }) } }, ({ queries }) => {
-      for (const { data } of queries.player.each()) data.invulnerable.set({ remaining: 1 })
+      for (const entity of queries.player.each()) queries.player.data.invulnerable.set(entity, { remaining: 1 })
     })
     expectOk(run.runtime.tick(Game.Schedule(Shield)))
     run.pour([{ element: "fire", at: { x: 0, y: 0 } }])

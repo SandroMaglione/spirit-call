@@ -172,16 +172,18 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
   let moves = 0
-  for (const { entity, data } of queries.player.each()) {
-    const position = data.position.get()
-    const aim = data.aim.get()
-    const current = data.basicAttack.get()
-    const atk = data.stats.get().atk
+  const { data } = queries.player
+  const enemyData = queries.enemies.data
+  for (const entity of queries.player.each()) {
+    const position = data.position.get(entity)
+    const aim = data.aim.get(entity)
+    const current = data.basicAttack.get(entity)
+    const atk = data.stats.get(entity).atk
     const spec: BasicAttackSpec = attackOf(tuning, current.attack)
-    const element = tuning.characters[data.member.get().character].element
+    const element = tuning.characters[data.member.get(entity).character].element
     const cooldown = Math.max(0, current.cooldown - dt)
     // In the air, or held coming in after a fall, she does not attack; a press then is dropped.
-    const grounded = !data.airborne.present && resources.arrival.get().remaining <= 0
+    const grounded = !data.airborne.has(entity) && resources.arrival.get().remaining <= 0
     const buffered = !grounded ? 0 : controls.attackPressed ? spec.inputBuffer : Math.max(0, current.buffered - dt)
     // Time idle since the recovery ended; the combo lapses after `comboWindow`, and ends with its last move.
     const comboTimer = cooldown > 0 ? 0 : current.comboTimer + dt
@@ -191,9 +193,9 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
     const reloading = Math.max(0, current.reloading - dt)
     const spent = current.reloading > 0 && reloading <= 0 ? 0 : current.spent
     // Raising a guard (see `Raising`), she does not attack.
-    const ready = cooldown <= 0 && reloading <= 0 && !data.raising.present && grounded
+    const ready = cooldown <= 0 && reloading <= 0 && !data.raising.has(entity) && grounded
     // A press during a dash, or just after it, is the dash strike: once per dash, cutting a recovery short.
-    const dash = data.dash.get()
+    const dash = data.dash.get(entity)
     const sinceDashStrike = current.sinceDashStrike === null ? null : current.sinceDashStrike + dt
     const dashing = dash.since !== null && dash.since <= tuning.dash.duration + tuning.dash.attackWindow && (sinceDashStrike === null || sinceDashStrike > dash.since)
 
@@ -210,8 +212,9 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
 
     // A body taken over by thunder (see `OverchargeEffect`): every blow carries it.
     // A gun driven past its limit (see `OverdriveEffect`): quicker, never reloading, every shot alight and bursting.
-    const driven = data.overdriven.present ? data.overdriven.get() : null
-    const surge = data.overcharged.present ? data.overcharged.get().effect.element : driven?.effect.element ?? null
+    const driven = data.overdriven.get(entity) ?? null
+    const overcharged = data.overcharged.get(entity)
+    const surge = overcharged !== undefined ? overcharged.effect.element : driven?.effect.element ?? null
     const use = (move: AttackMove, nextStep: number, power: boolean) => {
       const striking = move === spec.dash
       const context: MoveContext = {
@@ -241,9 +244,9 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         // Her aspect's elemental moment: these blows carry her element.
         element: surge !== null ? { id: surge, atk } : spec.infuse !== null && moveMatches(spec.infuse, context) ? { id: element, atk } : null
       })
-      const muzzleAt = (radius: number) => muzzleOf(tuning, position, aim, radius, wallBoxes(queries.walls.each()), queries.enemies.each()
-        .filter(({ data }) => data.hurtbox.get().faction === "enemy")
-        .map(({ data }) => ({ at: data.position.get(), radius: data.hurtbox.get().radius })))
+      const muzzleAt = (radius: number) => muzzleOf(tuning, position, aim, radius, wallBoxes(queries.walls), queries.enemies.each()
+        .filter((enemy) => enemyData.hurtbox.get(enemy).faction === "enemy")
+        .map((enemy) => ({ at: enemyData.position.get(enemy), radius: enemyData.hurtbox.get(enemy).radius })))
       if (move.shape === "shot") {
         const muzzle = muzzleAt(move.radius)
         const base = Ops.atan2(aim.y, aim.x)
@@ -253,7 +256,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
           commands.spawnIn(RunScope, makeProjectile(muzzle, { x: Ops.cos(angle) * move.speed, y: Ops.sin(angle) * move.speed }, {
             faction: "player",
             style: "bolt",
-            weapon: data.basicAttack.get().attack.class,
+            weapon: data.basicAttack.get(entity).attack.class,
             radius: move.radius,
             blow: struck,
             range: move.range,
@@ -309,7 +312,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
         // Her class's shockwaves, on from the end of the swing (not out of a dash).
         if (spec.shockwave !== null && !striking) {
           const wave = spec.shockwave
-          const boxes = wallBoxes(queries.walls.each())
+          const boxes = wallBoxes(queries.walls)
           const blow = { ...struck, damage: struck.damage * wave.share, hitStop: 0 }
           for (const direction of shockwaveDirections(move, wave, aim)) {
             const start = scale(direction, Math.max(0, move.reach - wave.radius))
@@ -330,19 +333,19 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       }
       // The lunge: an impulse that carries the player `lungeDistance` along the aim
       // (knockback travels its speed / decay before it dies out).
-      const enemies = queries.enemies.each().map(({ data: enemy }) => ({ position: enemy.position.get(), radius: enemy.hurtbox.get().radius }))
-      const lunge = lungeDistance(move, spec, data.body.get().radius, position, aim, enemies) * tuning.knockback.decay
-      if (lunge !== 0) data.knockback.update((knockback) => ({ x: knockback.x + aim.x * lunge, y: knockback.y + aim.y * lunge }))
+      const enemies = queries.enemies.each().map((enemy) => ({ position: enemyData.position.get(enemy), radius: enemyData.hurtbox.get(enemy).radius }))
+      const lunge = lungeDistance(move, spec, data.body.get(entity).radius, position, aim, enemies) * tuning.knockback.decay
+      if (lunge !== 0) data.knockback.update(entity, (knockback) => ({ x: knockback.x + aim.x * lunge, y: knockback.y + aim.y * lunge }))
       moves += 1
       events.action.emit({ kind: "attack", at: position, direction: aim, move, ...context })
       // She faces the way she struck until the move recovers, slowed meanwhile (a heavy move stops her).
-      data.facing.set({ direction: aim, hold: move.recovery })
+      data.facing.set(entity, { direction: aim, hold: move.recovery })
       const slowed = move.heavy ? 0 : spec.attackingSpeed
       // Overdriven, her magazine never runs dry and her shots come quicker.
       const fired = driven !== null ? 0 : power && spec.magazine !== null ? spec.magazine.rounds : spent + 1
       const empty = spec.magazine !== null && fired >= spec.magazine.rounds
       const recovery = move.recovery * (driven?.effect.fireRate ?? 1)
-      data.basicAttack.set({
+      data.basicAttack.set(entity, {
         ...current, cooldown: recovery, recovery, buffered: 0, comboTimer: 0, step: nextStep, held, powerQueued: false, slowed,
         spent: spec.magazine === null ? 0 : fired, reloading: empty && spec.magazine !== null ? spec.magazine.reload : 0,
         sinceDashStrike: move === spec.dash ? 0 : sinceDashStrike
@@ -367,7 +370,7 @@ export const UseBasicAttack = Game.System("Shooter/UseBasicAttack", {
       use(move, next, false)
       continue
     }
-    data.basicAttack.set({ ...current, cooldown, buffered: reloading > 0 && controls.attackHeld ? spec.inputBuffer : buffered, comboTimer, step, held, powerQueued, spent, reloading, sinceDashStrike })
+    data.basicAttack.set(entity, { ...current, cooldown, buffered: reloading > 0 && controls.attackHeld ? spec.inputBuffer : buffered, comboTimer, step, held, powerQueued, spent, reloading, sinceDashStrike })
   }
   if (moves > 0) resources.stats.update((stats) => ({ ...stats, shots: stats.shots + moves }))
 })
@@ -392,10 +395,11 @@ export const FeedDash = Game.System("Shooter/FeedDash", {
     if (hit.faction !== "enemy" || hit.periodic || move === undefined || move.dash || hit.source === null) continue
     const found = queries.feeders.getHandle(hit.source.attacker)
     if (!found.ok) continue
-    const attack = found.value.data.basicAttack.get()
+    const { data } = queries.feeders
+    const attack = data.basicAttack.get(found.value)
     const feed = attackOf(tuning, attack.attack).dashFeed
     if (feed <= 0 || attack.fed === move.serial) continue
-    found.value.data.basicAttack.set({ ...attack, fed: move.serial })
-    found.value.data.dash.update((dash) => ({ ...dash, cooldown: Math.max(0, dash.cooldown - feed) }))
+    data.basicAttack.set(found.value, { ...attack, fed: move.serial })
+    data.dash.update(found.value, (dash) => ({ ...dash, cooldown: Math.max(0, dash.cooldown - feed) }))
   }
 })

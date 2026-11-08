@@ -66,6 +66,7 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
   const state = resources.tutorial.get()
   const step = objective.steps[state.step]
   const [player] = queries.player.each()
+  const { data } = queries.player
   if (step === undefined) {
     if (state.celebrate > 0 && resources.slowMotion.get().remaining <= 0) {
       resources.tutorial.set({ ...state, celebrate: Math.max(0, state.celebrate - resources.time.get().dt) })
@@ -77,37 +78,37 @@ export const RunTutorial = Game.System("Shooter/RunTutorial", {
   // A step coming in: the dummy it asks for (the one standing stays, when it is the same), and its skill ready.
   if (state.ready !== state.step) {
     // Let the last dash end before placing the next step's dummy beside the player.
-    if (player.data.dash.get().remaining > 0) return
+    if (data.dash.get(player).remaining > 0) return
     const wanted = "dummy" in step ? step.dummy : null
     const standing = queries.enemies.each()
-    const keep = wanted !== null && standing.length === 1 && standing[0]!.data.enemy.get().kind === wanted.kind
+    const keep = wanted !== null && standing.length === 1 && queries.enemies.data.enemy.get(standing[0]!).kind === wanted.kind
     if (!keep) {
-      for (const { entity } of standing) commands.despawn(entity)
-      for (const { entity } of queries.pending.each()) commands.despawn(entity)
+      for (const entity of standing) commands.despawn(entity)
+      for (const entity of queries.pending.each()) commands.despawn(entity)
       if (wanted !== null) {
         const offset = tutorialSpot(tuning, wanted.offset)
-        const at = player.data.position.get()
+        const at = data.position.get(player)
         const radius = tuning.enemies[wanted.kind].radius
         const near = { x: Math.max(radius, Math.min(tuning.arena.width - radius, at.x + offset.x)), y: Math.max(radius, Math.min(tuning.arena.height - radius, at.y + offset.y)) }
         commands.spawnIn(RunScope, Game.Command.extend(makeEnemy(tuning, wanted.kind, near, 1, resources.level.get()), [Immortal, {}]))
       }
     }
     if (step.kind === "special" || step.kind === "ultimate") {
-      const skills = player.data.skills.get()
-      player.data.skills.set({ ...skills, [step.kind]: { ...skills[step.kind], cooldown: 0 } } as SkillsValue)
+      const skills = data.skills.get(player)
+      data.skills.set(player, { ...skills, [step.kind]: { ...skills[step.kind], cooldown: 0 } } as SkillsValue)
     }
     resources.tutorial.set({ ...state, ready: state.step })
   }
   // The ultimate's step keeps its energy full, until it is used.
-  if (step.kind === "ultimate") player.data.energy.set({ current: tuning.energy.max })
+  if (step.kind === "ultimate") data.energy.set(player, { current: tuning.energy.max })
 
-  const skills = player.data.skills.get()
+  const skills = data.skills.get(player)
   const used = (slot: "special" | "ultimate") =>
     events.cast.all().filter((cast) => cast.faction === "player" && cast.skill === skills[slot].skill && cast.landing !== true && cast.called !== true).length
   const done = (() => {
     switch (step.kind) {
       case "move":
-        return distance(player.data.position.get(), tutorialSpot(tuning, step.to)) <= tutorialSpotRadius ? 1 : 0
+        return distance(data.position.get(player), tutorialSpot(tuning, step.to)) <= tutorialSpotRadius ? 1 : 0
       case "dash":
         return events.action.all().filter((action) => action.kind === "dash").length
       case "attack":

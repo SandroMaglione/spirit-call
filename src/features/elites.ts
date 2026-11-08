@@ -32,24 +32,25 @@ export const UpdateElites = Game.System("Shooter/UpdateElites", {
   const tuning = resources.tuning.get()
   const rules = tuning.elites
   const dt = resources.time.get().dt * enemyPace(resources.slowMotion.get())
-  for (const { entity, data } of queries.elites.each()) {
-    if (data.stunned.get().remaining > 0) continue
-    const elite = data.elite.get()
-    const at = data.position.get()
-    const atk = data.stats.get().atk
+  const { data } = queries.elites
+  for (const entity of queries.elites.each()) {
+    if (data.stunned.get(entity).remaining > 0) continue
+    const elite = data.elite.get(entity)
+    const at = data.position.get(entity)
+    const atk = data.stats.get(entity).atk
     if (elite.element === "fire" || elite.element === "water") {
       // A champion leaves no trail: it stays for waves, and would flood the floor.
-      if (data.enemy.get().champion) continue
+      if (data.enemy.get(entity).champion) continue
       // A pool every so often while it moves.
-      const velocity = data.velocity.get()
+      const velocity = data.velocity.get(entity)
       const moving = Ops.hypot(velocity.x, velocity.y) > 20
       const trail = elite.trail - (moving ? dt : 0)
       if (trail > 0) {
-        data.elite.set({ ...elite, trail })
+        data.elite.set(entity, { ...elite, trail })
         continue
       }
       commands.spawnIn(RunScope, makeGround({ element: elite.element, ...rules.trail[elite.element] }, at, atk, false))
-      data.elite.set({ ...elite, trail: trail + rules.trailEvery })
+      data.elite.set(entity, { ...elite, trail: trail + rules.trailEvery })
       continue
     }
     // Thunder: the discharge winds up where it stood, then strikes all around it.
@@ -57,7 +58,7 @@ export const UpdateElites = Game.System("Shooter/UpdateElites", {
     if (elite.charging !== null) {
       const remaining = elite.charging.remaining - dt
       if (remaining > 0) {
-        data.elite.set({ ...elite, charging: { ...elite.charging, remaining } })
+        data.elite.set(entity, { ...elite, charging: { ...elite.charging, remaining } })
         continue
       }
       commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
@@ -67,15 +68,15 @@ export const UpdateElites = Game.System("Shooter/UpdateElites", {
           damage: damageDealt(atk, discharge.power),
           knockback: discharge.knockback,
           element: { id: "thunder", atk },
-          source: { attacker: Game.Entity.handle(entity.id, Position), label: { kind: "enemy", enemy: data.enemy.get().kind, attack: "discharge" } }
+          source: { attacker: Game.Entity.handle(entity.id, Position), label: { kind: "enemy", enemy: data.enemy.get(entity).kind, attack: "discharge" } }
         }),
         remaining: 0.08,
         hit: []
       }]))
-      data.elite.set({ ...elite, charging: null, discharge: discharge.every })
+      data.elite.set(entity, { ...elite, charging: null, discharge: discharge.every })
       continue
     }
     const until = elite.discharge - dt
-    data.elite.set(until > 0 ? { ...elite, discharge: until } : { ...elite, discharge: 0, charging: { at, remaining: discharge.windup } })
+    data.elite.set(entity, until > 0 ? { ...elite, discharge: until } : { ...elite, discharge: 0, charging: { at, remaining: discharge.windup } })
   }
 })

@@ -39,7 +39,7 @@ export const CastCompanions = Game.System("Shooter/CastCompanions", {
     if (effect.kind !== "companions") continue
     const caller = queries.callers.getHandle(cast.caster)
     if (!caller.ok) continue
-    const character = caller.value.data.member.get().character
+    const character = queries.callers.data.member.get(caller.value).character
     const blow = castBlow(cast, effect)
     for (let index = 0; index < effect.count; index++) {
       const at = companionStart(cast.from, cast.direction, index, effect.count)
@@ -83,32 +83,36 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
   if (companions.length === 0) return
   const [field] = queries.field.each()
   const bodies = queries.bodies.each()
-  for (const { entity, data } of companions) {
-    const companion = data.companion.get()
+  const { data } = queries.companions
+  const onField = queries.field.data
+  const shootable = queries.bodies.data
+  for (const entity of companions) {
+    const companion = data.companion.get(entity)
     const { effect } = companion
-    const at = data.position.get()
+    const at = data.position.get(entity)
     // Walking after her, never faster than `follow`, easing to a stop a little way off her.
     let facing = companion.facing
     if (field !== undefined) {
-      const away = subtract(field.data.position.get(), at)
+      const away = subtract(onField.position.get(field), at)
       const distance = Ops.hypot(away.x, away.y)
       const speed = Math.min(effect.follow, Math.max(0, distance - keep.distance) * 4)
       const direction = normalizeOr(away, facing)
-      data.velocity.set({ x: direction.x * speed, y: direction.y * speed })
+      data.velocity.set(entity, { x: direction.x * speed, y: direction.y * speed })
       if (speed > 1) facing = direction
-    } else data.velocity.set({ x: 0, y: 0 })
+    } else data.velocity.set(entity, { x: 0, y: 0 })
     let nextTick = companion.nextTick - dt
     let dealt = companion.dealt
     if (nextTick <= 1e-9 && field !== undefined) {
       nextTick += effect.tick
-      const her = field.data.position.get()
+      const her = onField.position.get(field)
       let target: (typeof bodies)[number] | undefined
       let nearest = Infinity
       for (const body of bodies) {
-        const hurtbox = body.data.hurtbox.get()
+        const hurtbox = shootable.hurtbox.get(body)
         if (hurtbox.faction === companion.faction) continue
-        if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
-        const where = body.data.position.get()
+        const invulnerable = shootable.invulnerable.get(body)
+        if (invulnerable !== undefined && invulnerable.remaining > 0) continue
+        const where = shootable.position.get(body)
         const gap = Ops.hypot(where.x - at.x, where.y - at.y) - hurtbox.radius
         if (gap <= effect.radius && gap < nearest) {
           target = body
@@ -116,7 +120,7 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
         }
       }
       if (target !== undefined) {
-        const where = target.data.position.get()
+        const where = shootable.position.get(target)
         const toward = normalizeOr(subtract(where, at), facing)
         commands.spawnIn(RunScope, makeDisc(at, {
           thrower: Game.Entity.handle(entity.id, Position),
@@ -138,11 +142,11 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
         facing = toward
         dealt += effect.power
       } else {
-        const health = field.data.health.get()
+        const health = onField.health.get(field)
         const close = Ops.hypot(her.x - at.x, her.y - at.y) <= effect.healRadius
         if (effect.heal > 0 && close && health.current > 0 && health.current < health.max) {
           const amount = Math.min(health.max - health.current, (health.max * effect.heal) / 100)
-          field.data.health.set({ current: health.current + amount, max: health.max })
+          onField.health.set(field, { current: health.current + amount, max: health.max })
           events.heal.emit({ at: her, amount })
           events.zap.emit({ path: [at, her], heal: true, skill: companion.skill })
         }
@@ -150,6 +154,6 @@ export const UpdateCompanions = Game.System("Shooter/UpdateCompanions", {
     }
     const remaining = companion.remaining - dt
     if (remaining <= 0 || dealt >= effect.budget - 1e-9) commands.despawn(entity)
-    else data.companion.set({ ...companion, remaining, nextTick, dealt, facing })
+    else data.companion.set(entity, { ...companion, remaining, nextTick, dealt, facing })
   }
 })

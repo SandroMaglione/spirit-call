@@ -21,7 +21,7 @@ const HitStopState = Game.Inspector("Test/HitStopState", {
 }, ({ resources, queries }) => ({
   hitStop: resources.hitStop.get().remaining,
   step: resources.time.get().step,
-  dash: queries.player.each()[0]?.data.dash.get()
+  dash: queries.player.each().map((player) => queries.player.data.dash.get(player))[0]
 }))
 
 describe("hit-stop", () => {

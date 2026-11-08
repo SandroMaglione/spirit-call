@@ -24,7 +24,7 @@ export const CastOvercharges = Game.System("Shooter/CastOvercharges", {
     const wielder = queries.wielders.getHandle(cast.caster)
     if (!wielder.ok) continue
     const strike = castBlow(cast, { ...effect, power: effect.dashStrike.power, knockback: effect.dashStrike.knockback, hitStop: 0.03, heavy: false })
-    commands.insert(wielder.value.entity, [Overcharged, { remaining: effect.seconds, effect, blow: strike, skill: cast.skill }])
+    commands.insert(wielder.value, [Overcharged, { remaining: effect.seconds, effect, blow: strike, skill: cast.skill }])
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: cast.from, radius: effect.radius },
       faction: cast.faction,
@@ -52,18 +52,19 @@ export const TickOvercharges = Game.System("Shooter/TickOvercharges", {
   commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.removes(Overcharged))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.overcharged.each()) {
-    const overcharged = data.overcharged.get()
+  const { data } = queries.overcharged
+  for (const entity of queries.overcharged.each()) {
+    const overcharged = data.overcharged.get(entity)
     const remaining = overcharged.remaining - dt
-    if (remaining <= 1e-9 || !data.player.present) {
+    if (remaining <= 1e-9 || !data.player.has(entity)) {
       commands.remove(entity, Overcharged)
       continue
     }
-    data.overcharged.set({ ...overcharged, remaining })
+    data.overcharged.set(entity, { ...overcharged, remaining })
     // A dash started this step (see `ControlPlayer`).
-    const dash = data.dash.get()
+    const dash = data.dash.get(entity)
     if (dash.since !== 0 || dash.remaining <= 0) continue
-    const length = dashOf(resources.tuning.get(), data.member.get().character, traitsIn(data.passives)).distance
+    const length = dashOf(resources.tuning.get(), data.member.get(entity).character, traitsIn(data.passives.get(entity))).distance
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "lane", origin: dash.from, direction: dash.direction, length, halfWidth: overcharged.effect.dashStrike.width / 2 },
       faction: "player",

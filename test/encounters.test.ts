@@ -27,10 +27,10 @@ const World = Game.Inspector("Test/Encounters", {
   },
   resources: { waves: Game.System.readResource(Waves) }
 }, ({ queries, resources }) => ({
-  player: queries.player.each()[0]!.data.health.get(),
-  playerState: queries.player.each()[0]!.data.state.get().current?.id ?? null,
-  enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, health: data.health.get(), elite: data.elite.present ? data.elite.get() : null })),
-  pools: queries.pools.each().map(({ data }) => data.ground.get()),
+  player: queries.player.data.health.get(queries.player.each()[0]!),
+  playerState: queries.player.data.state.get(queries.player.each()[0]!).current?.id ?? null,
+  enemies: queries.enemies.each().map((entity) => ({ kind: queries.enemies.data.enemy.get(entity).kind, health: queries.enemies.data.health.get(entity), elite: queries.enemies.data.elite.get(entity) ?? null })),
+  pools: queries.pools.each().map((entity) => queries.pools.data.ground.get(entity)),
   walls: queries.walls.each().length,
   waves: resources.waves.get()
 }))
@@ -73,7 +73,7 @@ describe("where enemies come in", () => {
   /** Despawns `count` enemies of the field, as if they had fallen. */
   const defeat = (run: ReturnType<typeof start>, count: number) => {
     const Defeat = Game.System("Test/Defeat", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
-      for (const { entity } of queries.enemies.each().slice(0, count)) commands.despawn(entity)
+      for (const entity of queries.enemies.each().slice(0, count)) commands.despawn(entity)
     })
     expectOk(run.runtime.tick(Game.Schedule(Defeat, Game.Schedule.applyDeferred())))
   }
@@ -199,7 +199,7 @@ describe("arenas", () => {
     const run = start({ arena: "kilnworks" })
     alone(run, "dummy", { x: pit.x - center.x, y: pit.y - center.y })
     run.step(3)
-    const Burning = Game.Inspector("Test/Burning", { queries: { enemies: Game.Query({ selection: { state: Game.Query.read(ElementState) }, with: [Enemy] }) } }, ({ queries }) => queries.enemies.each()[0]!.data.state.get().current?.id ?? null)
+    const Burning = Game.Inspector("Test/Burning", { queries: { enemies: Game.Query({ selection: { state: Game.Query.read(ElementState) }, with: [Enemy] }) } }, ({ queries }) => queries.enemies.data.state.get(queries.enemies.each()[0]!).current?.id ?? null)
     expect(run.runtime.inspect(Burning)).toBe("burning")
   })
 })
@@ -227,7 +227,7 @@ describe("enemies keeping out of hazards", () => {
     const box = hazardBoxes(tuning, "kilnworks")[0]!.box
     const run = start({ arena: "kilnworks", tuning })
     alone(run, "chaser", { x: box.maxX + 80 - center.x, y: box.minY + 50 - center.y })
-    const Where = Game.Inspector("Test/Where", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) } }, ({ queries }) => queries.enemies.each()[0]!.data.position.get())
+    const Where = Game.Inspector("Test/Where", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) } }, ({ queries }) => queries.enemies.data.position.get(queries.enemies.each()[0]!))
     let entered = false
     let closest = Infinity
     for (let step = 0; step < steps(5); step++) {
@@ -268,7 +268,7 @@ describe("enemies reading her", () => {
     const tuning = tuningWith({ enemies: { chaser: { attacks: [] } }, crowd: { minOrbitSeconds: 0 }, reading: { patience: 100 } })
     const run = start({ tuning, pointer: [{ frame: 0, move: cursorAt({ x: 300, y: 0 }) }] })
     alone(run, "chaser", { x: 300, y: 0 })
-    const Where = Game.Inspector("Test/Wary", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) } }, ({ queries }) => queries.enemies.each()[0]!.data.position.get())
+    const Where = Game.Inspector("Test/Wary", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) } }, ({ queries }) => queries.enemies.data.position.get(queries.enemies.each()[0]!))
     let closest = Infinity
     for (let step = 0; step < steps(3); step++) {
       run.step()

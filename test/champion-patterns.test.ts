@@ -36,12 +36,12 @@ const Field = Game.Inspector("Test/ChampionPatterns", {
   },
   events: { roused: Game.System.readEvent(Roused) }
 }, ({ queries, events }) => ({
-  champion: queries.champion.each().map(({ data }) => ({
-    ...data.attacker.get(), cycle: data.phase.get()._tag, rampage: data.rampage.get(), health: data.health.get(), stunned: data.stunned.get().remaining
+  champion: queries.champion.each().map((entity) => ({
+    ...queries.champion.data.attacker.get(entity), cycle: queries.champion.data.phase.get(entity)._tag, rampage: queries.champion.data.rampage.get(entity), health: queries.champion.data.health.get(entity), stunned: queries.champion.data.stunned.get(entity).remaining
   }))[0],
-  player: queries.player.each()[0]?.data.position.get(),
-  hurt: queries.player.each()[0]?.data.health.get(),
-  rings: queries.rings.each().map(({ data }) => data.hitbox.get()).filter((hitbox) => hitbox.area.kind === "ring"),
+  player: queries.player.each().map((entity) => queries.player.data.position.get(entity))[0],
+  hurt: queries.player.each().map((entity) => queries.player.data.health.get(entity))[0],
+  rings: queries.rings.each().map((entity) => queries.rings.data.hitbox.get(entity)).filter((hitbox) => hitbox.area.kind === "ring"),
   roused: events.roused.all()
 }))
 
@@ -54,7 +54,7 @@ const duel = (offset: Vec2, options: { readonly health?: number; readonly tuning
     commands.spawnIn(RunScope, makeEnemy(tuning, "brute", { x: at.x + offset.x, y: at.y + offset.y }, 1, 20, "fire", true))
   })
   const Wound = Game.System("Test/Wound", { queries: { enemies: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Enemy] }) } }, ({ queries }) => {
-    for (const { data } of queries.enemies.each()) data.health.update((health) => ({ ...health, current: health.max * (options.health ?? 1) }))
+    for (const entity of queries.enemies.each()) queries.enemies.data.health.update(entity, (health) => ({ ...health, current: health.max * (options.health ?? 1) }))
   })
   expectOk(run.runtime.tick(Game.Schedule(ClearEnemies, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred(), Wound)))
   /** Every attack it starts over `seconds` (by id), and whether it roared. */
@@ -170,7 +170,7 @@ describe("champion movesets", () => {
   it("shake a break off sooner than anything else (a champion with its own moveset)", () => {
     const run = duel({ x: 200, y: 0 })
     const Break = Game.System("Test/Break", { queries: { enemies: Game.Query({ selection: { poise: Game.Query.write(Poise) }, with: [Enemy] }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) data.poise.update((poise) => ({ ...poise, current: 1e9 }))
+      for (const entity of queries.enemies.each()) queries.enemies.data.poise.update(entity, (poise) => ({ ...poise, current: 1e9 }))
     })
     expectOk(run.runtime.tick(Game.Schedule(Break)))
     run.step(2)
@@ -181,8 +181,8 @@ describe("champion movesets", () => {
   it("call for help when the fight has worn their support down, and not while it stands", () => {
     const supported = tuningWith({ ...sturdy, champions: { alone: 2 } })
     const Count = Game.Inspector("Test/Count", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }), pending: Game.Query({ selection: { pending: Game.Query.read(PendingSpawn) } }) } }, ({ queries }) => ({
-      enemies: queries.enemies.each().map(({ data }) => data.enemy.get()),
-      pending: queries.pending.each().map(({ data }) => data.pending.get().kind)
+      enemies: queries.enemies.each().map((entity) => queries.enemies.data.enemy.get(entity)),
+      pending: queries.pending.each().map((entity) => queries.pending.data.pending.get(entity).kind)
     }))
     // Alone: its first move is the call, and its support comes in around it.
     const alone = duel({ x: 200, y: 0 }, { tuning: supported })
@@ -216,7 +216,7 @@ describe("champion movesets", () => {
     let seen = run.watch(3).started
     expect(seen).not.toContain("shove")
     const Press = Game.System("Test/Press", { queries: { rampages: Game.Query({ selection: { rampage: Game.Query.write(Rampage) } }) } }, ({ queries }) => {
-      for (const { data } of queries.rampages.each()) data.rampage.update((rampage) => ({ ...rampage, pressure: 100 }))
+      for (const entity of queries.rampages.each()) queries.rampages.data.rampage.update(entity, (rampage) => ({ ...rampage, pressure: 100 }))
     })
     expectOk(run.runtime.tick(Game.Schedule(Press)))
     seen = run.watch(3).started
@@ -239,7 +239,7 @@ describe("champion movesets", () => {
   })
 
   it("leave the floor burning where its later slams land", () => {
-    const Pools = Game.Inspector("Test/Pools", { queries: { pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }) } }, ({ queries }) => queries.pools.each().map(({ data }) => data.ground.get()))
+    const Pools = Game.Inspector("Test/Pools", { queries: { pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }) } }, ({ queries }) => queries.pools.each().map((entity) => queries.pools.data.ground.get(entity)))
     const crush = king.attacks[index("crush")]!
     const tuning = tuningWith({ ...sturdy, champions: { movesets: { brute: { health: 1, phases: [], attacks: [{ ...crush, phase: 0, followUp: null }] } } } })
     const run = duel({ x: 200, y: 0 }, { tuning })

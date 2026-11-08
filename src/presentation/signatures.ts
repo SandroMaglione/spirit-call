@@ -831,7 +831,7 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   const feedback = host.feedback
   const tuning = resources.tuning.get()
   const [player] = queries.player.each()
-  if (player !== undefined) tracked.at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
+  if (player !== undefined) tracked.at = lerp(queries.player.data.previous.get(player), queries.player.data.position.get(player), services.clock.alpha)
 
   // As an ultimate is called up (the world standing still): those that rise off the floor first.
   const moment = tuning.ultimate.moment
@@ -898,13 +898,13 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
     }
   }
   // Overcharged (her body glows, see `DrawPlayer`): lightning thrown out with each blow.
-  if (player !== undefined && player.data.overcharged.present) {
+  if (player !== undefined && queries.player.data.overcharged.has(player)) {
     for (const action of events.action.all()) {
       if (action.kind === "attack" && isMelee(action.move)) overchargeBlow(fx, action.at, action.direction, action.move.reach)
     }
   }
   // Overdriven (her body glows, see `DrawPlayer`): every shot a blaze at the muzzle, spent casings flying.
-  if (player !== undefined && player.data.overdriven.present) {
+  if (player !== undefined && queries.player.data.overdriven.has(player)) {
     for (const action of events.action.all()) {
       if (action.kind === "attack" && action.move.shape === "shot") overdriveShot(fx, action.at, action.direction)
     }
@@ -918,8 +918,8 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   // Barriers standing: walls of wind up off the floor, streaks running up them.
   const g = host.overlay
   const now = performance.now() / 1000
-  for (const { data } of queries.barriers.each()) {
-    const { shape, effect, remaining } = data.barrier.get()
+  for (const barrier of queries.barriers.each()) {
+    const { shape, effect, remaining } = queries.barriers.data.barrier.get(barrier)
     const color = effect.element === null ? view.playerArea : view.elements[effect.element]
     const fade = Math.min(1, remaining / view.barriers.fadeSeconds)
     if (shape.kind === "wall") {
@@ -948,9 +948,10 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
     }
   }
   // Riptide Bond: a thin chain from the one on the field to each enemy it holds; the snap as one goes back.
-  for (const { data } of queries.turned.each()) {
+  const turned = queries.turned.data
+  for (const enemy of queries.turned.each()) {
     if (player === undefined) continue
-    riptideChain(g, g, tracked.at, lerp(data.previous.get(), data.position.get(), services.clock.alpha), data.turned.get().remaining, now)
+    riptideChain(g, g, tracked.at, lerp(turned.previous.get(enemy), turned.position.get(enemy), services.clock.alpha), turned.turned.get(enemy).remaining, now)
   }
   for (const zap of zaps) {
     if (zap.skill !== "floodgate" || zap.path.length < 2) continue
@@ -958,16 +959,18 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
     if (!lash) riptideSnap(fx, feedback, zap.path[0]!, zap.path[1]!)
   }
   // Tide Domes over the one on the field (following her smoothly), rising as cast and fading as they go.
-  for (const { data } of queries.domes.each()) {
-    const { effect, remaining, faction } = data.dome.get()
-    const center = faction === "player" && player !== undefined ? tracked.at : data.position.get()
+  const domes = queries.domes.data
+  for (const entity of queries.domes.each()) {
+    const { effect, remaining, faction } = domes.dome.get(entity)
+    const center = faction === "player" && player !== undefined ? tracked.at : domes.position.get(entity)
     const age = effect.seconds - remaining
     dome(g, g, center, effect.radius, easeOut(clamp01(age / 0.25)), Math.min(1, remaining / 0.4), now)
   }
   // Wildfire: the pyre where it was cast, and what it burns streaming back into the one on the field.
-  for (const { data } of queries.pyres.each()) {
-    const { effect, remaining } = data.pyre.get()
-    const center = data.position.get()
+  const pyres = queries.pyres.data
+  for (const entity of queries.pyres.each()) {
+    const { effect, remaining } = pyres.pyre.get(entity)
+    const center = pyres.position.get(entity)
     pyreBurning(fx, host.haze, g, g, center, effect.radius, easeOut(clamp01((effect.seconds - remaining) / 0.3)), Math.min(1, remaining / 0.5), now)
   }
   for (const hit of events.hit.all()) {
@@ -976,11 +979,12 @@ export const ShowSignatures = Game.System("Shooter/ShowSignatures", {
   }
   // Tidal Echo: her echo walking after her, throwing; foam as it goes.
   const shown = new Set<number>()
-  for (const { entity, data } of queries.companions.each()) {
-    const companion = data.companion.get()
+  const companions = queries.companions.data
+  for (const entity of queries.companions.each()) {
+    const companion = companions.companion.get(entity)
     const seen = companionsSeen.get(entity.id)
     shown.add(entity.id)
-    companionsSeen.set(entity.id, { at: lerp(data.previous.get(), data.position.get(), services.clock.alpha), dealt: companion.dealt })
+    companionsSeen.set(entity.id, { at: lerp(companions.previous.get(entity), companions.position.get(entity), services.clock.alpha), dealt: companion.dealt })
     const node = services.nodes.get(entity.id)
     if (node?.kind === "companion") moveCompanion(node, companion.facing, seen !== undefined && companion.dealt > seen.dealt, companion.effect.seconds - companion.remaining, companion.remaining, services.clock.frameSeconds, now)
   }

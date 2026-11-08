@@ -9,7 +9,7 @@ import type { LobMove, MeleeMove, ShotMove } from "../src/content/attacks.ts"
 import { EnemyOptionalParts, makeEnemy } from "../src/features/enemies.ts"
 import { Enemy, Game, Health, Lobbed, Player, Position, Projectile, RunScope, Stats, BasicAttack } from "../src/schema.ts"
 
-const Grenades = Game.Inspector("Test/Grenades", { queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }) } }, ({ queries }) => queries.lobbed.each().map(({ data }) => data.lobbed.get()))
+const Grenades = Game.Inspector("Test/Grenades", { queries: { lobbed: Game.Query({ selection: { lobbed: Game.Query.read(Lobbed) } }) } }, ({ queries }) => queries.lobbed.each().map((entity) => queries.lobbed.data.lobbed.get(entity)))
 import type { BuildValue } from "../src/schema.ts"
 import { ClearEnemies, gunner, start, swordsman, plainAttack, hitBy, expectOk } from "./helpers.ts"
 
@@ -29,10 +29,10 @@ const World = Game.Inspector("Test/Weapons", {
   },
   resources: { stats: Game.System.readResource(Stats) }
 }, ({ queries, resources }) => ({
-  enemies: queries.enemies.each().map(({ data }) => data.health.get().current),
-  projectiles: queries.projectiles.each().map(({ data }) => data.projectile.get()),
-  player: queries.player.each()[0]!.data.position.get(),
-  weapon: queries.player.each()[0]!.data.basicAttack.get(),
+  enemies: queries.enemies.each().map((entity) => queries.enemies.data.health.get(entity).current),
+  projectiles: queries.projectiles.each().map((entity) => queries.projectiles.data.projectile.get(entity)),
+  player: queries.player.data.position.get(queries.player.each()[0]!),
+  weapon: queries.player.data.basicAttack.get(queries.player.each()[0]!),
   moves: resources.stats.get().shots
 }))
 

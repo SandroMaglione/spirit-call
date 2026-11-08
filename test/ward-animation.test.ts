@@ -37,12 +37,13 @@ it("raises and holds Warden's staff from its ward state, with attacks and stun t
       } })
     }
   }, ({ queries }) => {
-    const ally = queries.allies.each().find(({ data }) => data.enemy.get().kind === "chaser")!
-    for (const { entity, data } of queries.warders.each()) {
-      data.ward.set({ ally: linked ? { handle: Game.Entity.handle(ally.entity.id, Position), id: ally.entity.id } : null, formed, wait: 0 })
-      data.phase.set({ _tag: phase })
-      data.attacker.set({ ...data.attacker.get(), attack: 0, elapsed: .4 })
-      data.stunned.set({ remaining: stunned ? .2 : 0 })
+    const ally = queries.allies.each().find((entity) => queries.allies.data.enemy.get(entity).kind === "chaser")!
+    const { data } = queries.warders
+    for (const entity of queries.warders.each()) {
+      data.ward.set(entity, { ally: linked ? { handle: Game.Entity.handle(ally.id, Position), id: ally.id } : null, formed, wait: 0 })
+      data.phase.set(entity, { _tag: phase })
+      data.attacker.set(entity, { ...data.attacker.get(entity), attack: 0, elapsed: .4 })
+      data.stunned.set(entity, { remaining: stunned ? .2 : 0 })
       nodes.ensure(entity.id, () => ({
         kind: "enemy", root: new Group(), pivot: new Group(), shadow: new Instance(batch),
         facing: { x: 0, y: 1 }, attackPhase: null, drops: null,

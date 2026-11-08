@@ -24,8 +24,8 @@ const World = Game.Inspector("Test/Discs", {
     discs: Game.Query({ selection: { disc: Game.Query.read(Disc) } })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ data }) => data.health.get().current),
-  discs: queries.discs.each().map(({ data }) => data.disc.get())
+  enemies: queries.enemies.each().map((entity) => queries.enemies.data.health.get(entity).current),
+  discs: queries.discs.each().map((entity) => queries.discs.data.disc.get(entity))
 }))
 
 /** The Tidecaller with only the listed dummies (offsets from her), aiming at `aim`, the attack pressed on `presses` (held for `hold` seconds). */

@@ -19,18 +19,21 @@ const World = Game.Inspector("Test/StrangeEnemies", {
     bursts: Game.Query({ selection: { burst: Game.Query.read(Burst) } })
   }
 }, ({ queries }) => ({
-  player: queries.player.each()[0]!.data.health.get().current,
-  playerAt: queries.player.each()[0]!.data.position.get(),
-  enemies: queries.enemies.each().map(({ entity, data }) => ({
-    id: entity.id,
-    kind: data.enemy.get().kind,
-    at: data.position.get(),
-    health: data.health.get().current,
-    attack: data.attacker.get(),
-    phase: data.phase.get()._tag,
-    ward: data.ward.value()
-  })),
-  bursts: queries.bursts.each().map(({ data }) => data.burst.get())
+  player: queries.player.data.health.get(queries.player.each()[0]!).current,
+  playerAt: queries.player.data.position.get(queries.player.each()[0]!),
+  enemies: queries.enemies.each().map((entity) => {
+    const { data } = queries.enemies
+    return {
+      id: entity.id,
+      kind: data.enemy.get(entity).kind,
+      at: data.position.get(entity),
+      health: data.health.get(entity).current,
+      attack: data.attacker.get(entity),
+      phase: data.phase.get(entity)._tag,
+      ward: data.ward.get(entity)
+    }
+  }),
+  bursts: queries.bursts.each().map((entity) => queries.bursts.data.burst.get(entity))
 }))
 
 /** Training with only these enemies, at offsets from the player (who stands still unless moved). */
@@ -47,7 +50,7 @@ const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly offse
       queries: { enemies: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Enemy] }) },
       events: { damage: Game.System.writeEvent(Damage) }
     }, ({ queries, events }) => {
-      for (const { entity } of queries.enemies.each()) {
+      for (const entity of queries.enemies.each()) {
         if (entity.id === id) events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "player", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0 }) })
       }
     })
@@ -58,9 +61,10 @@ const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly offse
     const Place = Game.System("Test/Place", {
       queries: { player: Game.Query({ selection: { position: Game.Query.write(Position), previous: Game.Query.write(PrevPosition) }, with: [Player] }) }
     }, ({ queries }) => {
-      for (const { data } of queries.player.each()) {
-        data.position.set(at)
-        data.previous.set(at)
+      const { data } = queries.player
+      for (const entity of queries.player.each()) {
+        data.position.set(entity, at)
+        data.previous.set(entity, at)
       }
     })
     expectOk(run.runtime.tick(Game.Schedule(Place)))

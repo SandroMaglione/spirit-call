@@ -43,15 +43,16 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
   commands: Game.System.commands(Game.System.despawns(Disc))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  const boxes = wallBoxes(queries.walls.each())
-  const targets = queries.targets.each().map(({ entity, data }) => targetOf(entity.id, data))
+  const boxes = wallBoxes(queries.walls)
+  const targets = queries.targets.each().map((target) => targetOf(target, queries.targets.data))
   // Who is in a state (any one, whoever set it): a disc hitting one turns toward the next (see `DiscMove.bounces`).
-  const marked = new Set<number>(queries.states.each().filter(({ data }) => data.state.get().current !== null).map(({ entity }) => Game.Entity.handle(entity.id, Health)))
+  const marked = new Set<number>(queries.states.each().filter((entity) => queries.states.data.state.get(entity).current !== null).map((entity) => Game.Entity.handle(entity.id, Health)))
   const bounceRange = resources.tuning.get().discBounce.range
 
-  for (const { entity, data } of queries.discs.each()) {
-    let disc = data.disc.get()
-    const origin = data.position.get()
+  const { data } = queries.discs
+  for (const entity of queries.discs.each()) {
+    let disc = data.disc.get(entity)
+    const origin = data.position.get(entity)
     const hit = [...disc.hit]
     // Where it turns after hitting an enemy in a state: toward the nearest other one in range.
     let bounce: { readonly at: Vec2; readonly toward: Vec2 } | undefined
@@ -90,12 +91,12 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         if (bounce !== undefined) {
           // Off the enemy toward the next, with the way there (and a little more) to fly.
           const toward = subtract(bounce.toward, bounce.at)
-          data.position.set(bounce.at)
+          data.position.set(entity, bounce.at)
           disc = { ...disc, direction: normalizeOr(toward, disc.direction), range: Ops.hypot(toward.x, toward.y) + disc.radius * 2, bounces: disc.bounces - 1, hit }
           break
         }
         const at = { x: origin.x + delta.x * until, y: origin.y + delta.y * until }
-        data.position.set(at)
+        data.position.set(entity, at)
         if (wall !== undefined) events.impact.emit({ at, faction: disc.faction, wall: true, shielded: false })
         const range = disc.range - travel * until
         const done = blocked || wall !== undefined || range <= 1e-6
@@ -131,7 +132,7 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
           commands.despawn(entity)
           continue
         }
-        const home = thrower.value.data.position.get()
+        const home = queries.throwers.data.position.get(thrower.value)
         const toward = subtract(home, origin)
         const distance = Ops.hypot(toward.x, toward.y)
         const travel = disc.speed * dt
@@ -144,11 +145,11 @@ export const MoveDiscs = Game.System("Shooter/MoveDiscs", {
         const direction = normalizeOr(toward, disc.direction)
         const delta = scale(direction, travel)
         sweep(delta, 1, direction)
-        data.position.set({ x: origin.x + delta.x, y: origin.y + delta.y })
+        data.position.set(entity, { x: origin.x + delta.x, y: origin.y + delta.y })
         disc = { ...disc, back, hit }
         break
       }
     }
-    data.disc.set(disc)
+    data.disc.set(entity, disc)
   }
 })

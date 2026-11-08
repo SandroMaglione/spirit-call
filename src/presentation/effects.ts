@@ -145,9 +145,10 @@ export const SpawnFx = Game.System("Shooter/SpawnFx", {
       banner.classList.add("is-showing")
     }
   }
+  const [player] = queries.player.each()
   for (const action of events.action.all()) {
     // Melee moves leave a trail; in a combo, every other arc is a backhand that sweeps the other way.
-    if (action.kind === "attack" && isMelee(action.move) && action.move.shape !== "slam" && queries.player.each()[0]?.data.member.get().character !== "swordsman") {
+    if (action.kind === "attack" && isMelee(action.move) && action.move.shape !== "slam" && (player === undefined || queries.player.data.member.get(player).character !== "swordsman")) {
       services.host.trails.add(action.move, action.move.shape === "arc" && action.step % 2 === 1 ? -1 : 1, action.direction)
     }
   }
@@ -408,11 +409,12 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ queries, services }) => {
   const chance = services.clock.frameSeconds * view.states.motes
-  for (const { data } of queries.bodies.each()) {
-    const state = data.state.get().current
+  const { data } = queries.bodies
+  for (const entity of queries.bodies.each()) {
+    const state = data.state.get(entity).current
     if (state === null || Math.random() >= chance) continue
-    const at = toScreen(projection, lerp(data.previous.get(), data.position.get(), services.clock.alpha))
-    const r = data.body.get().radius * projection.zoom
+    const at = toScreen(projection, lerp(data.previous.get(entity), data.position.get(entity), services.clock.alpha))
+    const r = data.body.get(entity).radius * projection.zoom
     const from = { x: at.x + (Math.random() - 0.5) * r * 1.6, y: at.y - Math.random() * r * view.bodyHeightFactor }
     if (state.id === "burning") services.host.fx.mote(from, (Math.random() - 0.5) * 30, -60 - Math.random() * 50, { color: view.states.burning, size: 3 + Math.random() * 2, life: 0.5, gravity: -80, drag: 1 })
     else if (state.id === "soaked") services.host.fx.mote(from, (Math.random() - 0.5) * 16, 10, { color: view.states.soaked, size: 2.5, life: 0.45, gravity: 520, drag: 0.5 })
@@ -420,8 +422,8 @@ export const ShedStateMotes = Game.System("Shooter/ShedStateMotes", {
     else if (state.id === "cracked") services.host.fx.mote(from, (Math.random() - 0.5) * 30, -20, { color: view.states.cracked, size: 2.5, life: 0.4, gravity: 600, drag: 0.5 })
     else services.host.fx.mote(from, (Math.random() - 0.5) * 50, -30 - Math.random() * 30, { color: view.states.swept, size: 3, life: 0.4, gravity: -40, drag: 2, alpha: 0.6 })
   }
-  for (const { data } of queries.pools.each()) {
-    const pool = data.ground.get()
+  for (const entity of queries.pools.each()) {
+    const pool = queries.pools.data.ground.get(entity)
     // More embers off a bigger fire.
     // Arena hazards stay still (see `presentation/hazards.ts`).
     if (pool.element !== "fire" || pool.timer === null || Math.random() >= chance * (pool.radius / 40)) continue
@@ -472,11 +474,12 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
   services: { host: Game.System.service(RenderHost), nodes: Game.System.service(RenderNodes), clock: Game.System.service(RenderClock) }
 }, ({ queries, services }) => {
   const seconds = services.clock.frameSeconds
-  for (const { entity, data } of queries.players.each()) {
+  const { data } = queries.players
+  for (const entity of queries.players.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "player" || node.drops === null) continue
     const drops = node.drops
-    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const at = lerp(data.previous.get(entity), data.position.get(entity), services.clock.alpha)
     const last = shedding.get(node) ?? { at, owed: 0 }
     shedding.set(node, last)
     const moved = { x: at.x - last.at.x, y: at.y - last.at.y }
@@ -486,7 +489,7 @@ export const ShedSpiritDrops = Game.System("Shooter/ShedSpiritDrops", {
     const standing = speed < 20
     last.owed += drops.rate * seconds * (standing ? view.spirit.standing : Math.min(1, speed / 290))
     const back = standing ? { x: -node.facing.x, y: -node.facing.y } : { x: -moved.x / (speed * seconds), y: -moved.y / (speed * seconds) }
-    const radius = data.body.get().radius
+    const radius = data.body.get(entity).radius
     while (last.owed >= 1) {
       last.owed -= 1
       const color = drops.colors[Math.floor(Math.random() * drops.colors.length)]!
@@ -518,7 +521,8 @@ export const ReactToHits = Game.System("Shooter/ReactToHits", {
   const recoils = services.host.feedback.recoil
   const spec = view.impact
   for (const recoil of recoils.values()) recoil.age += seconds
-  for (const { entity, data } of queries.enemies.each()) {
+  const { data } = queries.enemies
+  for (const entity of queries.enemies.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "enemy") continue
     const recoil = recoils.get(entity.id)
@@ -539,10 +543,10 @@ export const ReactToHits = Game.System("Shooter/ReactToHits", {
       pivot.quaternion.setFromAxisAngle(leanAxis, spec.recoil.lean * k)
       pivot.position.set(recoil.x * spec.recoil.shift * k, pivot.position.y, recoil.y * spec.recoil.shift * k)
     }
-    const push = data.knockback.get()
+    const push = data.knockback.get(entity)
     const speed = Math.hypot(push.x, push.y)
     if (speed > spec.dustSpeed && Math.random() < seconds * 40) {
-      fxDust(services.host, data.position.get(), push, speed)
+      fxDust(services.host, data.position.get(entity), push, speed)
     }
   }
   for (const [id, recoil] of recoils) {
@@ -622,9 +626,11 @@ export const ShowPlates = Game.System("Shooter/ShowPlates", {
     services.host.stones.plates(null, 0, 0, 0, 0, time)
     return
   }
-  const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
-  const radius = player.data.body.get().radius
-  const raising = player.data.raising.present ? 1 - player.data.raising.get().remaining / player.data.raising.get().effect.raise : 0
+  const { data } = queries.player
+  const at = lerp(data.previous.get(player), data.position.get(player), services.clock.alpha)
+  const radius = data.body.get(player).radius
+  const lift = data.raising.get(player)
+  const raising = lift !== undefined ? 1 - lift.remaining / lift.effect.raise : 0
   services.host.stones.plates(at, radius * 2.3, radius * view.bodyHeightFactor * 0.45, resources.guard.get().plates, raising, time)
 })
 
@@ -638,5 +644,5 @@ export const UpdateFx = Game.System("Shooter/UpdateFx", {
   services.host.stones.update(seconds)
   services.host.combatLight.finish()
   const [player] = queries.player.each()
-  services.host.trails.update(seconds, player === undefined ? undefined : lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha))
+  services.host.trails.update(seconds, player === undefined ? undefined : lerp(queries.player.data.previous.get(player), queries.player.data.position.get(player), services.clock.alpha))
 })

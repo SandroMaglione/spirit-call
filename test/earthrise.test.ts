@@ -55,13 +55,16 @@ const World = Game.Inspector("Test/Earthrise", {
   }
 }, ({ queries }) => ({
   rocks: queries.rocks.each().length,
-  enemies: queries.enemies.each().map(({ data }) => ({
-    offset: { x: data.position.get().x - center.x, y: data.position.get().y - center.y },
-    health: data.health.get().current,
-    state: data.state.get().current?.id ?? null,
-    stunned: data.stunned.get().remaining,
-    poise: data.poise.get().current
-  }))
+  enemies: queries.enemies.each().map((entity) => {
+    const { data } = queries.enemies
+    return {
+      offset: { x: data.position.get(entity).x - center.x, y: data.position.get(entity).y - center.y },
+      health: data.health.get(entity).current,
+      state: data.state.get(entity).current?.id ?? null,
+      stunned: data.stunned.get(entity).remaining,
+      poise: data.poise.get(entity).current
+    }
+  })
 }))
 
 

@@ -5,6 +5,7 @@ import { overlapsCircle, type Box2 } from "@typeonce/ritmo-math/Box2"
 import { moveCircle, sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { add, normalizeOr, scale, subtract, zero, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as Ops from "@typeonce/ritmo/Ops"
+import type { QueryData, QueryEntity } from "@typeonce/ritmo/Query"
 import type { Tuning as TuningValue } from "../config/tuning.ts"
 import type { CharacterId } from "../content/characters.ts"
 import type { EnemyKind } from "../content/enemies.ts"
@@ -20,19 +21,30 @@ const Interpolated = Game.Query({
 export const RememberPositions = Game.System("Shooter/RememberPositions", {
   queries: { entities: Interpolated }
 }, ({ queries }) => {
-  for (const { data } of queries.entities.each()) {
-    data.previous.set(data.position.get())
+  const { data } = queries.entities
+  for (const entity of queries.entities.each()) {
+    data.previous.set(entity, data.position.get(entity))
   }
 })
 
 export const Walls = Game.Query({ selection: { wall: Game.Query.read(Wall), low: Game.Query.optional(LowWall) } })
 
-export const wallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box2 } } }>): Array<Box2> =>
-  walls.map((match) => match.data.wall.get())
+/** A system's `Walls` query: its walls and how to read them. */
+interface WallsQuery {
+  each(): ReadonlyArray<QueryEntity<typeof Game.schema, typeof Walls>>
+  readonly data: QueryData<typeof Walls>
+}
+
+export const wallBoxes = (walls: WallsQuery): Array<Box2> =>
+  walls.each().map((wall) => walls.data.wall.get(wall))
 
 /** The walls a hop does not carry her over: pillars, props, and the arena's edge (not its low walls, see `LowWall`). */
-export const tallWallBoxes = (walls: ReadonlyArray<{ readonly data: { readonly wall: { get(): Box2 }; readonly low: { readonly present: boolean } } }>): Array<Box2> =>
-  walls.filter((match) => !match.data.low.present).map((match) => match.data.wall.get())
+export const tallWallBoxes = (walls: WallsQuery): Array<Box2> =>
+  walls.each().filter((wall) => !walls.data.low.has(wall)).map((wall) => walls.data.wall.get(wall))
+
+/** The low walls a hop carries her over (see `LowWall`). */
+export const lowWallBoxes = (walls: WallsQuery): Array<Box2> =>
+  walls.each().filter((wall) => walls.data.low.has(wall)).map((wall) => walls.data.wall.get(wall))
 
 /** How far past a low wall a hop may carry her to land clear of it, beyond its reach. */
 const hopOvershoot = 120
@@ -106,22 +118,22 @@ export const IntegrateBodies = Game.System("Shooter/IntegrateBodies", {
 }, ({ queries, resources }) => {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
-  const walls = queries.walls.each()
-  const boxes = wallBoxes(walls)
+  const boxes = wallBoxes(queries.walls)
   // Hopping (see `PlungeEffect`), she flies over low walls.
-  const tall = tallWallBoxes(walls)
+  const tall = tallWallBoxes(queries.walls)
   // Enemies walk at their pace (slow motion); pushes still carry them at full speed.
   const pace = enemyPace(resources.slowMotion.get())
-  for (const { data } of queries.bodies.each()) {
-    const own = data.velocity.get()
-    const velocity = data.enemy.present && pace !== 1 ? { x: own.x * pace, y: own.y * pace } : own
-    const knockback = data.knockback.present ? data.knockback.get() : zero
-    const knockbackShare = pushShare(pushDecay(tuning, data.state.present ? data.state.get().current : undefined), dt)
+  const { data } = queries.bodies
+  for (const body of queries.bodies.each()) {
+    const own = data.velocity.get(body)
+    const velocity = data.enemy.has(body) && pace !== 1 ? { x: own.x * pace, y: own.y * pace } : own
+    const knockback = data.knockback.get(body) ?? zero
+    const knockbackShare = pushShare(pushDecay(tuning, data.state.get(body)?.current), dt)
     const vx = velocity.x + knockback.x * knockbackShare
     const vy = velocity.y + knockback.y * knockbackShare
     if (vx === 0 && vy === 0) continue
-    const hopping = data.airborne.present && data.airborne.get().kind === "plunge"
-    const moved = moveCircle(data.position.get(), { x: vx * dt, y: vy * dt }, data.body.get().radius, { boxes: hopping ? tall : boxes })
-    data.position.set(moved.position)
+    const hopping = data.airborne.get(body)?.kind === "plunge"
+    const moved = moveCircle(data.position.get(body), { x: vx * dt, y: vy * dt }, data.body.get(body).radius, { boxes: hopping ? tall : boxes })
+    data.position.set(body, moved.position)
   }
 })

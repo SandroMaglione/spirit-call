@@ -7,7 +7,7 @@
  * the element it applies (see `features/elements.ts`).
  */
 import { Clock } from "@typeonce/ritmo"
-import type { ReadCell, WriteCell } from "@typeonce/ritmo/Query"
+import type { QueryData, QueryEntity } from "@typeonce/ritmo/Query"
 import { overlapsCircle } from "@typeonce/ritmo-math/Box2"
 import { sweepCircle } from "@typeonce/ritmo-math/Collide2"
 import { normalizeOr, scale, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
@@ -72,7 +72,7 @@ import {
   Ward,
   Zap
 } from "../schema.ts"
-import type { ActiveState, Blow, ProjectileValue } from "../schema.ts"
+import type { Blow, ProjectileValue } from "../schema.ts"
 import { knockbackTaken, pushDecay, Walls, wallBoxes } from "./motion.ts"
 import { damageTaken, levelGap, traitsIn } from "./build.ts"
 import { affinityDamage, afflict, stateDamage } from "./elements.ts"
@@ -126,27 +126,28 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       events.explosion.emit({ at, radius: blast.radius, faction: projectile.faction, kind: "blast", heavy: false, element: blast.blow.element?.id ?? null, skill: blast.skill })
     }
     const tuning = resources.tuning.get()
-    const boxes = wallBoxes(queries.walls.each())
+    const boxes = wallBoxes(queries.walls)
 
     grid.clear()
     targets.length = 0
-    for (const { entity, data } of queries.targets.each()) {
-      const target = targetOf(entity.id, data)
+    for (const entity of queries.targets.each()) {
+      const target = targetOf(entity, queries.targets.data)
       grid.insert(targets.length, target.at.x, target.at.y, target.radius)
       targets.push(target)
     }
     // Bodies that just dashed: a shot through where they stood dodged them, wherever they are now.
     const dashers = targets.filter((target) => target.dashed !== undefined)
-    const barriers = queries.barriers.each().map(({ data }) => data.barrier.get())
+    const barriers = queries.barriers.each().map((entity) => queries.barriers.data.barrier.get(entity))
     const mantle = resources.mantle.get()
 
-    for (const { entity, data } of queries.projectiles.each()) {
-      const projectile = data.projectile.get()
+    const { data } = queries.projectiles
+    for (const entity of queries.projectiles.each()) {
+      const projectile = data.projectile.get(entity)
       const source = projectile.blow.source?.attacker
       const attacker = source === undefined ? undefined : queries.dodgeAttackers.getHandle(source)
-      const window = dodgeWindowOf(tuning, attacker?.ok === true ? attacker.value.data.enemy.get() : undefined)
-      const origin = data.position.get()
-      const velocity = data.velocity.get()
+      const window = dodgeWindowOf(tuning, attacker?.ok === true ? queries.dodgeAttackers.data.enemy.get(attacker.value) : undefined)
+      const origin = data.position.get(entity)
+      const velocity = data.velocity.get(entity)
       const speed = Ops.hypot(velocity.x, velocity.y)
       // Enemy shots fly at the enemies' pace (slower in slow motion).
       const travel = Math.min(speed * dt * paceOf(resources.slowMotion.get(), projectile.faction), projectile.range)
@@ -177,7 +178,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       barred = Math.min(barred, mantleMeets(mantle, projectile.faction, origin, delta, r) ?? Infinity)
       if (barred < (wall?.time ?? Infinity) && barred <= (contacts[0]?.time ?? Infinity)) {
         const at = { x: origin.x + delta.x * barred, y: origin.y + delta.y * barred }
-        data.position.set(at)
+        data.position.set(entity, at)
         events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: true })
         events.guarded.emit({ at, kind: "barred" })
         commands.despawn(entity)
@@ -226,28 +227,28 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
       }
 
       if (shieldedAt !== undefined) {
-        data.position.set(shieldedAt)
+        data.position.set(entity, shieldedAt)
         burst(projectile, shieldedAt)
         events.impact.emit({ at: shieldedAt, faction: projectile.faction, wall: false, shielded: true })
         commands.despawn(entity)
         continue
       }
       if (stopAt !== undefined) {
-        data.position.set({ x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
+        data.position.set(entity, { x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
         burst(projectile, { x: origin.x + delta.x * stopAt, y: origin.y + delta.y * stopAt })
         commands.despawn(entity)
         continue
       }
       if (wall !== undefined) {
         const at = { x: origin.x + delta.x * wall.time, y: origin.y + delta.y * wall.time }
-        data.position.set(at)
+        data.position.set(entity, at)
         events.impact.emit({ at, faction: projectile.faction, wall: true, shielded: false })
         burst(projectile, at)
         commands.despawn(entity)
         continue
       }
       const at = { x: origin.x + delta.x, y: origin.y + delta.y }
-      data.position.set(at)
+      data.position.set(entity, at)
       const range = projectile.range - travel
       if (range <= 1e-6) {
         events.impact.emit({ at, faction: projectile.faction, wall: false, shielded: false })
@@ -255,7 +256,7 @@ export const MoveProjectiles = Game.System("Shooter/MoveProjectiles", {
         commands.despawn(entity)
         continue
       }
-      data.projectile.set({ ...projectile, range, pierce, hit })
+      data.projectile.set(entity, { ...projectile, range, pierce, hit })
     }
 })
 
@@ -348,16 +349,17 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
   // The level gap (see `levelGap`): a blow the team deals lands by its dealer's level (the one on the field when it is
   // no member's, a totem's or a pool's), an enemy's by the level of the member it lands on.
   const enemyLevel = resources.enemyLevel.get()
-  const fielded = queries.energies.each().find(({ data }) => data.player.present)?.data.member.get().level ?? enemyLevel
+  const onField = queries.energies.each().find((entity) => queries.energies.data.player.has(entity))
+  const fielded = onField === undefined ? enemyLevel : queries.energies.data.member.get(onField).level
   const dealerLevel = (blow: Blow): number => {
     const dealer = blow.source === null ? undefined : queries.leveled.getHandle(blow.source.attacker)
-    return dealer?.ok === true ? dealer.value.data.member.get().level : fielded
+    return dealer?.ok === true ? queries.leveled.data.member.get(dealer.value).level : fielded
   }
   // In the Training Ground (and the tutorial) the team cannot fall (only the fire hurts, and never to the end).
   const objectiveKind = tuning.challenges[resources.challenge.get()].objective.kind
   const training = tuning.waves.enabled && (objectiveKind === "training" || objectiveKind === "tutorial")
   // Enemies a warder's tether holds take only a share (see `features/wards.ts`).
-  const warded = wardedTaken(tuning, queries.wards.each().map(({ data }) => ({ kind: data.enemy.get().kind, ward: data.ward.get() })))
+  const warded = wardedTaken(tuning, queries.wards.each().map((entity) => ({ kind: queries.wards.data.enemy.get(entity).kind, ward: queries.wards.data.ward.get(entity) })))
   const dead = new Set<number>()
   let kills = 0
   let energy = 0
@@ -368,69 +370,72 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
     const found = queries.damageable.getHandle(damage.target)
     if (!found.ok) {
       const benched = queries.benched.getHandle(damage.target)
-      if (benched.ok && damage.blow.periodic) burnOnBench(tuning, benched.value.data, damage.blow, levelGap(tuning, benched.value.data.member.get().level, enemyLevel).taken)
+      if (benched.ok && damage.blow.periodic) burnOnBench(tuning, benched.value, queries.benched.data, damage.blow, levelGap(tuning, queries.benched.data.member.get(benched.value).level, enemyLevel).taken)
       continue
     }
-    if (dead.has(found.value.entity.id)) continue
-    const { entity, data } = found.value
-    if (data.hurtbox.get().faction === damage.faction) continue
+    if (dead.has(found.value.id)) continue
+    const entity = found.value
+    const { data } = queries.damageable
+    if (data.hurtbox.get(entity).faction === damage.faction) continue
     const { blow } = damage
-    const invulnerable = data.invulnerable.get().remaining
+    const invulnerable = data.invulnerable.get(entity).remaining
     if (invulnerable > 0 && !blow.periodic) continue
     const guard = resources.guard.get()
-    if (plateTakes(guard, data.player.present, damage.faction, blow.periodic) && guard.effect !== null) {
+    if (plateTakes(guard, data.player.has(entity), damage.faction, blow.periodic) && guard.effect !== null) {
       resources.guard.set({ ...guard, plates: guard.plates - 1 })
       // Untouchable for the usual moment after, so one flurry does not spend every plate.
-      data.invulnerable.set({ remaining: tuning.player.hitInvulnerability })
+      data.invulnerable.set(entity, { remaining: tuning.player.hitInvulnerability })
       hitStop = Math.max(hitStop, guard.effect.hitStop)
-      commands.spawnIn(RunScope, Game.Command.spawn([PlateShatter, { at: data.position.get(), attacker: blow.source?.attacker ?? null, effect: guard.effect, atk: guard.atk, charges: guard.charges }]))
+      commands.spawnIn(RunScope, Game.Command.spawn([PlateShatter, { at: data.position.get(entity), attacker: blow.source?.attacker ?? null, effect: guard.effect, atk: guard.atk, charges: guard.charges }]))
       continue
     }
 
-    const health = data.health.get()
+    const health = data.health.get(entity)
     const holder = blow.source === null ? undefined : queries.holders.getHandle(blow.source.attacker)
-    const state = data.state.get().current
-    const held = (data.stunned.present && data.stunned.get().remaining > 0) || (data.poise.present && data.poise.get().broken > 0)
-    const wielder = holder?.ok === true && holder.value.data.health.present ? holder.value.data.health.get() : undefined
-    const bonus = holder?.ok === true ? damageBonusPercent(holder.value.data.passives.get(), blow.source?.move, { ...health, state: state?.id ?? null, held }, wielder) : 0
+    const state = data.state.get(entity).current
+    const held = (data.stunned.get(entity)?.remaining ?? 0) > 0 || (data.poise.get(entity)?.broken ?? 0) > 0
+    const wielder = holder?.ok === true ? queries.holders.data.health.get(holder.value) : undefined
+    const bonus = holder?.ok === true ? damageBonusPercent(queries.holders.data.passives.get(holder.value), blow.source?.move, { ...health, state: state?.id ?? null, held }, wielder) : 0
     // What her trade-offs cost: blows on her deal more (see `damageTakenPercent`).
-    const cost = data.player.present && data.passives.present ? damageTakenPercent(data.passives.get()) : 0
-    const enemy = data.enemy.present ? data.enemy.get().kind : undefined
-    const affinity = blow.element === null ? undefined : data.affinities.get()[blow.element.id]
+    const passives = data.passives.get(entity)
+    const cost = data.player.has(entity) && passives !== undefined ? damageTakenPercent(passives) : 0
+    const enemy = data.enemy.get(entity)?.kind
+    const affinity = blow.element === null ? undefined : data.affinities.get(entity)[blow.element.id]
     const factor = blow.element === null ? 1 : affinityDamage(tuning, affinity)
     // The blow's element takes hold (a burn only burns): its state, bursting another first (see `afflict`).
     const afflicted = blow.element !== null && !blow.periodic ? afflict(tuning, state, blow.element, blow.charges, affinity) : null
     // A broken enemy takes more (see `Tuning.breaking`).
     // Armor (see `ArmorSpec`) holds until the break bar fills: a share of the damage, and no push.
-    const armored = enemy !== undefined && tuning.enemies[enemy].armor !== null && !(data.poise.present && data.poise.get().broken > 0)
+    const armored = enemy !== undefined && tuning.enemies[enemy].armor !== null && !((data.poise.get(entity)?.broken ?? 0) > 0)
     const armor = armored ? tuning.enemies[enemy].armor!.taken : 1
-    const broken = armor * (data.poise.present && data.poise.get().broken > 0 ? tuning.breaking.damageTaken : 1)
+    const broken = armor * ((data.poise.get(entity)?.broken ?? 0) > 0 ? tuning.breaking.damageTaken : 1)
+    const member = data.member.get(entity)
     const gap = damage.faction === "enemy"
-      ? (data.member.present ? levelGap(tuning, data.member.get().level, enemyLevel).taken : 1)
+      ? (member !== undefined ? levelGap(tuning, member.level, enemyLevel).taken : 1)
       : enemy !== undefined ? levelGap(tuning, dealerLevel(blow), enemyLevel).dealt : 1
     // A soaked dealer's blows are weaker (not its burns: a burn's strength was set as it caught).
     const dealer = blow.source === null || blow.periodic ? undefined : queries.dealers.getHandle(blow.source.attacker)
-    const soaked = dealer?.ok === true ? stateDamage(tuning, dealer.value.data.state.get()) : 1
+    const soaked = dealer?.ok === true ? stateDamage(tuning, queries.dealers.data.state.get(dealer.value)) : 1
     // Under the team's mantle of wind, blows on the one on the field land weaker (see `features/windwall.ts`).
-    const mantled = mantleTaken(resources.mantle.get(), data.player.present, damage.faction, blow.periodic)
-    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * mantled * (warded.get(entity.id) ?? 1), data.stats.get().def)
+    const mantled = mantleTaken(resources.mantle.get(), data.player.has(entity), damage.faction, blow.periodic)
+    const amount = damageTaken(tuning, blow.damage * (1 + bonus / 100) * (1 + cost / 100) * factor * broken * gap * soaked * mantled * (warded.get(entity.id) ?? 1), data.stats.get(entity).def)
     // A dummy that never falls keeps its health (the blow still shows); a training team keeps one point of it.
-    let current = data.immortal.present
+    let current = data.immortal.has(entity)
       ? health.current
-      : training && data.player.present ? Math.max(Math.min(1, health.current), health.current - amount) : Math.max(0, health.current - amount)
+      : training && data.player.has(entity) ? Math.max(Math.min(1, health.current), health.current - amount) : Math.max(0, health.current - amount)
     // A second wind (the Survival slot's): once a run, a blow that would fell her leaves her standing, untouchable a moment.
-    const wind = data.player.present && data.member.present && data.passives.present ? secondWindPercent(data.passives.get()) : null
-    const slot = data.member.present ? data.member.get().slot : -1
+    const wind = data.player.has(entity) && member !== undefined && passives !== undefined ? secondWindPercent(passives) : null
+    const slot = member !== undefined ? member.slot : -1
     let caught = false
     if (current <= 0 && wind !== null && !resources.secondWinds.get().includes(slot)) {
       current = Math.max(1, (health.max * wind) / 100)
       caught = true
       resources.secondWinds.set([...resources.secondWinds.get(), slot])
-      events.heal.emit({ at: data.position.get(), amount: current })
+      events.heal.emit({ at: data.position.get(entity), amount: current })
     }
     // Only landed attacks and specials charge energy; damage and level do not set the award.
-    const landed = data.immortal.present ? Math.min(amount, health.current) : health.current - current
-    if (landed > 0 && blow.charges && !blow.periodic && blow.energyAction !== undefined && data.hurtbox.get().faction === "enemy") {
+    const landed = data.immortal.has(entity) ? Math.min(amount, health.current) : health.current - current
+    if (landed > 0 && blow.charges && !blow.periodic && blow.energyAction !== undefined && data.hurtbox.get(entity).faction === "enemy") {
       const action = blow.energyAction
       const entry = ledger[action.key] ?? { targets: [], gained: 0, expires: now + 60 }
       if (!entry.targets.includes(Game.Entity.handle(entity.id, Health))) {
@@ -439,23 +444,23 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
         ledger[action.key] = { ...entry, targets: [...entry.targets, Game.Entity.handle(entity.id, Health)], gained: entry.gained + gain }
       }
     }
-    data.health.set({ current, max: health.max })
+    data.health.set(entity, { current, max: health.max })
     if (!blow.periodic) {
-      data.flash.set({ remaining: tuning.feedback.hitFlash })
+      data.flash.set(entity, { remaining: tuning.feedback.hitFlash })
       // One mistake costs one hit: the player is briefly untouchable afterwards.
-      if (data.player.present) {
-        data.invulnerable.set({ remaining: tuning.player.hitInvulnerability * (caught ? 2 : 1) })
+      if (data.player.has(entity)) {
+        data.invulnerable.set(entity, { remaining: tuning.player.hitInvulnerability * (caught ? 2 : 1) })
         hitStop = Math.max(hitStop, tuning.feedback.hitStopOnPlayerHit)
       }
       // A swept body is light: pushed further (see `elementRules.swept`).
       const light = (afflicted?.state ?? state)?.id === "swept" ? tuning.elements.swept.knockback : 1
-      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy, data.enemy.present && data.enemy.get().champion, data.member.present ? data.member.get().character : undefined, traitsIn(data.passives).weight) * light
-      data.knockback.update((current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
+      const push = armored ? 0 : blow.knockback * knockbackTaken(tuning, enemy, data.enemy.get(entity)?.champion === true, member?.character, traitsIn(passives).weight) * light
+      data.knockback.update(entity, (current) => ({ x: current.x + damage.direction.x * push, y: current.y + damage.direction.y * push }))
       // Each landed blow pauses the game for its own hit-stop (heavier moves longer).
       if (enemy !== undefined) hitStop = Math.max(hitStop, blow.hitStop)
     }
 
-    const at = data.position.get()
+    const at = data.position.get(entity)
     const killed = current <= 0
     events.hit.emit({
       source: blow.source,
@@ -464,7 +469,7 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       direction: damage.direction,
       amount,
       // An enemy's side, even turned (see `Turned`): a blow on it is never one on the team (tallies, falls, the hurt).
-      faction: enemy !== undefined ? "enemy" : data.hurtbox.get().faction,
+      faction: enemy !== undefined ? "enemy" : data.hurtbox.get(entity).faction,
       killed,
       heavy: blow.heavy,
       periodic: blow.periodic,
@@ -472,42 +477,44 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
       state: state?.id ?? null
     })
     // The state it held bursts, even on the blow that ends it; the new state holds on a body that survives.
-    const side = data.hurtbox.get().faction
+    const side = data.hurtbox.get(entity).faction
     if (afflicted?.burst != null) {
       commands.spawnIn(RunScope, Game.Command.spawn([StateBurst, { at, state: afflicted.burst, target: entity.id, side, by: damage.faction, direction: damage.direction }]))
     }
     if (afflicted !== null && !killed) {
-      data.state.set({ current: afflicted.state })
+      data.state.set(entity, { current: afflicted.state })
       if (afflicted.state !== null && afflicted.state.id !== state?.id) events.reaction.emit({ at, kind: "apply", state: afflicted.state.id, faction: damage.faction })
     }
     // A blow on a charged body arcs on to the next (an arc or a burn never does).
     const charged = afflicted === null ? state : afflicted.state
     if (!blow.periodic && !blow.arc && damage.faction !== null && charged?.id === "charged" && charged.nextTick <= 0 && amount > 0) {
       commands.spawnIn(RunScope, Game.Command.spawn([Arc, { from: entity.id, at, side, by: damage.faction, damage: blow.damage * tuning.elements.charged.arcShare, atk: charged.atk, charges: false }]))
-      if (!killed) data.state.set({ current: { ...charged, nextTick: tuning.elements.charged.arcEvery } })
+      if (!killed) data.state.set(entity, { current: { ...charged, nextTick: tuning.elements.charged.arcEvery } })
     }
     if (!killed) continue
 
     dead.add(entity.id)
-    events.death.emit({ at, faction: data.hurtbox.get().faction, enemy, atk: data.stats.get().atk })
+    events.death.emit({ at, faction: data.hurtbox.get(entity).faction, enemy, atk: data.stats.get(entity).atk })
     // A fallen team member stays (out of the fight); everything else is gone.
-    if (data.player.present) data.state.set({ current: null })
+    if (data.player.has(entity)) data.state.set(entity, { current: null })
     else commands.despawn(entity)
-    if (data.hurtbox.get().faction === "enemy") {
+    if (data.hurtbox.get(entity).faction === "enemy") {
       kills += 1
       hitStop = Math.max(hitStop, tuning.feedback.hitStopOnKill)
     }
-    if (data.respawns.present && enemy !== undefined) {
-      commands.spawnIn(RunScope, respawnOf(enemy, data.respawns.get()))
+    const respawns = data.respawns.get(entity)
+    if (respawns !== undefined && enemy !== undefined) {
+      commands.spawnIn(RunScope, respawnOf(enemy, respawns))
     }
   }
   if (kills > 0) resources.stats.update((stats) => ({ ...stats, kills: stats.kills + kills }))
   resources.energyLedger.set(ledger)
   if (energy > 0) {
-    for (const { data } of queries.energies.each()) {
-      if (data.health.get().current <= 0) continue
-      const gained = (data.player.present ? energy : energy * tuning.team.benchEnergyShare) * traitsIn(data.passives).energy
-      data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + gained) }))
+    const { data } = queries.energies
+    for (const entity of queries.energies.each()) {
+      if (data.health.get(entity).current <= 0) continue
+      const gained = (data.player.has(entity) ? energy : energy * tuning.team.benchEnergyShare) * traitsIn(data.passives.get(entity)).energy
+      data.energy.update(entity, ({ current }) => ({ current: Math.min(tuning.energy.max, current + gained) }))
     }
   }
   if (hitStop > 0) resources.hitStop.update(({ remaining }) => ({ remaining: Math.max(remaining, hitStop) }))
@@ -516,19 +523,16 @@ export const ApplyDamage = Game.System("Shooter/ApplyDamage", {
 /** A burn on a team member on the bench: it lands like any burn (her DEF), and she falls when it ends her. */
 const burnOnBench = (
   tuning: TuningValue,
-  data: {
-    readonly health: WriteCell<{ readonly current: number; readonly max: number }>
-    readonly stats: ReadCell<{ readonly def: number }>
-    readonly state: WriteCell<{ readonly current: ActiveState | null }>
-  },
+  entity: QueryEntity<typeof Game.schema, typeof Benched>,
+  data: QueryData<typeof Benched>,
   struck: Blow,
   gap: number
 ): void => {
-  const health = data.health.get()
+  const health = data.health.get(entity)
   if (health.current <= 0) return
-  const current = Math.max(0, health.current - damageTaken(tuning, struck.damage * gap, data.stats.get().def))
-  data.health.set({ current, max: health.max })
-  if (current <= 0) data.state.set({ current: null })
+  const current = Math.max(0, health.current - damageTaken(tuning, struck.damage * gap, data.stats.get(entity).def))
+  data.health.set(entity, { current, max: health.max })
+  if (current <= 0) data.state.set(entity, { current: null })
 }
 
 /** Counts a hit-stop down; gameplay resumes once it reaches zero (see `frozen`). */
@@ -549,13 +553,15 @@ export const TickCombatTimers = Game.System("Shooter/TickCombatTimers", {
   resources: { time: Game.System.readResource(Time) }
 }, ({ queries, resources }) => {
   const dt = resources.time.get().dt
-  for (const { data } of queries.invulnerable.each()) {
-    const remaining = data.invulnerable.get().remaining
-    if (remaining > 0) data.invulnerable.set({ remaining: Math.max(0, remaining - dt) })
+  const invulnerable = queries.invulnerable.data.invulnerable
+  for (const entity of queries.invulnerable.each()) {
+    const remaining = invulnerable.get(entity).remaining
+    if (remaining > 0) invulnerable.set(entity, { remaining: Math.max(0, remaining - dt) })
   }
-  for (const { data } of queries.flashes.each()) {
-    const remaining = data.flash.get().remaining
-    if (remaining > 0) data.flash.set({ remaining: Math.max(0, remaining - dt) })
+  const flash = queries.flashes.data.flash
+  for (const entity of queries.flashes.each()) {
+    const remaining = flash.get(entity).remaining
+    if (remaining > 0) flash.set(entity, { remaining: Math.max(0, remaining - dt) })
   }
 })
 
@@ -566,11 +572,12 @@ export const DecayKnockback = Game.System("Shooter/DecayKnockback", {
 }, ({ queries, resources }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
-  for (const { data } of queries.pushed.each()) {
-    const current = data.knockback.get()
+  const { data } = queries.pushed
+  for (const entity of queries.pushed.each()) {
+    const current = data.knockback.get(entity)
     if (current.x !== 0 || current.y !== 0) {
-      const next = scale(current, Ops.exp(-pushDecay(tuning, data.state.present ? data.state.get().current : undefined) * dt))
-      data.knockback.set(Ops.hypot(next.x, next.y) < 0.5 ? { x: 0, y: 0 } : next)
+      const next = scale(current, Ops.exp(-pushDecay(tuning, data.state.get(entity)?.current) * dt))
+      data.knockback.set(entity, Ops.hypot(next.x, next.y) < 0.5 ? { x: 0, y: 0 } : next)
     }
   }
 })

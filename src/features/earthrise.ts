@@ -81,21 +81,22 @@ export const CastEarthrise = Game.System("Shooter/CastEarthrise", {
     const effect = cast.effect
     if (effect.kind !== "earthrise") continue
     const all = queries.bodies.each()
-    const bodies = all.map(({ entity, data }) => ({
+    const { data } = queries.bodies
+    const bodies = all.map((entity) => ({
       id: entity.id,
-      at: data.position.get(),
-      radius: data.hurtbox.get().radius,
-      faction: data.hurtbox.get().faction,
-      champion: data.enemy.present && data.enemy.get().champion,
-      elite: data.elite.present,
-      maxHealth: data.health.get().max
+      at: data.position.get(entity),
+      radius: data.hurtbox.get(entity).radius,
+      faction: data.hurtbox.get(entity).faction,
+      champion: data.enemy.get(entity)?.champion === true,
+      elite: data.elite.has(entity),
+      maxHealth: data.health.get(entity).max
     }))
     const blow = castBlow(cast, effect)
     earthriseTargets(effect, cast.faction, cast.from, cast.direction, bodies).forEach(({ at, target }, index) => {
-      const body = target === null ? undefined : all.find(({ entity }) => entity.id === target)
+      const body = target === null ? undefined : all.find((entity) => entity.id === target)
       commands.spawnIn(RunScope, Game.Command.spawn([Rock, {
         at,
-        target: body === undefined ? null : Game.Entity.handle(body.entity.id, Position),
+        target: body === undefined ? null : Game.Entity.handle(body.id, Position),
         remaining: effect.warning + index * effect.interval,
         effect,
         faction: cast.faction,
@@ -126,27 +127,30 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   const tuning = resources.tuning.get()
-  for (const { entity, data } of queries.rocks.each()) {
-    const rock = data.rock.get()
+  const rocks = queries.rocks.data
+  const bodies = queries.bodies.data
+  const holdable = queries.holdable.data
+  for (const entity of queries.rocks.each()) {
+    const rock = rocks.rock.get(entity)
     const followed = rock.target === null ? undefined : queries.bodies.getHandle(rock.target)
-    const at = followed?.ok === true ? followed.value.data.position.get() : rock.at
+    const at = followed?.ok === true ? bodies.position.get(followed.value) : rock.at
     const remaining = rock.remaining - dt
     if (remaining > 1e-9) {
-      data.rock.set({ ...rock, at, remaining })
+      rocks.rock.set(entity, { ...rock, at, remaining })
       continue
     }
     commands.despawn(entity)
     const { effect } = rock
     const caught = new Set<number>()
     for (const body of queries.bodies.each()) {
-      const hurtbox = body.data.hurtbox.get()
+      const hurtbox = bodies.hurtbox.get(body)
       if (hurtbox.faction === rock.faction) continue
-      if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
-      const there = body.data.position.get()
+      if ((bodies.invulnerable.get(body)?.remaining ?? 0) > 0) continue
+      const there = bodies.position.get(body)
       if (Ops.hypot(there.x - at.x, there.y - at.y) - hurtbox.radius > effect.size) continue
-      caught.add(body.entity.id)
+      caught.add(body.id)
       events.damage.emit({
-        target: Game.Entity.handle(body.entity.id, Health),
+        target: Game.Entity.handle(body.id, Health),
         faction: rock.faction,
         direction: normalizeOr(subtract(there, at), { x: 0, y: 1 }),
         blow: rock.blow
@@ -154,12 +158,12 @@ export const UpdateRocks = Game.System("Shooter/UpdateRocks", {
     }
     // An enemy it catches is held: stunned a while (never a champion: skills do not hold the fight's own), its break
     // bar filled (unless broken already).
-    for (const { entity: held, data: enemy } of queries.holdable.each()) {
+    for (const held of queries.holdable.each()) {
       if (!caught.has(held.id)) continue
-      if (effect.stun > 0 && !enemy.enemy.get().champion) enemy.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
-      const bar = poiseOf(tuning, enemy.enemy.get().kind, enemy.health.get().max, enemy.enemy.get().champion)
-      if (bar > 0 && effect.breakFill > 0 && enemy.poise.get().broken <= 0) {
-        enemy.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))
+      if (effect.stun > 0 && !holdable.enemy.get(held).champion) holdable.stunned.update(held, ({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
+      const bar = poiseOf(tuning, holdable.enemy.get(held).kind, holdable.health.get(held).max, holdable.enemy.get(held).champion)
+      if (bar > 0 && effect.breakFill > 0 && holdable.poise.get(held).broken <= 0) {
+        holdable.poise.update(held, (poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))
       }
     }
     events.explosion.emit({ at, radius: effect.size, faction: rock.faction, kind: "eruption", heavy: effect.heavy, element: effect.element })
@@ -183,7 +187,7 @@ export const CastFaults = Game.System("Shooter/CastFaults", {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind !== "fault") continue
-    const blocked = sweepCircle(cast.from, scale(cast.direction, effect.length), effect.size / 4, { boxes: wallBoxes(queries.walls.each()) })
+    const blocked = sweepCircle(cast.from, scale(cast.direction, effect.length), effect.size / 4, { boxes: wallBoxes(queries.walls) })
     const length = effect.length * (blocked?.time ?? 1)
     const rock = rockOf(effect, effect.size, effect.warning, effect.stun, effect.breakFill)
     const blow = castBlow(cast, effect)

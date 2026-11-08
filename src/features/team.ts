@@ -129,10 +129,11 @@ export const TickBench = Game.System("Shooter/TickBench", {
   if (wait > 0) resources.teamSwitch.set({ cooldown: Math.max(0, wait - dt) })
   const held = resources.arrival.get().remaining
   if (held > 0) resources.arrival.set({ remaining: Math.max(0, held - dt) })
-  for (const { data } of queries.bench.each()) {
-    const slots = data.skills.get()
+  const { data } = queries.bench
+  for (const entity of queries.bench.each()) {
+    const slots = data.skills.get(entity)
     if (Object.values(slots).every((slot) => slot.cooldown <= 0)) continue
-    data.skills.set(bySlot((slot) => ({ ...slots[slot], cooldown: Math.max(0, slots[slot].cooldown - dt) })))
+    data.skills.set(entity, bySlot((slot) => ({ ...slots[slot], cooldown: Math.max(0, slots[slot].cooldown - dt) })))
   }
 })
 
@@ -193,41 +194,42 @@ export const SwitchCharacter = Game.System("Shooter/SwitchCharacter", {
   const [field] = queries.field.each()
   if (field === undefined) return
   const tuning = resources.tuning.get()
-  const slot = field.data.member.get().slot
-  const dash = field.data.dash.get()
-  const members = queries.members.each().map(({ entity, data }) => ({
+  const { data } = queries.field
+  const slot = data.member.get(field).slot
+  const dash = data.dash.get(field)
+  const members = queries.members.each().map((entity) => ({
     entity,
-    slot: data.member.get().slot,
-    character: data.member.get().character,
-    alive: data.health.get().current > 0
+    slot: queries.members.data.member.get(entity).slot,
+    character: queries.members.data.member.get(entity).character,
+    alive: queries.members.data.health.get(entity).current > 0
   }))
-  const fell = field.data.health.get().current <= 0
+  const fell = data.health.get(field).current <= 0
   let incoming: (typeof members)[number] | undefined
   if (fell) incoming = nextAlive(members, slot)
   else {
     const wanted = resources.controls.get().switchTo
     const frozen = resources.hitStop.get().remaining > 1e-9
-    if (wanted === null || wanted === slot || frozen || dash.remaining > 0 || field.data.airborne.present || resources.teamSwitch.get().cooldown > 0) return
+    if (wanted === null || wanted === slot || frozen || dash.remaining > 0 || data.airborne.has(field) || resources.teamSwitch.get().cooldown > 0) return
     incoming = members.find((member) => member.slot === wanted && member.alive)
     if (incoming === undefined) return
   }
 
-  const at = field.data.position.get()
+  const at = data.position.get(field)
   // After a fall she is held while the one who fell goes down (see `Arrival`); her protection counts from when she steps in.
   const beat = fell ? tuning.team.fallBeat.seconds : 0
-  const invulnerable = Math.max(field.data.invulnerable.get().remaining, fell ? beat + tuning.team.fallProtection : 0)
+  const invulnerable = Math.max(data.invulnerable.get(field).remaining, fell ? beat + tuning.team.fallProtection : 0)
   const carried: Carried = {
-    motion: { previous: field.data.previous.get(), velocity: field.data.velocity.get(), invulnerable },
-    aim: field.data.aim.get(),
-    facing: field.data.facing.get().direction,
+    motion: { previous: data.previous.get(field), velocity: data.velocity.get(field), invulnerable },
+    aim: data.aim.get(field),
+    facing: data.facing.get(field).direction,
     dash: { ...dash, remaining: 0, buffered: 0 }
   }
   // The body leaves the one on the field (the same components any body has), and her attack is interrupted.
-  const outgoing = field.data.member.get()
-  commands.remove(field.entity, ...FieldParts)
+  const outgoing = data.member.get(field)
+  commands.remove(field, ...FieldParts)
   if (fell) events.action.emit({ kind: "fall", at, character: outgoing.character, facing: carried.facing })
   if (incoming === undefined) return
-  commands.insert(field.entity, [BasicAttack, initialBasicAttack({ attack: field.data.basicAttack.get().attack })])
+  commands.insert(field, [BasicAttack, initialBasicAttack({ attack: data.basicAttack.get(field).attack })])
   commands.insert(incoming.entity, ...fieldParts(tuning, incoming, at, carried))
   resources.teamSwitch.set({ cooldown: tuning.team.switchCooldown })
   // After a fall, a beat: the enemies slow to a crawl while the one who fell goes down, and the one coming in stands held.

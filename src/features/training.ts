@@ -15,10 +15,11 @@ export const MendInTraining = Game.System("Shooter/MendInTraining", {
   const tuning = resources.tuning.get()
   if (!tuning.waves.enabled || tuning.challenges[resources.challenge.get()].objective.kind !== "training") return
   const dt = resources.time.get().dt
-  for (const { data } of queries.members.each()) {
-    if (data.state.get().current?.id === "burning") continue
-    const health = data.health.get()
+  const { data } = queries.members
+  for (const entity of queries.members.each()) {
+    if (data.state.get(entity).current?.id === "burning") continue
+    const health = data.health.get(entity)
     if (health.current >= health.max) continue
-    data.health.set({ current: Math.min(health.max, health.current + health.max * mendPerSecond * dt), max: health.max })
+    data.health.set(entity, { current: Math.min(health.max, health.current + health.max * mendPerSecond * dt), max: health.max })
   }
 })

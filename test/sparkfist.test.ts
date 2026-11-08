@@ -15,20 +15,23 @@ const World = Game.Inspector("Test/Sparkfist", {
     player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ at: data.position.get(), hurt: data.health.get().current < data.health.get().max, state: data.state.get().current?.id ?? null })),
-  player: queries.player.each()[0]!.data.position.get()
+  enemies: queries.enemies.each().map((entity) => {
+    const { data } = queries.enemies
+    return { at: data.position.get(entity), hurt: data.health.get(entity).current < data.health.get(entity).max, state: data.state.get(entity).current?.id ?? null }
+  }),
+  player: queries.player.data.position.get(queries.player.each()[0]!)
 }))
 
 /** Whether the one on the field is overcharged. */
 const Surge = Game.Inspector("Test/Surge", { queries: { player: Game.Query({ selection: { overcharged: Game.Query.optional(Overcharged) }, with: [Player] }) } }, ({ queries }) =>
-  queries.player.each()[0]!.data.overcharged.present)
+  queries.player.data.overcharged.has(queries.player.each()[0]!))
 
 /** The one on the field's dash: charges ready, and the time until the next comes back. */
 const Dashes = Game.Inspector("Test/Dashes", { queries: { player: Game.Query({ selection: { dash: Game.Query.read(Dash) }, with: [Player] }) } }, ({ queries }) =>
-  queries.player.each()[0]!.data.dash.get())
+  queries.player.data.dash.get(queries.player.each()[0]!))
 
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 const arena = (dummies: ReadonlyArray<{ x: number; y: number }>, slot: "special" | "ultimate") => {

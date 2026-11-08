@@ -19,7 +19,7 @@ const bond = defaultTuning.skills.floodgate.effect
 const press = (slot: "special" | "ultimate", frame: number) => ({ frame, press: [slot], release: [slot] })
 
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 const World = Game.Inspector("Test/Tidewarden", {
@@ -28,16 +28,19 @@ const World = Game.Inspector("Test/Tidewarden", {
       selection: { enemy: Game.Query.read(Enemy), position: Game.Query.read(Position), state: Game.Query.read(ElementState), health: Game.Query.read(Health), hurtbox: Game.Query.read(Hurtbox), stunned: Game.Query.read(Stunned), turned: Game.Query.optional(Turned) }
     })
   }
-}, ({ queries }) => queries.enemies.each().map(({ data }) => ({
-  kind: data.enemy.get().kind,
-  offset: { x: data.position.get().x - center.x, y: data.position.get().y - center.y },
-  state: data.state.get().current?.id ?? null,
-  health: data.health.get(),
-  faction: data.hurtbox.get().faction,
-  stunned: data.stunned.get().remaining,
-  champion: data.enemy.get().champion,
-  turned: data.turned.present
-})))
+}, ({ queries }) => {
+  const { data } = queries.enemies
+  return queries.enemies.each().map((entity) => ({
+    kind: data.enemy.get(entity).kind,
+    offset: { x: data.position.get(entity).x - center.x, y: data.position.get(entity).y - center.y },
+    state: data.state.get(entity).current?.id ?? null,
+    health: data.health.get(entity),
+    faction: data.hurtbox.get(entity).faction,
+    stunned: data.stunned.get(entity).remaining,
+    champion: data.enemy.get(entity).champion,
+    turned: data.turned.has(entity)
+  }))
+})
 
 /** A run with Tidewarden alone, enemies of `kinds` at `offsets` from her, and her energy full. */
 const field = (enemies: ReadonlyArray<{ readonly kind: EnemyKind; readonly at: Vec2; readonly champion?: boolean }>, keys: ReadonlyArray<ReturnType<typeof press>>) => {

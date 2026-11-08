@@ -52,22 +52,23 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
   const controls = resources.controls.get()
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
-  for (const { data } of queries.player.each()) {
+  const { data } = queries.player
+  for (const entity of queries.player.each()) {
     // Her own dash (see `dashOf`): how many, how far, how soon back, how long untouchable.
-    const own = dashOf(tuning, data.member.get().character, traitsIn(data.passives))
+    const own = dashOf(tuning, data.member.get(entity).character, traitsIn(data.passives.get(entity)))
     const dashSpeed = own.distance / own.duration
     // Overcharged (see `OverchargeEffect`): quicker, and a spent dash comes back all but at once.
-    const surge = data.overcharged.present ? data.overcharged.get().effect : null
+    const surge = data.overcharged.get(entity)?.effect ?? null
     const recharge = surge === null ? own.cooldown : Math.min(own.cooldown, surge.dash)
-    const position = data.position.get()
-    const aim = normalizeOr(subtract(controls.aimPoint, position), data.aim.get())
-    data.aim.set(aim)
-    const facing = data.facing.get()
+    const position = data.position.get(entity)
+    const aim = normalizeOr(subtract(controls.aimPoint, position), data.aim.get(entity))
+    data.aim.set(entity, aim)
+    const facing = data.facing.get(entity)
     const hold = Math.max(0, facing.hold - dt)
     const faces = hold <= 0 && length(controls.move) > 0 ? normalizeOr(controls.move, facing.direction) : facing.direction
-    data.facing.set({ direction: faces, hold })
+    data.facing.set(entity, { direction: faces, hold })
 
-    const dash = data.dash.get()
+    const dash = data.dash.get(entity)
     let remaining = dash.remaining
     let direction = dash.direction
     // Spent charges come back one at a time.
@@ -78,7 +79,7 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       cooldown = charges < own.charges ? cooldown + recharge : 0
     }
     // Raising a guard, in the air, or held coming in after a fall, she stands: a dash under way stops, and a press is dropped.
-    const rooted = data.raising.present || data.airborne.present || resources.arrival.get().remaining > 0
+    const rooted = data.raising.has(entity) || data.airborne.has(entity) || resources.arrival.get().remaining > 0
     if (rooted) remaining = 0
     let buffered = rooted ? 0 : controls.dashPressed ? own.inputBuffer : Math.max(0, dash.buffered - dt)
     let since = dash.since === null ? null : dash.since + dt
@@ -95,23 +96,23 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       since = 0
       perfect = false
       from = position
-      const invulnerable = data.invulnerable.get().remaining
-      data.invulnerable.set({ remaining: Math.max(invulnerable, own.invulnerability) })
+      const invulnerable = data.invulnerable.get(entity).remaining
+      data.invulnerable.set(entity, { remaining: Math.max(invulnerable, own.invulnerability) })
     }
 
     if (remaining > 0) {
       const covered = Math.min(dt, remaining)
       remaining -= covered
-      data.velocity.set(scale(direction, dashSpeed * covered / dt))
+      data.velocity.set(entity, scale(direction, dashSpeed * covered / dt))
     } else {
       // Leaving a dash keeps some momentum, then normal running takes over.
-      const runSpeed = data.stats.get().speed * (surge === null ? 1 : surge.speed)
-      const carried = clampLength(data.velocity.get(), Math.max(runSpeed, dashSpeed * own.exitSpeedFactor))
+      const runSpeed = data.stats.get(entity).speed * (surge === null ? 1 : surge.speed)
+      const carried = clampLength(data.velocity.get(entity), Math.max(runSpeed, dashSpeed * own.exitSpeedFactor))
       // Charging a power attack slows the player down, and so does a move recovering.
-      const attack = data.basicAttack.get()
+      const attack = data.basicAttack.get(entity)
       const spec = attackOf(tuning, attack.attack)
       const charge = spec.power !== null && charging(spec, attack) ? spec.power.moveSpeedMultiplier : 1
-      const air = data.airborne.present ? data.airborne.get() : null
+      const air = data.airborne.get(entity) ?? null
       // Gliding down (see `SoarSpec`), she steers as she runs, at the glide's speed.
       const gliding = air !== null && air.glide !== null && air.remaining > 0 && air.remaining <= air.glide.seconds + 1e-9
       const speed = gliding ? air.glide!.speed : rooted ? 0 : runSpeed * charge * (attack.cooldown > 0 ? attack.slowed : 1)
@@ -121,9 +122,9 @@ export const ControlPlayer = Game.System("Shooter/ControlPlayer", {
       // to where she lands, arriving on the last step of the dive (a step at landing is a step on the ground).
       const diving = air !== null && air.dive !== null && air.remaining > 0 && air.remaining <= air.dive.seconds + 1e-9
       const flying = diving ? Math.max(1, Math.ceil(air.remaining / dt - 1e-6)) * dt : 0
-      data.velocity.set(air === null || gliding ? moveToward(carried, target, rate * dt) : diving ? scale(subtract(air.dive!.to, position), 1 / flying) : { x: 0, y: 0 })
+      data.velocity.set(entity, air === null || gliding ? moveToward(carried, target, rate * dt) : diving ? scale(subtract(air.dive!.to, position), 1 / flying) : { x: 0, y: 0 })
     }
 
-    data.dash.set({ remaining, charges, cooldown, buffered, direction, since, perfect, from })
+    data.dash.set(entity, { remaining, charges, cooldown, buffered, direction, since, perfect, from })
   }
 })

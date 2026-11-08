@@ -39,7 +39,7 @@ const InsideArena = Invariant.fromInspector(Game.Inspector("player inside arena"
 }, ({ queries }) => {
   const { width, height } = defaultTuning.arena
   for (const match of queries.player.each()) {
-    const { x, y } = match.data.position.get()
+    const { x, y } = queries.player.data.position.get(match)
     if (x < 0 || y < 0 || x > width || y > height) return `player at (${x}, ${y})`
   }
   return undefined

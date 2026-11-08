@@ -49,7 +49,7 @@ export const CastHearth = Game.System("Shooter/CastHearth", {
   for (const cast of events.cast.all()) {
     const effect = cast.effect
     if (effect.kind === "pyre") {
-      for (const { entity, data } of queries.pyres.each()) if (data.pyre.get().faction === cast.faction) commands.despawn(entity)
+      for (const entity of queries.pyres.each()) if (queries.pyres.data.pyre.get(entity).faction === cast.faction) commands.despawn(entity)
       const tick = castBlow(cast, { ...effect, power: effect.tickPower, knockback: 0, hitStop: 0, heavy: false })
       commands.spawnIn(RunScope, Game.Command.spawn(
         [Position, cast.from],
@@ -92,39 +92,41 @@ export const UpdateEmberRings = Game.System("Shooter/UpdateEmberRings", {
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.rings.each()) {
-    const ring = data.ring.get()
+  const { data } = queries.rings
+  const bodies = queries.bodies.data
+  for (const entity of queries.rings.each()) {
+    const ring = data.ring.get(entity)
     if (ring.wait > 0) {
-      data.ring.set({ ...ring, wait: ring.wait - dt })
+      data.ring.set(entity, { ...ring, wait: ring.wait - dt })
       continue
     }
     if (ring.remaining <= 0) {
       commands.despawn(entity)
       continue
     }
-    const center = data.position.get()
+    const center = data.position.get(entity)
     const { effect } = ring
     const struck = [...ring.struck]
     for (const body of queries.bodies.each()) {
-      const hurtbox = body.data.hurtbox.get()
-      if (hurtbox.faction === ring.faction || body.data.health.get().current <= 0 || struck.includes(body.entity.id)) continue
-      const at = body.data.position.get()
+      const hurtbox = bodies.hurtbox.get(body)
+      if (hurtbox.faction === ring.faction || bodies.health.get(body).current <= 0 || struck.includes(body.id)) continue
+      const at = bodies.position.get(body)
       const distance = Ops.hypot(at.x - center.x, at.y - center.y)
       // Kept at a distance: what is closer is spared.
       if (distance < effect.inner || distance - hurtbox.radius > effect.outer) continue
-      struck.push(body.entity.id)
+      struck.push(body.id)
       const element = effect.element
       if (element !== null) {
-        const before = body.data.state.get().current
-        const long = longState(tuning, element, before, ring.atk, ring.charges, body.data.affinities.get()[element], effect.seconds)
+        const before = bodies.state.get(body).current
+        const long = longState(tuning, element, before, ring.atk, ring.charges, bodies.affinities.get(body)[element], effect.seconds)
         if (long !== null) {
-          body.data.state.set({ current: long })
+          bodies.state.set(body, { current: long })
           if (before === null) events.reaction.emit({ at, kind: "apply", state: long.id, faction: ring.faction })
         }
       }
-      events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: ring.faction, direction: normalizeOr(subtract(at, center), { x: 1, y: 0 }), blow: ring.blow })
+      events.damage.emit({ target: Game.Entity.handle(body.id, Health), faction: ring.faction, direction: normalizeOr(subtract(at, center), { x: 1, y: 0 }), blow: ring.blow })
     }
-    data.ring.set({ ...ring, remaining: ring.remaining - dt, struck })
+    data.ring.set(entity, { ...ring, remaining: ring.remaining - dt, struck })
   }
 })
 
@@ -145,27 +147,29 @@ export const UpdatePyres = Game.System("Shooter/UpdatePyres", {
   commands: Game.System.commands(Game.System.despawns(Pyre))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.pyres.each()) {
-    const pyre = data.pyre.get()
+  const { data } = queries.pyres
+  const bodies = queries.bodies.data
+  for (const entity of queries.pyres.each()) {
+    const pyre = data.pyre.get(entity)
     const remaining = pyre.remaining - dt
     if (remaining <= 0) {
       commands.despawn(entity)
       continue
     }
-    const center = data.position.get()
+    const center = data.position.get(entity)
     let next = pyre.next - dt
     if (next <= 0) {
       next += pyre.effect.tick
       for (const body of queries.bodies.each()) {
-        const hurtbox = body.data.hurtbox.get()
-        if (hurtbox.faction === pyre.faction || body.data.health.get().current <= 0) continue
-        if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
-        const at = body.data.position.get()
+        const hurtbox = bodies.hurtbox.get(body)
+        if (hurtbox.faction === pyre.faction || bodies.health.get(body).current <= 0) continue
+        if ((bodies.invulnerable.get(body)?.remaining ?? 0) > 0) continue
+        const at = bodies.position.get(body)
         if (Ops.hypot(at.x - center.x, at.y - center.y) > pyre.effect.radius + hurtbox.radius) continue
-        events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: pyre.faction, direction: normalizeOr(subtract(at, center), { x: 1, y: 0 }), blow: pyre.tick })
+        events.damage.emit({ target: Game.Entity.handle(body.id, Health), faction: pyre.faction, direction: normalizeOr(subtract(at, center), { x: 1, y: 0 }), blow: pyre.tick })
       }
     }
-    data.pyre.set({ ...pyre, remaining, next })
+    data.pyre.set(entity, { ...pyre, remaining, next })
   }
 })
 
@@ -186,7 +190,7 @@ export const DrainFromPyres = Game.System("Shooter/DrainFromPyres", {
   const tuning = resources.tuning.get()
   const [field] = queries.field.each()
   if (field === undefined) return
-  const health = field.data.health.get()
+  const health = queries.field.data.health.get(field)
   // By skill: each up to its own cap.
   const gains = new Map<string, { gained: number; most: number }>()
   for (const hit of events.hit.all()) {
@@ -201,6 +205,6 @@ export const DrainFromPyres = Game.System("Shooter/DrainFromPyres", {
   const gained = [...gains.values()].reduce((sum, { gained, most }) => sum + Math.min(gained, most), 0)
   if (gained <= 0 || health.current <= 0 || health.current >= health.max) return
   const amount = Math.min(health.max - health.current, gained)
-  field.data.health.set({ current: health.current + amount, max: health.max })
-  events.heal.emit({ at: field.data.position.get(), amount })
+  queries.field.data.health.set(field, { current: health.current + amount, max: health.max })
+  events.heal.emit({ at: queries.field.data.position.get(field), amount })
 })

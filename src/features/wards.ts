@@ -65,35 +65,36 @@ export const UpdateWards = Game.System("Shooter/UpdateWards", {
   // Warders struck this step (a burn does not cut a tether).
   const struck = new Set(events.hit.all().filter((hit) => !hit.periodic).map((hit) => hit.entity))
   const [player] = queries.player.each()
-  const her = player === undefined ? undefined : { at: player.data.position.get(), radius: player.data.hurtbox.get().radius }
-  const allies = queries.allies.each().map(({ entity, data }) => ({ entity, id: entity.id, at: data.position.get(), kind: data.enemy.get().kind }))
-  const taken = new Set(queries.warders.each().flatMap(({ data }) => (data.ward.get().ally === null ? [] : [data.ward.get().ally!.id])))
+  const her = player === undefined ? undefined : { at: queries.player.data.position.get(player), radius: queries.player.data.hurtbox.get(player).radius }
+  const allies = queries.allies.each().map((entity) => ({ entity, id: entity.id, at: queries.allies.data.position.get(entity), kind: queries.allies.data.enemy.get(entity).kind }))
+  const { data } = queries.warders
+  const taken = new Set(queries.warders.each().flatMap((entity) => (data.ward.get(entity).ally === null ? [] : [data.ward.get(entity).ally!.id])))
 
-  for (const { entity, data } of queries.warders.each()) {
-    const spec = tuning.enemies[data.enemy.get().kind].ward
+  for (const entity of queries.warders.each()) {
+    const spec = tuning.enemies[data.enemy.get(entity).kind].ward
     if (spec === null) continue
-    const ward = data.ward.get()
-    const at = data.position.get()
+    const ward = data.ward.get(entity)
+    const at = data.position.get(entity)
     const drop = (): WardValue => ({ ally: null, formed: 0, wait: spec.cooldown })
     if (ward.ally !== null) {
       const ally = allies.find((candidate) => candidate.id === ward.ally!.id)
       const cut = ally === undefined ||
         struck.has(Game.Entity.handle(entity.id, Health)) ||
-        data.stunned.get().remaining > 0 ||
-        data.poise.get().broken > 0 ||
+        data.stunned.get(entity).remaining > 0 ||
+        data.poise.get(entity).broken > 0 ||
         Ops.hypot(ally.at.x - at.x, ally.at.y - at.y) > spec.range * slack ||
         (her !== undefined && crossesTether(at, ally.at, her.at, her.radius))
       if (cut) {
         taken.delete(ward.ally.id)
-        data.ward.set(drop())
+        data.ward.set(entity, drop())
       } else {
-        data.ward.set({ ...ward, formed: Math.min(spec.link, ward.formed + dt) })
+        data.ward.set(entity, { ...ward, formed: Math.min(spec.link, ward.formed + dt) })
       }
       continue
     }
     const wait = Math.max(0, ward.wait - dt)
-    if (wait > 0 || her === undefined || data.stunned.get().remaining > 0) {
-      data.ward.set({ ...ward, wait })
+    if (wait > 0 || her === undefined || data.stunned.get(entity).remaining > 0) {
+      data.ward.set(entity, { ...ward, wait })
       continue
     }
     // The ally nearest her within its range: the one she is fighting. Never itself, nor one warded already.
@@ -103,10 +104,10 @@ export const UpdateWards = Game.System("Shooter/UpdateWards", {
       return best === undefined || away(ally) < away(best) ? ally : best
     }, undefined)
     if (chosen === undefined) {
-      data.ward.set({ ...ward, wait })
+      data.ward.set(entity, { ...ward, wait })
       continue
     }
     taken.add(chosen.id)
-    data.ward.set({ ally: { handle: Game.Entity.handle(chosen.entity.id, Position), id: chosen.id }, formed: 0, wait: 0 })
+    data.ward.set(entity, { ally: { handle: Game.Entity.handle(chosen.entity.id, Position), id: chosen.id }, formed: 0, wait: 0 })
   }
 })

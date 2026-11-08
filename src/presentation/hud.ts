@@ -73,26 +73,27 @@ export const SyncTouchPad = Game.System("Shooter/SyncTouchPad", {
 
   const tuning = resources.tuning.get()
   const [player] = queries.player.each()
-  const slots = player === undefined ? undefined : skillStatus(tuning, player.data.skills.get(), player.data.energy.get().current)
+  const { data } = queries.player
+  const slots = player === undefined ? undefined : skillStatus(tuning, data.skills.get(player), data.energy.get(player).current)
   const fill = {
     // The attack recharges between moves.
-    attack: player === undefined ? 0 : recharge(player.data.basicAttack.get()),
+    attack: player === undefined ? 0 : recharge(data.basicAttack.get(player)),
     special: slots?.special.recharge ?? 0,
     // Ready while a charge is left; otherwise waiting for the next one.
-    dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown / dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)).cooldown,
+    dash: player === undefined || data.dash.get(player).charges > 0 ? 0 : data.dash.get(player).cooldown / dashOf(tuning, data.member.get(player).character, traitsIn(data.passives.get(player))).cooldown,
     ultimate: slots?.ultimate.recharge ?? 1
   }
   // Seconds left, on the buttons that wait for a cooldown (the ultimate waits for energy, the attack only a moment).
   const seconds = {
     attack: 0,
-    special: player === undefined || (slots?.special.spec.cooldown ?? 0) <= 0 ? 0 : player.data.skills.get().special.cooldown,
-    dash: player === undefined || player.data.dash.get().charges > 0 ? 0 : player.data.dash.get().cooldown,
-    ultimate: player === undefined ? 0 : player.data.skills.get().ultimate.cooldown
+    special: player === undefined || (slots?.special.spec.cooldown ?? 0) <= 0 ? 0 : data.skills.get(player).special.cooldown,
+    dash: player === undefined || data.dash.get(player).charges > 0 ? 0 : data.dash.get(player).cooldown,
+    ultimate: player === undefined ? 0 : data.skills.get(player).ultimate.cooldown
   }
   // Icons: the attack's by her class, the skills' by the skill in each slot.
   if (player !== undefined) {
-    showIcon(pad.buttons.attack.icon, classIcons, tuning.characters[player.data.member.get().character].class)
-    for (const slot of skillSlots) showIcon(pad.buttons[slot].icon, skillIcons, player.data.skills.get()[slot].skill)
+    showIcon(pad.buttons.attack.icon, classIcons, tuning.characters[data.member.get(player).character].class)
+    for (const slot of skillSlots) showIcon(pad.buttons[slot].icon, skillIcons, data.skills.get(player)[slot].skill)
   }
   for (const name of actionButtons) {
     const zone = layout.buttons[name]
@@ -160,23 +161,23 @@ export const SyncTeam = Game.System("Shooter/SyncTeam", {
   // The switch's wait, as the share of it left (it fills each face that waits).
   setStyle(team.root, "--wait", String(Math.min(1, wait / tuning.team.switchCooldown)))
   const members = queries.members.each()
+  const { data } = queries.members
   // A team of one has nothing to switch to.
   const shown = members.length > 1
   const rows = touchMode ? partyLayout(services.host.size, services.host.safeArea()) : undefined
   team.members.forEach((refs, slot) => {
-    const found = shown ? members.find(({ data }) => data.member.get().slot === slot) : undefined
+    const found = shown ? members.find((member) => data.member.get(member).slot === slot) : undefined
     setHidden(refs.root, found === undefined)
     if (found === undefined) return
-    const { data } = found
-    const character = data.member.get().character
-    const health = data.health.get()
+    const character = data.member.get(found).character
+    const health = data.health.get(found)
     const fallen = health.current <= 0
-    const ultimate = data.skills.get().ultimate
-    const ready = skillRecharge(tuning.skills[ultimate.skill], ultimate.cooldown, data.energy.get().current) <= 0
-    const state = data.state.get().current
-    refs.root.classList.toggle("is-field", data.player.present)
+    const ultimate = data.skills.get(found).ultimate
+    const ready = skillRecharge(tuning.skills[ultimate.skill], ultimate.cooldown, data.energy.get(found).current) <= 0
+    const state = data.state.get(found).current
+    refs.root.classList.toggle("is-field", data.player.has(found))
     refs.root.classList.toggle("is-fallen", fallen)
-    refs.root.classList.toggle("is-waiting", waiting && !data.player.present && !fallen)
+    refs.root.classList.toggle("is-waiting", waiting && !data.player.has(found) && !fallen)
     refs.root.classList.toggle("is-ready", ready && !fallen)
     // Her ultimate's icon left of her row once it is ready, as Genshin's: worth switching to her.
     showIcon(refs.burst, skillIcons, ultimate.skill)
@@ -295,22 +296,23 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
   if (stats.sinceHud < 0.1) return
   stats.sinceHud = 0
   const player = queries.player.singleOptional()
-  const field = player.ok ? player.value?.data : undefined
+  const field = player.ok ? player.value : undefined
+  const { data } = queries.player
   if (field !== undefined) {
     // Each slot drains as its cooldown runs down and as energy fills up.
-    const slots = skillStatus(tuning, field.skills.get(), field.energy.get().current)
+    const slots = skillStatus(tuning, data.skills.get(field), data.energy.get(field).current)
     for (const slot of skillSlots) {
       const refs = hud.skills[slot]
       setText(refs.root.querySelector("span"), slots[slot].spec.name)
       setStyle(refs.cooldown, "height", `${100 * slots[slot].recharge}%`)
       refs.root.classList.toggle("is-ready", slots[slot].recharge <= 0)
     }
-    const element = elementOf(tuning, field.member.get().character)
+    const element = elementOf(tuning, data.member.get(field).character)
     if ((hud.root.dataset["element"] ?? null) !== element) {
       if (element === null) delete hud.root.dataset["element"]
       else hud.root.dataset["element"] = element
     }
-    const health = field.health.get()
+    const health = data.health.get(field)
     setStyle(hud.health, "width", `${(100 * health.current) / health.max}%`)
     setText(hud.healthText, `${Math.ceil(health.current)} / ${Math.ceil(health.max)}`)
   } else {
@@ -318,7 +320,7 @@ export const SyncHud = Game.System("Shooter/SyncHud", {
     setText(hud.healthText, "")
   }
   // Her state, as Genshin's: its icon over the left end of her health bar, a ring inside it running down with its time.
-  const state = field?.state.get().current ?? null
+  const state = (field === undefined ? undefined : data.state.get(field).current) ?? null
   const clock = services.host.feedback.stateClock
   setHidden(hud.state, state === null)
   if (state === null) clock.id = null

@@ -14,13 +14,14 @@ const State = Game.Inspector("Test/Gauntlets", {
   queries: { player: Game.Query({ selection: { attack: Game.Query.read(BasicAttack), dash: Game.Query.read(Dash) }, with: [Player] }) }
 }, ({ queries }) => {
   const [player] = queries.player.each()
-  return { step: player!.data.attack.get().step, cooldown: player!.data.dash.get().cooldown, sinceDashStrike: player!.data.attack.get().sinceDashStrike }
+  const { data } = queries.player
+  return { step: data.attack.get(player!).step, cooldown: data.dash.get(player!).cooldown, sinceDashStrike: data.attack.get(player!).sinceDashStrike }
 })
 
 /** Every dash spent, the next one `seconds` away; or a dash just started (so the next press is the dash strike). */
 const setDash = (patch: { readonly charges?: number; readonly cooldown?: number; readonly since?: number }) =>
   Game.System("Test/SetDash", { queries: { player: Game.Query({ selection: { dash: Game.Query.write(Dash) }, with: [Player] }) } }, ({ queries }) => {
-    for (const { data } of queries.player.each()) data.dash.update((dash) => ({ ...dash, ...patch }))
+    for (const entity of queries.player.each()) queries.player.data.dash.update(entity, (dash) => ({ ...dash, ...patch }))
   })
 
 const arena = (classId: "gauntlets" | "blade", dummies: ReadonlyArray<{ x: number; y: number }>, presses: ReadonlyArray<number>, dashFeed = feed) => {

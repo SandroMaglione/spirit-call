@@ -79,8 +79,8 @@ export const dashOf = (tuning: TuningValue, character: CharacterId, traits: Requ
 }
 
 /** What `passives` (her relics') change of her traits, read from her `Passives` when she has them. */
-export const traitsIn = (passives: { readonly present: true; get(): ReadonlyArray<Passive> } | { readonly present: false }): Required<TraitChange> =>
-  passives.present ? traitsOf(passives.get()) : noTraitChange
+export const traitsIn = (passives: ReadonlyArray<Passive> | undefined): Required<TraitChange> =>
+  passives === undefined ? noTraitChange : traitsOf(passives)
 
 /** The build the game starts with: the first character, fighting with her class's plain aspect. */
 export const defaultBuild: BuildValue = { character: "swordsman" }

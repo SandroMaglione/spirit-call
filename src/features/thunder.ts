@@ -10,7 +10,7 @@
  * caster and heals the whole team, the bench too).
  */
 import type { EntityId } from "@typeonce/ritmo/Entity"
-import type { Query } from "@typeonce/ritmo/Query"
+import type { QueryData, QueryEntity } from "@typeonce/ritmo/Query"
 import { normalizeOr, subtract, type Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as Ops from "@typeonce/ritmo/Ops"
 
@@ -27,7 +27,6 @@ import {
   Hurtbox,
   Invulnerable,
   Knockback,
-  Member,
   Player,
   Poise,
   Position,
@@ -40,7 +39,7 @@ import {
   Zap
 } from "../schema.ts"
 import type { Blow, DamageValue, Faction, Root } from "../schema.ts"
-import { healTeam, stateHealPercent } from "./mending.ts"
+import { HealedMembers, healTeam, stateHealPercent } from "./mending.ts"
 import { knockbackTaken } from "./motion.ts"
 import { poiseOf } from "./poise.ts"
 import { castBlow } from "./skills.ts"
@@ -91,18 +90,18 @@ const Strikeable = Game.Query({
 
 type StrikeableId = EntityId<typeof Game.schema, typeof Root>
 
-/** Matches of `Strikeable` as bodies to strike. */
-const struckOf = (entries: ReadonlyArray<{
-  readonly entity: { readonly id: StrikeableId }
-  readonly data: Query.Cells<typeof Strikeable>
-}>): Array<Struck> =>
-  entries.map(({ entity, data }) => ({
+/** The bodies of a `Strikeable` query, as bodies to strike. */
+const struckOf = (bodies: {
+  each(): ReadonlyArray<QueryEntity<typeof Game.schema, typeof Strikeable>>
+  readonly data: QueryData<typeof Strikeable>
+}): Array<Struck> =>
+  bodies.each().map((entity) => ({
     id: entity.id,
     entity: entity.id,
-    at: data.position.get(),
-    radius: data.hurtbox.get().radius,
-    faction: data.hurtbox.get().faction,
-    protected: data.invulnerable.present && data.invulnerable.get().remaining > 0
+    at: bodies.data.position.get(entity),
+    radius: bodies.data.hurtbox.get(entity).radius,
+    faction: bodies.data.hurtbox.get(entity).faction,
+    protected: (bodies.data.invulnerable.get(entity)?.remaining ?? 0) > 0
   }))
 
 interface Emitters {
@@ -175,23 +174,25 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
   const dt = resources.time.get().dt
   const totems = queries.totems.each()
   if (totems.length === 0) return
-  const bodies = struckOf(queries.bodies.each())
+  const bodies = struckOf(queries.bodies)
   const [field] = queries.field.each()
-  for (const { entity, data } of totems) {
-    const totem = data.totem.get()
+  const { data } = queries.totems
+  const fieldData = queries.field.data
+  for (const entity of totems) {
+    const totem = data.totem.get(entity)
     const { effect } = totem
-    const at = data.position.get()
+    const at = data.position.get(entity)
     let nextTick = totem.nextTick - dt
     if (nextTick <= 1e-9) {
       nextTick += effect.tick
       const center: Struck = { id: -1, entity: null, at, radius: 0, faction: totem.faction, protected: false }
-      const health = field?.data.health.get()
-      const close = field !== undefined && Ops.hypot(field.data.position.get().x - at.x, field.data.position.get().y - at.y) <= effect.radius + field.data.hurtbox.get().radius
+      const health = field === undefined ? undefined : fieldData.health.get(field)
+      const close = field !== undefined && Ops.hypot(fieldData.position.get(field).x - at.x, fieldData.position.get(field).y - at.y) <= effect.radius + fieldData.hurtbox.get(field).radius
       if (effect.heal > 0 && field !== undefined && health !== undefined && close && health.current > 0 && health.current < health.max) {
         const amount = Math.min(health.max - health.current, (health.max * effect.heal) / 100)
-        field.data.health.set({ current: health.current + amount, max: health.max })
-        events.heal.emit({ at: field.data.position.get(), amount })
-        events.zap.emit({ path: [at, field.data.position.get()], heal: true })
+        fieldData.health.set(field, { current: health.current + amount, max: health.max })
+        events.heal.emit({ at: fieldData.position.get(field), amount })
+        events.zap.emit({ path: [at, fieldData.position.get(field)], heal: true })
       } else {
         let target: (typeof bodies)[number] | undefined
         for (const body of bodies) {
@@ -213,14 +214,15 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
         const pushed = queries.pushed.get(body.entity)
         if (pushed.ok) {
           const out = normalizeOr(subtract(body.at, at), { x: 1, y: 0 })
-          const push = effect.repel * knockbackTaken(tuning, pushed.value.data.enemy.present ? pushed.value.data.enemy.get().kind : undefined, pushed.value.data.enemy.present && pushed.value.data.enemy.get().champion)
-          pushed.value.data.knockback.update((current) => ({ x: current.x + out.x * push, y: current.y + out.y * push }))
+          const enemy = queries.pushed.data.enemy.get(pushed.value)
+          const push = effect.repel * knockbackTaken(tuning, enemy?.kind, enemy !== undefined && enemy.champion)
+          queries.pushed.data.knockback.update(pushed.value, (current) => ({ x: current.x + out.x * push, y: current.y + out.y * push }))
         }
       }
     }
     const remaining = totem.remaining - dt
     if (remaining <= 0) commands.despawn(entity)
-    else data.totem.set({ ...totem, remaining, nextTick, inside })
+    else data.totem.set(entity, { ...totem, remaining, nextTick, inside })
   }
 })
 
@@ -233,7 +235,7 @@ export const UpdateTotems = Game.System("Shooter/UpdateTotems", {
 export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
   queries: {
     bodies: Strikeable,
-    members: Game.Query({ selection: { health: Game.Query.write(Health), player: Game.Query.optional(Player) }, with: [Member] }),
+    members: HealedMembers,
     stunnable: Game.Query({ selection: { enemy: Game.Query.read(Enemy), health: Game.Query.read(Health), poise: Game.Query.write(Poise), stunned: Game.Query.write(Stunned) } }),
     states: Game.Query({ selection: { state: Game.Query.read(ElementState) }, with: [Enemy] })
   },
@@ -251,7 +253,7 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
     const effect = cast.effect
     if (effect.kind !== "thunderclap") continue
     const at = cast.from
-    const bodies = struckOf(queries.bodies.each())
+    const bodies = struckOf(queries.bodies)
       const caster: Struck = { id: -1, entity: null, at, radius: 0, faction: cast.faction, protected: false }
     const inReach = bodies
       .filter((body) => body.faction !== cast.faction && !body.protected && gap(caster, body) <= effect.radius)
@@ -267,19 +269,20 @@ export const CastThunderclaps = Game.System("Shooter/CastThunderclaps", {
     }
     // What it struck is held: stunned a while (never a champion: skills do not hold the fight's own), its break bar
     // filled up (a full one breaks, see `BuildPoise`).
-    for (const { entity, data } of queries.stunnable.each()) {
+    const { data } = queries.stunnable
+    for (const entity of queries.stunnable.each()) {
       if (!struck.has(entity.id)) continue
-      if (effect.stun > 0 && !data.enemy.get().champion) data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
-      const bar = poiseOf(tuning, data.enemy.get().kind, data.health.get().max, data.enemy.get().champion)
-      if (bar > 0 && effect.breakFill > 0 && data.poise.get().broken <= 0) {
-        data.poise.update((poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))
+      if (effect.stun > 0 && !data.enemy.get(entity).champion) data.stunned.update(entity, ({ remaining }) => ({ remaining: Math.max(remaining, effect.stun) }))
+      const bar = poiseOf(tuning, data.enemy.get(entity).kind, data.health.get(entity).max, data.enemy.get(entity).champion)
+      if (bar > 0 && effect.breakFill > 0 && data.poise.get(entity).broken <= 0) {
+        data.poise.update(entity, (poise) => ({ ...poise, current: Math.min(bar, poise.current + bar * effect.breakFill), quiet: 0 }))
       }
     }
     // It heals by what it struck in its state, read before its own thunder lands (a clap that heals nobody, a relic's discharge, shows no healing either).
     if (effect.heals !== null) {
       const state = effect.heals.state
-      const held = queries.states.each().filter(({ entity, data }) => struck.has(entity.id) && data.state.get().current?.id === state).length
-      healTeam(queries.members.each(), stateHealPercent(effect.heals, held), (amount) => events.heal.emit({ at, amount }))
+      const held = queries.states.each().filter((entity) => struck.has(entity.id) && queries.states.data.state.get(entity).current?.id === state).length
+      healTeam(queries.members, stateHealPercent(effect.heals, held), (amount) => events.heal.emit({ at, amount }))
     }
     events.explosion.emit({ at, radius: effect.radius, faction: cast.faction, kind: "nova", heavy: effect.heavy, element: effect.element, skill: cast.skill })
   }

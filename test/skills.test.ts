@@ -22,12 +22,12 @@ const World = Game.Inspector("Test/Skills", {
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current, state: data.state.get().current?.id ?? null })),
-  skills: queries.player.each()[0]!.data.skills.get(),
-  energy: queries.player.each()[0]!.data.energy.get().current,
-  grenades: queries.grenades.each().map(({ data }) => data.lobbed.get()),
-  projectiles: queries.projectiles.each().map(({ data }) => data.projectile.get()),
-  pools: queries.pools.each().map(({ data }) => data.ground.get())
+  enemies: queries.enemies.each().map((entity) => ({ position: queries.enemies.data.position.get(entity), health: queries.enemies.data.health.get(entity).current, state: queries.enemies.data.state.get(entity).current?.id ?? null })),
+  skills: queries.player.data.skills.get(queries.player.each()[0]!),
+  energy: queries.player.data.energy.get(queries.player.each()[0]!).current,
+  grenades: queries.grenades.each().map((entity) => queries.grenades.data.lobbed.get(entity)),
+  projectiles: queries.projectiles.each().map((entity) => queries.projectiles.data.projectile.get(entity)),
+  pools: queries.pools.each().map((entity) => queries.pools.data.ground.get(entity))
 }))
 
 /** Cursor position (screen) that points at a world offset from the player at spawn. */
@@ -44,7 +44,7 @@ const range = (dummies: ReadonlyArray<Vec2>, aim: Vec2, options: StartOptions = 
 const FillEnergy = Game.System("Test/FillEnergy", {
   queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 const hp = defaultTuning.enemies.dummy.hp
@@ -294,8 +294,9 @@ describe("ultimates (Shift)", () => {
     const Gun = Game.Inspector("Test/Gun", {
       queries: { player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack), overdriven: Game.Query.optional(Overdriven) }, with: [Player] }) }
     }, ({ queries }) => {
-      const { data } = queries.player.each()[0]!
-      return { reloading: data.basicAttack.get().reloading, spent: data.basicAttack.get().spent, overdriven: data.overdriven.present }
+      const player = queries.player.each()[0]!
+      const { data } = queries.player
+      return { reloading: data.basicAttack.get(player).reloading, spent: data.basicAttack.get(player).spent, overdriven: data.overdriven.has(player) }
     })
     /** Taps of the trigger, one every `every` steps from `from`. */
     const taps = (count: number, from: number, every: number) => Array.from({ length: count }, (_, index) => [{ frame: from + index * every, press: ["primary" as const] }, { frame: from + index * every + 1, release: ["primary" as const] }]).flat()
@@ -422,14 +423,14 @@ describe("kits", () => {
   it("carries out a cast from any caster: an enemy's cut hits the player", () => {
     const PlayerHealth = Game.Inspector("Test/PlayerHealth", {
       queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) }
-    }, ({ queries }) => queries.player.each()[0]!.data.health.get().current)
+    }, ({ queries }) => queries.player.data.health.get(queries.player.each()[0]!).current)
     const run = range([{ x: 200, y: 0 }], { x: 200, y: 0 })
     const EnemyCasts = Game.System("Test/EnemyCasts", {
       queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) },
       events: { cast: Game.System.writeEvent(Cast) }
     }, ({ queries, events }) => {
-      for (const { entity, data } of queries.enemies.each()) {
-        const from = data.position.get()
+      for (const entity of queries.enemies.each()) {
+        const from = queries.enemies.data.position.get(entity)
         const effect = windCut
         events.cast.emit({ caster: Game.Entity.handle(entity.id, Position), faction: "enemy", atk: defaultTuning.enemies.dummy.atk, skill: "bladeWave", effect, from, at: center, direction: { x: -1, y: 0 }, charges: false })
       }

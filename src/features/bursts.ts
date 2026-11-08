@@ -43,11 +43,12 @@ export const UpdateBursts = Game.System("Shooter/UpdateBursts", {
   commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.despawns(Burst))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt * enemyPace(resources.slowMotion.get())
-  for (const { entity, data } of queries.bursts.each()) {
-    const burst = data.burst.get()
+  const { data } = queries.bursts
+  for (const entity of queries.bursts.each()) {
+    const burst = data.burst.get(entity)
     const remaining = burst.remaining - dt
     if (remaining > 0) {
-      data.burst.set({ ...burst, remaining })
+      data.burst.set(entity, { ...burst, remaining })
       continue
     }
     const area = { kind: "circle" as const, center: burst.at, radius: burst.radius }

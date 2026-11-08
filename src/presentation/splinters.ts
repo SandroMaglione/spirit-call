@@ -55,8 +55,8 @@ export const ShowSplinters = Game.System("Shooter/ShowSplinters", {
   const fx = host.fx
   // Every splinter's shard, where it is this frame.
   const shards: Array<{ x: number; y: number; z: number; along: Vector3; roll: number; size: number }> = []
-  for (const { entity, data } of queries.lobbed.each()) {
-    const lobbed = data.lobbed.get()
+  for (const entity of queries.lobbed.each()) {
+    const lobbed = queries.lobbed.data.lobbed.get(entity)
     if (lobbed.splinter !== true) continue
     const elapsed = lobbed.elapsed + services.clock.alpha * engine.step.dt
     const t = Math.min(1, Math.max(0, elapsed / lobbed.effect.flightTime))
@@ -115,8 +115,9 @@ export const ShowSplinters = Game.System("Shooter/ShowSplinters", {
     fx.ring(at(cast.from), z(60), view.stone.glow, 0.3)
   }
   // Meanwhile: grit falling off her, now and then a glint.
-  for (const { data } of queries.quarrying.each()) {
-    const where = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+  const { data } = queries.quarrying
+  for (const entity of queries.quarrying.each()) {
+    const where = lerp(data.previous.get(entity), data.position.get(entity), services.clock.alpha)
     if (Math.random() < 0.35) {
       const body = at(where, 18 + Math.random() * 20)
       fx.mote({ x: body.x + (Math.random() - 0.5) * z(24), y: body.y }, (Math.random() - 0.5) * 40, -60, { color: Math.random() < 0.3 ? view.stone.glow : view.stone.middle, size: 2.5 + Math.random() * 2, life: 0.5, gravity: 500 })

@@ -42,7 +42,7 @@ export const RecordRunLog = Game.System("Shooter/RecordRunLog", {
   const before = resources.log.get()
   if (hits.length === 0 && casts.length === 0 && actions.length === 0 && (wave === 0 || before.waves.at(-1)?.wave === wave)) return
   const now = resources.run.get().time
-  const characters = new Map<number, CharacterId>(queries.members.each().map(({ entity, data }) => [entity.id, data.member.get().character]))
+  const characters = new Map<number, CharacterId>(queries.members.each().map((entity) => [entity.id, queries.members.data.member.get(entity).character]))
   let log = before
 
   // A wave begun: its own line.

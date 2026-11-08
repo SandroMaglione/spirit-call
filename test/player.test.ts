@@ -130,7 +130,7 @@ describe("dash", () => {
     // Face world north (straight at the pillar at (0.5, 0.16)) and dash standing still: a dash from standing goes the way she faces.
     const run = start({ tuning, keys: doubleTap("right", 1) })
     const FaceNorth = Game.System("Test/FaceNorth", { queries: { player: Game.Query({ selection: { facing: Game.Query.write(Facing) }, with: [Player] }) } }, ({ queries }) => {
-      for (const { data } of queries.player.each()) data.facing.set({ direction: { x: 0, y: -1 }, hold: 10 })
+      for (const entity of queries.player.each()) queries.player.data.facing.set(entity, { direction: { x: 0, y: -1 }, hold: 10 })
     })
     expectOk(run.runtime.tick(Game.Schedule(FaceNorth)))
     run.step(12)

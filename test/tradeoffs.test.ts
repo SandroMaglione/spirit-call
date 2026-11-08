@@ -22,7 +22,7 @@ import { center, doubleTap, start, testRelic, withRelic, expectOk } from "./help
 const relic = (id: RelicId, tier: 1 | 2 | 3 = 1) => ({ id, tier })
 
 const Vitals = Game.Inspector("Test/TradeoffVitals", { queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) } }, ({ queries }) =>
-  queries.player.each()[0]?.data.health.get())
+  queries.player.each().map((entity) => queries.player.data.health.get(entity))[0])
 
 /** A run with `build`, no enemies, and a way to strike her with a blow of no element. */
 const alone = (build: BuildValue, keys: Parameters<typeof start>[0] extends infer Options ? Options extends { keys?: infer Keys } ? Keys : never : never = []) => {
@@ -32,7 +32,7 @@ const alone = (build: BuildValue, keys: Parameters<typeof start>[0] extends infe
       queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) },
       events: { damage: Game.System.writeEvent(Damage) }
     }, ({ queries, events }) => {
-      for (const { entity } of queries.player.each()) {
+      for (const entity of queries.player.each()) {
         events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "enemy", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0, element: null }) })
       }
     })

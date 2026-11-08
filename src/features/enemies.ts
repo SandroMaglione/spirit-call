@@ -221,11 +221,12 @@ export const ProcessPendingSpawns = Game.System("Shooter/ProcessPendingSpawns", 
   const dt = resources.time.get().dt
   // Lasting until the team falls, each wave comes in stronger (see `waveLevelBonus`).
   const level = resources.level.get() + waveLevelBonus(tuning.challenges[resources.challenge.get()].objective, resources.waves.get().number)
-  for (const { entity, data } of queries.pending.each()) {
-    const pending = data.pending.get()
+  const { data } = queries.pending
+  for (const entity of queries.pending.each()) {
+    const pending = data.pending.get(entity)
     const remaining = pending.remaining - dt
     if (remaining > 0) {
-      data.pending.set({ ...pending, remaining })
+      data.pending.set(entity, { ...pending, remaining })
       continue
     }
     commands.despawn(entity)
@@ -283,15 +284,16 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
     // Enemies walk at their pace (slow motion), which tells how far one should have got in a step.
     const pace = enemyPace(resources.slowMotion.get())
     const [player] = queries.player.each()
-    const target = player?.data.position.get()
+    const herData = queries.player.data
+    const target = player === undefined ? undefined : herData.position.get(player)
     // What the enemies make of her: open to a rush, or a threat to keep out of reach of (see `readPlayer`).
     const herRead = player === undefined || target === undefined
       ? undefined
-      : readPlayer(tuning, { at: target, aim: player.data.aim.get(), attack: player.data.basicAttack.get(), dashes: player.data.dash.get().charges })
-    const boxes = wallBoxes(queries.walls.each())
+      : readPlayer(tuning, { at: target, aim: herData.aim.get(player), attack: herData.basicAttack.get(player), dashes: herData.dash.get(player).charges })
+    const boxes = wallBoxes(queries.walls)
     // Pools enemies keep out of: fire anywhere, and the arena's basins (each enemy minds those it is not immune to).
     // The arena's hazards they also path around, as if walls (they are not: a push still sends them in).
-    const pools = queries.pools.each().map(({ data }) => data.ground.get()).filter((pool) => active(pool) && (pool.element === "fire" || pool.timer === null))
+    const pools = queries.pools.each().map((pool) => queries.pools.data.ground.get(pool)).filter((pool) => active(pool) && (pool.element === "fire" || pool.timer === null))
     const laid = pools.flatMap((pool) => (pool.timer === null && pool.half !== null
       ? [{ minX: pool.center.x - pool.half.x, minY: pool.center.y - pool.half.y, maxX: pool.center.x + pool.half.x, maxY: pool.center.y + pool.half.y }]
       : []))
@@ -307,16 +309,17 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
     grid.clear()
     bodies.length = 0
     const enemies = queries.enemies.each()
-    for (const { entity, data } of enemies) {
-      const position = data.position.get()
-      const r = data.body.get().radius
+    const { data } = queries.enemies
+    for (const entity of enemies) {
+      const position = data.position.get(entity)
+      const r = data.body.get(entity).radius
       grid.insert(bodies.length, position.x, position.y, r + tuning.crowd.spacing)
       bodies.push({ x: position.x, y: position.y, r, id: entity.id })
     }
     if (player !== undefined && target !== undefined) {
-      const r = player.data.body.get().radius
+      const r = herData.body.get(player).radius
       grid.insert(bodies.length, target.x, target.y, r + tuning.crowd.spacing)
-      bodies.push({ x: target.x, y: target.y, r, id: player.entity.id })
+      bodies.push({ x: target.x, y: target.y, r, id: player.id })
     }
 
     // Engagement slots: free ones go to the circling skirmishers nearest the player.
@@ -324,28 +327,27 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       let engaged = 0
       const waiting: Array<{
         readonly distance: number
-        readonly mode: (typeof enemies)[number]["data"]["mode"]
-        readonly brain: (typeof enemies)[number]["data"]["brain"]
+        readonly entity: (typeof enemies)[number]
       }> = []
-      for (const { data } of enemies) {
-        if (behaviorOf(tuning, data.enemy.get()).kind !== "skirmish") continue
-        const mode = data.mode.get()._tag
+      for (const entity of enemies) {
+        if (behaviorOf(tuning, data.enemy.get(entity)).kind !== "skirmish") continue
+        const mode = data.mode.get(entity)._tag
         if (mode === "engage") engaged += 1
         // Open, she gets the circling ones at once.
-        else if (mode === "orbit" && (herRead?.opening === true || data.brain.get().modeTimer >= tuning.crowd.minOrbitSeconds)) {
-          const position = data.position.get()
-          waiting.push({ distance: Ops.hypot(position.x - target.x, position.y - target.y), mode: data.mode, brain: data.brain })
+        else if (mode === "orbit" && (herRead?.opening === true || data.brain.get(entity).modeTimer >= tuning.crowd.minOrbitSeconds)) {
+          const position = data.position.get(entity)
+          waiting.push({ distance: Ops.hypot(position.x - target.x, position.y - target.y), entity })
         }
       }
       waiting.sort((left, right) => left.distance - right.distance)
       for (const candidate of waiting.slice(0, Math.max(0, tuning.crowd.engagers - engaged))) {
-        candidate.mode.transition({ from: "orbit", to: "engage" })
-        candidate.brain.update((brain) => ({ ...brain, modeTimer: 0 }))
+        data.mode.transition(candidate.entity, { from: "orbit", to: "engage" })
+        data.brain.update(candidate.entity, (brain) => ({ ...brain, modeTimer: 0 }))
       }
     }
 
     // Enemies turned to her side (see `Turned`) and those still against her: each goes for the nearest of the other.
-    const sides = enemies.map(({ entity, data }) => ({ id: entity.id, at: data.position.get(), turned: data.turned.present }))
+    const sides = enemies.map((entity) => ({ id: entity.id, at: data.position.get(entity), turned: data.turned.has(entity) }))
     /** Where an enemy goes: a turned one, to the nearest still against her; the others, to her or a turned one, the nearer. */
     const goalOf = (id: number, at: Vec2, turned: boolean): { readonly at: Vec2; readonly her: boolean } | undefined => {
       const others = sides.filter((side) => side.id !== id && side.turned !== turned).map((side) => ({ at: side.at, her: false }))
@@ -354,56 +356,56 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
         best === undefined || Ops.hypot(next.at.x - at.x, next.at.y - at.y) < Ops.hypot(best.at.x - at.x, best.at.y - at.y) ? next : best, undefined)
     }
 
-    for (const { entity, data } of enemies) {
-      const kind = data.enemy.get().kind
+    for (const entity of enemies) {
+      const kind = data.enemy.get(entity).kind
       const spec = tuning.enemies[kind]
-      const chase = goalOf(entity.id, data.position.get(), data.turned.present)
+      const chase = goalOf(entity.id, data.position.get(entity), data.turned.has(entity))
       // What it makes of the one it goes for: only she is read (see `readPlayer`).
       const read = chase?.her === true ? herRead : undefined
       // Speed is a stat, so what changes stats (levels) changes it.
       // Closing in on her while she is open, a melee enemy rushes.
-      const behavior = behaviorOf(tuning, data.enemy.get())
-      const closing = behavior.kind === "chase" || (behavior.kind === "skirmish" && data.mode.get()._tag === "engage")
-      const speed = data.stats.get().speed * (closing && read?.opening === true ? tuning.reading.rushSpeed : 1)
-      const position = data.position.get()
-      const radius = data.body.get().radius
-      const attacker = data.attacker.get()
-      const phase = data.phase.get()._tag
+      const behavior = behaviorOf(tuning, data.enemy.get(entity))
+      const closing = behavior.kind === "chase" || (behavior.kind === "skirmish" && data.mode.get(entity)._tag === "engage")
+      const speed = data.stats.get(entity).speed * (closing && read?.opening === true ? tuning.reading.rushSpeed : 1)
+      const position = data.position.get(entity)
+      const radius = data.body.get(entity).radius
+      const attacker = data.attacker.get(entity)
+      const phase = data.phase.get(entity)._tag
 
       // Stunned: it stands where it is (a push still slides it).
-      if (data.stunned.get().remaining > 0) {
-        data.velocity.set(zero)
+      if (data.stunned.get(entity).remaining > 0) {
+        data.velocity.set(entity, zero)
         continue
       }
 
       // A charge moves straight down its lane at full speed, ignoring crowding.
-      const attack = currentAttack(tuning, data.enemy.get(), attacker)
+      const attack = currentAttack(tuning, data.enemy.get(entity), attacker)
       if (attack?.kind === "charge" && phase === "active" && attacker.area?.kind === "lane") {
-        data.velocity.set(scale(attacker.area.direction, attack.speed))
+        data.velocity.set(entity, scale(attacker.area.direction, attack.speed))
         continue
       }
 
       // Skirmish turns: an attack (its recovery) or a long engagement sends the enemy back; retreats end in circling.
-      let mode = data.mode.get()._tag
+      let mode = data.mode.get(entity)._tag
       if (behavior.kind === "skirmish") {
         const before = mode
-        const turn = skirmishTurn(behavior, mode, phase, data.brain.get().modeTimer + dt)
+        const turn = skirmishTurn(behavior, mode, phase, data.brain.get(entity).modeTimer + dt)
         mode = turn.mode
-        if (before === "engage" && mode === "retreat") data.mode.transition({ from: "engage", to: "retreat" })
-        else if (before === "retreat" && mode === "orbit") data.mode.transition({ from: "retreat", to: "orbit" })
-        data.brain.update((brain) => ({ ...brain, modeTimer: turn.modeTimer }))
+        if (before === "engage" && mode === "retreat") data.mode.transition(entity, { from: "engage", to: "retreat" })
+        else if (before === "retreat" && mode === "orbit") data.mode.transition(entity, { from: "retreat", to: "orbit" })
+        data.brain.update(entity, (brain) => ({ ...brain, modeTimer: turn.modeTimer }))
       }
 
       // Staggered: while a hit's push is strong, the enemy slides with it instead of walking.
-      if (length(data.knockback.get()) > tuning.knockback.staggerSpeed) {
-        data.velocity.set(zero)
+      if (length(data.knockback.get(entity)) > tuning.knockback.staggerSpeed) {
+        data.velocity.set(entity, zero)
         continue
       }
 
       // Attacks are commitments: it stands its ground from the windup to the end of the recovery,
       // unmoved by the crowd too, so the attack lands where its telegraph showed.
       if (phase !== "ready") {
-        data.velocity.set(zero)
+        data.velocity.set(entity, zero)
         continue
       }
       let desired: Vec2 = zero
@@ -415,19 +417,19 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
         // Seeing her over the arena's pools counts (shots fly over them); only walls hide her.
         const sight = way === toward || hasLineOfSight(position, chase.at, radius, boxes)
         const distance = length(subtract(chase.at, position))
-        const steering = steer(tuning, behavior, mode, data.brain.get(), { toward, way, sight, distance, speed, dt })
+        const steering = steer(tuning, behavior, mode, data.brain.get(entity), { toward, way, sight, distance, speed, dt })
         // Under her threat, a skirmisher whose turn it is keeps just out of her reach, circling, until it runs out of patience.
-        const wary = behavior.kind === "skirmish" && mode === "engage" && read !== undefined && read.threatens(position) && data.brain.get().modeTimer < tuning.reading.patience
-        const side = { x: -toward.y * data.brain.get().strafe, y: toward.x * data.brain.get().strafe }
+        const wary = behavior.kind === "skirmish" && mode === "engage" && read !== undefined && read.threatens(position) && data.brain.get(entity).modeTimer < tuning.reading.patience
+        const side = { x: -toward.y * data.brain.get(entity).strafe, y: toward.x * data.brain.get(entity).strafe }
         const backing = read !== undefined && distance < read.reach ? 1 : 0
         const holding = wary ? normalizeOr({ x: side.x - toward.x * backing, y: side.y - toward.y * backing }, side) : null
         // Never into a pool it would take harm from: along its edge instead, and out at once if pushed in.
-        const affinities = data.affinities.get()
+        const affinities = data.affinities.get(entity)
         const minded = pools.filter((pool) => durationFactor(tuning, affinities[pool.element]) > 0)
         const wanted = holding === null ? steering.desired : scale(holding, speed * tuning.crowd.orbitSpeed)
         // Pressed into a corner, getting nowhere: it follows the wall out for a while (see `Tuning.unstick`).
         const rules = tuning.unstick
-        const brain = data.brain.get()
+        const brain = data.brain.get(entity)
         let { pressedAt, stuck, unstick } = brain
         let goal = wanted
         if (unstick !== null && unstick.remaining > 0) {
@@ -460,7 +462,7 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
           }
         }
         desired = minded.length === 0 ? goal : keepOut(goal, position, radius, speed, minded, tuning.crowd.hazardMargin)
-        data.brain.set({ ...steering.brain, pressedAt, stuck, unstick })
+        data.brain.set(entity, { ...steering.brain, pressedAt, stuck, unstick })
       }
 
       // Separation from nearby bodies (other enemies and the player).
@@ -483,23 +485,24 @@ export const SteerEnemies = Game.System("Shooter/SteerEnemies", {
       })
 
       // Leaving a charge drops the charge speed at once.
-      const velocity = clampLength(data.velocity.get(), Math.max(speed, 1))
+      const velocity = clampLength(data.velocity.get(entity), Math.max(speed, 1))
       const steered = moveToward(velocity, desired, Math.max(spec.acceleration, 1) * dt)
-      data.velocity.set({ x: steered.x + pushX * dt * 10, y: steered.y + pushY * dt * 10 })
+      data.velocity.set(entity, { x: steered.x + pushX * dt * 10, y: steered.y + pushY * dt * 10 })
     }
 
     // Shields turn toward the player at their turn rate.
     if (target !== undefined) {
-      for (const { data } of queries.shields.each()) {
-        const shield = data.shield.get()
-        const position = data.position.get()
+      const shields = queries.shields.data
+      for (const entity of queries.shields.each()) {
+        const shield = shields.shield.get(entity)
+        const position = shields.position.get(entity)
         const want = Ops.atan2(target.y - position.y, target.x - position.x)
         const have = Ops.atan2(shield.facing.y, shield.facing.x)
         let delta = want - have
         while (delta > Math.PI) delta -= Math.PI * 2
         while (delta < -Math.PI) delta += Math.PI * 2
         const step = Math.max(-shield.turnRate * dt, Math.min(shield.turnRate * dt, delta))
-        data.shield.set({ ...shield, facing: { x: Ops.cos(have + step), y: Ops.sin(have + step) } })
+        shields.shield.set(entity, { ...shield, facing: { x: Ops.cos(have + step), y: Ops.sin(have + step) } })
       }
     }
 })

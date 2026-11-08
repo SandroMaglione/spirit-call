@@ -148,15 +148,17 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
 }, ({ queries, resources }): Battlefield => {
   const tuning: Tuning = resources.tuning.get()
   const [player] = queries.player.each()
+  const playerData = queries.player.data
   const threats: Array<Threat> = []
-  for (const { data } of queries.enemies.each()) {
-    const attacker = data.attacker.get()
-    const phase = data.phase.get()._tag
-    const spec = currentAttack(tuning, data.enemy.get(), attacker)
+  const enemyData = queries.enemies.data
+  for (const entity of queries.enemies.each()) {
+    const attacker = enemyData.attacker.get(entity)
+    const phase = enemyData.phase.get(entity)._tag
+    const spec = currentAttack(tuning, enemyData.enemy.get(entity), attacker)
     const area = attacker.area
     if (spec === undefined || area === null || (phase !== "windup" && phase !== "active")) continue
     // A windup can run slower than its spec at the first levels (see `windupOf`): its time left, in seconds.
-    const slower = data.enemy.get().windup ?? 1
+    const slower = enemyData.enemy.get(entity).windup ?? 1
     const lands = phase === "windup" ? Math.max(0, spec.windup - attacker.elapsed) * slower : 0
     const seen = phase === "windup" ? attacker.elapsed : Infinity
     const ends = lands + (phase === "windup" ? spec.active : Math.max(0, spec.active - attacker.elapsed))
@@ -184,38 +186,43 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     if (spec.kind === "call") continue
     if (spec.kind === "wave") {
       // A ring not yet sent out (one out is a hitbox, below).
-      if (phase === "windup") threats.push({ kind: "wave", center: data.position.get(), speed: spec.speed, width: spec.width, reach: spec.reach, from: lands, seen })
+      if (phase === "windup") threats.push({ kind: "wave", center: enemyData.position.get(entity), speed: spec.speed, width: spec.width, reach: spec.reach, from: lands, seen })
       continue
     }
     if (phase === "active" && spec.kind !== "charge") continue
     threats.push({ kind: "area", area, from: lands, to: Math.max(ends, lands + 1 / 60), seen })
   }
-  for (const { data } of queries.projectiles.each()) {
-    const projectile = data.projectile.get()
+  const projectileData = queries.projectiles.data
+  for (const entity of queries.projectiles.each()) {
+    const projectile = projectileData.projectile.get(entity)
     if (projectile.faction !== "enemy") continue
-    threats.push({ kind: "shot", at: data.position.get(), velocity: data.velocity.get(), radius: projectile.radius, from: 0, range: projectile.range, seen: Infinity })
+    threats.push({ kind: "shot", at: projectileData.position.get(entity), velocity: projectileData.velocity.get(entity), radius: projectile.radius, from: 0, range: projectile.range, seen: Infinity })
   }
-  for (const { data } of queries.lobbed.each()) {
-    const lobbed = data.lobbed.get()
+  const lobbedData = queries.lobbed.data
+  for (const entity of queries.lobbed.each()) {
+    const lobbed = lobbedData.lobbed.get(entity)
     if (lobbed.faction !== "enemy") continue
     const bursts = Math.max(0, lobbed.effect.flightTime + lobbed.effect.fuse - lobbed.elapsed)
     threats.push({ kind: "area", area: { kind: "circle", center: lobbed.to, radius: lobbed.effect.radius }, from: bursts, to: bursts + blast, seen: Infinity })
   }
   // A fallen enemy's burst: its ring, once the fuse has burnt.
-  for (const { data } of queries.bursts.each()) {
-    const burst = data.burst.get()
+  const burstData = queries.bursts.data
+  for (const entity of queries.bursts.each()) {
+    const burst = burstData.burst.get(entity)
     threats.push({ kind: "area", area: { kind: "circle", center: burst.at, radius: burst.radius }, from: burst.remaining, to: burst.remaining + blast * 2, seen: burst.fuse - burst.remaining })
   }
   // A thunder elite's discharge winding up: its ring, once it strikes.
-  for (const { data } of queries.elites.each()) {
-    const charging = data.elite.get().charging
+  const eliteData = queries.elites.data
+  for (const entity of queries.elites.each()) {
+    const charging = eliteData.elite.get(entity).charging
     if (charging === null) continue
     const discharge = tuning.elites.discharge
     threats.push({ kind: "area", area: { kind: "circle", center: charging.at, radius: discharge.radius }, from: charging.remaining, to: charging.remaining + blast * 2, seen: discharge.windup - charging.remaining })
   }
   // Fire on the floor burns whoever walks in: kept out of while it lasts.
-  for (const { data } of queries.pools.each()) {
-    const pool = data.ground.get()
+  const poolData = queries.pools.data
+  for (const entity of queries.pools.each()) {
+    const pool = poolData.ground.get(entity)
     if (pool.element !== "fire" || pool.out > 0) continue
     // A trench sunk into the floor is a box: a lane along it.
     const area: Area = pool.half === null
@@ -224,8 +231,9 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
     // A cost to walk through (it burns), not a wall: see `playOut`.
     threats.push({ kind: "area", area, from: 0, to: pool.timer === null ? Infinity : pool.timer.remaining, seen: Infinity, soft: true })
   }
-  for (const { data } of queries.hitboxes.each()) {
-    const hitbox = data.hitbox.get()
+  const hitboxData = queries.hitboxes.data
+  for (const entity of queries.hitboxes.each()) {
+    const hitbox = hitboxData.hitbox.get(entity)
     if (hitbox.faction !== "enemy") continue
     if (hitbox.grows !== undefined && hitbox.area.kind === "ring") {
       const area = hitbox.area
@@ -234,20 +242,20 @@ export const ReadBattlefield = Game.Inspector("Bot/Battlefield", {
   }
   return {
     player: player === undefined ? undefined : {
-      at: player.data.position.get(),
-      body: player.data.body.get().radius,
-      hurtbox: player.data.hurtbox.get().radius,
-      speed: player.data.stats.get().speed,
-      dashReady: player.data.dash.get().charges > 0 && player.data.dash.get().remaining <= 0,
-      charges: player.data.dash.get().charges,
-      maxCharges: dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)).charges,
-      dash: dashOf(tuning, player.data.member.get().character, traitsIn(player.data.passives)),
-      invulnerable: player.data.invulnerable.get().remaining,
-      skillReady: { special: player.data.skills.get().special.cooldown <= 0, ultimate: player.data.skills.get().ultimate.cooldown <= 0 }
+      at: playerData.position.get(player),
+      body: playerData.body.get(player).radius,
+      hurtbox: playerData.hurtbox.get(player).radius,
+      speed: playerData.stats.get(player).speed,
+      dashReady: playerData.dash.get(player).charges > 0 && playerData.dash.get(player).remaining <= 0,
+      charges: playerData.dash.get(player).charges,
+      maxCharges: dashOf(tuning, playerData.member.get(player).character, traitsIn(playerData.passives.get(player))).charges,
+      dash: dashOf(tuning, playerData.member.get(player).character, traitsIn(playerData.passives.get(player))),
+      invulnerable: playerData.invulnerable.get(player).remaining,
+      skillReady: { special: playerData.skills.get(player).special.cooldown <= 0, ultimate: playerData.skills.get(player).ultimate.cooldown <= 0 }
     },
-    enemies: queries.enemies.each().map(({ entity, data }) => ({ id: entity.id, at: data.position.get() })),
+    enemies: queries.enemies.each().map((entity) => ({ id: entity.id, at: enemyData.position.get(entity) })),
     threats,
-    walls: queries.walls.each().map(({ data }) => data.wall.get())
+    walls: queries.walls.each().map((entity) => queries.walls.data.wall.get(entity))
   }
 })
 
@@ -479,13 +487,16 @@ export const botTouch = () => {
 
 const Vitals = Game.Inspector("Bot/Vitals", {
   queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) }
-}, ({ queries }) => queries.player.each()[0]?.data.health.get().current)
+}, ({ queries }) => {
+  const [player] = queries.player.each()
+  return player === undefined ? undefined : queries.player.data.health.get(player).current
+})
 
 const Progress = Game.Inspector("Bot/Progress", { resources: { waves: Game.System.readResource(Waves) } }, ({ resources }) => resources.waves.get().phase)
 const Outcome = Game.Inspector("Bot/Outcome", { resources: { result: Game.System.readResource(RunResult) } }, ({ resources }) => resources.result.get())
 const Members = Game.Inspector("Bot/Members", {
   queries: { members: Game.Query({ selection: { member: Game.Query.read(Member), health: Game.Query.read(Health), player: Game.Query.optional(Player) } }) }
-}, ({ queries }) => queries.members.each().map(({ data }) => ({ ...data.member.get(), health: data.health.get(), active: data.player.present })))
+}, ({ queries }) => queries.members.each().map((entity) => ({ ...queries.members.data.member.get(entity), health: queries.members.data.health.get(entity), active: queries.members.data.player.has(entity) })))
 
 const Tallied = Game.Inspector("Bot/Tally", { resources: { stats: Game.System.readResource(Stats) } }, ({ resources }) => resources.stats.get().tally)
 
@@ -681,7 +692,7 @@ export const runBot = (run: BotRun): BotReport => {
   if (run.enemies !== undefined) {
     const enemies = run.enemies
     const Clear = Game.System("Bot/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
-      for (const { entity } of queries.enemies.each()) commands.despawn(entity)
+      for (const entity of queries.enemies.each()) commands.despawn(entity)
     })
     const Spawn = Game.System("Bot/Spawn", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
       const middle = { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
@@ -691,9 +702,10 @@ export const runBot = (run: BotRun): BotReport => {
     })
     // Those starting wounded (`health`, a share of their max): a champion in a later phase.
     const Wound = Game.System("Bot/Wound", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy), health: Game.Query.write(Health) } }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) {
-        const share = enemies.find((entry) => entry.kind === data.enemy.get().kind)?.health
-        if (share !== undefined) data.health.update((health) => ({ ...health, current: health.max * share }))
+      const { data } = queries.enemies
+      for (const entity of queries.enemies.each()) {
+        const share = enemies.find((entry) => entry.kind === data.enemy.get(entity).kind)?.health
+        if (share !== undefined) data.health.update(entity, (health) => ({ ...health, current: health.max * share }))
       }
     })
     expectOk(sim.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred(), Spawn, Game.Schedule.applyDeferred(), Wound)))

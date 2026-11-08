@@ -125,14 +125,15 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     if (action.fell) services.host.feedback.wideEyes = view.spirit.wideSeconds + tuning.team.fallBeat.seconds
   }
   if (events.perfect.all().length > 0) services.host.feedback.wideEyes = view.spirit.wideSeconds
-  for (const { entity, data } of queries.player.each()) {
-    const position = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
-    const dash = data.dash.get()
-    const radius = data.body.get().radius
+  const { data } = queries.player
+  for (const entity of queries.player.each()) {
+    const position = lerp(data.previous.get(entity), data.position.get(entity), services.clock.alpha)
+    const dash = data.dash.get(entity)
+    const radius = data.body.get(entity).radius
 
     // Stella Sora-style facing: a subtle ring at a melee attack's reach (close around a gun), with a small arrow on it.
-    const aim = data.aim.get()
-    const current = data.basicAttack.get()
+    const aim = data.aim.get(entity)
+    const current = data.basicAttack.get(entity)
     const attack = attackOf(tuning, current.attack)
     const first = attack.combo[0]
     const around = first !== undefined && isMelee(first) ? first.reach : radius + view.facingRing.gap
@@ -144,15 +145,15 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
 
     // Protected after coming in from a fall: a ring of her color, pulsing, fading as it runs out.
     const protection = services.host.feedback.protection
-    if (protection > 0 && data.invulnerable.get().remaining > 0) {
+    if (protection > 0 && data.invulnerable.get(entity).remaining > 0) {
       const pulse = 0.5 + 0.5 * Math.sin((performance.now() / 1000) * view.fallEntry.pulseHz * Math.PI * 2)
       const left = Math.min(1, protection / 0.6)
-      marks.strokeCircle(position.x, position.y, radius + 18 + pulse * 4, 4, view.characters[data.member.get().character], (0.45 + 0.35 * pulse) * left)
+      marks.strokeCircle(position.x, position.y, radius + 18 + pulse * 4, 4, view.characters[data.member.get(entity).character], (0.45 + 0.35 * pulse) * left)
     }
     // Dash charges around the feet: one arc each, lit while ready, the next one filling back up.
     const ring = radius + 6
     const startAngle = -Math.PI / 2
-    const own = dashOf(tuning, data.member.get().character, traitsIn(data.passives))
+    const own = dashOf(tuning, data.member.get(entity).character, traitsIn(data.passives.get(entity)))
     const each = (Math.PI * 2) / own.charges
     const gap = own.charges > 1 ? 0.18 : 0
     for (let charge = 0; charge < own.charges; charge++) {
@@ -189,8 +190,8 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
     }
 
     // A skill around her ready to use (a thunderclap, a pyre; a ring of fire's both edges): a faint ring showing what it would catch.
-    const skills = data.skills.get()
-    const energy = data.energy.get().current
+    const skills = data.skills.get(entity)
+    const energy = data.energy.get(entity).current
     for (const slot of skillSlots) {
       const spec = tuning.skills[skills[slot].skill]
       const effect = spec.effect
@@ -205,27 +206,27 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       const pulse = charge >= 1 ? 0.5 + 0.5 * Math.sin((performance.now() / 1000) * view.charge.pulseHz * Math.PI * 2) : 0
       const glow = charge >= 1 ? view.charge.glow + (1 - view.charge.glow) * pulse : charge * view.charge.glow
       // A hit flashes her white, a dash lights her up; overcharged she flickers with thunder; otherwise a charge glows. Protected: see-through.
-      const flashing = data.flash.get().remaining > 0
+      const flashing = data.flash.get(entity).remaining > 0
       // Overcharged: lit with thunder, surging; strobing as it runs out.
       const now = performance.now() / 1000
-      const overcharged = data.overcharged.present ? data.overcharged.get() : null
+      const overcharged = data.overcharged.get(entity) ?? null
       const strobe = overcharged === null ? 0 : overcharged.remaining < 1.2 ? (Math.sin(now * 40) > 0 ? 1 : 0.2) : 0.8 + 0.2 * Math.sin(now * 23) * Math.sin(now * 7)
       // Overdriven: lit with fire, flaring as she fires; flickering out as it runs out.
-      const overdriven = data.overdriven.present ? data.overdriven.get() : null
+      const overdriven = data.overdriven.get(entity) ?? null
       const heat = overdriven === null ? 0 : overdriven.remaining < 1.2 ? (Math.sin(now * 30) > 0 ? 1 : 0.25) : 0.75 + 0.25 * Math.sin(now * 17) * Math.sin(now * 5)
       const surge = charge <= 0 ? 0.6 * Math.max(strobe, heat) : 0
-      const wind = data.member.get().character === "swordsman" && data.airborne.present ? 0.48 : 0
+      const wind = data.member.get(entity).character === "swordsman" && data.airborne.has(entity) ? 0.48 : 0
       node.body.paint(
-        stateTint(0xffffff, data.state.get().current),
+        stateTint(0xffffff, data.state.get(entity).current),
         flashing ? view.hitFlash : dash.remaining > 0 ? view.playerDashing : surge > 0 ? (overdriven !== null ? view.elements.fire : view.elements.thunder) : wind > 0 ? view.elements.wind : view.charge.full,
         flashing ? 1 : dash.remaining > 0 ? 0.65 : surge > 0 ? surge : Math.max(wind, glow),
-        data.invulnerable.get().remaining > 0 ? 0.55 : 1)
+        data.invulnerable.get(entity).remaining > 0 ? 0.55 : 1)
       // Her body says how she is: its halo bright and pulsing while her ultimate is ready, dimming as her health runs low.
       const spirit = view.spirit
       const feedback = services.host.feedback
       const ultimate = skills.ultimate
       const ready = skillRecharge(tuning.skills[ultimate.skill], ultimate.cooldown, energy) <= 0
-      const health = data.health.get()
+      const health = data.health.get(entity)
       const left = health.max > 0 ? health.current / health.max : 1
       const dim = spirit.low + (1 - spirit.low) * Math.min(1, left / spirit.lowHealth)
       const beat = 0.5 + 0.5 * Math.sin((performance.now() / 1000) * spirit.pulseHz * Math.PI * 2)
@@ -238,10 +239,10 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
       // Her body leans with her changes of pace, sprung: digging in as she stops, into a turn, forward as she sets off.
       const sway = feedback.sway
       const springs = spirit.sway
-      const velocity = data.velocity.get()
+      const velocity = data.velocity.get(entity)
       const seconds = resources.hitStop.get().remaining > 0 ? 0 : Math.min(services.clock.frameSeconds, 0.05)
       if (sway.last !== null && seconds > 0) {
-        const pace = tuning.characters[data.member.get().character].stats.speed
+        const pace = tuning.characters[data.member.get(entity).character].stats.speed
         // A dash's burst counts as no more than a run's.
         const change = { x: velocity.x - sway.last.x, y: velocity.y - sway.last.y }
         const size = Math.hypot(change.x, change.y)
@@ -262,16 +263,17 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         sway.last = { x: velocity.x, y: velocity.y }
       }
       // Standing, she leans toward where she aims (seen from behind, her body still says where that is); a run leans on its own.
-      const pace = tuning.characters[data.member.get().character].stats.speed
+      const pace = tuning.characters[data.member.get(entity).character].stats.speed
       // Less the more she faces the camera: there her eyes say it, and leaning would tip them out of sight.
       const onScreen = normalizeOr(toScreen(projection, aim), { x: 0, y: -1 })
       const still = Math.max(0, 1 - Math.hypot(velocity.x, velocity.y) / (pace * 0.5)) * (0.5 - 0.5 * onScreen.y)
       // Diving, she tips head first toward where she lands.
-      const dive = data.airborne.present && diving(data.airborne.get()) ? data.airborne.get().dive!.velocity : null
+      const airborne = data.airborne.get(entity)
+      const dive = airborne !== undefined && diving(airborne) ? airborne.dive!.velocity : null
       // (A dive in place, straight down, stays upright.)
       const ahead = dive === null || Math.hypot(dive.x, dive.y) < 1e-6 ? null : normalizeOr(dive, aim)
       const tilt = ahead !== null ? { x: ahead.x * view.airborne.plunge.lean, y: ahead.y * view.airborne.plunge.lean } : { x: sway.x + aim.x * springs.aim * still, y: sway.y + aim.y * springs.aim * still }
-      const look = characterLooks[data.member.get().character]
+      const look = characterLooks[data.member.get(entity).character]
       const grounded = look.kind === "model" && look.grounded === true
       const lean = grounded ? 0 : ahead !== null ? view.airborne.plunge.lean : Math.min(springs.most, Math.hypot(tilt.x, tilt.y))
       if (lean > 1e-4) {
@@ -280,7 +282,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         node.pivot.quaternion.setFromAxisAngle(leanAxis, lean)
       } else node.pivot.quaternion.identity()
       // Soaring up, she spins round.
-      const spin = data.airborne.present ? soarSpin(data.airborne.get()) : 0
+      const spin = airborne !== undefined ? soarSpin(airborne) : 0
       if (spin !== 0) node.pivot.quaternion.multiply(spinTurn.setFromAxisAngle(upAxis, spin))
       // Only a change of pace squashes her, not her aim.
       const squash = grounded ? 0 : Math.min(springs.most, Math.hypot(sway.x, sway.y)) * springs.squash
@@ -303,7 +305,7 @@ export const DrawPlayer = Game.System("Shooter/DrawPlayer", {
         if (hover.age >= hover.life) feedback.hover = null
       }
       const hovering = feedback.hover === null ? 0 : worldHeight(projection, Math.max(0, feedback.hover.lift(feedback.hover.age)))
-      const lift = (data.airborne.present ? airborneLift(data.airborne.get()) : 0) + hovering
+      const lift = (airborne !== undefined ? airborneLift(airborne) : 0) + hovering
       node.pivot.position.y = lift
       const shadow = radius * (1 - (1 - view.airborne.shadow) * Math.min(1, lift / worldHeight(projection, view.airborne.plunge.height)))
       node.shadow.object.scale.set(shadow, 1, shadow)
@@ -335,35 +337,38 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
   const tuning = resources.tuning.get()
   const overlay = services.host.overlay
   overlay.clear()
-  for (const { entity, data } of queries.enemies.each()) {
+  const { data } = queries.enemies
+  for (const entity of queries.enemies.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "enemy") continue
-    const kind = data.enemy.get().kind
-    const attacker = data.attacker.get()
-    const spec = currentAttack(tuning, data.enemy.get(), attacker)
+    const kind = data.enemy.get(entity).kind
+    const attacker = data.attacker.get(entity)
+    const spec = currentAttack(tuning, data.enemy.get(entity), attacker)
     // Anticipation: the body brightens through the windup.
-    const windup = spec !== undefined && data.phase.get()._tag === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
-    const stunned = data.stunned.get().remaining > 0
+    const windup = spec !== undefined && data.phase.get(entity)._tag === "windup" ? Math.min(1, attacker.elapsed / spec.windup) : 0
+    const stunned = data.stunned.get(entity).remaining > 0
     // A hit flashes it white; stunned it is dimly lit; otherwise a windup lights it up.
-    const tint = stateTint(0xffffff, data.state.get().current)
-    const poise = data.poise.get()
-    if (data.flash.get().remaining > 0) node.body.paint(tint, view.hitFlash, 1, 1)
+    const tint = stateTint(0xffffff, data.state.get(entity).current)
+    const poise = data.poise.get(entity)
+    const turning = data.turned.get(entity)
+    const elite = data.elite.get(entity)
+    if (data.flash.get(entity).remaining > 0) node.body.paint(tint, view.hitFlash, 1, 1)
     // Broken: it glows in the break color, pulsing, until it recovers.
     else if (poise.broken > 0) node.body.paint(tint, view.breaking.glow, 0.35 + 0.25 * Math.sin(performance.now() / 1000 * view.breaking.pulseHz * Math.PI * 2), 1)
     else if (stunned) node.body.paint(tint, view.stun, 0.35, 1)
     // Turned to her side (see `Turned`): water through its body, swelling and ebbing (stronger through a windup),
     // flickering as its time runs out.
-    else if (data.turned.present) {
-      const left = data.turned.get().remaining
+    else if (turning !== undefined) {
+      const left = turning.remaining
       const now = performance.now() / 1000
       const ebb = left < 1.2 && Math.sin(now * 30) < 0 ? 0.3 : 1
-      node.body.paint(stateTint(view.turned.tint, data.state.get().current), view.turned.glow, (0.4 + 0.18 * Math.sin(now * 5) + windup * 0.35) * ebb, 1)
+      node.body.paint(stateTint(view.turned.tint, data.state.get(entity).current), view.turned.glow, (0.4 + 0.18 * Math.sin(now * 5) + windup * 0.35) * ebb, 1)
     }
     // An elite glows in its element's color (brighter through a windup); a champion brighter still, pulsing.
-    else if (data.elite.present && windup === 0) {
-      const champion = data.enemy.get().champion
+    else if (elite !== undefined && windup === 0) {
+      const champion = data.enemy.get(entity).champion
       const glow = champion ? view.champion.glow + view.champion.glowPulse * Math.sin(performance.now() / 1000 * view.champion.pulseHz * Math.PI * 2) : 0.32
-      node.body.paint(tint, view.elements[data.elite.get().element], glow, 1)
+      node.body.paint(tint, view.elements[elite.element], glow, 1)
     }
     else node.body.paint(tint, view.windupTint, windup * 0.75, 1)
     // Over its head, in projected coordinates (the overlay's).
@@ -377,17 +382,17 @@ export const DrawEnemies = Game.System("Shooter/DrawEnemies", {
         overlay.fillCircle(feet.x + Math.cos(angle) * view.stunStars.radius, head - 22 + Math.sin(angle) * view.stunStars.radius * 0.4, 3, view.stun, 1)
       }
     }
-    const health = data.health.get()
-    const champion = data.enemy.get().champion
+    const health = data.health.get(entity)
+    const champion = data.enemy.get(entity).champion
     const bar = poiseOf(tuning, kind, health.max, champion)
     const breaking = bar > 0 && (poise.current > 0 || poise.broken > 0)
     // A champion's bar is always shown, wider, edged in its element's color.
-    const turned = data.turned.present
+    const turned = turning !== undefined
     if (health.current >= health.max && !breaking && !champion && !turned) continue
     const width = champion ? view.champion.bar : 34
     const x = feet.x - width / 2
     const y = head - 12
-    if (champion && data.elite.present) overlay.fillRect(x - 2, y - 2, width + 4, breaking ? 12 : 8, view.elements[data.elite.get().element], 0.9)
+    if (champion && elite !== undefined) overlay.fillRect(x - 2, y - 2, width + 4, breaking ? 12 : 8, view.elements[elite.element], 0.9)
     overlay.fillRect(x - 1, y - 1, width + 2, breaking ? 10 : 6, view.healthBack, 0.85)
     // A turned one's health in her side's color: whose side it is on.
     overlay.fillRect(x, y, width * (health.current / health.max), 4, turned ? view.turned.bar : view.healthFill, 1)
