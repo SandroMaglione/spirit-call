@@ -10,11 +10,12 @@ export const KeepCharged = Game.System("Shooter/Dev/KeepCharged", {
   resources: { tuning: Game.System.readResource(Tuning) }
 }, ({ queries, resources }) => {
   const max = resources.tuning.get().energy.max
-  for (const { data } of queries.team.each()) {
-    if (data.energy.get().current < max) data.energy.set({ current: max })
-    const skills = data.skills.get()
+  const { data } = queries.team
+  for (const entity of queries.team.each()) {
+    if (data.energy.get(entity).current < max) data.energy.set(entity, { current: max })
+    const skills = data.skills.get(entity)
     if (skills.special.cooldown > 0 || skills.ultimate.cooldown > 0) {
-      data.skills.set({ special: { ...skills.special, cooldown: 0 }, ultimate: { ...skills.ultimate, cooldown: 0 } })
+      data.skills.set(entity, { special: { ...skills.special, cooldown: 0 }, ultimate: { ...skills.ultimate, cooldown: 0 } })
     }
   }
 })

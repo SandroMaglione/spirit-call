@@ -12,8 +12,9 @@ import { cursorAt, start, steps, plainAttack } from "./helpers.ts"
 const Body = Game.Inspector("Test/Facing", {
   queries: { player: Game.Query({ selection: { aim: Game.Query.read(Aim), facing: Game.Query.read(Facing), velocity: Game.Query.read(Velocity) }, with: [Player] }) }
 }, ({ queries }) => {
-  const { data } = queries.player.each()[0]!
-  return { aim: data.aim.get(), facing: data.facing.get().direction, velocity: data.velocity.get() }
+  const player = queries.player.each()[0]!
+  const { data } = queries.player
+  return { aim: data.aim.get(player), facing: data.facing.get(player).direction, velocity: data.velocity.get(player) }
 })
 
 const along = (a: Vec2, b: Vec2): number => a.x * b.x + a.y * b.y

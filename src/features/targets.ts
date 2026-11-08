@@ -5,7 +5,7 @@
  * frontal shield facing the blow stops it.
  */
 import type { EntityId, Handle } from "@typeonce/ritmo/Entity"
-import type { Query } from "@typeonce/ritmo/Query"
+import type { QueryData, QueryEntity } from "@typeonce/ritmo/Query"
 import { sweepCircleCircle } from "@typeonce/ritmo-math/Collide2"
 import type { Vec2 } from "@typeonce/ritmo-math/Vec2"
 import * as Ops from "@typeonce/ritmo/Ops"
@@ -41,18 +41,23 @@ export const Targets = Game.Query({
 
 /** A match of `Targets` as a `Target`. */
 export const targetOf = (
-  entity: Target["entity"],
-  data: Query.Cells<typeof Targets>
-): Target => ({
-  entity,
-  id: Game.Entity.handle(entity, Health),
-  at: data.position.get(),
-  radius: data.hurtbox.get().radius,
-  faction: data.hurtbox.get().faction,
-  invulnerable: data.invulnerable.present && data.invulnerable.get().remaining > 0,
-  shield: data.shield.present ? { facing: data.shield.get().facing, cosHalfAngle: Ops.cos(data.shield.get().halfAngle) } : undefined,
-  dashed: data.dash?.present === true ? { from: data.dash.get().from, since: data.dash.get().since } : undefined
-})
+  entity: QueryEntity<typeof Game.schema, typeof Targets>,
+  data: QueryData<typeof Targets>
+): Target => {
+  const hurtbox = data.hurtbox.get(entity)
+  const shield = data.shield.get(entity)
+  const dash = data.dash.get(entity)
+  return {
+    entity: entity.id,
+    id: Game.Entity.handle(entity.id, Health),
+    at: data.position.get(entity),
+    radius: hurtbox.radius,
+    faction: hurtbox.faction,
+    invulnerable: (data.invulnerable.get(entity)?.remaining ?? 0) > 0,
+    shield: shield === undefined ? undefined : { facing: shield.facing, cosHalfAngle: Ops.cos(shield.halfAngle) },
+    dashed: dash === undefined ? undefined : { from: dash.from, since: dash.since }
+  }
+}
 
 /** Whether `target`'s shield faces a blow arriving at `at`. */
 export const shieldBlocks = (target: Target, at: Vec2): boolean => {

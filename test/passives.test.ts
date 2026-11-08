@@ -24,8 +24,8 @@ const Healths = Game.Inspector("Test/Healths", {
     player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ data }) => data.health.get().current),
-  player: queries.player.each()[0]!.data.health.get()
+  enemies: queries.enemies.each().map((entity) => queries.enemies.data.health.get(entity).current),
+  player: queries.player.data.health.get(queries.player.each()[0]!)
 }))
 
 /** Sets every enemy's (and the player's, if given) current health. */
@@ -35,8 +35,8 @@ const setHealth = (enemies: number | undefined, player?: number) => Game.System(
     player: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Player] })
   }
 }, ({ queries }) => {
-  if (enemies !== undefined) for (const { data } of queries.enemies.each()) data.health.update(({ max }) => ({ current: enemies, max }))
-  if (player !== undefined) for (const { data } of queries.player.each()) data.health.update(({ max }) => ({ current: player, max }))
+  if (enemies !== undefined) for (const entity of queries.enemies.each()) queries.enemies.data.health.update(entity, ({ max }) => ({ current: enemies, max }))
+  if (player !== undefined) for (const entity of queries.player.each()) queries.player.data.health.update(entity, ({ max }) => ({ current: player, max }))
 })
 
 /** Touch play (assist off, facing world +x) with `build` and dummies at `offsets` from the player. */

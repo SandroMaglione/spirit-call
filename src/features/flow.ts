@@ -52,7 +52,8 @@ export const RecordTally = Game.System("Shooter/RecordTally", {
   const breaks = events.broke.all().length
   // An ultimate is a skill that costs energy (a landing is part of one already used, see `Airborne`).
   const ultimates = events.cast.all().filter((cast) => cast.faction === "player" && cast.skill !== null && cast.landing !== true && tuning.skills[cast.skill].energy > 0).length
-  const health = queries.members.each().reduce((sum, { data }) => ({ current: sum.current + Math.max(0, data.health.get().current), max: sum.max + data.health.get().max }), { current: 0, max: 0 })
+  const { data } = queries.members
+  const health = queries.members.each().reduce((sum, member) => ({ current: sum.current + Math.max(0, data.health.get(member).current), max: sum.max + data.health.get(member).max }), { current: 0, max: 0 })
   const healthLeft = health.max > 0 ? Math.floor((health.current / health.max) * 100) : 0
   const before = resources.stats.get().tally
   const longestChain = Math.max(before.longestChain, ...perfect.map((dodge) => dodge.chain))
@@ -86,7 +87,7 @@ export const DetectGameOver = Game.System("Shooter/DetectGameOver", {
   },
   nextMachines: { flow: Game.System.nextState(Flow) }
 }, ({ queries, resources, nextMachines }) => {
-  if (queries.members.each().some(({ data }) => data.health.get().current > 0)) return
+  if (queries.members.each().some((member) => queries.members.data.health.get(member).current > 0)) return
   const run = { ...resources.run.get(), endedAt: Clock.elapsed(resources.time.get()) }
   const challenge = resources.challenge.get()
   resources.run.set(run)

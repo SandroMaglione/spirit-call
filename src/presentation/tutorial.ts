@@ -106,7 +106,7 @@ export const ShowTutorial = Game.System("Shooter/ShowTutorial", {
   const words = state.words
   words.mesh.visible = true
   const { step: index, count } = resources.tutorial.get()
-  const at = player.data.position.get()
+  const at = queries.player.data.position.get(player)
   // A step done chimes (not the first one showing).
   if (index !== state.step) {
     if (state.step >= 0 && index > state.step) services.sounds.play("uiSuccess")
@@ -142,7 +142,7 @@ export const ShowTutorial = Game.System("Shooter/ShowTutorial", {
     case "ultimate":
     case "perfectDodge": {
       const [dummy] = queries.enemies.each()
-      const spot = dummy?.data.position.get() ?? at
+      const spot = dummy === undefined ? at : queries.enemies.data.position.get(dummy)
       place(spot, 130)
     }
   }

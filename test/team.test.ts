@@ -33,16 +33,16 @@ const TeamState = Game.Inspector("Test/Team", {
   resources: { teamSwitch: Game.System.readResource(TeamSwitch) }
 }, ({ queries, resources }) => ({
   members: queries.members.each()
-    .map(({ data }) => ({
-      ...data.member.get(),
-      health: data.health.get().current,
-      energy: data.energy.get().current,
-      special: data.skills.get().special.cooldown,
-      state: data.state.get().current,
-      step: data.basicAttack.get().step,
-      position: data.position.value(),
-      invulnerable: data.invulnerable.present ? data.invulnerable.get().remaining : undefined,
-      onField: data.player.present
+    .map((entity) => ({
+      ...queries.members.data.member.get(entity),
+      health: queries.members.data.health.get(entity).current,
+      energy: queries.members.data.energy.get(entity).current,
+      special: queries.members.data.skills.get(entity).special.cooldown,
+      state: queries.members.data.state.get(entity).current,
+      step: queries.members.data.basicAttack.get(entity).step,
+      position: queries.members.data.position.get(entity),
+      invulnerable: queries.members.data.invulnerable.get(entity)?.remaining,
+      onField: queries.members.data.player.has(entity)
     }))
     .sort((left, right) => left.slot - right.slot),
   discs: queries.discs.each().length,
@@ -53,7 +53,7 @@ const TeamState = Game.Inspector("Test/Team", {
 const ChargeTeam = Game.System("Test/ChargeTeam", {
   queries: { members: Game.Query({ selection: { energy: Game.Query.write(Energy) } }) }
 }, ({ queries }) => {
-  for (const { data } of queries.members.each()) data.energy.set({ current: tuning.energy.max })
+  for (const entity of queries.members.each()) queries.members.data.energy.set(entity, { current: tuning.energy.max })
 })
 
 /** A run with `team`; `world()` is the team's state, `field()` the one on the field. */
@@ -68,7 +68,7 @@ const putIn = (slot: number, state: ActiveState) => {
   const Put = Game.System("Test/PutInState", {
     queries: { members: Game.Query({ selection: { member: Game.Query.read(Member), state: Game.Query.write(ElementState) } }) }
   }, ({ queries }) => {
-    for (const { data } of queries.members.each()) if (data.member.get().slot === slot) data.state.set({ current: state })
+    for (const entity of queries.members.each()) if (queries.members.data.member.get(entity).slot === slot) queries.members.data.state.set(entity, { current: state })
   })
   return Game.Schedule(Put)
 }

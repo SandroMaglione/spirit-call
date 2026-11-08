@@ -54,8 +54,9 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   g.clear()
   const tuning = resources.tuning.get()
   const now = performance.now() / 1000
-  for (const { data } of queries.pools.each()) {
-    const pool = data.ground.get()
+  const pools = queries.pools.data
+  for (const entity of queries.pools.each()) {
+    const pool = pools.ground.get(entity)
     // An arena hazard is a place of its own, laid into the floor (see `presentation/hazards.ts`).
     if (pool.timer === null) continue
     const color = view.elements[pool.element]
@@ -70,10 +71,11 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
       g.fillCircle(pool.center.x, pool.center.y, pool.radius * 0.6, view.pools.fireCore, 0.18 * pulse * fade)
     }
   }
-  for (const { data } of queries.attackers.each()) {
-    const attacker = data.attacker.get()
-    const spec = currentAttack(tuning, data.enemy.get(), attacker)
-    if (spec === undefined || attacker.area === null || data.phase.get()._tag !== "windup") continue
+  const attackers = queries.attackers.data
+  for (const entity of queries.attackers.each()) {
+    const attacker = attackers.attacker.get(entity)
+    const spec = currentAttack(tuning, attackers.enemy.get(entity), attacker)
+    if (spec === undefined || attacker.area === null || attackers.phase.get(entity)._tag !== "windup") continue
     const area = attacker.area
     // A shot shows no line: the shot itself is the warning.
     if (area.kind === "line") continue
@@ -82,28 +84,30 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     const tracking = !aimLocked(spec, "windup", attacker.elapsed)
     // A gust shows as wind: what it does is push. A call for help, as the spawn warnings of what it calls.
     // A turned one's (see `Turned`) in her side's color: it is not coming for her.
-    const practiceWindow = tuning.enemies[data.enemy.get().kind].perfectDodgeWindow
+    const practiceWindow = tuning.enemies[attackers.enemy.get(entity).kind].perfectDodgeWindow
     // The practice partner teaches timing explicitly: gold during its forgiving dodge window.
-    const practiceCue = practiceWindow !== null && (spec.windup - attacker.elapsed) * (data.enemy.get().windup ?? 1) <= practiceWindow
-    const color = practiceCue ? view.telegraphLocked : data.turned.present ? view.turned.glow : spec.kind === "call" ? view.spawnWarning : spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
+    const practiceCue = practiceWindow !== null && (spec.windup - attacker.elapsed) * (attackers.enemy.get(entity).windup ?? 1) <= practiceWindow
+    const color = practiceCue ? view.telegraphLocked : attackers.turned.has(entity) ? view.turned.glow : spec.kind === "call" ? view.spawnWarning : spec.kind === "gust" ? view.elements.wind : spec.element !== null ? view.elements[spec.element] : tracking || spec.kind !== "beam" ? view.telegraph : view.telegraphLocked
     // Where, never when: no fill counting down to the hit (its timing is read from its body).
     drawArea(g, area, 0, practiceCue ? { color, fill: 0.3, outline: 1 } : tracking ? { color, fill: 0.05, outline: 0.35 } : { color, fill: 0.12, outline: 0.75 })
     // A blink: a ring around where it stands, as its mark shows where it will land.
     if (spec.kind === "blink") {
-      const at = data.position.get()
-      g.strokeCircle(at.x, at.y, data.body.get().radius + 14, 3, color, 0.8)
+      const at = attackers.position.get(entity)
+      g.strokeCircle(at.x, at.y, attackers.body.get(entity).radius + 14, 3, color, 0.8)
     }
   }
 
   // Wards: the tether from the warder to its ally, growing while it forms, then steady and pulsing; a ring under
   // the ally it holds. Crossing it cuts it.
-  const bodies = new Map<number, { at: { x: number; y: number }; radius: number }>(queries.enemyBodies.each().map(({ entity, data }) => [entity.id, { at: lerp(data.previous.get(), data.position.get(), services.clock.alpha), radius: data.body.get().radius }]))
-  for (const { data } of queries.wards.each()) {
-    const ward = data.ward.get()
-    const spec = tuning.enemies[data.enemy.get().kind].ward
+  const enemyBodies = queries.enemyBodies.data
+  const bodies = new Map<number, { at: { x: number; y: number }; radius: number }>(queries.enemyBodies.each().map((entity) => [entity.id, { at: lerp(enemyBodies.previous.get(entity), enemyBodies.position.get(entity), services.clock.alpha), radius: enemyBodies.body.get(entity).radius }]))
+  const wards = queries.wards.data
+  for (const entity of queries.wards.each()) {
+    const ward = wards.ward.get(entity)
+    const spec = tuning.enemies[wards.enemy.get(entity).kind].ward
     const ally = ward.ally === null ? undefined : bodies.get(ward.ally.id)
     if (spec === null || ally === undefined) continue
-    const from = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const from = lerp(wards.previous.get(entity), wards.position.get(entity), services.clock.alpha)
     const formed = spec.link <= 0 ? 1 : Math.min(1, ward.formed / spec.link)
     const end = { x: from.x + (ally.at.x - from.x) * formed, y: from.y + (ally.at.y - from.y) * formed }
     if (formed < 1) {
@@ -117,10 +121,11 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
 
   // Armor: plates in a ring under an armored enemy until it breaks (its armor down while it is).
-  for (const { data } of queries.armored.each()) {
-    if (tuning.enemies[data.enemy.get().kind].armor === null || data.poise.get().broken > 0) continue
-    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
-    const radius = data.body.get().radius + 8
+  const armored = queries.armored.data
+  for (const entity of queries.armored.each()) {
+    if (tuning.enemies[armored.enemy.get(entity).kind].armor === null || armored.poise.get(entity).broken > 0) continue
+    const at = lerp(armored.previous.get(entity), armored.position.get(entity), services.clock.alpha)
+    const radius = armored.body.get(entity).radius + 8
     for (let plate = 0; plate < 6; plate++) {
       const start = (plate / 6) * Math.PI * 2 + 0.12
       g.strokeArc(at.x, at.y, radius, start, start + (Math.PI * 2) / 6 - 0.24, 5, view.armor, 0.85)
@@ -128,21 +133,23 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
 
   // Bursts about to go off where a body fell: their ring, filling as the fuse burns.
-  for (const { data } of queries.bursts.each()) {
-    const burst = data.burst.get()
+  const bursts = queries.bursts.data
+  for (const entity of queries.bursts.each()) {
+    const burst = bursts.burst.get(entity)
     const color = burst.element === null ? view.telegraphLocked : view.elements[burst.element.id]
     drawArea(g, { kind: "circle", center: burst.at, radius: burst.radius }, 0, { color, fill: 0.14, outline: 0.9 })
   }
 
   // Elites: a ring of their element under their feet, turning; a thunder elite's discharge fills its ring where it will strike.
   // A champion's mark: a crest instead, a filled ring with points around it turning the other way, and a wider ring out.
-  for (const { data } of queries.elites.each()) {
-    const elite = data.elite.get()
+  const elites = queries.elites.data
+  for (const entity of queries.elites.each()) {
+    const elite = elites.elite.get(entity)
     const color = view.elements[elite.element]
-    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
-    const radius = data.body.get().radius + 10
+    const at = lerp(elites.previous.get(entity), elites.position.get(entity), services.clock.alpha)
+    const radius = elites.body.get(entity).radius + 10
     const turn = now * 2.2
-    if (data.enemy.get().champion) {
+    if (elites.enemy.get(entity).champion) {
       const mark = view.champion
       g.fillCircle(at.x, at.y, radius + 4, color, mark.fill + mark.pulse * Math.sin(now * mark.pulseHz * Math.PI * 2))
       g.strokeCircle(at.x, at.y, radius + 4, 3, color, 0.95)
@@ -163,15 +170,17 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
   }
 
   // Guardian shields: a bright arc on the side they face.
-  for (const { data } of queries.shields.each()) {
-    const shield = data.shield.get()
-    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
-    const radius = data.body.get().radius + 9
+  const shields = queries.shields.data
+  for (const entity of queries.shields.each()) {
+    const shield = shields.shield.get(entity)
+    const at = lerp(shields.previous.get(entity), shields.position.get(entity), services.clock.alpha)
+    const radius = shields.body.get(entity).radius + 9
     const facing = Math.atan2(shield.facing.y, shield.facing.x)
     g.strokeArc(at.x, at.y, radius, facing - shield.halfAngle, facing + shield.halfAngle, 6, view.shield, 0.9)
   }
-  for (const { data } of queries.hitboxes.each()) {
-    const hitbox = data.hitbox.get()
+  const hitboxes = queries.hitboxes.data
+  for (const entity of queries.hitboxes.each()) {
+    const hitbox = hitboxes.hitbox.get(entity)
     const label = hitbox.blow.source?.label
     if (label?.kind === "skill" && unmarkedHits.has(label.skill)) continue
     const color = hitbox.faction === "enemy" ? view.telegraphLocked : hitbox.blow.element === null ? view.playerArea : view.elements[hitbox.blow.element.id]
@@ -182,8 +191,9 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
 
   // Lobbed skills: an arc through the air (shadow on the floor, orb above it), then the fuse ring.
   const overlay = services.host.overlay
-  for (const { data } of queries.lobbed.each()) {
-    const lobbed = data.lobbed.get()
+  const lobs = queries.lobbed.data
+  for (const entity of queries.lobbed.each()) {
+    const lobbed = lobs.lobbed.get(entity)
     const spec = lobbed.effect
     const elapsed = lobbed.elapsed + services.clock.alpha * engine.step.dt
     const color = spec.element === null ? view.playerArea : view.elements[spec.element]
@@ -220,8 +230,9 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     }
   }
   // Whirls: their reach, with arms spiraling in toward the center (fading as they run out).
-  for (const { data } of queries.vortices.each()) {
-    const vortex = data.vortex.get()
+  const vortices = queries.vortices.data
+  for (const entity of queries.vortices.each()) {
+    const vortex = vortices.vortex.get(entity)
     const { center, effect } = vortex
     const color = effect.element === null ? view.playerArea : view.elements[effect.element]
     const fade = Math.min(1, vortex.remaining / 0.3)
@@ -237,9 +248,10 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     }
   }
   // Totems: their one reach (where they zap enemies, and where standing heals), fading as they run out.
-  for (const { data } of queries.totems.each()) {
-    const totem = data.totem.get()
-    const at = data.position.get()
+  const totems = queries.totems.data
+  for (const entity of queries.totems.each()) {
+    const totem = totems.totem.get(entity)
+    const at = totems.position.get(entity)
     const { effect } = totem
     const color = effect.element === null ? view.playerArea : view.elements[effect.element]
     const fade = Math.min(1, totem.remaining / 0.6)
@@ -250,8 +262,9 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     g.strokeArc(at.x, at.y, effect.radius + 6, -Math.PI / 2, -Math.PI / 2 + next * Math.PI * 2, 2, color, 0.7 * fade)
   }
   // An Earthrise's rocks about to erupt: the floor cracking out from where each will rise, amber light welling up through the cracks.
-  for (const { entity, data } of queries.rocks.each()) {
-    const rock = data.rock.get()
+  const rocks = queries.rocks.data
+  for (const entity of queries.rocks.each()) {
+    const rock = rocks.rock.get(entity)
     const { effect, at } = rock
     const grown = Math.max(0, Math.min(1, 1 - rock.remaining / effect.warning))
     if (grown <= 0) continue
@@ -274,28 +287,31 @@ export const DrawTelegraphs = Game.System("Shooter/DrawTelegraphs", {
     }
   }
   // Shockwaves: a crescent of the floor heaving up, bowed the way it runs.
-  for (const { data } of queries.waves.each()) {
-    const projectile = data.projectile.get()
+  const waves = queries.waves.data
+  for (const entity of queries.waves.each()) {
+    const projectile = waves.projectile.get(entity)
     if (projectile.style !== "wave") continue
-    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
-    const velocity = data.velocity.get()
+    const at = lerp(waves.previous.get(entity), waves.position.get(entity), services.clock.alpha)
+    const velocity = waves.velocity.get(entity)
     const heading = Math.atan2(velocity.y, velocity.x)
     const radius = projectile.radius * view.shockwave.crescent
     const color = projectile.blow.element === null ? view.shockwave.color : view.elements[projectile.blow.element.id]
     g.strokeArc(at.x - Math.cos(heading) * radius, at.y - Math.sin(heading) * radius, radius * 2, heading - 0.7, heading + 0.7, view.shockwave.width, color, view.shockwave.alpha)
   }
   // Discs: a ring spinning under each, wide while it hovers (where it hits).
-  for (const { data } of queries.discs.each()) {
-    const disc = data.disc.get()
-    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+  const discs = queries.discs.data
+  for (const entity of queries.discs.each()) {
+    const disc = discs.disc.get(entity)
+    const at = lerp(discs.previous.get(entity), discs.position.get(entity), services.clock.alpha)
     const turn = now * view.disc.turnsPerSecond * Math.PI * 2
     // While hovering, out to where it hits a body of average size.
     const radius = disc.phase === "hover" ? disc.radius + 16 : disc.radius * 1.5
     g.strokeArc(at.x, at.y, radius, turn, turn + Math.PI * 1.4, disc.phase === "hover" ? 4 : 3, view.disc.ring, disc.phase === "hover" ? 0.9 : 0.6)
     if (disc.phase === "hover") g.fillCircle(at.x, at.y, radius, view.disc.ring, 0.12)
   }
-  for (const { data } of queries.pending.each()) {
-    const pending = data.pending.get()
+  const pendingSpawns = queries.pending.data
+  for (const entity of queries.pending.each()) {
+    const pending = pendingSpawns.pending.get(entity)
     const radius = tuning.enemies[pending.kind].radius + 10
     const progress = 1 - pending.remaining / pending.duration
     g.strokeCircle(pending.at.x, pending.at.y, radius, 3, view.spawnWarning, 0.8)
@@ -316,13 +332,14 @@ export const DrawMarks = Game.System("Shooter/DrawMarks", {
   services: { host: Game.System.service(RenderHost), clock: Game.System.service(RenderClock) }
 }, ({ queries, services }) => {
   const g = services.host.telegraphs
-  for (const { data } of queries.marked.each()) {
-    const { remaining } = data.marked.get()
+  const { data } = queries.marked
+  for (const entity of queries.marked.each()) {
+    const { remaining } = data.marked.get(entity)
     if (remaining <= 0) continue
-    const at = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
+    const at = lerp(data.previous.get(entity), data.position.get(entity), services.clock.alpha)
     const fade = Math.min(1, remaining / view.marks.fadeSeconds)
     const pulse = 0.75 + 0.25 * Math.sin((performance.now() / 1000 / view.marks.pulse) * Math.PI * 2)
-    const radius = data.body.get().radius + view.marks.gap
+    const radius = data.body.get(entity).radius + view.marks.gap
     g.strokeCircle(at.x, at.y, radius, view.marks.width, view.marks.color, view.marks.outline * fade * pulse)
     g.strokeCircle(at.x, at.y, radius - view.marks.inner, view.marks.width - 1, view.marks.color, view.marks.outline * fade * pulse * 0.6)
   }
@@ -340,8 +357,9 @@ export const DrawBarriers = Game.System("Shooter/DrawBarriers", {
   const g = services.host.telegraphs
   const now = performance.now() / 1000
   const spec = view.barriers
-  for (const { data } of queries.barriers.each()) {
-    const { shape, effect, remaining } = data.barrier.get()
+  const { data } = queries.barriers
+  for (const entity of queries.barriers.each()) {
+    const { shape, effect, remaining } = data.barrier.get(entity)
     const color = effect.element === null ? view.playerArea : view.elements[effect.element]
     const fade = Math.min(1, remaining / spec.fadeSeconds)
     const half = effect.thickness / 2

@@ -125,11 +125,12 @@ export const TickStates = Game.System("Shooter/TickStates", {
   const dt = resources.time.get().dt
   const rules = tuning.elements.burning
   const all = queries.bodies.each()
+  const { data } = queries.bodies
 
   // Run every state down, burning as it goes.
   const fires: Array<{ readonly x: number; readonly y: number; readonly r: number; readonly enemy: boolean; readonly state: ActiveState }> = []
-  for (const { entity, data } of all) {
-    const current = data.state.get().current
+  for (const entity of all) {
+    const current = data.state.get(entity).current
     if (current === null) continue
     const remaining = current.remaining - dt
     let nextTick = current.nextTick
@@ -148,23 +149,25 @@ export const TickStates = Game.System("Shooter/TickStates", {
       nextTick = Math.max(0, nextTick - dt)
     }
     const next = remaining <= 0 ? null : { ...current, remaining, nextTick }
-    data.state.set({ current: next })
-    if (next?.id === "burning" && data.position.present && data.body.present) {
-      const position = data.position.get()
-      fires.push({ x: position.x, y: position.y, r: data.body.get().radius, enemy: data.enemy.present, state: next })
+    data.state.set(entity, { current: next })
+    if (next?.id === "burning") {
+      const position = data.position.get(entity)
+      const body = data.body.get(entity)
+      if (position !== undefined && body !== undefined) fires.push({ x: position.x, y: position.y, r: body.radius, enemy: data.enemy.has(entity), state: next })
     }
   }
 
   // Fire spreads to the bodies of its side in no state burning ones touch (unless they are immune to it).
   if (fires.length === 0) return
-  for (const { data } of all) {
-    if (!data.position.present || !data.body.present || data.state.get().current !== null) continue
-    if (durationFactor(tuning, data.affinities.get().fire) <= 0) continue
-    const position = data.position.get()
-    const r = data.body.get().radius
-    const fire = fires.find((other) => other.enemy === data.enemy.present && (other.x - position.x) ** 2 + (other.y - position.y) ** 2 <= (other.r + r + rules.contact) ** 2)
+  for (const entity of all) {
+    const position = data.position.get(entity)
+    const body = data.body.get(entity)
+    if (position === undefined || body === undefined || data.state.get(entity).current !== null) continue
+    if (durationFactor(tuning, data.affinities.get(entity).fire) <= 0) continue
+    const r = body.radius
+    const fire = fires.find((other) => other.enemy === data.enemy.has(entity) && (other.x - position.x) ** 2 + (other.y - position.y) ** 2 <= (other.r + r + rules.contact) ** 2)
     if (fire === undefined) continue
-    data.state.set({ current: { ...fire.state, nextTick: rules.tick } })
+    data.state.set(entity, { current: { ...fire.state, nextTick: rules.tick } })
     events.reaction.emit({ at: position, kind: "apply", state: "burning", faction: null })
   }
 })
@@ -218,44 +221,45 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
 }, ({ queries, resources, events, commands }) => {
   const pending = queries.bursts.each()
   if (pending.length === 0) return
-  for (const { entity } of pending) commands.despawn(entity)
-  const bursts = pending.map(({ data }) => data.burst.get())
+  for (const entity of pending) commands.despawn(entity)
+  const bursts = pending.map((entity) => queries.bursts.data.burst.get(entity))
   const tuning = resources.tuning.get()
   const rules = tuning.elements.bursts
   const bodies = queries.bodies.each()
+  const { data } = queries.bodies
   for (const burst of bursts) {
     const { state, at, side } = burst
     const reach = rules[state.id].radius
     const by: Faction = side === "enemy" ? "player" : "enemy"
     // The bodies of its side in reach, nearest first (the struck one is at the center).
     const around = bodies
-      .filter(({ data }) => data.hurtbox.get().faction === side && (data.player.present || !(data.invulnerable.present && data.invulnerable.get().remaining > 0)))
-      .map((body) => ({ body, gap: Ops.hypot(body.data.position.get().x - at.x, body.data.position.get().y - at.y) - body.data.hurtbox.get().radius }))
+      .filter((body) => data.hurtbox.get(body).faction === side && (data.player.has(body) || !((data.invulnerable.get(body)?.remaining ?? 0) > 0)))
+      .map((body) => ({ body, gap: Ops.hypot(data.position.get(body).x - at.x, data.position.get(body).y - at.y) - data.hurtbox.get(body).radius }))
       .filter(({ gap }) => gap <= reach)
       .sort((left, right) => left.gap - right.gap)
     // On the team a burst is part of the blow that set it off: it lands through the moment she is untouchable after it, as a burn does.
     const deal = (target: (typeof bodies)[number], damage: number, direction: Vec2) => {
       if (damage <= 0) return
-      const struck = target.data.player.present ? blow({ damage, knockback: 0, periodic: true }) : blow({ damage, knockback: 0, heavy: true })
-      events.damage.emit({ target: Game.Entity.handle(target.entity.id, Health), faction: by, direction, blow: struck })
+      const struck = data.player.has(target) ? blow({ damage, knockback: 0, periodic: true }) : blow({ damage, knockback: 0, heavy: true })
+      events.damage.emit({ target: Game.Entity.handle(target.id, Health), faction: by, direction, blow: struck })
     }
     // Whether the burst may take hold of `target` (stop, stun, push it): never the team, never a body immune to it.
     const takes = (target: (typeof bodies)[number]) =>
-      !target.data.player.present && durationFactor(tuning, target.data.affinities.get()[elementOf(state.id)]) > 0
+      !data.player.has(target) && durationFactor(tuning, data.affinities.get(target)[elementOf(state.id)]) > 0
     const stun = (target: (typeof bodies)[number], seconds: number) => {
       if (!takes(target) || seconds <= 0) return
-      target.data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
+      data.stunned.update(target, ({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
     }
     const disarm = (target: (typeof bodies)[number], seconds: number) => {
       if (!takes(target) || seconds <= 0) return
-      target.data.disarmed.update(({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
+      data.disarmed.update(target, ({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
     }
     const away = (target: (typeof bodies)[number]) =>
-      target.entity.id === burst.target ? burst.direction : normalizeOr(subtract(target.data.position.get(), at), burst.direction)
+      target.id === burst.target ? burst.direction : normalizeOr(subtract(data.position.get(target), at), burst.direction)
     switch (state.id) {
       case "burning": {
         const left = burnDps(tuning, state.atk) * Math.max(0, state.remaining)
-        for (const { body } of around) deal(body, body.entity.id === burst.target ? left : left * rules.burning.share, away(body))
+        for (const { body } of around) deal(body, body.id === burst.target ? left : left * rules.burning.share, away(body))
         break
       }
       case "soaked": {
@@ -268,7 +272,7 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
       case "charged": {
         const struck = around.slice(0, rules.charged.strikes)
         for (const { body } of struck) deal(body, (state.atk * rules.charged.power) / 100, away(body))
-        if (struck.length > 0) events.zap.emit({ path: [at, ...struck.map(({ body }) => body.data.position.get())], heal: false })
+        if (struck.length > 0) events.zap.emit({ path: [at, ...struck.map(({ body }) => data.position.get(body))], heal: false })
         break
       }
       case "swept": {
@@ -276,15 +280,16 @@ export const ApplyStateBursts = Game.System("Shooter/ApplyStateBursts", {
           const direction = away(body)
           deal(body, (state.atk * rules.swept.power) / 100, direction)
           if (!takes(body)) continue
-          const push = rules.swept.knockback * knockbackTaken(tuning, body.data.enemy.present ? body.data.enemy.get().kind : undefined, body.data.enemy.present && body.data.enemy.get().champion)
-          body.data.knockback.update((current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
+          const enemy = data.enemy.get(body)
+          const push = rules.swept.knockback * knockbackTaken(tuning, enemy?.kind, enemy !== undefined && enemy.champion)
+          data.knockback.update(body, (current) => ({ x: current.x + direction.x * push, y: current.y + direction.y * push }))
           stun(body, rules.swept.stun)
         }
         break
       }
       case "cracked": {
         const struck = (state.atk * rules.cracked.power) / 100
-        for (const { body } of around) deal(body, body.entity.id === burst.target ? struck : struck * rules.cracked.share, away(body))
+        for (const { body } of around) deal(body, body.id === burst.target ? struck : struck * rules.cracked.share, away(body))
         break
       }
     }
@@ -306,27 +311,29 @@ export const ArcCharges = Game.System("Shooter/ArcCharges", {
 }, ({ queries, resources, events, commands }) => {
   const pending = queries.arcs.each()
   if (pending.length === 0) return
-  for (const { entity } of pending) commands.despawn(entity)
-  const arcs = pending.map(({ data }) => data.arc.get())
+  for (const entity of pending) commands.despawn(entity)
+  const arcs = pending.map((entity) => queries.arcs.data.arc.get(entity))
   const range = resources.tuning.get().elements.charged.arcRange
   const bodies = queries.bodies.each()
+  const { data } = queries.bodies
   for (const arc of arcs) {
     let next: (typeof bodies)[number] | undefined
     let nearest = Infinity
     for (const body of bodies) {
-      if (body.entity.id === arc.from || body.data.hurtbox.get().faction !== arc.side) continue
-      if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
-      const there = body.data.position.get()
-      const gap = Ops.hypot(there.x - arc.at.x, there.y - arc.at.y) - body.data.hurtbox.get().radius
+      if (body.id === arc.from || data.hurtbox.get(body).faction !== arc.side) continue
+      const invulnerable = data.invulnerable.get(body)
+      if (invulnerable !== undefined && invulnerable.remaining > 0) continue
+      const there = data.position.get(body)
+      const gap = Ops.hypot(there.x - arc.at.x, there.y - arc.at.y) - data.hurtbox.get(body).radius
       if (gap <= range && gap < nearest) {
         next = body
         nearest = gap
       }
     }
     if (next === undefined) continue
-    const there = next.data.position.get()
+    const there = data.position.get(next)
     events.damage.emit({
-      target: Game.Entity.handle(next.entity.id, Health),
+      target: Game.Entity.handle(next.id, Health),
       faction: arc.by,
       direction: normalizeOr(subtract(there, arc.at), { x: 0, y: 0 }),
       blow: blow({ damage: arc.damage, knockback: 0, charges: false, element: { id: "thunder", atk: arc.atk }, arc: true })

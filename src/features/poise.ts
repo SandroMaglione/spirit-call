@@ -44,19 +44,22 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
   const dt = resources.time.get().dt
   const hits = events.hit.all()
   // Blows (not burns) fill a bar by the impact of the one on the field (what a benched one left behind too).
-  const fielded = queries.team.each().find(({ data }) => data.player.present)?.data.member.get().character
+  const team = queries.team.data
+  const onField = queries.team.each().find((member) => team.player.has(member))
+  const fielded = onField === undefined ? undefined : team.member.get(onField).character
   const impact = fielded === undefined ? 1 : tuning.characters[fielded].impact
   // Bursts and wall slams the team set off (an enemy's own on the player do not count), on the body they happened to.
   let breaks = 0
   const reactions = events.reaction.all().filter((reaction) => reaction.faction !== "enemy" && (reaction.kind === "burst" || reaction.kind === "slam"))
-  for (const { entity, data } of queries.enemies.each()) {
-    const kind = data.enemy.get().kind
-    const bar = poiseOf(tuning, kind, data.health.get().max, data.enemy.get().champion)
+  const { data } = queries.enemies
+  for (const entity of queries.enemies.each()) {
+    const kind = data.enemy.get(entity).kind
+    const bar = poiseOf(tuning, kind, data.health.get(entity).max, data.enemy.get(entity).champion)
     if (bar <= 0) continue
-    const poise = data.poise.get()
+    const poise = data.poise.get(entity)
     if (poise.broken > 0) {
       const broken = Math.max(0, poise.broken - dt)
-      data.poise.set({ current: broken > 0 ? poise.current : 0, broken, quiet: 0 })
+      data.poise.set(entity, { current: broken > 0 ? poise.current : 0, broken, quiet: 0 })
       continue
     }
     // An armored one (see `ArmorSpec`) fills by the blows as dealt, before its armor took its share.
@@ -66,33 +69,33 @@ export const BuildPoise = Game.System("Shooter/BuildPoise", {
       if (hit.entity !== Game.Entity.handle(entity.id, Health) || hit.killed) continue
       gained += (hit.amount / armor) * (hit.periodic ? rules.burn : hit.heavy ? rules.heavy : 1) * (hit.periodic ? 1 : impact)
     }
-    const at = data.position.get()
-    const reach = data.hurtbox.get().radius
+    const at = data.position.get(entity)
+    const reach = data.hurtbox.get(entity).radius
     for (const reaction of reactions) {
       if ((reaction.at.x - at.x) ** 2 + (reaction.at.y - at.y) ** 2 > reach * reach) continue
       gained += bar * (reaction.kind === "slam" ? rules.slam : reaction.state === "cracked" ? tuning.elements.bursts.cracked.break : rules.burst)
     }
-    if (data.state.get().current?.id === "cracked") gained *= 1 + tuning.elements.cracked.breakBonus
+    if (data.state.get(entity).current?.id === "cracked") gained *= 1 + tuning.elements.cracked.breakBonus
     const quiet = gained > 0 ? 0 : poise.quiet + dt
     const drained = quiet > rules.quietSeconds ? bar * rules.drain * dt : 0
     const current = Math.max(0, Math.min(bar, poise.current + gained - drained))
     if (current < bar) {
-      data.poise.set({ current, broken: 0, quiet })
+      data.poise.set(entity, { current, broken: 0, quiet })
       continue
     }
     // Broken: stunned (its attack cut off, see `UpdateAttacks`), with a heavy pause.
     // A champion with its own moveset shakes a break off sooner: a boss's windows are short.
-    const seconds = rules.seconds * (data.enemy.get().champion && tuning.champions.movesets[kind] !== undefined ? tuning.champions.broken : 1)
-    data.poise.set({ current: bar, broken: seconds, quiet: 0 })
-    data.stunned.update(({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
+    const seconds = rules.seconds * (data.enemy.get(entity).champion && tuning.champions.movesets[kind] !== undefined ? tuning.champions.broken : 1)
+    data.poise.set(entity, { current: bar, broken: seconds, quiet: 0 })
+    data.stunned.update(entity, ({ remaining }) => ({ remaining: Math.max(remaining, seconds) }))
     resources.hitStop.update(({ remaining }) => ({ remaining: Math.max(remaining, rules.hitStop) }))
     events.broke.emit({ at, enemy: kind })
     breaks += 1
   }
   if (breaks === 0 || tuning.energy.break <= 0) return
-  for (const { data } of queries.team.each()) {
-    if (data.health.get().current <= 0) continue
-    const gained = breaks * tuning.energy.break * (data.player.present ? 1 : tuning.team.benchEnergyShare)
-    data.energy.update(({ current }) => ({ current: Math.min(tuning.energy.max, current + gained) }))
+  for (const member of queries.team.each()) {
+    if (team.health.get(member).current <= 0) continue
+    const gained = breaks * tuning.energy.break * (team.player.has(member) ? 1 : tuning.team.benchEnergyShare)
+    team.energy.update(member, ({ current }) => ({ current: Math.min(tuning.energy.max, current + gained) }))
   }
 })

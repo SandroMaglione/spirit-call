@@ -54,7 +54,7 @@ export const CastSplinters = Game.System("Shooter/CastSplinters", {
     const blow = castBlow(cast, effect)
     if (effect.seconds > 0) {
       const wielder = queries.wielders.getHandle(cast.caster)
-      if (wielder.ok) commands.insert(wielder.value.entity, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
+      if (wielder.ok) commands.insert(wielder.value, [Splintering, { remaining: effect.seconds, effect, blow, skill: cast.skill }])
       continue
     }
     random ??= Random.draw(resources.rng)
@@ -82,14 +82,15 @@ export const ThrowSplinters = Game.System("Shooter/ThrowSplinters", {
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
   let random: Random.Random | undefined
-  for (const { entity, data } of queries.throwers.each()) {
-    const splintering = data.splintering.get()
+  const { data } = queries.throwers
+  for (const entity of queries.throwers.each()) {
+    const splintering = data.splintering.get(entity)
     const remaining = splintering.remaining - dt
-    if (remaining <= 1e-9 || !data.player.present) {
+    if (remaining <= 1e-9 || !data.player.has(entity)) {
       commands.remove(entity, Splintering)
       continue
     }
-    data.splintering.set({ ...splintering, remaining })
+    data.splintering.set(entity, { ...splintering, remaining })
     const landed: Array<Vec2> = []
     for (const blow of events.explosion.all()) {
       if (blow.kind === "blow" && blow.faction === "player") landed.push(blow.at)

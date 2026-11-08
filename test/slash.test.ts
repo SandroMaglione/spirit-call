@@ -26,8 +26,8 @@ const World = Game.Inspector("Test/Slash", {
   },
   resources: { stats: Game.System.readResource(Stats), camera: Game.System.readResource(Camera) }
 }, ({ queries, resources }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current })),
-  player: queries.player.each()[0]!.data.position.get(),
+  enemies: queries.enemies.each().map((entity) => ({ position: queries.enemies.data.position.get(entity), health: queries.enemies.data.health.get(entity).current })),
+  player: queries.player.data.position.get(queries.player.each()[0]!),
   slashes: resources.stats.get().shots,
   camera: resources.camera.get()
 }))
@@ -39,7 +39,7 @@ const HitStopLeft = Game.Inspector("Test/HitStopLeft", {
 /** The sword move done last, by name ("ready": none, the next press starts the combo). */
 const ComboState = Game.Inspector("Test/Combo", {
   queries: { player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack) }, with: [Player] }) }
-}, ({ queries }) => ["first", "second", "third", "finisher"][queries.player.each()[0]!.data.basicAttack.get().step] ?? "ready")
+}, ({ queries }) => ["first", "second", "third", "finisher"][queries.player.data.basicAttack.get(queries.player.each()[0]!).step] ?? "ready")
 
 /** Replaces the training dummies with dummies at `offsets` from the player. Facing starts at world +x. */
 const arena = (
@@ -55,7 +55,7 @@ const arena = (
     queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
     commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts), Game.System.despawns(Enemy))
   }, ({ queries, commands }) => {
-    for (const { entity } of queries.dummies.each()) commands.despawn(entity)
+    for (const entity of queries.dummies.each()) commands.despawn(entity)
     for (const offset of offsets) commands.spawnIn(RunScope, makeEnemy(defaultTuning, "dummy", { x: center.x + offset.x, y: center.y + offset.y }))
   })
   expectOk(run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred())))
@@ -164,7 +164,7 @@ describe("sword slash", () => {
       queries: { dummies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) },
       commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts), Game.System.despawns(Enemy))
     }, ({ queries, commands }) => {
-      for (const { entity } of queries.dummies.each()) commands.despawn(entity)
+      for (const entity of queries.dummies.each()) commands.despawn(entity)
       commands.spawnIn(RunScope, makeEnemy(plainEnemies(defaultTuning), "chaser", { x: center.x + 70, y: center.y }))
     })
     expectOk(run.runtime.tick(Game.Schedule(Place, Game.Schedule.applyDeferred())))

@@ -109,9 +109,10 @@ export const ShowHazards = Game.System("Shooter/ShowHazards", {
   queries: { pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } }) },
   services: { nodes: Game.System.service(RenderNodes) }
 }, ({ queries, services }) => {
-  for (const { entity, data } of queries.pools.each()) {
+  const { data } = queries.pools
+  for (const entity of queries.pools.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "hazard") continue
-    node.show(data.ground.get().out)
+    node.show(data.ground.get(entity).out)
   }
 })

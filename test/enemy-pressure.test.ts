@@ -19,8 +19,8 @@ const World = Game.Inspector("Test/Pressure", {
   },
   resources: { stats: Game.System.readResource(Stats) }
 }, ({ queries, resources }) => ({
-  player: queries.player.each().map(({ data }) => ({ health: data.health.get().current, state: data.state.get().current }))[0],
-  phases: queries.enemies.each().map(({ data }) => data.phase.get()._tag),
+  player: queries.player.each().map((entity) => ({ health: queries.player.data.health.get(entity).current, state: queries.player.data.state.get(entity).current }))[0],
+  phases: queries.enemies.each().map((entity) => queries.enemies.data.phase.get(entity)._tag),
   reactions: resources.stats.get().reactions
 }))
 
@@ -53,7 +53,7 @@ describe("enemy elements", () => {
     })
     const run = arena("shooter", [{ x: 300, y: 0 }], tuning)
     const Soak = Game.System("Test/Soak", { queries: { player: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Player] }) } }, ({ queries }) => {
-      for (const { data } of queries.player.each()) data.state.set({ current: { id: "soaked", remaining: 30, atk: 0, nextTick: 0, charges: false } })
+      for (const entity of queries.player.each()) queries.player.data.state.set(entity, { current: { id: "soaked", remaining: 30, atk: 0, nextTick: 0, charges: false } })
     })
     expectOk(run.runtime.tick(Game.Schedule(Soak)))
     const before = run.world().player!.health
@@ -88,7 +88,7 @@ describe("leading aim", () => {
           shooter: Game.Query({ selection: { attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase) }, with: [Enemy] }),
           player: Game.Query({ selection: { velocity: Game.Query.read(Velocity) }, with: [Player] })
         }
-      }, ({ queries }) => ({ ...queries.shooter.each()[0]!.data.attacker.get(), phase: queries.shooter.each()[0]!.data.phase.get()._tag, velocity: queries.player.each()[0]!.data.velocity.get() }))
+      }, ({ queries }) => ({ ...queries.shooter.data.attacker.get(queries.shooter.each()[0]!), phase: queries.shooter.data.phase.get(queries.shooter.each()[0]!)._tag, velocity: queries.player.data.velocity.get(queries.player.each()[0]!) }))
       for (let step = 0; step < steps(5); step++) {
         run.step()
         const aim = run.runtime.inspect(Aim)

@@ -23,8 +23,8 @@ describe("finding the way around walls", () => {
         player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] })
       }
     }, ({ queries }) => {
-      const at = queries.chaser.each()[0]!.data.position.get()
-      const player = queries.player.each()[0]!.data.position.get()
+      const at = queries.chaser.data.position.get(queries.chaser.each()[0]!)
+      const player = queries.player.data.position.get(queries.player.each()[0]!)
       return Math.hypot(at.x - player.x, at.y - player.y)
     })
     run.step(steps(6))
@@ -39,7 +39,7 @@ describe("finding the way around walls", () => {
     ]
     const Enemies = Game.Inspector("Test/CornerEnemy", {
       queries: { enemy: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) }
-    }, ({ queries }) => queries.enemy.each()[0]!.data.position.get())
+    }, ({ queries }) => queries.enemy.data.position.get(queries.enemy.each()[0]!))
 
     /** Puts the L and one enemy of `kind` in its inside corner; after `seconds`, how far up it got (the lowest y from her), where it ended (x from her: below 100, on her side of the wall), and how near her. */
     const fromCorner = (tuning: Tuning, kind: "charger" | "shooter" | "chaser", seconds: number, top = -200) => {

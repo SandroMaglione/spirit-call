@@ -108,12 +108,13 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
   const now = performance.now() / 1000
   const light = services.host.combatLight
   light.begin(services.clock.frameSeconds)
-  for (const { entity, data } of queries.bolts.each()) {
+  const bolts = queries.bolts.data
+  for (const entity of queries.bolts.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "projectile" || node.style !== "bolt") continue
-    const velocity = data.velocity.get()
+    const velocity = bolts.velocity.get(entity)
     const speed = Math.hypot(velocity.x, velocity.y)
-    const projectile = data.projectile.get()
+    const projectile = bolts.projectile.get(entity)
     if (node.look === null) {
       const kind = projectile.weapon
       node.look = projectile.faction === "enemy" ? "enemy" : kind === "gun" ? "round" : projectile.radius >= 11 ? "orb" : "spark"
@@ -132,7 +133,7 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
       // Gun rounds are narrow darts; Staff sparks are bright diamonds, its charged orb much rounder.
       node.orb.object.scale.set(node.look === "round" ? r * 1.6 : node.look === "spark" ? r * 1.7 : r, node.look === "round" ? r * 0.38 : r * 0.8, node.look === "round" ? r * 0.38 : r * 0.8)
       node.core.object.scale.set(node.look === "round" ? r * 1.3 : r * 0.5, r * 0.25, r * 0.25)
-      const origin = projectile.origin ?? data.previous.get()
+      const origin = projectile.origin ?? bolts.previous.get(entity)
       light.launch(origin, node.bolt.position.y, speed > 0 ? { x: velocity.x / speed, y: velocity.y / speed } : { x: 1, y: 0 }, color, node.look)
       node.last = origin
     }
@@ -142,7 +143,7 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
     // The floor's y is the scene's z: a turn about the vertical axis.
     if (speed > 0) node.orb.object.rotation.y = node.bolt.rotation.y = Math.atan2(-velocity.y, velocity.x)
     placeTracer(node, speed * (node.look === "round" ? 0.065 : node.look === "orb" ? 0.09 : 0.04))
-    const thunder = data.projectile.get().blow.element?.id === "thunder"
+    const thunder = bolts.projectile.get(entity).blow.element?.id === "thunder"
     const flicker = thunder ? 0.8 + Math.random() * 0.5 : 1 + 0.1 * Math.sin(now * 38 + entity.id)
     const halo = node.radius * (node.look === "round" ? 0.9 : view.bolt.halo) * flicker
     node.halo.object.scale.set(node.look === "round" ? halo * 2 : node.look === "spark" ? halo * 1.2 : halo, node.look === "spark" ? halo * 0.35 : halo, node.look === "spark" ? halo * 0.35 : halo)
@@ -151,10 +152,11 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
       node.orb.object.rotation.x = now * 7
     }
   }
-  for (const { entity, data } of queries.discs.each()) {
+  const discs = queries.discs.data
+  for (const entity of queries.discs.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "projectile") continue
-    const disc = data.disc.get()
+    const disc = discs.disc.get(entity)
     const at = { x: node.root.position.x, y: node.root.position.z }
     const thrower = services.nodes.get(disc.thrower)
     const dx = thrower === undefined ? -disc.direction.x : thrower.root.position.x - at.x
@@ -168,7 +170,7 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
     node.halo.color.copy(node.orb.color)
     node.halo.object.scale.set(node.radius * 1.5, node.radius * 0.22, node.radius * 1.5)
     if (!node.launched) {
-      const origin = disc.origin ?? data.previous.get()
+      const origin = disc.origin ?? discs.previous.get(entity)
       light.launch(origin, height, direction, node.orb.color.getHex(), "disc")
       node.last = origin
       node.launched = true
@@ -179,8 +181,9 @@ export const OrientBolts = Game.System("Shooter/OrientBolts", {
     node.streak.color.setHex(0xf3fffa)
     placeTracer(node, disc.phase === "hover" ? 0 : disc.speed * 0.035)
   }
-  for (const { entity, data } of queries.lobbed.each()) {
-    const lob = data.lobbed.get()
+  const lobs = queries.lobbed.data
+  for (const entity of queries.lobbed.each()) {
+    const lob = lobs.lobbed.get(entity)
     if (lob.splinter === true || lob.faction !== "player") continue
     const elapsed = lob.elapsed + services.clock.alpha * engine.step.dt
     if (elapsed < 0) continue
@@ -207,7 +210,7 @@ export const FadeOccluders = Game.System("Shooter/FadeOccluders", {
   },
   services: { nodes: Game.System.service(RenderNodes) }
 }, ({ queries, services }) => {
-  const players = queries.player.each().flatMap(({ entity }) => {
+  const players = queries.player.each().flatMap((entity) => {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "player") return []
     const feet = { x: node.root.position.x, y: node.root.position.z }
@@ -216,8 +219,9 @@ export const FadeOccluders = Game.System("Shooter/FadeOccluders", {
     const half = node.body.radius * projection.zoom
     return [{ depth: depthOf(feet), left: at.x - half, right: at.x + half, top, bottom: at.y }]
   })
-  for (const { entity, data } of queries.occluders.each()) {
-    const renderable = data.renderable.get()
+  const occluders = queries.occluders.data
+  for (const entity of queries.occluders.each()) {
+    const renderable = occluders.renderable.get(entity)
     if (renderable.kind !== "wall" || renderable.placement !== "sorted") continue
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "wall") continue

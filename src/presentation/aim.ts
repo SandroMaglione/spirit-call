@@ -37,18 +37,20 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   const controls = resources.controls.get()
   const [player] = queries.player.each()
   if (player === undefined) return
+  const { data } = queries.player
+  const enemies = queries.enemies.data
   const g = services.host.telegraphs
-  const at = lerp(player.data.previous.get(), player.data.position.get(), services.clock.alpha)
+  const at = lerp(data.previous.get(player), data.position.get(player), services.clock.alpha)
   const tuning = resources.tuning.get()
-  const first = attackOf(tuning, player.data.basicAttack.get().attack).combo[0]
+  const first = attackOf(tuning, data.basicAttack.get(player).attack).combo[0]
   if (first !== undefined && isMelee(first)) {
     const cue = services.host.feedback.slashCue
     const range = first.reach + tuning.touch.assist.range
-    const nearby = queries.enemies.each().some(({ data }) => {
-      const enemy = data.position.get()
-      return Math.hypot(enemy.x - at.x, enemy.y - at.y) - data.hurtbox.get().radius <= range
+    const nearby = queries.enemies.each().some((entity) => {
+      const enemy = enemies.position.get(entity)
+      return Math.hypot(enemy.x - at.x, enemy.y - at.y) - enemies.hurtbox.get(entity).radius <= range
     })
-    const recharging = player.data.basicAttack.get().cooldown > 0
+    const recharging = data.basicAttack.get(player).cooldown > 0
     const seconds = services.clock.frameSeconds
     if (nearby || recharging) {
       cue.idle = 0
@@ -62,8 +64,8 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
       // A hammer's blow: the circle it comes down on.
       const halfAngle = first.shape === "arc" ? (first.arcDegrees * Math.PI) / 360 : Math.PI
       const area = first.shape === "slam"
-        ? moveArea(first, at, player.data.aim.get()).area
-        : { kind: "cone" as const, origin: at, direction: player.data.aim.get(), radius: first.reach, halfAngle }
+        ? moveArea(first, at, data.aim.get(player)).area
+        : { kind: "cone" as const, origin: at, direction: data.aim.get(player), radius: first.reach, halfAngle }
       // (A hammer's circle fainter: its blow's own look marks it as it falls.)
       const faint = first.shape === "slam" ? 0.6 : 1
       drawArea(g, area, 0, {
@@ -74,11 +76,11 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     }
   }
   // Charging: the power move's area fills up with the charge, bright once full.
-  const current = player.data.basicAttack.get()
+  const current = data.basicAttack.get(player)
   const power = attackOf(tuning, current.attack).power
   const charge = power === null ? 0 : chargeOf(power, current.held)
   if (power !== null && charge > 0) {
-    const aim = player.data.aim.get()
+    const aim = data.aim.get(player)
     const move = power.move
     const area = isMelee(move)
       ? moveArea(move, at, aim).area
@@ -97,10 +99,10 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
   if (controls.device !== "touch") return
   // The enemy an attack now would turn toward (attack assist), ringed on the floor.
   if (controls.assistTarget !== null) {
-    for (const { entity, data } of queries.enemies.each()) {
+    for (const entity of queries.enemies.each()) {
       if (entity.id !== controls.assistTarget) continue
-      const target = lerp(data.previous.get(), data.position.get(), services.clock.alpha)
-      const radius = data.hurtbox.get().radius + 8
+      const target = lerp(enemies.previous.get(entity), enemies.position.get(entity), services.clock.alpha)
+      const radius = enemies.hurtbox.get(entity).radius + 8
       g.fillCircle(target.x, target.y, radius, view.reticle, controls.attackHeld ? 0.18 : 0.08)
       g.strokeCircle(target.x, target.y, radius, 3, view.reticle, controls.attackHeld ? 0.95 : 0.6)
     }
@@ -111,7 +113,7 @@ export const DrawTouchAim = Game.System("Shooter/DrawTouchAim", {
     const reach = Math.min(moveReach(first), 320) / (Math.hypot(dx, dy) || 1)
     g.line(at.x, at.y, at.x + dx * reach, at.y + dy * reach, 3, view.reticle, 0.45)
   }
-  const skills = player.data.skills.get()
+  const skills = data.skills.get(player)
   for (const slot of skillSlots) {
     const aiming = controls.skills[slot].aiming
     if (aiming !== null) drawSkillAim(g, tuning.skills[skills[slot].skill].effect, at, aiming)

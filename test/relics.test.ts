@@ -29,9 +29,12 @@ const World = Game.Inspector("Test/Relics", {
     rocks: Game.Query({ selection: { rock: Game.Query.read(Rock) } })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current, state: data.state.get().current?.id ?? null })),
-  dash: queries.player.each()[0]!.data.dash.get(),
-  ground: queries.ground.each().map(({ data }) => data.ground.get()).filter((pool) => pool.timer !== null),
+  enemies: queries.enemies.each().map((entity) => {
+    const { data } = queries.enemies
+    return { position: data.position.get(entity), health: data.health.get(entity).current, state: data.state.get(entity).current?.id ?? null }
+  }),
+  dash: queries.player.data.dash.get(queries.player.each()[0]!),
+  ground: queries.ground.each().map((entity) => queries.ground.data.ground.get(entity)).filter((pool) => pool.timer !== null),
   vortices: queries.vortices.each().length,
   rocks: queries.rocks.each().length
 }))
@@ -57,19 +60,20 @@ const at = (position: { readonly x: number; readonly y: number }, offset: { read
 const burningAt = (offset: { readonly x: number; readonly y: number }, health: number) => Game.System("Test/BurningAt", {
   queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.write(Health), state: Game.Query.write(ElementState) }, with: [Enemy] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.enemies.each()) {
-    if (!at(data.position.get(), offset)) continue
-    data.health.update(({ max }) => ({ current: health, max }))
-    data.state.set({ current: { id: "burning", remaining: 60, atk: 0, nextTick: 60, charges: false } })
+  const { data } = queries.enemies
+  for (const entity of queries.enemies.each()) {
+    if (!at(data.position.get(entity), offset)) continue
+    data.health.update(entity, ({ max }) => ({ current: health, max }))
+    data.state.set(entity, { current: { id: "burning", remaining: 60, atk: 0, nextTick: 60, charges: false } })
   }
 })
 
 /** Her dashes all spent, a long wait for the next. */
 const NoDashes = Game.System("Test/NoDashes", { queries: { player: Game.Query({ selection: { dash: Game.Query.write(Dash) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.dash.update((dash) => ({ ...dash, charges: 0, cooldown: 30 }))
+  for (const entity of queries.player.each()) queries.player.data.dash.update(entity, (dash) => ({ ...dash, charges: 0, cooldown: 30 }))
 })
 
-const Hurt = Game.Inspector("Test/Hurt", { queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) } }, ({ queries }) => queries.player.each()[0]!.data.health.get().current)
+const Hurt = Game.Inspector("Test/Hurt", { queries: { player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] }) } }, ({ queries }) => queries.player.data.health.get(queries.player.each()[0]!).current)
 
 const relic = (id: RelicId, tier: 1 | 2 | 3 = 1) => ({ id, tier })
 
@@ -195,7 +199,7 @@ describe("relics in play", () => {
       const run = arena(build, [{ x: 150, y: 0 }], { x: 150, y: 0 }, { tuning: breakable, pointer: click(4) })
       // Its break bar a hair from full: the next blow breaks it.
       const Brink = Game.System("Test/Brink", { queries: { enemies: Game.Query({ selection: { poise: Game.Query.write(Poise) }, with: [Enemy] }) } }, ({ queries }) => {
-        for (const { data } of queries.enemies.each()) data.poise.set({ current: 999.9, broken: 0, quiet: 0 })
+        for (const entity of queries.enemies.each()) queries.enemies.data.poise.set(entity, { current: 999.9, broken: 0, quiet: 0 })
       })
       expectOk(run.runtime.tick(Game.Schedule(Brink)))
       let rocks = 0

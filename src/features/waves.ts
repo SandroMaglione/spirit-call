@@ -174,11 +174,12 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
   const random = Random.draw(resources.rng)
   let { number, phase, timer, front, size, carried } = waves
   let queue = [...waves.queue]
-  const player = queries.player.each()[0]?.data.position.get()
+  const playerEntity = queries.player.each()[0]
+  const player = playerEntity === undefined ? undefined : queries.player.data.position.get(playerEntity)
   // The enemies standing or about to (spawn warnings), champions aside: they stay across waves.
   const enemies = queries.enemies.each()
   const pending = queries.pending.each()
-  const champions = enemies.filter(({ data }) => data.enemy.get().champion).length + pending.filter(({ data }) => data.pending.get().champion === true).length
+  const champions = enemies.filter((entity) => queries.enemies.data.enemy.get(entity).champion).length + pending.filter((entity) => queries.pending.data.pending.get(entity).champion === true).length
   const left = enemies.length + pending.length - champions
 
   switch (phase) {
@@ -198,7 +199,7 @@ export const DirectWaves = Game.System("Shooter/DirectWaves", {
       break
     case "spawning": {
       timer -= dt
-      const boxes = wallBoxes(queries.walls.each())
+      const boxes = wallBoxes(queries.walls)
       // At most `waves.most` on the field (spawn warnings included): the rest of the wave waits for room.
       let standing = enemies.length + pending.length
       while (timer <= 0 && queue.length > 0) {

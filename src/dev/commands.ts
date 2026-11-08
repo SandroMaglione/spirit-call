@@ -100,14 +100,15 @@ export const ApplyDevCommands = Game.System("Shooter/ApplyDevCommands", {
 
   if (queue.clear) {
     queue.clear = false
-    for (const { entity } of queries.enemies.each()) commands.despawn(entity)
-    for (const { entity } of queries.pending.each()) commands.despawn(entity)
+    for (const entity of queries.enemies.each()) commands.despawn(entity)
+    for (const entity of queries.pending.each()) commands.despawn(entity)
   }
 
   if (queue.spawns.length > 0) {
     const tuning = resources.tuning.get()
-    const player = queries.player.each()[0]?.data.position.get() ?? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 }
-    const boxes = wallBoxes(queries.walls.each())
+    const playerEntity = queries.player.each()[0]
+    const player = playerEntity === undefined ? { x: tuning.arena.width / 2, y: tuning.arena.height / 2 } : queries.player.data.position.get(playerEntity)
+    const boxes = wallBoxes(queries.walls)
     const random = Random.draw(resources.rng)
     for (const entry of queue.spawns) {
       const kind = entryKind(entry)

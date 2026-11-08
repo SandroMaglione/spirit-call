@@ -47,7 +47,7 @@ describe("a character's weight", () => {
 
 describe("a character's impact", () => {
   const Bars = Game.Inspector("Test/BodyBars", { queries: { enemies: Game.Query({ selection: { poise: Game.Query.read(Poise) }, with: [Enemy] }) } }, ({ queries }) =>
-    queries.enemies.each().map(({ data }) => data.poise.get().current))
+    queries.enemies.each().map((entity) => queries.enemies.data.poise.get(entity).current))
   /** One slash of the Swordsman's, at `impact`, on a sturdy dummy with a break bar: how much of the bar it filled. */
   const filledBy = (impact: number) => {
     const tuning: Tuning = tuningWith({ enemies: { dummy: { hp: 100_000, poise: 0.5 } }, characters: { swordsman: { impact } } })

@@ -21,17 +21,21 @@ const World = Game.Inspector("Test/Tutorial", {
   count: resources.tutorial.get().count,
   result: resources.result.get(),
   slow: resources.slow.get().remaining,
-  enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, position: data.position.get(), immortal: data.immortal.present, health: data.health.get().current })),
-  player: queries.player.each()[0]?.data.position.get()
+  enemies: queries.enemies.each().map((entity) => {
+    const { data } = queries.enemies
+    return { kind: data.enemy.get(entity).kind, position: data.position.get(entity), immortal: data.immortal.has(entity), health: data.health.get(entity).current }
+  }),
+  player: queries.player.each().map((entity) => queries.player.data.position.get(entity))[0]
 }))
 
 /** Puts the player at `at` (a test's shortcut for walking there). */
 const putAt = (at: Vec2) => Game.Schedule(Game.System("Test/PutPlayer", {
   queries: { player: Game.Query({ selection: { position: Game.Query.write(Position), previous: Game.Query.write(PrevPosition) }, with: [Player] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.player.each()) {
-    data.position.set(at)
-    data.previous.set(at)
+  const { data } = queries.player
+  for (const entity of queries.player.each()) {
+    data.position.set(entity, at)
+    data.previous.set(entity, at)
   }
 }))
 
@@ -122,7 +126,7 @@ describe("the tutorial", () => {
     const BeginDodge = Game.Schedule(Game.System("Test/BeginTutorialDodge", { resources: { tutorial: Game.System.writeResource(Tutorial) } }, ({ resources }) => {
       resources.tutorial.set({ ...tutorialStart, step: 5 })
     }))
-    const Phase = Game.Inspector("Test/TutorialDummyPhase", { queries: { enemies: Game.Query({ selection: { phase: Game.Query.read(AttackPhase) } }) } }, ({ queries }) => queries.enemies.each()[0]?.data.phase.get()._tag)
+    const Phase = Game.Inspector("Test/TutorialDummyPhase", { queries: { enemies: Game.Query({ selection: { phase: Game.Query.read(AttackPhase) } }) } }, ({ queries }) => queries.enemies.each().map((entity) => queries.enemies.data.phase.get(entity)._tag)[0])
     const prepare = (run: ReturnType<typeof start>) => {
       expectOk(run.runtime.tick(BeginDodge))
       run.step(2)

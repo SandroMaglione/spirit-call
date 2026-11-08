@@ -24,15 +24,15 @@ const World = Game.Inspector("Test/Kits", {
     pools: Game.Query({ selection: { ground: Game.Query.read(Ground) } })
   }
 }, ({ queries }) => ({
-  player: queries.player.each()[0]!.data.position.get(),
-  enemies: queries.enemies.each().map(({ data }) => ({
-    position: data.position.get(),
-    health: data.health.get().current,
-    state: data.state.get().current?.id ?? null,
-    stunned: data.stunned.get().remaining,
-    poise: data.poise.get()
+  player: queries.player.data.position.get(queries.player.each()[0]!),
+  enemies: queries.enemies.each().map((entity) => ({
+    position: queries.enemies.data.position.get(entity),
+    health: queries.enemies.data.health.get(entity).current,
+    state: queries.enemies.data.state.get(entity).current?.id ?? null,
+    stunned: queries.enemies.data.stunned.get(entity).remaining,
+    poise: queries.enemies.data.poise.get(entity)
   })),
-  pools: queries.pools.each().map(({ data }) => data.ground.get())
+  pools: queries.pools.each().map((entity) => queries.pools.data.ground.get(entity))
 }))
 
 const sturdy = tuningWith({ enemies: { dummy: { hp: 2000 } } })
@@ -43,10 +43,10 @@ const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: numbe
   expectOk(run.runtime.tick(placeDummies(offsets, tuning)))
   return { ...run, world: () => run.runtime.inspect(World), airborne: () => run.runtime.inspect(InAir) }
 }
-const InAir = Game.Inspector("Test/InAir", { queries: { player: Game.Query({ selection: { airborne: Game.Query.optional(Airborne) }, with: [Player] }) } }, ({ queries }) => queries.player.each()[0]!.data.airborne.present)
+const InAir = Game.Inspector("Test/InAir", { queries: { player: Game.Query({ selection: { airborne: Game.Query.optional(Airborne) }, with: [Player] }) } }, ({ queries }) => queries.player.data.airborne.has(queries.player.each()[0]!))
 const press = (slot: "special" | "ultimate", frame: number) => ({ frame, press: [slot], release: [slot] })
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 describe("the Gunner's Flare Jump", () => {

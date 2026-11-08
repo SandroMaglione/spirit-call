@@ -24,8 +24,8 @@ const World = Game.Inspector("Test/Hearth", {
     members: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Member] })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ lost: data.health.get().max - data.health.get().current, state: data.state.get().current?.id ?? null, remaining: data.state.get().current?.remaining ?? 0 })),
-  health: queries.members.each()[0]!.data.health.get()
+  enemies: queries.enemies.each().map((entity) => ({ lost: queries.enemies.data.health.get(entity).max - queries.enemies.data.health.get(entity).current, state: queries.enemies.data.state.get(entity).current?.id ?? null, remaining: queries.enemies.data.state.get(entity).current?.remaining ?? 0 })),
+  health: queries.members.data.health.get(queries.members.each()[0]!)
 }))
 
 const Prepare = Game.System("Test/Prepare", {
@@ -34,8 +34,8 @@ const Prepare = Game.System("Test/Prepare", {
     members: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Member] })
   }
 }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
-  for (const { data } of queries.members.each()) data.health.set({ current: 20, max: data.health.get().max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
+  for (const entity of queries.members.each()) queries.members.data.health.set(entity, { current: 20, max: queries.members.data.health.get(entity).max })
 })
 
 const arena = (dummies: ReadonlyArray<Vec2>, keys: NonNullable<StartOptions["keys"]>) => {

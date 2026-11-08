@@ -71,11 +71,12 @@ export const CallSupport = Game.System("Shooter/CallSupport", {
   for (const released of events.released.all()) {
     const spec = released.attack
     if (spec.kind !== "call") continue
-    const boxes = wallBoxes(queries.walls.each())
+    const boxes = wallBoxes(queries.walls)
     const clearance = Math.max(...spec.calls.map((kind) => tuning.enemies[kind].radius)) + 12
     const points = callPoints(released.at, spec.radius, spec.calls.length, clearance, tuning.arena, boxes)
     // The first few come as elites of the caller's element (see `Tuning.elites`).
-    const element = queries.elites.each().find(({ entity }) => entity.id === released.attacker)?.data.elite.get().element ?? null
+    const caller = queries.elites.each().find((entity) => entity.id === released.attacker)
+    const element = caller === undefined ? null : queries.elites.data.elite.get(caller).element ?? null
     spec.calls.forEach((kind, index) => {
       for (const spawn of makeGroupSpawns(tuning, kind, points[index]!, tuning.waves.spawnWarning, index < spec.elites ? element : null)) commands.spawnIn(RunScope, spawn)
     })
@@ -96,8 +97,9 @@ export const PressChampions = Game.System("Shooter/PressChampions", {
   const rules = resources.tuning.get().champions.pressed
   const dt = resources.time.get().dt
   const hits = events.hit.all()
-  for (const { entity, data } of queries.rampages.each()) {
+  const { data } = queries.rampages
+  for (const entity of queries.rampages.each()) {
     const struck = hits.filter((hit) => hit.entity === Game.Entity.handle(entity.id, Health) && !hit.periodic).length
-    data.rampage.update((rampage) => ({ ...rampage, pressure: Math.max(0, rampage.pressure - rules.drain * dt) + struck }))
+    data.rampage.update(entity, (rampage) => ({ ...rampage, pressure: Math.max(0, rampage.pressure - rules.drain * dt) + struck }))
   }
 })

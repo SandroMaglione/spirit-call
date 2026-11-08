@@ -16,14 +16,17 @@ const Ground = Game.Inspector("Test/TrainingGround", {
     player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ entity, data }) => ({
-    id: entity.id,
-    kind: data.enemy.get().kind,
-    health: data.health.get(),
-    broken: data.poise.get().broken > 0,
-    immortal: data.immortal.present
-  })),
-  player: queries.player.each()[0]!.data.health.get()
+  enemies: queries.enemies.each().map((entity) => {
+    const { data } = queries.enemies
+    return {
+      id: entity.id,
+      kind: data.enemy.get(entity).kind,
+      health: data.health.get(entity),
+      broken: data.poise.get(entity).broken > 0,
+      immortal: data.immortal.has(entity)
+    }
+  }),
+  player: queries.player.data.health.get(queries.player.each()[0]!)
 }))
 
 /** A blow of `damage` on whatever matches `target` (an enemy's id, or the player), landing next step. */
@@ -32,8 +35,8 @@ const strike = (run: ReturnType<typeof start>, target: number | "player", damage
     queries: { bodies: Game.Query({ selection: { health: Game.Query.read(Health), player: Game.Query.optional(Player) } }) },
     events: { damage: Game.System.writeEvent(Damage) }
   }, ({ queries, events }) => {
-    for (const { entity, data } of queries.bodies.each()) {
-      const hit = target === "player" ? data.player.present : entity.id === target
+    for (const entity of queries.bodies.each()) {
+      const hit = target === "player" ? queries.bodies.data.player.has(entity) : entity.id === target
       if (hit) events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: target === "player" ? "enemy" : "player", direction: { x: 1, y: 0 }, blow: blow({ damage, knockback: 0 }) })
     }
   })

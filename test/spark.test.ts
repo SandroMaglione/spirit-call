@@ -8,7 +8,7 @@ import { defaultTuning, engine, tuningWith } from "../src/config/tuning.ts"
 import { Attacker, AttackPhase, Dash, DodgeChain, ElementState, Enemy, Energy, Game, Health, Player, Poise, SlowMotion, Stats, Stunned, Vortex, BasicAttack } from "../src/schema.ts"
 import { cursorAt, doubleTap, gunner, placeDummies, start, steps, plainAttack, expectOk } from "./helpers.ts"
 
-const Charge = Game.Inspector("Test/Charge", { queries: { player: Game.Query({ selection: { energy: Game.Query.read(Energy) }, with: [Player] }) } }, ({ queries }) => queries.player.each()[0]!.data.energy.get().current)
+const Charge = Game.Inspector("Test/Charge", { queries: { player: Game.Query({ selection: { energy: Game.Query.read(Energy) }, with: [Player] }) } }, ({ queries }) => queries.player.data.energy.get(queries.player.each()[0]!).current)
 
 const Fight = Game.Inspector("Test/Spark", {
   queries: {
@@ -19,17 +19,21 @@ const Fight = Game.Inspector("Test/Spark", {
     }),
     vortices: Game.Query({ selection: { vortex: Game.Query.read(Vortex) } })
   }
-}, ({ queries }) => ({
-  weapon: queries.weapon.each()[0]?.data.basicAttack.get(),
-  enemies: queries.enemies.each().map(({ data }) => ({
-    health: data.health.get().current,
-    state: data.state.get().current?.id ?? null,
-    poise: data.poise.get(),
-    stunned: data.stunned.get().remaining,
-    phase: data.phase.get()._tag
-  })),
-  vortices: queries.vortices.each().map(({ data }) => data.vortex.get())
-}))
+}, ({ queries }) => {
+  const [weapon] = queries.weapon.each()
+  const { data } = queries.enemies
+  return {
+    weapon: weapon === undefined ? undefined : queries.weapon.data.basicAttack.get(weapon),
+    enemies: queries.enemies.each().map((entity) => ({
+      health: data.health.get(entity).current,
+      state: data.state.get(entity).current?.id ?? null,
+      poise: data.poise.get(entity),
+      stunned: data.stunned.get(entity).remaining,
+      phase: data.phase.get(entity)._tag
+    })),
+    vortices: queries.vortices.each().map((entity) => queries.vortices.data.vortex.get(entity))
+  }
+})
 
 /** Clicks every `every` frames from `from`, `count` times. */
 const clicks = (from: number, count: number, every: number) =>
@@ -155,9 +159,10 @@ describe("breaking", () => {
     run.step(5)
     expect(run.runtime.inspect(Fight).enemies[0]!.phase).toBe("windup")
     const Break = Game.System("Test/Break", { queries: { enemies: Game.Query({ selection: { poise: Game.Query.write(Poise), stunned: Game.Query.write(Stunned) } }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) {
-        data.poise.set({ current: 200, broken: 2, quiet: 0 })
-        data.stunned.set({ remaining: 2 })
+      const { data } = queries.enemies
+      for (const entity of queries.enemies.each()) {
+        data.poise.set(entity, { current: 200, broken: 2, quiet: 0 })
+        data.stunned.set(entity, { remaining: 2 })
       }
     })
     expectOk(run.runtime.tick(Game.Schedule(Break)))
@@ -173,7 +178,7 @@ describe("a perfect dodge", () => {
   const Dodger = Game.Inspector("Test/Dodger", {
     queries: { player: Game.Query({ selection: { dash: Game.Query.read(Dash), health: Game.Query.read(Health) }, with: [Player] }) },
     resources: { slow: Game.System.readResource(SlowMotion) }
-  }, ({ queries, resources }) => ({ dash: queries.player.each()[0]!.data.dash.get(), health: queries.player.each()[0]!.data.health.get().current, slow: resources.slow.get() }))
+  }, ({ queries, resources }) => ({ dash: queries.player.data.dash.get(queries.player.each()[0]!), health: queries.player.data.health.get(queries.player.each()[0]!).current, slow: resources.slow.get() }))
 
   /** The step the swipe goes off on (the dummy 80 to her right). */
   const landsAt = (() => {
@@ -277,7 +282,7 @@ describe("a perfect dodge", () => {
     })
     expectOk(run.runtime.tick(Game.Schedule(Slow)))
     const before = { at: run.player().position, windup: run.runtime.inspect(Fight).enemies[0]!.phase }
-    const AttackerElapsed = Game.Inspector("Test/Elapsed", { queries: { enemies: Game.Query({ selection: { attacker: Game.Query.read(Attacker) } }) } }, ({ queries }) => queries.enemies.each()[0]!.data.attacker.get().elapsed)
+    const AttackerElapsed = Game.Inspector("Test/Elapsed", { queries: { enemies: Game.Query({ selection: { attacker: Game.Query.read(Attacker) } }) } }, ({ queries }) => queries.enemies.data.attacker.get(queries.enemies.each()[0]!).elapsed)
     const start0 = run.runtime.inspect(AttackerElapsed)
     run.step(30)
     expect(before.windup).toBe("windup")
@@ -306,7 +311,7 @@ describe("the dash strike", () => {
   const sword = plainAttack(defaultTuning, "blade")
   const DashWeapon = Game.Inspector("Test/DashWeapon", {
     queries: { player: Game.Query({ selection: { basicAttack: Game.Query.read(BasicAttack) }, with: [Player] }) }
-  }, ({ queries }) => queries.player.each()[0]!.data.basicAttack.get())
+  }, ({ queries }) => queries.player.data.basicAttack.get(queries.player.each()[0]!))
   /** A dash toward a sturdy dummy, and an attack pressed `after` steps into it. */
   const strike = (after: number) => {
     const tuning = tuningWith({ enemies: { dummy: { hp: 500 } } })

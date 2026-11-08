@@ -27,7 +27,7 @@ const World = Game.Inspector("Test/Aspects", {
     enemies: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health), state: Game.Query.read(ElementState) }, with: [Enemy] })
   }
 }, ({ queries }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current, state: data.state.get().current?.id ?? null }))
+  enemies: queries.enemies.each().map((entity) => ({ position: queries.enemies.data.position.get(entity), health: queries.enemies.data.health.get(entity).current, state: queries.enemies.data.state.get(entity).current?.id ?? null }))
 }))
 
 const sturdy = tuningWith({ enemies: { dummy: { hp: 2000, knockbackTaken: 0 } } })
@@ -44,7 +44,7 @@ const taps = (count: number, first: number, gap: number) =>
 
 /** Every enemy in a state (soaked, by someone else), for a long while. */
 const Soak = Game.System("Test/SoakAll", { queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Enemy] }) } }, ({ queries }) => {
-  for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "soaked", remaining: 60, atk: 0, nextTick: 0, charges: false } })
+  for (const entity of queries.enemies.each()) queries.enemies.data.state.set(entity, { current: { id: "soaked", remaining: 60, atk: 0, nextTick: 0, charges: false } })
 })
 
 const context = (extra: Partial<MoveContext>): MoveContext => ({ step: 0, finisher: false, power: false, dash: false, counter: false, lastRound: false, serial: 0, ...extra })
@@ -143,7 +143,7 @@ describe("Duelist (Blade)", () => {
     const dashStrike = (perfect: boolean, build: BuildValue = duelist) => {
       const run = arena(build, [{ x: 120, y: 0 }], { x: 300, y: 0 }, { pointer: [{ frame: 1, press: ["primary"] }, { frame: 2, release: ["primary"] }] })
       const Dashing = Game.System("Test/Dashing", { queries: { player: Game.Query({ selection: { dash: Game.Query.write(Dash) }, with: [Player] }) } }, ({ queries }) => {
-        for (const { data } of queries.player.each()) data.dash.update((dash) => ({ ...dash, since: 0.02, perfect }))
+        for (const entity of queries.player.each()) queries.player.data.dash.update(entity, (dash) => ({ ...dash, since: 0.02, perfect }))
       })
       expectOk(run.runtime.tick(Game.Schedule(Dashing)))
       run.step(steps(0.4))
@@ -217,7 +217,7 @@ describe("Whirlpool (Disc)", () => {
 
 describe("Lightning Rod (Staff)", () => {
   it("plants a rod with its charged attack, which zaps the nearest enemy with her element (the Stormcaller's charges)", () => {
-    const Rods = Game.Inspector("Test/Rods", { queries: { totems: Game.Query({ selection: { totem: Game.Query.read(Totem) } }) } }, ({ queries }) => queries.totems.each().map(({ data }) => data.totem.get()))
+    const Rods = Game.Inspector("Test/Rods", { queries: { totems: Game.Query({ selection: { totem: Game.Query.read(Totem) } }) } }, ({ queries }) => queries.totems.each().map((entity) => queries.totems.data.totem.get(entity)))
     // Off her line, so only the rod (not the charged bolt) reaches it.
     const run = arena({ character: "stormcaller", aspect: "lightningRod" as AspectId }, [{ x: 100, y: 120 }], { x: 300, y: 0 }, { pointer: charge("staff") })
     run.step(steps(1.4))

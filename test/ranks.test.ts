@@ -16,7 +16,7 @@ const Field = Game.Inspector("Test/RankField", {
 }, ({ queries, resources }) => ({
   wave: resources.waves.get().number,
   pending: queries.pending.each().length,
-  enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, elite: data.elite.present ? data.elite.get().element : null, shield: data.shield.present }))
+  enemies: queries.enemies.each().map((entity) => ({ kind: queries.enemies.data.enemy.get(entity).kind, elite: queries.enemies.data.elite.get(entity)?.element ?? null, shield: queries.enemies.data.shield.has(entity) }))
 }))
 
 /** The ranks: every quest played again, harder, opening along the main line and their own replay (see docs/quests.md, "Ranks"). */

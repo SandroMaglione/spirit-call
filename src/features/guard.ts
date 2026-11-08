@@ -39,7 +39,7 @@ export const CastGuards = Game.System("Shooter/CastGuards", {
     events.explosion.emit({ at: cast.from, radius: shove.radius, faction: cast.faction, kind: "upheaval", heavy: effect.heavy, element: effect.element })
     const caster = queries.casters.getHandle(cast.caster)
     if (!caster.ok) continue
-    commands.insert(caster.value.entity, [Raising, { remaining: effect.raise, effect, atk: cast.atk, charges: cast.charges }])
+    commands.insert(caster.value, [Raising, { remaining: effect.raise, effect, atk: cast.atk, charges: cast.charges }])
   }
 })
 
@@ -60,18 +60,20 @@ export const RaiseGuards = Game.System("Shooter/RaiseGuards", {
   commands: Game.System.commands(Game.System.removes(Raising))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.raising.each()) {
-    const raising = data.raising.get()
-    const lost = !data.player.present || !data.position.present
+  const { data } = queries.raising
+  for (const entity of queries.raising.each()) {
+    const raising = data.raising.get(entity)
+    const position = data.position.get(entity)
+    const lost = !data.player.has(entity) || position === undefined
     const remaining = raising.remaining - dt
     if (lost || remaining <= 1e-9) commands.remove(entity, Raising)
     if (lost) continue
     if (remaining > 1e-9) {
-      data.raising.set({ ...raising, remaining })
+      data.raising.set(entity, { ...raising, remaining })
       continue
     }
     resources.guard.set({ plates: raising.effect.plates, effect: raising.effect, atk: raising.atk, charges: raising.charges })
-    events.guarded.emit({ at: data.position.get(), kind: "raised" })
+    events.guarded.emit({ at: position, kind: "raised" })
   }
 })
 
@@ -89,9 +91,9 @@ export const ShatterPlates = Game.System("Shooter/ShatterPlates", {
   commands: Game.System.commands(Game.System.spawns(Hitbox), Game.System.despawns(PlateShatter))
 }, ({ queries, resources, events, commands }) => {
   const tuning = resources.tuning.get()
-  for (const { entity, data } of queries.shatters.each()) {
+  for (const entity of queries.shatters.each()) {
     commands.despawn(entity)
-    const { at, effect, atk, charges, attacker } = data.shatter.get()
+    const { at, effect, atk, charges, attacker } = queries.shatters.data.shatter.get(entity)
     commands.spawnIn(RunScope, Game.Command.spawn([Hitbox, {
       area: { kind: "circle", center: at, radius: effect.radius },
       faction: "player",
@@ -110,8 +112,9 @@ export const ShatterPlates = Game.System("Shooter/ShatterPlates", {
     if (attacker === null || effect.breakFill <= 0) continue
     const struck = queries.breakable.getHandle(attacker)
     if (!struck.ok) continue
-    const { enemy, health, poise } = struck.value.data
-    const bar = poiseOf(tuning, enemy.get().kind, health.get().max, enemy.get().champion)
-    if (bar > 0 && poise.get().broken <= 0) poise.update((current) => ({ ...current, current: Math.min(bar, current.current + bar * effect.breakFill), quiet: 0 }))
+    const { enemy, health, poise } = queries.breakable.data
+    const target = struck.value
+    const bar = poiseOf(tuning, enemy.get(target).kind, health.get(target).max, enemy.get(target).champion)
+    if (bar > 0 && poise.get(target).broken <= 0) poise.update(target, (current) => ({ ...current, current: Math.min(bar, current.current + bar * effect.breakFill), quiet: 0 }))
   }
 })

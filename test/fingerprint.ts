@@ -61,9 +61,9 @@ const Bodies = Game.Inspector("Determinism/Bodies", {
   queries: { bodies: Game.Query({ selection: { position: Game.Query.read(Position), health: Game.Query.read(Health), state: Game.Query.optional(ElementState) } }) },
   resources: { log: Game.System.readResource(RunLog), result: Game.System.readResource(RunResult) }
 }, ({ queries, resources }) => ({
-  bodies: queries.bodies.each().map(({ entity, data }) => {
-    const at = data.position.get(), health = data.health.get()
-    return [entity.id, at.x, at.y, health.current, health.max, data.state.present ? data.state.get().current : null]
+  bodies: queries.bodies.each().map((entity) => {
+    const at = queries.bodies.data.position.get(entity), health = queries.bodies.data.health.get(entity), state = queries.bodies.data.state.get(entity)
+    return [entity.id, at.x, at.y, health.current, health.max, state !== undefined ? state.current : null]
   }),
   log: resources.log.get(),
   result: resources.result.get()

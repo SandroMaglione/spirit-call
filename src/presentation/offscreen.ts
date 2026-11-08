@@ -30,7 +30,7 @@ export const DrawOffscreenEnemies = Game.System("Shooter/DrawOffscreenEnemies", 
   const center = { x: width / 2, y: height / 2 }
   // Rays from the center end on this box, just inside the edge.
   const half = { x: width / 2 - arrows.inset, y: height / 2 - arrows.inset }
-  const targets = queries.enemies.each().map(({ data }) => ({ position: data.position.get(), color: view.enemies[data.enemy.get().kind].color }))
+  const targets = queries.enemies.each().map((enemy) => ({ position: queries.enemies.data.position.get(enemy), color: view.enemies[queries.enemies.data.enemy.get(enemy).kind].color }))
   const tuning = resources.tuning.get()
   const objective = tuning.challenges[resources.challenge.get()].objective
   if (objective.kind === "tutorial") {

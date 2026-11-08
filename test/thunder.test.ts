@@ -24,10 +24,10 @@ const World = Game.Inspector("Test/Thunder", {
   },
   resources: { stats: Game.System.readResource(Stats) }
 }, ({ queries, resources }) => ({
-  enemies: queries.enemies.each().map(({ data }) => ({ position: data.position.get(), health: data.health.get().current })),
-  player: queries.player.each()[0]?.data.health.get(),
-  members: Object.fromEntries(queries.members.each().map(({ data }) => [data.member.get().character, data.health.get().current])),
-  totems: queries.totems.each().map(({ data }) => ({ ...data.totem.get(), at: data.position.get() })),
+  enemies: queries.enemies.each().map((entity) => ({ position: queries.enemies.data.position.get(entity), health: queries.enemies.data.health.get(entity).current })),
+  player: queries.player.each().map((entity) => queries.player.data.health.get(entity))[0],
+  members: Object.fromEntries(queries.members.each().map((entity) => [queries.members.data.member.get(entity).character, queries.members.data.health.get(entity).current])),
+  totems: queries.totems.each().map((entity) => ({ ...queries.totems.data.totem.get(entity), at: queries.totems.data.position.get(entity) })),
   reactions: resources.stats.get().reactions
 }))
 
@@ -45,20 +45,20 @@ const ultimate = (frame: number) => ({ frame, press: ["ultimate" as const], rele
 const Hurt = (current: number) => Game.System(`Test/Hurt${current}`, {
   queries: { members: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Member] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.members.each()) data.health.set({ current, max: data.health.get().max })
+  for (const entity of queries.members.each()) queries.members.data.health.set(entity, { current, max: queries.members.data.health.get(entity).max })
 })
 
 const FillEnergy = Game.System("Test/ThunderEnergy", {
   queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 /** Soaks every enemy, as if water had hit it (for a long while). */
 const Soak = Game.System("Test/Soak", {
   queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Enemy] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "soaked", remaining: 60, atk: 100, nextTick: 0, charges: false } })
+  for (const entity of queries.enemies.each()) queries.enemies.data.state.set(entity, { current: { id: "soaked", remaining: 60, atk: 100, nextTick: 0, charges: false } })
 })
 
 const body = (id: number, x: number, extra: Partial<Struck> = {}): Struck => ({ id, entity: null, at: { x, y: 0 }, radius: 10, faction: "enemy", protected: false, ...extra })
@@ -174,7 +174,7 @@ describe("the Stormcaller's Thunderclap (Shift)", () => {
     const Charge = Game.System("Test/Charge", {
       queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState) }, with: [Enemy] }) }
     }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) data.state.set({ current: { id: "charged", remaining: 60, atk: 100, nextTick: 0, charges: false } })
+      for (const entity of queries.enemies.each()) queries.enemies.data.state.set(entity, { current: { id: "charged", remaining: 60, atk: 100, nextTick: 0, charges: false } })
     })
     const run = range([{ x: 120, y: 0 }, { x: -150, y: 0 }], { x: 200, y: 0 }, { keys: [ultimate(1)] })
     expectOk(run.runtime.tick(Game.Schedule(FillEnergy, Hurt(30), Charge)))

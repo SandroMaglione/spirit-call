@@ -26,7 +26,7 @@ describe("input", () => {
 
     const SpecialCooldown = Game.Inspector("Test/SpecialCooldown", {
       queries: { player: Game.Query({ selection: { skills: Game.Query.read(Skills) }, with: [Player] }) }
-    }, ({ queries }) => queries.player.each()[0]!.data.skills.get().special.cooldown)
+    }, ({ queries }) => queries.player.data.skills.get(queries.player.each()[0]!).special.cooldown)
     expect(sim.runtime.inspect(SpecialCooldown)).toBe(0)
     fakeWindow.press(" ", "Space")
     expectOk(sim.runtime.tick(sim.fixedUpdate))

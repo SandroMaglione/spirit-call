@@ -20,8 +20,8 @@ const World = Game.Inspector("Test/Mending", {
     player: Game.Query({ selection: { health: Game.Query.read(Health) }, with: [Player] })
   }
 }, ({ queries }) => ({
-  marks: queries.enemies.each().map(({ data }) => data.marked.get().remaining),
-  health: queries.player.each()[0]!.data.health.get()
+  marks: queries.enemies.each().map((entity) => queries.enemies.data.marked.get(entity).remaining),
+  health: queries.player.data.health.get(queries.player.each()[0]!)
 }))
 
 /** The Tidecaller with her shipped kit, sturdy dummies at `offsets`, aiming at `aim`. */
@@ -34,14 +34,14 @@ const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: numbe
   /** Leaves her at half her health. */
   const hurt = () => {
     const Hurt = Game.System("Test/Hurt", { queries: { player: Game.Query({ selection: { health: Game.Query.write(Health) }, with: [Player] }) } }, ({ queries }) => {
-      for (const { data } of queries.player.each()) data.health.set({ ...data.health.get(), current: data.health.get().max / 2 })
+      for (const entity of queries.player.each()) queries.player.data.health.set(entity, { ...queries.player.data.health.get(entity), current: queries.player.data.health.get(entity).max / 2 })
     })
     expectOk(run.runtime.tick(Game.Schedule(Hurt)))
   }
   /** A blow of the team (no skill's) on every enemy. */
   const strike = () => {
     const Strike = Game.System("Test/Strike", { queries: { enemies: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Enemy] }) }, events: { damage: Game.System.writeEvent(Damage) } }, ({ queries, events }) => {
-      for (const { entity } of queries.enemies.each()) {
+      for (const entity of queries.enemies.each()) {
         events.damage.emit({ target: Game.Entity.handle(entity.id, Health), faction: "player", direction: { x: 1, y: 0 }, blow: blow({ damage: 5, knockback: 0 }) })
       }
     })
@@ -51,9 +51,10 @@ const arena = (offsets: ReadonlyArray<{ x: number; y: number }>, aim: { x: numbe
   /** Puts the enemies at `offsets` (from the center) in `state`. */
   const putIn = (state: StateId, offsets: ReadonlyArray<{ x: number; y: number }>) => {
     const Put = Game.System("Test/PutIn", { queries: { enemies: Game.Query({ selection: { state: Game.Query.write(ElementState), position: Game.Query.read(Position) }, with: [Enemy] }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) {
-        const at = data.position.get()
-        if (offsets.some((offset) => Math.hypot(at.x - center.x - offset.x, at.y - center.y - offset.y) < 1)) data.state.set({ current: { id: state, remaining: 10, atk: 100, nextTick: 0, charges: true } })
+      const { data } = queries.enemies
+      for (const entity of queries.enemies.each()) {
+        const at = data.position.get(entity)
+        if (offsets.some((offset) => Math.hypot(at.x - center.x - offset.x, at.y - center.y - offset.y) < 1)) data.state.set(entity, { current: { id: state, remaining: 10, atk: 100, nextTick: 0, charges: true } })
       }
     })
     expectOk(run.runtime.tick(Game.Schedule(Put)))
@@ -107,7 +108,7 @@ describe("the Tidecaller's healing asks for blows", () => {
     const run = arena([], { x: 150, y: 0 }, { keys: [{ frame: 1, press: ["ultimate"], release: ["ultimate"] }] })
     run.hurt()
     const Fill = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-      for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+      for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
     })
     expectOk(run.runtime.tick(Game.Schedule(Fill)))
     const before = run.world().health
@@ -116,7 +117,7 @@ describe("the Tidecaller's healing asks for blows", () => {
     expect(run.world().health.current - before.current).toBeCloseTo((before.max * tide.heal * tide.count) / 100, 6)
     // Far from them (they drift after her, slower than she runs): no more heals until they catch up.
     const Away = Game.System("Test/Away", { queries: { player: Game.Query({ selection: { position: Game.Query.write(Position) }, with: [Player] }) } }, ({ queries }) => {
-      for (const { data } of queries.player.each()) data.position.set({ x: data.position.get().x + 320, y: data.position.get().y })
+      for (const entity of queries.player.each()) queries.player.data.position.set(entity, { x: queries.player.data.position.get(entity).x + 320, y: queries.player.data.position.get(entity).y })
     })
     expectOk(run.runtime.tick(Game.Schedule(Away)))
     const away = run.world().health.current

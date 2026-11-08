@@ -56,30 +56,31 @@ export const AnimateActors = Game.System("Shooter/AnimateActors", {
     node.body.face(facing)
     node.body.animate({ x: node.root.position.x, y: node.root.position.z }, facing, dt, holding)
   }
-  for (const { entity, data } of queries.player.each()) {
+  for (const entity of queries.player.each()) {
     const node = services.nodes.get(entity.id)
-    if (node?.kind === "player") animate(node, data.facing.get().direction, data.dash.get().remaining > 0, herSeconds)
+    if (node?.kind === "player") animate(node, queries.player.data.facing.get(entity).direction, queries.player.data.dash.get(entity).remaining > 0, herSeconds)
   }
-  for (const { entity, data } of queries.enemies.each()) {
+  const { data } = queries.enemies
+  for (const entity of queries.enemies.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "enemy") continue
-    const velocity = data.velocity.get()
-    const area = data.attacker.get().area
-    const aimed = data.phase.get()._tag !== "ready" && area !== null ? areaDirection(area, data.position.get()) : null
+    const velocity = data.velocity.get(entity)
+    const area = data.attacker.get(entity).area
+    const aimed = data.phase.get(entity)._tag !== "ready" && area !== null ? areaDirection(area, data.position.get(entity)) : null
     const moving = Math.hypot(velocity.x, velocity.y) > turnSpeed ? normalizeOr(velocity, node.facing) : null
-    const shield = data.shield.present ? data.shield.get().facing : null
+    const shield = data.shield.get(entity)?.facing ?? null
     const facing = aimed ?? shield ?? moving ?? node.facing
-    const held = data.stunned.get().remaining > 0
+    const held = data.stunned.get(entity).remaining > 0
     animate(node, facing, held, held ? 0 : seconds)
     if (shield !== null) node.body.shield?.(Math.atan2(shield.x, shield.y) - Math.atan2(facing.x, facing.y))
-    const kind = data.enemy.get().kind
-    const spec = currentAttack(resources.tuning.get(), data.enemy.get(), data.attacker.get())
+    const kind = data.enemy.get(entity).kind
+    const spec = currentAttack(resources.tuning.get(), data.enemy.get(entity), data.attacker.get(entity))
     const look = enemyLooks[kind]
     const clips = look.kind === "model" && spec !== undefined ? look.attackClips?.[spec.id] : undefined
-    const pose = enemyPose(spec, data.phase.get()._tag, data.attacker.get().elapsed, clips)
+    const pose = enemyPose(spec, data.phase.get(entity)._tag, data.attacker.get(entity).elapsed, clips)
+    const ward = data.ward.get(entity)
     if (pose !== null) node.body.sample?.(pose.clip, pose.progress)
-    else if (!held && look.kind === "model" && look.wardClip !== undefined && data.ward.present) {
-      const ward = data.ward.get()
+    else if (!held && look.kind === "model" && look.wardClip !== undefined && ward !== undefined) {
       const link = resources.tuning.get().enemies[kind].ward?.link
       if (ward.ally !== null && link !== undefined) node.body.sample?.(look.wardClip, link > 0 ? Math.min(1, ward.formed / link) : 1)
     }
@@ -104,7 +105,7 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
 }, ({ events, queries, resources, services }) => {
   const tuning = resources.tuning.get()
   const [player] = queries.player.each()
-  const hers = player === undefined ? undefined : services.nodes.get(player.entity.id)
+  const hers = player === undefined ? undefined : services.nodes.get(player.id)
   for (const action of events.action.all()) {
     if (player === undefined || hers?.kind !== "player") break
     const moments = hers.body.moments
@@ -112,7 +113,7 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     if (action.kind === "attack") {
       const shot = action.power ? moments.power : moments.attack?.[Math.min(action.step, moments.attack.length - 1)]
       // A melee blow lands while its hitbox is out (in its middle); a shot leaves at once.
-      const hitAt = isMelee(action.move) ? attackOf(tuning, player.data.basicAttack.get().attack).active / 2 : 0
+      const hitAt = isMelee(action.move) ? attackOf(tuning, queries.player.data.basicAttack.get(player).attack).active / 2 : 0
       if (shot !== undefined) hers.body.play(shot, action.move.recovery, hitAt)
     } else if (action.kind === "dash" && moments.dash !== undefined) {
       hers.body.play(moments.dash, tuning.dash.duration, null)
@@ -140,13 +141,14 @@ export const PlayMoments = Game.System("Shooter/PlayMoments", {
     if (clip !== undefined) node.body.play(clip, null, null)
   }
   // An enemy's windup starts: its clip over the windup.
-  for (const { entity, data } of queries.enemies.each()) {
+  const { data } = queries.enemies
+  for (const entity of queries.enemies.each()) {
     const node = services.nodes.get(entity.id)
     if (node?.kind !== "enemy") continue
-    const phase = data.phase.get()._tag
+    const phase = data.phase.get(entity)._tag
     const started = phase === "windup" && node.attackPhase !== "windup"
     node.attackPhase = phase
-    const spec = currentAttack(tuning, data.enemy.get(), data.attacker.get())
+    const spec = currentAttack(tuning, data.enemy.get(entity), data.attacker.get(entity))
     const clip = node.body.moments?.windup
     if (started && spec !== undefined && clip !== undefined) node.body.play(clip, spec.windup, null)
   }

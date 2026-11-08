@@ -34,12 +34,15 @@ const World = Game.Inspector("Test/Enemies", {
   const [player] = queries.player.each()
   return {
     player: player === undefined ? undefined : {
-      position: player.data.position.get(),
-      health: player.data.health.get().current,
-      invulnerable: player.data.invulnerable.get().remaining
+      position: queries.player.data.position.get(player),
+      health: queries.player.data.health.get(player).current,
+      invulnerable: queries.player.data.invulnerable.get(player).remaining
     },
-    enemies: queries.enemies.each().map(({ data }) => ({ kind: data.enemy.get().kind, position: data.position.get(), attacker: { ...data.attacker.get(), phase: data.phase.get()._tag } })),
-    pending: queries.pending.each().map(({ data }) => data.pending.get()),
+    enemies: queries.enemies.each().map((entity) => {
+      const { data } = queries.enemies
+      return { kind: data.enemy.get(entity).kind, position: data.position.get(entity), attacker: { ...data.attacker.get(entity), phase: data.phase.get(entity)._tag } }
+    }),
+    pending: queries.pending.each().map((entity) => queries.pending.data.pending.get(entity)),
     waves: resources.waves.get(),
     stats: resources.stats.get()
   }
@@ -51,7 +54,7 @@ const duel = (kind: EnemyKind, offset: Vec2, options: StartOptions = {}) => {
   const tuning: Tuning = { ...base, enemies: { ...base.enemies } }
   const run = start({ ...options, tuning })
   const Clear = Game.System("Test/Clear", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
-    for (const { entity } of queries.enemies.each()) commands.despawn(entity)
+    for (const entity of queries.enemies.each()) commands.despawn(entity)
   })
   const Spawn = Game.System("Test/Spawn", { commands: Game.System.commands(Game.System.spawns(Enemy, ...EnemyOptionalParts)) }, ({ commands }) => {
     commands.spawnIn(RunScope, makeEnemy(tuning, kind, { x: center.x + offset.x, y: center.y + offset.y }))
@@ -101,7 +104,7 @@ describe("telegraphed attacks", () => {
     // Past its aim lock, a gust throws the chaser away from her (world +x).
     run.step(Math.ceil((swipe.windup - swipe.aimLock) / engine.step.dt) + 1)
     const Push = Game.System("Test/Push", { queries: { enemies: Game.Query({ selection: { knockback: Game.Query.write(Knockback) }, with: [Enemy] }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) data.knockback.set({ x: 1500, y: 0 })
+      for (const entity of queries.enemies.each()) queries.enemies.data.knockback.set(entity, { x: 1500, y: 0 })
     })
     expectOk(run.runtime.tick(Game.Schedule(Push)))
     run.step(Math.ceil(swipe.windup / engine.step.dt) + Math.ceil(swipe.active / engine.step.dt) + 4)
@@ -154,7 +157,7 @@ describe("enemy stats", () => {
   it("walk at the speed in their stats, so what changes stats changes it", () => {
     const run = duel("chaser", { x: 400, y: 0 })
     const Slow = Game.System("Test/Slow", { queries: { enemies: Game.Query({ selection: { stats: Game.Query.write(CombatStats) }, with: [Enemy] }) } }, ({ queries }) => {
-      for (const { data } of queries.enemies.each()) data.stats.update((stats) => ({ ...stats, speed: stats.speed / 2 }))
+      for (const entity of queries.enemies.each()) queries.enemies.data.stats.update(entity, (stats) => ({ ...stats, speed: stats.speed / 2 }))
     })
     expectOk(run.runtime.tick(Game.Schedule(Slow)))
     run.step(40)
@@ -187,7 +190,7 @@ describe("enemy levels", () => {
   it("spawn every enemy of a run at the level the arena was entered with", () => {
     const Enemies = Game.Inspector("Test/EnemyStats", {
       queries: { enemies: Game.Query({ selection: { stats: Game.Query.read(CombatStats), kind: Game.Query.read(Enemy) } }) }
-    }, ({ queries }) => queries.enemies.each().map(({ data }) => ({ kind: data.kind.get().kind, stats: data.stats.get() })))
+    }, ({ queries }) => queries.enemies.each().map((entity) => ({ kind: queries.enemies.data.kind.get(entity).kind, stats: queries.enemies.data.stats.get(entity) })))
     const run = start({ flow: "Menu", waves: true })
     run.runtime.send(UiRequest, { kind: "start", team: [{ character: "swordsman" }], challenge: "swarm", enemyLevel: 12 })
     run.step(240)
@@ -248,7 +251,7 @@ describe("waves", () => {
   it("starts the next wave after the current one is cleared", () => {
     const { run, world } = firstWave()
     const Clear = Game.System("Test/ClearWave", { queries: { enemies: Game.Query({ selection: { enemy: Game.Query.read(Enemy) } }) }, commands: Game.System.commands(Game.System.despawns(Enemy)) }, ({ queries, commands }) => {
-      for (const { entity } of queries.enemies.each()) commands.despawn(entity)
+      for (const entity of queries.enemies.each()) commands.despawn(entity)
     })
     expectOk(run.runtime.tick(Game.Schedule(Clear, Game.Schedule.applyDeferred())))
     stepUntil(run, () => world().waves.number === 2)

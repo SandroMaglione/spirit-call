@@ -25,18 +25,18 @@ const World = Game.Inspector("Test/Touch", {
   },
   resources: { controls: Game.System.readResource(Controls) }
 }, ({ queries, resources }) => ({
-  projectiles: queries.projectiles.each().map(({ data }) => ({ velocity: data.velocity.get() })),
-  grenades: queries.grenades.each().map(({ data }) => data.lobbed.get()),
-  position: queries.player.each()[0]!.data.position.get(),
+  projectiles: queries.projectiles.each().map((entity) => ({ velocity: queries.projectiles.data.velocity.get(entity) })),
+  grenades: queries.grenades.each().map((entity) => queries.grenades.data.lobbed.get(entity)),
+  position: queries.player.data.position.get(queries.player.each()[0]!),
   device: resources.controls.get().device,
   aimPoint: resources.controls.get().aimPoint,
-  enemies: queries.enemies.each().map(({ data }) => data.position.get())
+  enemies: queries.enemies.each().map((entity) => queries.enemies.data.position.get(entity))
 }))
 
 const Charge = Game.System("Test/ChargeUltimate", {
   queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) }
 }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 describe("touch controls", () => {
@@ -261,7 +261,7 @@ describe("touch controls", () => {
     const run = start({ touch: [{ frame: 0, sticks: { move: { x: 1, y: 0 } }, press: ["attack"] }] })
     run.step(2)
     const Remove = Game.System("Test/RemovePlayer", { queries: { player: Game.Query({ selection: { position: Game.Query.read(Position) }, with: [Player] }) }, commands: Game.System.commands(Game.System.despawns(Player)) }, ({ queries, commands }) => {
-      for (const { entity } of queries.player.each()) commands.despawn(entity)
+      for (const entity of queries.player.each()) commands.despawn(entity)
     })
     expectOk(run.runtime.tick(Game.Schedule(Remove, Game.Schedule.applyDeferred())))
     const AimPoint = Game.Inspector("Test/AimPoint", { resources: { controls: Game.System.readResource(Controls) } }, ({ resources }) => resources.controls.get())

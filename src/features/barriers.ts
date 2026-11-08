@@ -82,8 +82,10 @@ export const UpdateBarriers = Game.System("Shooter/UpdateBarriers", {
   commands: Game.System.commands(Game.System.despawns(Barrier))
 }, ({ queries, resources, events, commands }) => {
   const dt = resources.time.get().dt
-  for (const { entity, data } of queries.barriers.each()) {
-    const barrier = data.barrier.get()
+  const { data } = queries.barriers
+  const bodies = queries.bodies.data
+  for (const entity of queries.barriers.each()) {
+    const barrier = data.barrier.get(entity)
     const remaining = barrier.remaining - dt
     if (remaining <= 0) {
       commands.despawn(entity)
@@ -94,10 +96,11 @@ export const UpdateBarriers = Game.System("Shooter/UpdateBarriers", {
       nextTick += barrier.effect.tick
       const { shape } = barrier
       for (const body of queries.bodies.each()) {
-        const hurtbox = body.data.hurtbox.get()
+        const hurtbox = bodies.hurtbox.get(body)
         if (hurtbox.faction === barrier.faction) continue
-        if (body.data.invulnerable.present && body.data.invulnerable.get().remaining > 0) continue
-        const at = body.data.position.get()
+        const invulnerable = bodies.invulnerable.get(body)
+        if (invulnerable !== undefined && invulnerable.remaining > 0) continue
+        const at = bodies.position.get(body)
         if (barrierGap(shape, at) > hurtbox.radius + barrier.effect.thickness / 2) continue
         const direction = shape.kind === "ring"
           ? normalizeOr(subtract(at, shape.center), { x: 1, y: 0 })
@@ -106,9 +109,9 @@ export const UpdateBarriers = Game.System("Shooter/UpdateBarriers", {
             const side = (at.x - shape.from.x) * across.x + (at.y - shape.from.y) * across.y
             return side >= 0 ? across : scale(across, -1)
           })()
-        events.damage.emit({ target: Game.Entity.handle(body.entity.id, Health), faction: barrier.faction, direction, blow: barrier.blow })
+        events.damage.emit({ target: Game.Entity.handle(body.id, Health), faction: barrier.faction, direction, blow: barrier.blow })
       }
     }
-    data.barrier.set({ ...barrier, remaining, nextTick })
+    data.barrier.set(entity, { ...barrier, remaining, nextTick })
   }
 })

@@ -129,8 +129,9 @@ keeps them, and releasing).
   from `@typeonce/ritmo-math` (`Vec2`, `Box2`, `Collide2`, `FlowField`); the
   spatial grid is the game's own (`src/physics/spatial-grid.ts`, copied from
   the Ritmo skill's spatial-grid playbook). Content (`src/content/`) may
-  import `Ops`. The Ritmo skill is linked at `.agents/skills/ritmo` from the
-  installed package, so it follows every upgrade.
+  import `Ops`. The Ritmo skills are linked in `.agents/skills/` from the
+  installed package (`ritmo`, and `ritmo-prototype`, `ritmo-onboarding`,
+  `ritmo-polish` as `SETUP.md` step 2 lists), so they follow every upgrade.
 - `src/presentation/`: rendering (Three.js), sounds, effects, and the in-arena
   HUD (plain DOM). The world is 3D (low-poly), seen by an orthographic
   camera whose view of the floor is exactly `src/math/iso.ts`'s projection

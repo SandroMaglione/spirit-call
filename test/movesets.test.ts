@@ -24,7 +24,7 @@ const chaserWith = (attacks: ReadonlyArray<AttackSpec>): Tuning =>
 
 const World = Game.Inspector("Test/Movesets", {
   queries: { enemies: Game.Query({ selection: { attacker: Game.Query.read(Attacker), phase: Game.Query.read(AttackPhase), position: Game.Query.read(Position) }, with: [Enemy] }) }
-}, ({ queries }) => queries.enemies.each().map(({ data }) => ({ ...data.attacker.get(), phase: data.phase.get()._tag, position: data.position.get() })))
+}, ({ queries }) => queries.enemies.each().map((entity) => ({ ...queries.enemies.data.attacker.get(entity), phase: queries.enemies.data.phase.get(entity)._tag, position: queries.enemies.data.position.get(entity) })))
 
 const duel = (tuning: Tuning, offset: Vec2) => {
   const run = start({ tuning })

@@ -19,8 +19,8 @@ export const ShowSwordsmanWind = Game.System("Shooter/ShowSwordsmanWind", {
   for (const cast of events.cast.all()) {
     if (cast.skill === "bladeWave" && cast.landing === true && cast.effect.kind === "blast") light.gust(cast.from, cast.effect.radius)
   }
-  for (const { data } of queries.vortices.each()) {
-    const vortex = data.vortex.get()
+  for (const entity of queries.vortices.each()) {
+    const vortex = queries.vortices.data.vortex.get(entity)
     if (vortex.blow.source?.label?.kind !== "skill" || vortex.blow.source.label.skill !== "cyclone") continue
     const fade = Math.min(1, vortex.remaining / 0.4)
     // Broken currents rise through a tapering funnel, with air between the wisps.
@@ -36,12 +36,12 @@ export const ShowSwordsmanWind = Game.System("Shooter/ShowSwordsmanWind", {
       }
     }
   }
-  if (player === undefined || player.data.member.get().character !== "swordsman") return
-  const node = services.nodes.get(player.entity.id)
+  if (player === undefined || queries.player.data.member.get(player).character !== "swordsman") return
+  const node = services.nodes.get(player.id)
   if (node?.kind !== "player") return
   const at = node.root.position
   const height = node.pivot.position.y + node.body.height * 0.5
-  const air = player.data.airborne.present ? player.data.airborne.get() : null
+  const air = queries.player.data.airborne.get(player) ?? null
   if (air !== null) {
     for (let arm = 0; arm < 3; arm++) {
       const points = Array.from({ length: 25 }, (_, index) => {

@@ -15,7 +15,7 @@ const effect = defaultTuning.skills.stoneGuard.effect
 const bastion = { character: "bastion" } as const
 const raise = (frame: number) => ({ frame, press: ["ultimate" as const], release: ["ultimate" as const] })
 const FillEnergy = Game.System("Test/FillEnergy", { queries: { player: Game.Query({ selection: { energy: Game.Query.write(Energy) }, with: [Player] }) } }, ({ queries }) => {
-  for (const { data } of queries.player.each()) data.energy.set({ current: defaultTuning.energy.max })
+  for (const entity of queries.player.each()) queries.player.data.energy.set(entity, { current: defaultTuning.energy.max })
 })
 
 const World = Game.Inspector("Test/Guard", {
@@ -28,13 +28,13 @@ const World = Game.Inspector("Test/Guard", {
   const [player] = queries.player.each()
   return {
     plates: resources.guard.get().plates,
-    player: { position: player!.data.position.get(), health: player!.data.health.get().current, invulnerable: player!.data.invulnerable.get().remaining },
-    enemies: queries.enemies.each().map(({ data }) => ({
-      offset: { x: data.position.get().x - center.x, y: data.position.get().y - center.y },
-      state: data.state.get().current?.id ?? null,
-      knockback: data.knockback.get(),
-      poise: data.poise.get().current,
-      health: data.health.get().current
+    player: { position: queries.player.data.position.get(player!), health: queries.player.data.health.get(player!).current, invulnerable: queries.player.data.invulnerable.get(player!).remaining },
+    enemies: queries.enemies.each().map((entity) => ({
+      offset: { x: queries.enemies.data.position.get(entity).x - center.x, y: queries.enemies.data.position.get(entity).y - center.y },
+      state: queries.enemies.data.state.get(entity).current?.id ?? null,
+      knockback: queries.enemies.data.knockback.get(entity),
+      poise: queries.enemies.data.poise.get(entity).current,
+      health: queries.enemies.data.health.get(entity).current
     }))
   }
 })
@@ -55,13 +55,13 @@ const field = (dummies: ReadonlyArray<Vec2>, options: StartOptions = {}) => {
       },
       events: { damage: Game.System.writeEvent(Damage) }
     }, ({ queries, events }) => {
-      const attacker = from === null ? undefined : queries.enemies.each().find(({ data }) => Math.hypot(data.position.get().x - center.x - from.x, data.position.get().y - center.y - from.y) < 1)
-      for (const { entity } of queries.player.each()) {
+      const attacker = from === null ? undefined : queries.enemies.each().find((entity) => Math.hypot(queries.enemies.data.position.get(entity).x - center.x - from.x, queries.enemies.data.position.get(entity).y - center.y - from.y) < 1)
+      for (const entity of queries.player.each()) {
         events.damage.emit({
           target: Game.Entity.handle(entity.id, Health),
           faction: periodic ? null : "enemy",
           direction: { x: -1, y: 0 },
-          blow: blow({ damage, knockback: 300, periodic, ...(attacker === undefined ? {} : { source: { attacker: Game.Entity.handle(attacker.entity.id, Position) } }) })
+          blow: blow({ damage, knockback: 300, periodic, ...(attacker === undefined ? {} : { source: { attacker: Game.Entity.handle(attacker.id, Position) } }) })
         })
       }
     })
