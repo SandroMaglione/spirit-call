@@ -41,7 +41,8 @@ it("raises and holds Warden's staff from its ward state, with attacks and stun t
     const { data } = queries.warders
     for (const entity of queries.warders.each()) {
       data.ward.set(entity, { ally: linked ? { handle: Game.Entity.handle(ally.id, Position), id: ally.id } : null, formed, wait: 0 })
-      data.phase.set(entity, { _tag: phase })
+      // A forced phase, from outside the moves the graph lists.
+      if (!data.phase.setRaw(entity, { _tag: phase }).ok) throw new Error(`cannot force phase ${phase}`)
       data.attacker.set(entity, { ...data.attacker.get(entity), attack: 0, elapsed: .4 })
       data.stunned.set(entity, { remaining: stunned ? .2 : 0 })
       nodes.ensure(entity.id, () => ({

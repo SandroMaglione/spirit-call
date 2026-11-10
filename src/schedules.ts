@@ -99,7 +99,7 @@ const input = Game.Schedule.when(
  */
 const gameplay = Game.Schedule.when(
   [Game.Condition.inState(Flow, "Playing")],
-  Game.Schedule.pauseWhen([Game.Condition.not(paused), Game.Condition.not(frozen)],
+  Game.Schedule.pauseWhile([paused, frozen],
   TrackRun,
   TickCombatTimers,
   TickBench,
@@ -196,7 +196,7 @@ const gameplay = Game.Schedule.when(
  */
 const runOutcome = Game.Schedule.when(
   [Game.Condition.inState(Flow, "Playing")],
-  Game.Schedule.pauseWhen([Game.Condition.not(paused)],
+  Game.Schedule.pauseWhile([paused],
   RecordReactions,
   // A dash at the last moment (its rewards fill the attacker's break bar), then the
   // blows and reactions of the step fill break bars.
@@ -230,7 +230,7 @@ export const fixedUpdate = Game.Schedule(
   TickHitStop,
   // An ultimate whose moment ended goes off, for this step's casting systems (see `UltimateMoment`).
   Game.Schedule.when([Game.Condition.inState(Flow, "Playing")],
-    Game.Schedule.pauseWhen([Game.Condition.not(paused)], ReleaseUltimates)),
+    Game.Schedule.pauseWhile([paused], ReleaseUltimates)),
   CaptureViewport,
   input,
   RememberPositions,

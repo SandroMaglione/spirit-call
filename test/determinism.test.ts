@@ -61,7 +61,7 @@ const botRuns: Record<string, Omit<BotRun, "probe">> = {
   stormFront: { tuning: defaultTuning, challenge: "stormFront", seconds: 40, style: learner, team: team("stormcaller", "tidecaller", "hearth"), abilities: true, rotateEvery: 5, measurePressure: false },
   // Its last wave: a burning champion guardian.
   gauntletChampion: { tuning: lastWave("gauntlet"), challenge: "gauntlet", seconds: 40, style: fighter, team: team("quarry", "stormcaller", "tidecaller"), abilities: true, rotateEvery: 6, measurePressure: false },
-  // Real health and the real objective: the team falls (at about 86 s), and the run's result is written.
+  // Real health and the real objective: the team falls (at about 74 s), and the run's result is written.
   untilFall3: { tuning: defaultTuning, challenge: "untilFall3", enemyLevel: 5, seconds: 100, style: learner, team: team("gunner", "hearth", "swordsman"), abilities: true, rotateEvery: 8, mortal: true, measurePressure: false }
 }
 
