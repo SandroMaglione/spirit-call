@@ -43,10 +43,10 @@
     "@fontsource/alegreya-sans": "^5.3.0",
     "@fontsource/barlow-condensed": "5.3.0",
     "@preact/signals": "2.11.3",
-    "@typeonce/ritmo": "0.22.0",
-    "@typeonce/ritmo-browser": "0.22.0",
-    "@typeonce/ritmo-math": "0.22.0",
-    "@typeonce/ritmo-render": "0.22.0",
+    "@typeonce/ritmo": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-0.23.0.tgz",
+    "@typeonce/ritmo-browser": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-browser-0.23.0.tgz",
+    "@typeonce/ritmo-math": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-math-0.23.0.tgz",
+    "@typeonce/ritmo-render": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-render-0.23.0.tgz",
     "effect": "4.0.2",
     "preact": "11.0.1",
     "three": "0.186.1"
@@ -55,8 +55,8 @@
     "@capacitor/assets": "3.0.5",
     "@capacitor/cli": "8.5.3",
     "@effect/sql-sqlite-node": "4.0.2",
-    "@typeonce/oxlint-plugin-ritmo": "0.22.0",
-    "@typeonce/ritmo-devtools": "0.22.0",
+    "@typeonce/oxlint-plugin-ritmo": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-oxlint-plugin-ritmo-0.23.0.tgz",
+    "@typeonce/ritmo-devtools": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-devtools-0.23.0.tgz",
     "@types/node": "25.5.0",
     "@types/three": "0.186.0",
     "oxlint": "1.87.0",
@@ -67,8 +67,15 @@
   },
   "pnpm": {
     "overrides": {
-      "sharp": "0.34.5"
+      "sharp": "0.34.5",
+      "@typeonce/ritmo": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-0.23.0.tgz",
+      "@typeonce/ritmo-browser": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-browser-0.23.0.tgz",
+      "@typeonce/ritmo-math": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-math-0.23.0.tgz",
+      "@typeonce/ritmo-render": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-render-0.23.0.tgz",
+      "@typeonce/ritmo-devtools": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-devtools-0.23.0.tgz",
+      "@typeonce/ritmo-netcode": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-ritmo-netcode-0.23.0.tgz",
+      "@typeonce/oxlint-plugin-ritmo": "file:/private/tmp/claude-501/-Users-sandromaglione-Development-projects-gamedev-ritmo/27247023-fa92-42d6-9bd8-ecd25bf20b20/scratchpad/tarballs/typeonce-oxlint-plugin-ritmo-0.23.0.tgz"
     }
   },
-  "ritmoRelease": "0.22.0"
+  "ritmoRelease": "0.23.0"
 }

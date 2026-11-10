@@ -23,6 +23,7 @@
     "ritmo/handle-runtime-result": "error",
     "ritmo/prefix-descriptor-and-system-names": "error",
     "ritmo/no-state-spread": "error",
+    "ritmo/no-kept-query-values": "error",
     "typescript/consistent-type-imports": "error",
     "typescript/no-import-type-side-effects": "error",
     "import/no-duplicates": "error",

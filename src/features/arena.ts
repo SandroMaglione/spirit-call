@@ -108,7 +108,6 @@ export const SpawnArena = Game.System("Shooter/SpawnArena", {
       center,
       radius: Ops.hypot(half.x, half.y),
       half,
-      drift: { x: 0, y: 0 },
       timer: null,
       atk: tuning.hazards.atk,
       charges: false,
