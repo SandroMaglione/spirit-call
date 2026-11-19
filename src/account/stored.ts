@@ -56,6 +56,18 @@ export const migrateSettings = (stored: typeof StoredSettings.Type, device: { re
 export const StoredSettingsJson = Schema.fromJsonString(StoredSettings)
 export const LatestSettingsJson = Schema.fromJsonString(StoredSettingsLatest)
 
+// ── The email sign-up (see signup.ts) ─────────────────────────────────────
+
+/** Version 1: whether the player signed up, when the chip was last closed, and how many quests the device cleared. */
+export const StoredSignupV1 = Schema.Struct({
+  version: Schema.Literal(1),
+  signedUp: Schema.Boolean,
+  closedAt: Schema.NullOr(Schema.Number),
+  clears: Schema.Number
+})
+
+export const StoredSignupJson = Schema.fromJsonString(StoredSignupV1)
+
 // ── The account ───────────────────────────────────────────────────────────
 
 /** A quest's or a tier's runs. */

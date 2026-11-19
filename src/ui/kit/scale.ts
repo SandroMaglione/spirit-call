@@ -9,7 +9,13 @@ export const frame = { height: 390, minWidth: 680 }
 
 /** Keeps `layers` scaled to the window (each gets its size in units, its scale, and `--z` for what must stay in real pixels). */
 export const fitToScreen = (layers: ReadonlyArray<HTMLElement>): void => {
+  let fitted = { width: 0, height: 0 }
   const fit = () => {
+    // A phone's on-screen keyboard shrinks the window while a text field is typed in (the email sign-up's, in the top
+    // corner): the layout keeps its scale, so nothing jumps and the field stays where it is, in view; it fits again
+    // once the field is left.
+    if (typing() && window.innerWidth === fitted.width && window.innerHeight < fitted.height) return
+    fitted = { width: window.innerWidth, height: window.innerHeight }
     const scale = Math.min(window.innerHeight / frame.height, window.innerWidth / frame.minWidth)
     for (const layer of layers) {
       layer.style.width = `${window.innerWidth / scale}px`
@@ -20,4 +26,8 @@ export const fitToScreen = (layers: ReadonlyArray<HTMLElement>): void => {
   }
   fit()
   window.addEventListener("resize", fit)
+  window.addEventListener("focusout", () => setTimeout(fit))
 }
+
+/** Whether a text field has the focus (a phone's keyboard may be up). */
+const typing = (): boolean => document.activeElement?.matches("input:not([type=range], [type=checkbox], [type=radio], [type=button], [type=submit]), textarea") ?? false

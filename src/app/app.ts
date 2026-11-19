@@ -18,6 +18,9 @@ import type { AccountSummary } from "../account/account-list.ts"
 import { AccountReadError, AccountStore, layer as accountLayer } from "../account/account-store.ts"
 import { layer as settingsLayer, SettingsStore } from "../account/settings.ts"
 import type { Settings } from "../account/settings.ts"
+import { afterRun, closeSignup, offersSignup, signUp } from "../account/signup.ts"
+import type { Signup, SignupRun } from "../account/signup.ts"
+import { layer as signupLayer, SignupStore } from "../account/signup-store.ts"
 import { defaultTuning } from "../config/tuning.ts"
 import { newAccount } from "../content/account.ts"
 import type { CharacterId } from "../content/characters.ts"
@@ -26,6 +29,7 @@ import type { BuildValue, RunLogValue, RunResultValue } from "../schema.ts"
 import { randomId } from "./ids.ts"
 import { Playtest, reportOf } from "./playtest.ts"
 import { storageLayer } from "./storage.ts"
+import { signupReachable } from "./subscribe.ts"
 
 export interface App {
   /** The account as loaded when the game started. */
@@ -59,6 +63,12 @@ export interface App {
   readonly recordRun: (play: Play | null, result: RunResultValue, log: RunLogValue, team: ReadonlyArray<BuildValue>) => Earned
   /** Marks the tutorial done (finished or skipped): the game no longer opens on it. */
   readonly finishTutorial: () => Account
+  /** Counts a run that ended for the email sign-up (see `account/signup.ts`): whether its results offer it. */
+  readonly signupAfter: (run: SignupRun) => boolean
+  /** The player closed the sign-up's chip: hidden on this device for a day. */
+  readonly closeSignup: () => void
+  /** The player signed up: hidden on this device for good. */
+  readonly signedUp: () => void
   /** Saves a change to this device's settings (what each one changes applies it itself: the sound board, the camera, the arena). */
   readonly changeSettings: (change: Partial<Settings>) => void
 }
@@ -146,14 +156,14 @@ export const startApp = async (id: string, name: string): Promise<App> => {
   const playtest = SHOOTER_PLAYTEST === null ? Playtest.off : (await import("./playtest-send.ts")).layer(SHOOTER_PLAYTEST)
   // Reduced motion starts as the phone asks for it.
   const device = { reducedMotion: typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches }
-  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer(device), accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
-  const { settings, accounts, sender } = await runtime.runPromise(Effect.gen(function*() {
+  const runtime = ManagedRuntime.make(Layer.mergeAll(settingsLayer(device), signupLayer, accountLayer(tuning, newAccount, id), accountListLayer(), playtest).pipe(Layer.provide(storageLayer)))
+  const { settings, accounts, sender, signups } = await runtime.runPromise(Effect.gen(function*() {
     // The list shows the last played first.
     yield* (yield* AccountList).played(id).pipe(Effect.catchTags({
       AccountListSaveError: (error) => Effect.logWarning("The account list could not be saved", error.cause),
       AccountListReadError: () => Effect.logWarning("The account list could not be read")
     }))
-    return { settings: yield* SettingsStore, accounts: yield* AccountStore, sender: yield* Playtest }
+    return { settings: yield* SettingsStore, accounts: yield* AccountStore, sender: yield* Playtest, signups: yield* SignupStore }
   })).catch((error: unknown) => {
     // A save the storage failed to read is left as it is: the game says so, and starting again may work.
     throw error instanceof AccountReadError ? new SaveReadFailed() : error
@@ -190,6 +200,20 @@ export const startApp = async (id: string, name: string): Promise<App> => {
       Effect.tapError((error) => Effect.logWarning("The settings could not be saved", error.cause)),
       Effect.ignore
     ))
+  /** What the device remembers of the sign-up: `null` when its storage could not read it (it is then never offered). */
+  let signup = await runtime.runPromise(signups.get)
+  /** Changes what the device remembers of the sign-up at once, and saves it (a failure is logged: at worst the chip shows again). */
+  const changeSignup = (change: (signup: Signup) => Signup) => {
+    if (signup === null) return null
+    const next = change(signup)
+    if (next === signup) return signup
+    signup = next
+    runtime.runFork(signups.update(() => next).pipe(
+      Effect.tapError((error) => Effect.logWarning("The sign-up could not be saved", error.cause)),
+      Effect.ignore
+    ))
+    return signup
+  }
   return {
     account,
     settings: await runtime.runPromise(settings.get),
@@ -231,6 +255,12 @@ export const startApp = async (id: string, name: string): Promise<App> => {
       return recorded.earned
     },
     finishTutorial: () => (account.tutorialDoneAt === null ? changed(finishTutorial(account, Date.now())) : account),
+    signupAfter: (run) => {
+      const after = changeSignup((signup) => afterRun(signup, run))
+      return after !== null && signupReachable() && offersSignup(after, run, Date.now())
+    },
+    closeSignup: () => void changeSignup((signup) => closeSignup(signup, Date.now())),
+    signedUp: () => void changeSignup(signUp),
     changeSettings: (change) => saveSettings((current) => ({ ...current, ...change }))
   }
 }

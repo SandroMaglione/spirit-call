@@ -34,6 +34,7 @@ import { LookIcon, RelicIcon, TierMarks } from "./RelicIcon.tsx"
 import { CharacterCard, MaterialIcon } from "./menu/parts.tsx"
 import type { Screen } from "./menu/screens.ts"
 import { nextAfter, tabOf } from "./navigation.ts"
+import { Signup } from "./Signup.tsx"
 import type { UiActions, UiStore } from "./store.ts"
 
 /** When each piece comes in, in seconds from the screen showing: the title, the goals (one after another when some are new), the line about the run, the rewards, the account's bar, and the buttons (usable from then). */
@@ -78,6 +79,8 @@ export const Results = ({ store, actions }: { readonly store: UiStore; readonly 
   const enemyLevel = play === null ? null : encounterOf(tuning, play, account).enemyLevel
   const underleveled = !result.cleared && extra === null && enemyLevel !== null && store.team.value.every((build) => (build.level ?? 1) < enemyLevel)
   return <div class={`results${result.cleared ? " is-cleared" : ""}${newcomer === undefined ? "" : " has-newcomer"}${skipped.value ? " is-skipped" : ""}`} onClick={() => { revealed.value = true; skipped.value = true }}>
+    {/* The email sign-up, in the corner (only after a cleared quest, see `account/signup.ts`): it comes in with the buttons, and is usable with them. */}
+    {store.signup.value && (shown.value || skipped.value) && <Signup actions={actions} enabled={enabled} />}
     {newcomer?.kind === "character" && <div class="results__newcomer" data-element={elementOf(tuning, newcomer.id)}><Model character={newcomer.id} reveal={!revealed.value} /></div>}
     <section class="results__content" style={{ "--loot": `${times.loot}s` }}>
       <h1 class="results__title">{title}</h1>

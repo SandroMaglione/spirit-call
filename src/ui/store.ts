@@ -17,6 +17,7 @@ import type { ChallengeId } from "../content/challenges.ts"
 import type { CharacterId } from "../content/characters.ts"
 import { emptyRunLog } from "../schema.ts"
 import type { BuildValue, FlowState, PracticeValue, RunLogValue, RunResultValue } from "../schema.ts"
+import type { SubscribeOutcome } from "../app/subscribe.ts"
 import type { Screen } from "./menu/screens.ts"
 import type { TeamDraft } from "./draft.ts"
 
@@ -64,6 +65,8 @@ export interface UiStore {
   readonly runLog: Signal<RunLogValue>
   /** What the last run earned the account, once recorded; `null` until then. */
   readonly earned: Signal<Earned | null>
+  /** Whether the results of the last run offer the email sign-up for the next Typeonce game (see `account/signup.ts`). */
+  readonly signup: Signal<boolean>
   /** The name of the account being played (one of this device's). */
   readonly accountName: string
   /** Messages for the player (what loading the save had to fix), until dismissed. */
@@ -128,6 +131,7 @@ export const createUiStore = (initial: {
   result: signal(null),
   runLog: signal(emptyRunLog),
   earned: signal(null),
+  signup: signal(false),
   accountName: initial.accountName,
   notices: signal(initial.notices),
   sound: signal(initial.sound),
@@ -189,6 +193,10 @@ export interface UiActions {
   readonly switchAccount: () => void
   /** Closes the game (Android's back button on the home screen, once confirmed); `null` where the game cannot close itself. */
   readonly leave: (() => void) | null
+  /** Signs `email` up for the next Typeonce game: how it went (signing up hides the sign-up on this device for good). */
+  readonly subscribe: (email: string) => Promise<SubscribeOutcome>
+  /** The player closed the sign-up's chip: it hides on this device for a day. */
+  readonly closeSignup: () => void
   /** The open-source packages the game contains, with their licenses (none in a dev build, which lists nothing). */
   readonly licenses: () => Promise<ReadonlyArray<License>>
 }
