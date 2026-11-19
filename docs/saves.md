@@ -44,6 +44,7 @@ changes. Tests give an in-memory one (`KeyValueStore.layerMemory`).
 | `shooter.accounts` | The list of accounts: each one's id, name, and when it was made and last played. |
 | `shooter.account.<id>` | One account. |
 | `shooter.settings` | The device's settings. |
+| `shooter.signup` | The email sign-up for the next Typeonce game, on the Results screen (see `src/account/signup.ts`): whether the player signed up (it never shows again), when its chip was last closed (it hides for 24 hours), and how many quests the device cleared (it shows from the second). Device-wide, as one device can hold several accounts. |
 | `shooter.playtest.outbox`, `.device`, `.tester` | A playtest build's runs waiting to be sent, and who is playing (see [playtest.md](playtest.md)). |
 | `<key>.unreadable`, `<key>.unreadable.2` … `.5` | A save that could not be read, set aside (each copy kept; a later one goes beside it). |
 

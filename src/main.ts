@@ -12,6 +12,7 @@ import { ApplyDevCommands, DevCommands, emptyDevCommands } from "./dev/commands.
 import { arenaFromQuery, challengeFromQuery, waveFromQuery, enemyLevelFromQuery, practiceFromQuery, teamFromQuery } from "./dev/build.ts"
 import { holdAccount, openAccounts, SaveReadFailed, startApp } from "./app/app.ts"
 import { buzz, hideSplash, inApp, leaveApp, onBackButton } from "./app/device.ts"
+import { subscribe } from "./app/subscribe.ts"
 import type { Accounts } from "./app/app.ts"
 import { showAccounts } from "./ui/Accounts.tsx"
 import { crashShowing, describeError, showCrash } from "./ui/crash.ts"
@@ -27,7 +28,7 @@ import { chargedFromQuery, KeepCharged } from "./dev/charged.ts"
 import { createBrowserHost, loadLooks } from "./presentation/host.ts"
 import { frame } from "./presentation/schedule.ts"
 import { createShowcase } from "./presentation/showcase.ts"
-import { createMenuInputHost } from "./presentation/menu-input.ts"
+import { createMenuInputHost, typingIn } from "./presentation/menu-input.ts"
 import { createSoundBoard } from "./presentation/sound.ts"
 import { createTuningPanel, loadSavedTuning } from "./presentation/tuning-panel.ts"
 import { initialMachines, initialResources } from "./runtime.ts"
@@ -209,12 +210,16 @@ const start = async (mount: HTMLElement) => {
     const result = uiStore.result.value
     if (result === null) {
       uiStore.earned.value = null
+      uiStore.signup.value = false
       return
     }
     if (result === reported) return
     reported = result
     if (!recording) return
-    uiStore.earned.value = shell.recordRun(playing, result, uiStore.runLog.peek(), uiStore.team.peek())
+    const earned = shell.recordRun(playing, result, uiStore.runLog.peek(), uiStore.team.peek())
+    uiStore.earned.value = earned
+    // The email sign-up: after a cleared quest, from the device's second on (see `account/signup.ts`).
+    uiStore.signup.value = shell.signupAfter({ quest: playing?.kind === "quest", cleared: result.cleared, newcomer: earned.granted.some((unlock) => unlock.kind === "character") })
   })
   /** Takes the player from the tutorial (done or skipped) to the menu; it counts as done. */
   const leaveTutorial = () => {
@@ -337,6 +342,12 @@ const start = async (mount: HTMLElement) => {
     },
     leave: leaveApp,
     // Listed by the build beside the game (scripts/licenses.ts); a dev build has none.
+    subscribe: async (email) => {
+      const outcome = await subscribe(email)
+      if (outcome === "ok") shell.signedUp()
+      return outcome
+    },
+    closeSignup: () => shell.closeSignup(),
     licenses: () => fetch("licenses.json").then((response) => response.json() as Promise<ReadonlyArray<License>>).catch(() => [])
   }
   const stress = makeStress(tuning, stressLoad ?? { enemies: 0, projectiles: 0 })
@@ -361,7 +372,7 @@ const start = async (mount: HTMLElement) => {
   menuButton.addEventListener("pointerdown", (event) => event.stopPropagation())
   menuButton.addEventListener("click", uiActions.pause)
   window.addEventListener("keydown", (event) => {
-    if (event.code === "KeyM" && !(event.target instanceof HTMLInputElement)) uiActions.setMuted(!sounds.muted())
+    if (event.code === "KeyM" && !typingIn(event.target)) uiActions.setMuted(!sounds.muted())
   })
   // Leaving the game (another app, a call, another tab or window) pauses the run; only a run going on pauses.
   document.addEventListener("visibilitychange", () => {

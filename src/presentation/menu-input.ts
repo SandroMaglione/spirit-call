@@ -1,6 +1,22 @@
 import type { Keyboard } from "@typeonce/ritmo-browser"
 
-/** Menu activation keeps native keyboard behavior, and held combat inputs are released on entry. */
+/** Input types that take no typing: keys pressed on them still reach the game. */
+const untyped = new Set(["button", "checkbox", "color", "file", "image", "radio", "range", "reset", "submit"])
+
+/**
+ * Whether a key event's target takes typing (a text field, a text area, an
+ * editable element): the game's shortcuts (R or Enter to play again, Esc for
+ * the menu, M to mute) leave such keys to it.
+ */
+export const typingIn = (target: unknown): boolean => {
+  if (typeof target !== "object" || target === null) return false
+  const element = target as { readonly tagName?: unknown; readonly type?: unknown; readonly isContentEditable?: unknown }
+  if (element.isContentEditable === true) return true
+  if (element.tagName === "TEXTAREA") return true
+  return element.tagName === "INPUT" && !untyped.has(typeof element.type === "string" ? element.type : "text")
+}
+
+/** Menu activation keeps native keyboard behavior, and held combat inputs are released on entry. Keys typed into a text field never reach the game. */
 export const createMenuInputHost = (target: EventTarget, active: () => boolean) => {
   const releases = new Set<() => void>()
   const keys = new Map<(event: Keyboard.KeyEvent) => void, EventListener>()
@@ -11,7 +27,7 @@ export const createMenuInputHost = (target: EventTarget, active: () => boolean) 
         target.addEventListener(type, listener as EventListener)
       } else if (type === "keydown") {
         const key = listener as (event: Keyboard.KeyEvent) => void
-        const wrapped: EventListener = (event) => { if (active()) key(event as KeyboardEvent) }
+        const wrapped: EventListener = (event) => { if (active() && !typingIn(event.target)) key(event as KeyboardEvent) }
         keys.set(key, wrapped)
         target.addEventListener(type, wrapped)
       } else target.addEventListener(type, listener as EventListener)
